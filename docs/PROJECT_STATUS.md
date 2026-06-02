@@ -43,6 +43,7 @@ native 层显示：
 | z2d 名称引用 | 11733 |
 | OGG chunk | 9952 |
 | `sound_id.dat` 记录 | 9951 |
+| 含内嵌 `@SFA` 音频的视频 slice | 456 |
 | PCM chunk | 21 |
 | `m_info.dat` 记录 | 1084 |
 
@@ -103,6 +104,19 @@ snd_<sound_resource_id>_bank<sound_bank>_ogg_<ogg_chunk_index>.ogg
 ```text
 snd_00067_bank01_ogg_00001.ogg
 ```
+
+视频内嵌音频判断：
+
+- 全部 7801 个 CRID 视频 slice 中，456 个包含 `@SFA` 音频块
+- `main`：230 个包含内嵌音频，4972 个不包含
+- `patch`：226 个包含内嵌音频，2373 个不包含
+- `ac0902_608..627` 样本没有 `@SFA`，所以导出 MP4 没有音轨是符合原始数据的
+- `main:97` 样本包含 `@SFA`，导出后 `ffprobe` 显示 `h264 + alac`，说明内嵌音频解复用流程可工作
+
+当前需要分清两类音频：
+
+- CRID 内嵌 `@SFA`：可以随视频一起封装进 MP4
+- 外部 OGG/PCM：需要从游戏事件、sound id 或 native 调度逻辑中建立对应关系，不能直接按视频文件名自动匹配
 
 ## 当前可用标准
 

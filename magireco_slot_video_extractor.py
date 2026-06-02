@@ -397,11 +397,19 @@ def build_parser():
     parser.add_argument("--start-index", type=int, default=0)
     parser.add_argument("--limit", type=int, help="number of slices to process per selected package")
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--final-dir", default=FINAL_MP4_DIR, help="MP4 output directory")
+    parser.add_argument("--temp-dir", default=TEMP_USM_DIR, help="temporary demux directory")
     parser.add_argument("--merge", action="store_true", help="merge named folders after extraction")
     return parser
 
 def main(argv=None):
+    global FINAL_MP4_DIR, TEMP_USM_DIR
     args = build_parser().parse_args(argv)
+    FINAL_MP4_DIR = args.final_dir
+    TEMP_USM_DIR = args.temp_dir
+    os.makedirs(FINAL_MP4_DIR, exist_ok=True)
+    os.makedirs(TEMP_USM_DIR, exist_ok=True)
+
     print("="*60)
     print("CRID/USM video extraction, conversion, naming and classification")
     print("="*60)

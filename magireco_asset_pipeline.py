@@ -249,6 +249,69 @@ def build_video_manifest_rows(candidates, code_to_labels):
     return rows
 
 
+def build_video_audio_scan_rows(candidates):
+    markers = [b"CRID", b"@SFV", b"@SFA", b"@ALP", b"@CUE", b"@SBT"]
+    rows = []
+    for pack, (bin_path, add_path) in VIDEO_ARCHIVES.items():
+        offsets = read_offsets(bin_path, add_path)
+        with bin_path.open("rb") as src:
+            for idx, start in enumerate(offsets[:-1]):
+                end = offsets[idx + 1]
+                src.seek(start)
+                data = src.read(end - start)
+                names = candidates.get((pack, idx), [])
+                counts = {marker.decode("ascii"): data.count(marker) for marker in markers}
+                rows.append(
+                    {
+                        "package": pack,
+                        "index": idx,
+                        "offset": start,
+                        "size": end - start,
+                        "crid_count": counts["CRID"],
+                        "sfv_count": counts["@SFV"],
+                        "sfa_count": counts["@SFA"],
+                        "alp_count": counts["@ALP"],
+                        "cue_count": counts["@CUE"],
+                        "sbt_count": counts["@SBT"],
+                        "has_embedded_audio": "yes" if counts["@SFA"] else "no",
+                        "candidate_count": len(names),
+                        "primary_name_if_unique": names[0] if len(names) == 1 else "",
+                        "candidates": ";".join(names),
+                    }
+                )
+    return rows
+
+
+def command_video_audio_scan(args):
+    manifest_dir = Path(args.manifest_dir)
+    known_counts = {pack: len(read_offsets(bin_path, add_path)) - 1 for pack, (bin_path, add_path) in VIDEO_ARCHIVES.items()}
+    candidates = parse_gdb_video_candidates(known_counts)
+    rows = build_video_audio_scan_rows(candidates)
+    write_csv(
+        manifest_dir / "video_audio_scan.csv",
+        rows,
+        [
+            "package",
+            "index",
+            "offset",
+            "size",
+            "crid_count",
+            "sfv_count",
+            "sfa_count",
+            "alp_count",
+            "cue_count",
+            "sbt_count",
+            "has_embedded_audio",
+            "candidate_count",
+            "primary_name_if_unique",
+            "candidates",
+        ],
+    )
+    embedded = sum(1 for row in rows if row["has_embedded_audio"] == "yes")
+    print(f"[video-audio-scan] wrote {len(rows)} rows to {manifest_dir / 'video_audio_scan.csv'}")
+    print(f"[video-audio-scan] slices with embedded @SFA audio: {embedded}")
+
+
 def command_manifest(args):
     manifest_dir = Path(args.manifest_dir)
     code_to_labels, group_index_to_label = load_label_maps()
@@ -574,6 +637,10 @@ def build_parser():
     manifest = sub.add_parser("manifest", help="write CSV manifests for video/image/audio assets")
     manifest.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
     manifest.set_defaults(func=command_manifest)
+
+    video_audio = sub.add_parser("video-audio-scan", help="scan CRID slices for embedded @SFA audio")
+    video_audio.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    video_audio.set_defaults(func=command_video_audio_scan)
 
     export_audio = sub.add_parser("export-audio", help="export ogg/pcm chunks; dry-run by default")
     export_audio.add_argument("--out-dir", default=str(DEFAULT_OUTPUT_DIR))

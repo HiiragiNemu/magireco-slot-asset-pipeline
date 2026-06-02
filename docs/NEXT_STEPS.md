@@ -109,11 +109,36 @@ python magireco_slot_video_extractor.py --package main --start-index 607 --limit
 - `main:607` 起是一批唯一候选命名样本，适合验证 MP4 生成、翻转、音频封装和命名逻辑
 - 不加 `--merge`，避免在未复核前自动拼合
 - 当前 C 盘剩余空间较低，不建议直接全量导出
+- 这一批样本原始 slice 不含 `@SFA` 音频，因此导出的 MP4 没声音是正常现象
+
+用一个含内嵌音频的样本验证音频封装：
+
+```powershell
+python magireco_slot_video_extractor.py --package main --start-index 97 --limit 1 --workers 1
+```
+
+扫描全部视频 slice 是否含内嵌 `@SFA` 音频：
+
+```powershell
+python magireco_asset_pipeline.py video-audio-scan
+```
 
 检查样本输出：
 
 ```powershell
 Get-ChildItem -Recurse final_mp4_videos -Filter *.mp4 | Select-Object FullName,Length
+```
+
+如果使用 RAMDISK，例如 `A:`，建议把输出和临时目录放到 RAMDISK：
+
+```powershell
+python magireco_slot_video_extractor.py --package main --start-index 607 --limit 20 --workers 4 --final-dir A:\magireco_final_mp4_videos --temp-dir A:\magireco_temp_usm_slices
+```
+
+全量导出前建议先只跑 `main`，仍不加 `--merge`：
+
+```powershell
+python magireco_slot_video_extractor.py --package main --workers 8 --final-dir A:\magireco_final_mp4_videos --temp-dir A:\magireco_temp_usm_slices
 ```
 
 检查音频命名 dry-run：
