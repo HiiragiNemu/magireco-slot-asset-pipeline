@@ -1,0 +1,5 @@
+# Core audit/export scripts use the Python standard library.
+# These packages are needed by optional helper scripts.
+requests>=2.31
+tqdm>=4.66
+mitmproxy>=10

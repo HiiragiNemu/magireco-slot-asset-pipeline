@@ -1,0 +1,121 @@
+# Project Status
+
+更新时间：2026-06-03
+
+## 审计范围
+
+已检查本地 APK/解包内容、JADX 输出、smali、native 字符串、GDB、`m_info.dat`、`sound_id.dat` 和现有提取脚本。
+
+JADX CLI 输出目录：
+
+```text
+jadx_audit/base_src_only
+```
+
+JADX 输出文件数：1142。
+
+## 关键代码层结论
+
+Java/smali 层显示：
+
+- `SlotMainActivity` 将 `cri.bin`, `cri2.bin`, `cri3.bin` 以及对应 add 表交给 `SysMng`
+- `SysMng` 调用 native `nsysmSetCriFileNames` 和 `nsysmLoadOffset`
+- 演出调试入口 `DebugProd.dispatchData(int,int,int,int,int)` 也是 native
+- `DebugDispNameList` 和 `DebugProd` 提供演出标签，但不包含完整视频播放/拼合逻辑
+
+native 层显示：
+
+- `libARES.so` 包含 `CBinCtrl`, `LoadOffset`, `GetFileOffset`, `CRI_FUSION_FILENAME`, `MARGE_INFO_FILENAME`, `OGG_FUSION_FILENAME`, `SOUND_ID_FILENAME`
+- `libGameProc.so` 含大量 `acXXXX`、图像/演出/音频资源字符串
+- 实际资源选择、offset 读取、融合包处理和可能的演出调度主要在 native
+
+## 资产统计
+
+基础清单：
+
+| 类型 | 数量 |
+| --- | ---: |
+| CRID 视频 chunk | 7801 |
+| 唯一视频命名 | 483 |
+| 多候选视频 chunk | 607 |
+| 无直接视频候选 | 6711 |
+| z2d chunk | 12083 |
+| z2d 名称引用 | 11733 |
+| OGG chunk | 9952 |
+| `sound_id.dat` 记录 | 9951 |
+| PCM chunk | 21 |
+| `m_info.dat` 记录 | 1084 |
+
+内部审计：
+
+| 项目 | 数量 |
+| --- | ---: |
+| Java/smali 关键文本引用 | 516 |
+| native 方法声明 | 130 |
+| native 相关字符串 | 41814 |
+| native `ac` token | 34441 |
+| native 序列候选 | 22979 |
+| 视频序列候选 | 263 |
+| 高置信视频序列候选 | 175 |
+| 图像 `ac` 分组 | 256 |
+
+## 视频命名与拼合判断
+
+当前视频命名必须保守：
+
+- 483 个 CRID chunk 可以唯一命名
+- 多候选共享 chunk 不能强行命名为单一 `acXXXX_NNN`
+- `ac0902`, `ac4921`, `ac0904`, `ac3409`, `ac3410`, `ac5102` 等存在长连续编号
+- 这些长序列高置信，但很多 chunk 被多个演出名共享，所以只适合进入复核队列，不适合无条件自动拼合
+
+当前建议：
+
+- 先导出小样本视频，按 `video_sequence_candidates.csv` 人工或脚本核验画面连续性
+- 对共享 chunk 建立画面 hash/时长/分辨率/音轨一致性检查后，再进入自动合并
+- 未唯一命名的视频保留 `package + index`，避免误标
+
+## 图像分类判断
+
+z2d 的 GDB 名称引用足够多，可以按嵌入的 `acXXXX` 分组。
+
+仍需注意：
+
+- 大量 unclassified 图像可能是系统 UI、通用部件或非 `ac` 前缀资源
+- 不应尝试伪装成 PNG；当前只导出 raw `.z2d`
+
+## 音频判断
+
+`sound_id.dat` 已解析为：
+
+- 7 字节头
+- 后续 9951 条记录
+- 每条 12 字节
+- 包含声音资源号、OGG chunk index、bank/category、固定 marker
+
+OGG chunk 0 未映射，可能是保留项。chunk 1 起可以用：
+
+```text
+snd_<sound_resource_id>_bank<sound_bank>_ogg_<ogg_chunk_index>.ogg
+```
+
+示例：
+
+```text
+snd_00067_bank01_ogg_00001.ogg
+```
+
+## 当前可用标准
+
+项目已经达到“可继续批处理前的审计可用标准”：
+
+- 能生成可复现清单
+- 能区分唯一命名、多候选、无候选视频
+- 能解析音频 ID 映射
+- 能将图像按 `acXXXX` 做初步分类
+- 会默认 dry-run，降低误操作风险
+
+尚未达到“全自动最终整理标准”：
+
+- 视频拼合仍需共享 chunk 复核
+- z2d 真实图像格式仍需专门解码器或格式解析
+- 音频和视频是否存在独立同步表尚未完全确认

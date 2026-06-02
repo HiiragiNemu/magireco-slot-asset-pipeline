@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Generated reports and extracted outputs
+asset_manifests/
+organized_assets/
+final_mp4_videos/
+temp_chunks/
+temp_usm_slices/
+magireco_slot_traffic/
+
+# APKs, expansion packs, unpacked proprietary game data, and native/decompiled output
+*.apk
+*.apks
+*.aab
+*.obb
+*.digests
+*.jar
+downloaded_assets/
+unpacked_assets/
+unpacked_base/
+unpacked_lib/
+jadx_audit/
+jadx-gui-*/
+
+# Large or raw media/assets
+*.bin
+*.dat
+*.z2d
+*.ogg
+*.pcmraw
+*.adx
+*.m2v
+*.usm
+*.mp4
+*.wav
+
+# Local scratch
+*.log
+新建 文本文档.txt
