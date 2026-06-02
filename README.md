@@ -8,6 +8,8 @@
 
 已完成的本地审计结论见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
 
+下一步执行建议见 [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)。
+
 主要结果：
 
 - 视频 CRID chunk：7801
