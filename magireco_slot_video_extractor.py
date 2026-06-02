@@ -4,6 +4,7 @@ import re
 import struct
 import codecs
 import subprocess
+import argparse
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
@@ -335,25 +336,29 @@ def concatenate_videos_in_folder(folder_path, output_mp4):
     if res.returncode == 0:
         print(f"[🎉] 成功生成完整演出合集: {os.path.basename(output_mp4)} (共无损拼接 {len(files)} 个片段)")
 
-def extract_all_videos_from_bin(bin_path, add_path, prefix):
+def extract_all_videos_from_bin(bin_path, add_path, prefix, start_index=0, limit=None, workers=4):
     bin_size = os.path.getsize(bin_path)
     offsets = parse_add_file(add_path, bin_size)
     total_files = len(offsets) - 1
+    if start_index < 0 or start_index >= total_files:
+        raise ValueError(f"{prefix} start_index out of range: {start_index} / {total_files}")
+    end_index = total_files if limit is None else min(total_files, start_index + limit)
+    selected_indices = range(start_index, end_index)
     
-    print(f"\n[*] 正在对 {prefix} 执行切割、硬件加速、无损转码并自动重命名分类 (共 {total_files} 个媒体段)...")
+    print(f"\n[*] 正在对 {prefix} 执行切割、转码并自动重命名分类 (选择 {start_index}..{end_index - 1} / 共 {total_files} 段)...")
     
     success_count = 0
-    with ThreadPoolExecutor(max_workers=16) as executor: 
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(process_single_slice, bin_path, offsets[i], offsets[i+1], i, prefix): i
-            for i in range(total_files)
+            for i in selected_indices
         }
         for future in tqdm(as_completed(futures), total=len(futures), desc=f"处理 {prefix}"):
             if future.result(): success_count += 1
                 
-    print(f"[✅] {prefix} 数据全部提取并分类完成！")
+    print(f"[✅] {prefix} 已完成：成功 {success_count} / {len(futures)}。")
 
-def main():
+def legacy_main():
     print("="*60)
     print("🎬 老虎机 5.7GB 一键智能切割、绝对无损音画转码、自动重命名、合集拼接与分类系统")
     print("="*60)
@@ -375,6 +380,50 @@ def main():
     try: os.rmdir(TEMP_USM_DIR)
     except OSError: pass
     print(f"\n[🎉] 全盘大捷！干净、正向、纯无损、完全自动分类、重命名并【自动拼接完整版】的视频已全部保存在 `{FINAL_MP4_DIR}` 目录下！")
+
+def concatenate_all_safe_folders():
+    print("\n[*] 正在对分类演出包进行【二进制零损拼接】...")
+    for root, dirs, _ in os.walk(FINAL_MP4_DIR):
+        for d in dirs:
+            if d in {"Unclassified_Slices", "Unassigned_演出", "MultiCandidate_Slices"}:
+                continue
+            folder_path = os.path.join(root, d)
+            merged_output = os.path.join(folder_path, f"{d}_完整合集.mp4")
+            concatenate_videos_in_folder(folder_path, merged_output)
+
+def build_parser():
+    parser = argparse.ArgumentParser(description="Extract CRID/USM slices to MP4")
+    parser.add_argument("--package", choices=["main", "patch", "all"], default="all")
+    parser.add_argument("--start-index", type=int, default=0)
+    parser.add_argument("--limit", type=int, help="number of slices to process per selected package")
+    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--merge", action="store_true", help="merge named folders after extraction")
+    return parser
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    print("="*60)
+    print("CRID/USM video extraction, conversion, naming and classification")
+    print("="*60)
+
+    if args.workers < 1:
+        raise ValueError("--workers must be >= 1")
+    if args.limit is not None and args.limit < 1:
+        raise ValueError("--limit must be >= 1")
+
+    if args.package in ("main", "all"):
+        extract_all_videos_from_bin(MAIN_BIN, MAIN_ADD, "main", args.start_index, args.limit, args.workers)
+    if args.package in ("patch", "all"):
+        extract_all_videos_from_bin(PATCH_BIN, PATCH_ADD, "patch", args.start_index, args.limit, args.workers)
+
+    if args.merge:
+        concatenate_all_safe_folders()
+
+    try:
+        os.rmdir(TEMP_USM_DIR)
+    except OSError:
+        pass
+    print(f"\n[done] output dir: {FINAL_MP4_DIR}")
 
 if __name__ == "__main__":
     main()

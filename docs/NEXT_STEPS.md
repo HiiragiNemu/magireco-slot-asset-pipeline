@@ -98,6 +98,24 @@ python magireco_asset_pipeline.py manifest
 python magireco_internal_audit.py
 ```
 
+先导出小批量视频样本，不合并：
+
+```powershell
+python magireco_slot_video_extractor.py --package main --start-index 607 --limit 20 --workers 4
+```
+
+说明：
+
+- `main:607` 起是一批唯一候选命名样本，适合验证 MP4 生成、翻转、音频封装和命名逻辑
+- 不加 `--merge`，避免在未复核前自动拼合
+- 当前 C 盘剩余空间较低，不建议直接全量导出
+
+检查样本输出：
+
+```powershell
+Get-ChildItem -Recurse final_mp4_videos -Filter *.mp4 | Select-Object FullName,Length
+```
+
 检查音频命名 dry-run：
 
 ```powershell
@@ -119,6 +137,7 @@ python magireco_asset_pipeline.py organize-videos
 不要先执行：
 
 ```powershell
+python magireco_slot_video_extractor.py --merge
 python magireco_asset_pipeline.py organize-videos --execute --merge
 ```
 
