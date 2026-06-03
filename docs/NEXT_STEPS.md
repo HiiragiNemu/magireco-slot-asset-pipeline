@@ -191,13 +191,48 @@ python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Ba
 - 存在同名映射歧义：2
 - `ac0902` 唯一连续预览片段：26
 - 已在 D 盘备份目录生成 26 个 `ac0902` 预览拼合 MP4，全部 `ffprobe` 通过
+- `ac0902_*` 唯一命名视频共 483 个，全部没有内嵌音轨
+- 当前 7801 个 MP4 均有视频流，未发现真正“只有音频无画面”的 MP4
+- 456 个带内嵌音频的 MP4 中，仅发现少量黑画面/近黑画面片段
 
 ## 当前下一步任务
 
-下一步应优先做两件事：
+下一步应优先做三件事：
 
 1. 视觉复核 `ac0902` 的 26 个预览拼合视频，判断这些片段是否确实连续、是否存在明显断点或画面错序。
 2. 开始外部音频关联审计，重点查找 native/event 表中 `sound_id`、OGG bank、演出名或 `acXXXX` 之间的映射。
+3. 使用 `sound-request-audit` 生成声音请求表，按请求标签筛选可能与演出相关的 OGG/PCM，再回查 native/event 调度来源。
+
+声音请求表审计命令：
+
+```powershell
+python magireco_asset_pipeline.py sound-request-audit
+```
+
+已确认该命令会生成：
+
+```text
+asset_manifests/sound_request_audit.csv
+asset_manifests/sound_request_summary.md
+```
+
+优先人工查看：
+
+```text
+asset_manifests/sound_request_audit.csv
+```
+
+重点字段：
+
+- `sound_resource_id`
+- `request_text`
+- `request_label`
+- `sound_bank`
+- `suggested_name`
+- `ogg_duration_sec`
+- `nearest_media`
+
+注意：`nearest_media` 只是声音表内的邻近 `.smz/.pcm` 候选，不能直接等同于视频同步关系。
 
 暂不建议：
 

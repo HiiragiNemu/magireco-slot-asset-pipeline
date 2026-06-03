@@ -47,6 +47,7 @@ CHUNK_ARCHIVES = {
 
 GDB_PATH = ROOT / "unpacked_assets" / "assets" / "gdb.bin"
 SOUND_ID_PATH = ROOT / "unpacked_assets" / "assets" / "sound_id.dat"
+SOUND_REQUEST_TABLE_PATH = ROOT / "unpacked_assets" / "assets" / "zg_snd_request_tbl.bin"
 DEBUG_SMALI_FILES = [
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugProd.smali",
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugDispNameList.smali",
@@ -1113,6 +1114,219 @@ def command_video_review(args):
     print(f"[video-review] wrote {summary_path}")
 
 
+SOUND_MEDIA_NAME_RE = re.compile(r"([0-9A-F]{16,}\.(?:smz|pcm))", re.IGNORECASE)
+
+
+def normalize_sound_table_string(text: str) -> str:
+    media_match = SOUND_MEDIA_NAME_RE.search(text)
+    if media_match:
+        return media_match.group(1)
+    return re.sub(r"^[\x00-\x1f]+|[\x00-\x1f]+$", "", text).strip("\x00\r\n\t ")
+
+
+def decode_table_string(raw: bytes) -> str:
+    raw = raw.strip(b"\x00")
+    if not raw:
+        return ""
+    for encoding in ("utf-8", "shift_jis", "cp932"):
+        try:
+            return normalize_sound_table_string(raw.decode(encoding, errors="strict"))
+        except UnicodeDecodeError:
+            continue
+    return normalize_sound_table_string(raw.decode("utf-8", errors="ignore"))
+
+
+def is_useful_sound_string(text: str) -> bool:
+    if not text:
+        return False
+    if SOUND_MEDIA_NAME_RE.search(text):
+        return True
+    if re.match(r"^\d{1,6}(?:_|$)", text):
+        return True
+    if re.search(r"[ぁ-んァ-ヶ一-龥ー]", text):
+        return True
+    if re.search(r"(?:BGM|SE|Voice|voice|serihu|kyara|seq|BB|AT|UT)", text):
+        return True
+    return False
+
+
+def extract_sound_table_strings(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    data = path.read_bytes()
+    rows = []
+    start = 0
+    for pos, value in enumerate(data + b"\x00"):
+        if value != 0:
+            continue
+        if pos > start:
+            raw = data[start:pos]
+            text = decode_table_string(raw)
+            if is_useful_sound_string(text):
+                rows.append(
+                    {
+                        "offset": start,
+                        "offset_hex": f"0x{start:x}",
+                        "text": text,
+                    }
+                )
+        start = pos + 1
+    rows.sort(key=lambda row: row["offset"])
+    return rows
+
+
+def classify_sound_table_string(text: str) -> str:
+    if SOUND_MEDIA_NAME_RE.search(text):
+        return "media"
+    if re.match(r"^\d{1,6}(?:_|$)", text):
+        return "request"
+    return "group_or_label"
+
+
+def sound_request_id_and_label(text: str) -> tuple[int | None, str]:
+    match = re.match(r"^(?P<id>\d{1,6})(?:_(?P<label>.*))?$", text)
+    if not match:
+        return None, ""
+    return int(match.group("id")), match.group("label") or ""
+
+
+def nearest_text(
+    rows: list[dict],
+    current_index: int,
+    direction: int,
+    kinds: set[str],
+    max_distance: int,
+) -> dict | None:
+    current_offset = int(rows[current_index]["offset"])
+    index = current_index + direction
+    while 0 <= index < len(rows):
+        row = rows[index]
+        distance = abs(int(row["offset"]) - current_offset)
+        if distance > max_distance:
+            return None
+        if row["kind"] in kinds:
+            return row | {"distance": distance}
+        index += direction
+    return None
+
+
+def load_ogg_duration_map(path: Path) -> dict[str, str]:
+    rows = read_csv(path)
+    result = {}
+    for row in rows:
+        name = Path(row.get("relative_path", "")).name
+        if name:
+            result[name] = row.get("duration_sec", "")
+    return result
+
+
+def command_sound_request_audit(args):
+    manifest_dir = Path(args.manifest_dir)
+    table_path = Path(args.table_path)
+    rows = extract_sound_table_strings(table_path)
+    for row in rows:
+        row["kind"] = classify_sound_table_string(row["text"])
+
+    sound_records = {
+        int(row["sound_resource_id"]): row
+        for row in read_csv(manifest_dir / "sound_id_records.csv")
+        if row.get("sound_resource_id", "").isdigit()
+    }
+    ogg_duration_map = load_ogg_duration_map(Path(args.ogg_audit)) if args.ogg_audit else {}
+
+    request_rows = []
+    for index, row in enumerate(rows):
+        if row["kind"] != "request":
+            continue
+        sound_id, label = sound_request_id_and_label(row["text"])
+        if sound_id is None:
+            continue
+        media_before = nearest_text(rows, index, -1, {"media"}, args.context_bytes)
+        media_after = nearest_text(rows, index, 1, {"media"}, args.context_bytes)
+        group_before = nearest_text(rows, index, -1, {"group_or_label"}, args.context_bytes)
+        group_after = nearest_text(rows, index, 1, {"group_or_label"}, args.context_bytes)
+        nearest_media = None
+        for candidate in (media_before, media_after):
+            if candidate and (nearest_media is None or candidate["distance"] < nearest_media["distance"]):
+                nearest_media = candidate
+
+        sound_record = sound_records.get(sound_id, {})
+        suggested_name = sound_record.get("suggested_name", "")
+        request_rows.append(
+            {
+                "offset_hex": row["offset_hex"],
+                "sound_resource_id": sound_id,
+                "request_text": row["text"],
+                "request_label": label,
+                "group_before": group_before["text"] if group_before else "",
+                "group_after": group_after["text"] if group_after else "",
+                "media_before": media_before["text"] if media_before else "",
+                "media_before_distance": media_before["distance"] if media_before else "",
+                "media_after": media_after["text"] if media_after else "",
+                "media_after_distance": media_after["distance"] if media_after else "",
+                "nearest_media": nearest_media["text"] if nearest_media else "",
+                "nearest_media_distance": nearest_media["distance"] if nearest_media else "",
+                "has_sound_id_record": "yes" if sound_record else "no",
+                "ogg_chunk_index": sound_record.get("ogg_chunk_index", ""),
+                "sound_bank": sound_record.get("sound_bank", ""),
+                "suggested_name": suggested_name,
+                "ogg_duration_sec": ogg_duration_map.get(suggested_name, ""),
+            }
+        )
+
+    request_rows.sort(key=lambda row: (int(row["sound_resource_id"]), natural_key(row["request_text"])))
+    output_csv = manifest_dir / "sound_request_audit.csv"
+    write_csv(
+        output_csv,
+        request_rows,
+        [
+            "offset_hex",
+            "sound_resource_id",
+            "request_text",
+            "request_label",
+            "group_before",
+            "group_after",
+            "media_before",
+            "media_before_distance",
+            "media_after",
+            "media_after_distance",
+            "nearest_media",
+            "nearest_media_distance",
+            "has_sound_id_record",
+            "ogg_chunk_index",
+            "sound_bank",
+            "suggested_name",
+            "ogg_duration_sec",
+        ],
+    )
+
+    linked = sum(1 for row in request_rows if row["has_sound_id_record"] == "yes")
+    with_label = sum(1 for row in request_rows if row["request_label"])
+    with_media = sum(1 for row in request_rows if row["nearest_media"])
+    summary_path = manifest_dir / "sound_request_summary.md"
+    lines = [
+        "# Sound Request Audit Summary",
+        "",
+        f"Table: {table_path}",
+        f"Extracted useful strings: {len(rows)}",
+        f"Request rows: {len(request_rows)}",
+        f"Rows linked to sound_id.dat: {linked}",
+        f"Rows with descriptive labels: {with_label}",
+        f"Rows with nearby media hash/name: {with_media}",
+        "",
+        "## Notes",
+        "- This is a heuristic parser for zg_snd_request_tbl.bin.",
+        "- `nearest_media` is proximity-based and should be treated as a candidate until validated.",
+        "- `sound_id.dat` remains the reliable mapping from sound_resource_id to OGG chunk index.",
+    ]
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[sound-request-audit] useful strings: {len(rows)}")
+    print(f"[sound-request-audit] request rows: {len(request_rows)}")
+    print(f"[sound-request-audit] linked to sound_id.dat: {linked}")
+    print(f"[sound-request-audit] wrote {output_csv}")
+    print(f"[sound-request-audit] wrote {summary_path}")
+
+
 def merge_videos(video_dir: Path, execute: bool):
     files = find_existing_videos(video_dir)
     groups: dict[str, list[Path]] = defaultdict(list)
@@ -1215,6 +1429,13 @@ def build_parser():
     review.add_argument("--write-concat-plans", action="store_true", help="write ffconcat text files for unique preview runs")
     review.add_argument("--max-concat-plans", type=int, default=200, help="maximum ffconcat text files to write")
     review.set_defaults(func=command_video_review)
+
+    sound_request = sub.add_parser("sound-request-audit", help="parse sound request table and join sound_id metadata")
+    sound_request.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    sound_request.add_argument("--table-path", default=str(SOUND_REQUEST_TABLE_PATH))
+    sound_request.add_argument("--ogg-audit", default=str(DEFAULT_MANIFEST_DIR / "ramdisk_audit" / "ogg_ffprobe_audit.csv"))
+    sound_request.add_argument("--context-bytes", type=int, default=320)
+    sound_request.set_defaults(func=command_sound_request_audit)
 
     merge = sub.add_parser("merge-videos", help="merge already named acXXXX mp4 groups; dry-run by default")
     merge.add_argument("--video-dir", default=str(DEFAULT_OUTPUT_DIR / "videos"))

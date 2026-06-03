@@ -77,6 +77,12 @@ python magireco_asset_pipeline.py organize-videos
 python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Backup_20260603_032042\magireco_final_mp4_videos --write-concat-plans
 ```
 
+解析 `zg_snd_request_tbl.bin`，生成声音请求 ID、描述标签、候选 `.smz/.pcm` 媒体名与 `sound_id.dat` 的关联审计：
+
+```powershell
+python magireco_asset_pipeline.py sound-request-audit
+```
+
 ## 外部工具
 
 - Python 3.10+
