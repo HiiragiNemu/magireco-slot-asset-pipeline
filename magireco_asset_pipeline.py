@@ -9,7 +9,7 @@ import struct
 import subprocess
 import sys
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 ROOT = Path(__file__).resolve().parent
@@ -57,6 +57,10 @@ GDB_FILE_VAL_TO_PACK = {v: k for k, v in PACK_TO_GDB_FILE_VAL.items()}
 INVALID_NAME_CHARS = re.compile(r'[\\/*?:"<>|\r\n\t]+')
 AC_CODE_RE = re.compile(r"^(ac\d{4})", re.IGNORECASE)
 AC_CODE_ANY_RE = re.compile(r"(ac\d{4})", re.IGNORECASE)
+AC_WITH_FINAL_NUMBER_RE = re.compile(
+    r"^(?P<key>ac\d{4}[A-Za-z]*(?:_[A-Za-z0-9]+)*?)_(?P<number>\d+)$",
+    re.IGNORECASE,
+)
 
 
 def safe_name(value: str, fallback: str = "unnamed", max_len: int = 140) -> str:
@@ -223,6 +227,41 @@ def write_csv(path: Path, rows: list[dict], fieldnames: list[str]):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def read_csv(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    with path.open("r", newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
+
+
+def split_semicolon(value: str) -> list[str]:
+    if not value:
+        return []
+    return [item for item in value.split(";") if item]
+
+
+def parse_bool(value) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
+def parse_optional_float(value) -> float | None:
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def parse_optional_int(value) -> int | None:
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        return int(float(value))
+    except ValueError:
+        return None
 
 
 def build_video_manifest_rows(candidates, code_to_labels):
@@ -571,6 +610,509 @@ def ffconcat_path(path: Path) -> str:
     return f"file '{value}'"
 
 
+def load_video_candidate_maps(manifest_dir: Path):
+    rows = read_csv(manifest_dir / "video_candidates.csv")
+    chunk_to_info = {}
+    name_to_chunks: dict[str, list[tuple[str, int]]] = defaultdict(list)
+
+    for row in rows:
+        pack = row.get("package", "").lower()
+        index = parse_optional_int(row.get("index"))
+        if not pack or index is None:
+            continue
+        names = split_semicolon(row.get("candidates", ""))
+        key = (pack, index)
+        chunk_to_info[key] = {
+            "package": pack,
+            "index": index,
+            "candidate_count": parse_optional_int(row.get("candidate_count")) or len(names),
+            "primary_name_if_unique": row.get("primary_name_if_unique", ""),
+            "candidates": names,
+        }
+        for name in names:
+            name_to_chunks[name].append(key)
+
+    return chunk_to_info, name_to_chunks
+
+
+def infer_mp4_chunk_key(row: dict, name_to_chunks: dict[str, list[tuple[str, int]]]) -> tuple[str, int] | None:
+    relative_path = row.get("relative_path", "")
+    stem = PureWindowsPath(relative_path).stem
+    indexed = re.match(r"^(main|patch)_video_(\d+)", stem, re.IGNORECASE)
+    if indexed:
+        return indexed.group(1).lower(), int(indexed.group(2))
+
+    chunks = name_to_chunks.get(stem, [])
+    if len(chunks) == 1:
+        return chunks[0]
+    return None
+
+
+def load_mp4_audit_maps(manifest_dir: Path, explicit_path: str, name_to_chunks: dict[str, list[tuple[str, int]]]):
+    audit_path = Path(explicit_path) if explicit_path else manifest_dir / "ramdisk_audit" / "mp4_ffprobe_audit.csv"
+    rows = read_csv(audit_path)
+    chunk_to_mp4 = {}
+    unmapped = []
+
+    for row in rows:
+        key = infer_mp4_chunk_key(row, name_to_chunks)
+        if key is None:
+            unmapped.append(row)
+            continue
+        chunk_to_mp4.setdefault(key, row)
+
+    return audit_path, rows, chunk_to_mp4, unmapped
+
+
+def sequence_number_from_name(name: str) -> int | None:
+    stem = Path(name).stem
+    match = re.search(r"_(\d+)$", stem)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def split_sequence_key_from_name(name: str) -> tuple[str, int | None]:
+    match = AC_WITH_FINAL_NUMBER_RE.match(Path(name).stem)
+    if not match:
+        return Path(name).stem.lower(), None
+    return match.group("key").lower(), int(match.group("number"))
+
+
+def build_sequence_name_groups(chunk_to_info: dict[tuple[str, int], dict]) -> dict[str, list[str]]:
+    grouped: dict[str, list[dict]] = defaultdict(list)
+    for info in chunk_to_info.values():
+        for name in info["candidates"]:
+            key, number = split_sequence_key_from_name(name)
+            grouped[key].append(
+                {
+                    "name": name,
+                    "number": number,
+                }
+            )
+
+    result = {}
+    for key, items in grouped.items():
+        items.sort(key=lambda item: (item["number"] is None, item["number"] or -1, natural_key(item["name"])))
+        result[key] = [item["name"] for item in items]
+    return result
+
+
+def path_from_video_root(video_dir: Path, relative_path: str) -> Path:
+    return video_dir.joinpath(*PureWindowsPath(relative_path).parts)
+
+
+def format_seconds(value: float | None) -> str:
+    if value is None:
+        return ""
+    return f"{value:.3f}"
+
+
+def review_action_for_sequence(
+    item_count: int,
+    matched_items: int,
+    shared_chunk_items: int,
+    missing_mapping_items: int,
+    missing_mp4_items: int,
+    ambiguous_name_items: int,
+    resolution_count: int,
+    confidence: str,
+    coverage_ratio: float,
+) -> str:
+    if missing_mapping_items or missing_mp4_items or ambiguous_name_items:
+        return "needs_missing_mapping_review"
+    if shared_chunk_items:
+        return "review_shared_chunks_before_merge"
+    if resolution_count > 1:
+        return "review_resolution_mismatch"
+    if item_count < 2 or matched_items < 2:
+        return "do_not_merge_single_item"
+    if confidence not in {"high", "medium"} or coverage_ratio < 0.9:
+        return "do_not_merge_low_confidence"
+    return "candidate_for_preview_concat"
+
+
+def flush_unique_run(
+    runs: list[dict],
+    current: list[dict],
+    min_run: int,
+    sequence_key: str,
+    concat_dir: Path,
+    write_concat_plans: bool,
+    max_concat_plans: int,
+):
+    if len(current) < min_run:
+        return
+
+    start = current[0]
+    end = current[-1]
+    durations = [parse_optional_float(row["duration_sec"]) for row in current]
+    total_duration = sum(d for d in durations if d is not None)
+    has_audio_count = sum(1 for row in current if parse_bool(row["has_audio"]))
+    resolutions = sorted({row["resolution"] for row in current if row["resolution"]}, key=natural_key)
+    concat_plan = ""
+
+    if write_concat_plans and len(runs) < max_concat_plans:
+        concat_dir.mkdir(parents=True, exist_ok=True)
+        plan_name = safe_name(
+            f"{sequence_key}_{start['sequence_number'] or start['item_order']:04d}_"
+            f"{end['sequence_number'] or end['item_order']:04d}_"
+            f"{start['package']}_{start['index']}-{end['index']}",
+            max_len=120,
+        ) + ".ffconcat.txt"
+        concat_path = concat_dir / plan_name
+        concat_lines = [ffconcat_path(Path(row["source_path"])) for row in current]
+        concat_path.write_text("\n".join(concat_lines) + "\n", encoding="utf-8")
+        concat_plan = str(concat_path)
+
+    recommendation = "candidate_for_silent_preview_concat" if has_audio_count == 0 else "candidate_for_preview_concat"
+    runs.append(
+        {
+            "sequence_key": sequence_key,
+            "start_number": start["sequence_number"],
+            "end_number": end["sequence_number"],
+            "item_count": len(current),
+            "package": start["package"],
+            "first_index": start["index"],
+            "last_index": end["index"],
+            "total_duration_sec": format_seconds(total_duration),
+            "has_audio_count": has_audio_count,
+            "resolutions": ";".join(resolutions),
+            "first_relative_path": start["relative_path"],
+            "last_relative_path": end["relative_path"],
+            "recommendation": recommendation,
+            "concat_plan": concat_plan,
+        }
+    )
+
+
+def build_video_review(args):
+    manifest_dir = Path(args.manifest_dir)
+    video_dir = Path(args.video_dir)
+    sequence_csv = Path(args.sequence_csv) if args.sequence_csv else manifest_dir / "internal_audit" / "video_sequence_candidates.csv"
+    sequence_rows = read_csv(sequence_csv)
+    chunk_to_info, name_to_chunks = load_video_candidate_maps(manifest_dir)
+    sequence_name_groups = build_sequence_name_groups(chunk_to_info)
+    sequence_meta = {row.get("sequence_key", ""): row for row in sequence_rows if row.get("sequence_key")}
+    mp4_audit_path, mp4_rows, chunk_to_mp4, unmapped_mp4_rows = load_mp4_audit_maps(
+        manifest_dir,
+        args.mp4_audit,
+        name_to_chunks,
+    )
+
+    review_rows = []
+    item_rows = []
+    run_rows = []
+    concat_dir = manifest_dir / "video_review_concat_plans"
+
+    sequence_keys = sorted(set(sequence_meta) | set(sequence_name_groups), key=natural_key)
+    for sequence_key in sequence_keys:
+        seq_row = sequence_meta.get(sequence_key, {"sequence_key": sequence_key})
+        names = sequence_name_groups.get(sequence_key) or split_semicolon(seq_row.get("names", ""))
+        confidence = seq_row.get("confidence", "")
+        coverage_ratio = parse_optional_float(seq_row.get("number_coverage_ratio")) or 0.0
+        matched_items = 0
+        shared_chunk_items = 0
+        missing_mapping_items = 0
+        missing_mp4_items = 0
+        ambiguous_name_items = 0
+        duplicate_chunk_items = 0
+        has_audio_items = 0
+        total_duration = 0.0
+        resolutions = set()
+        packages = set()
+        seen_chunks = set()
+        current_run: list[dict] = []
+
+        def close_run():
+            flush_unique_run(
+                run_rows,
+                current_run,
+                args.min_run,
+                sequence_key,
+                concat_dir,
+                args.write_concat_plans,
+                args.max_concat_plans,
+            )
+            current_run.clear()
+
+        for item_order, name in enumerate(names, start=1):
+            number = sequence_number_from_name(name)
+            chunks = name_to_chunks.get(name, [])
+            item_status = "ok"
+            key = None
+            chunk_info = None
+            mp4_info = None
+            source_path = ""
+            source_exists = ""
+            duration = None
+            width = ""
+            height = ""
+            resolution = ""
+            has_audio = False
+
+            if not chunks:
+                item_status = "missing_gdb_mapping"
+                missing_mapping_items += 1
+            elif len(chunks) > 1:
+                item_status = "ambiguous_name_mapping"
+                ambiguous_name_items += 1
+            else:
+                key = chunks[0]
+                chunk_info = chunk_to_info.get(key, {})
+                mp4_info = chunk_to_mp4.get(key)
+                if key in seen_chunks:
+                    duplicate_chunk_items += 1
+                seen_chunks.add(key)
+
+                if not mp4_info:
+                    item_status = "missing_mp4_audit"
+                    missing_mp4_items += 1
+                else:
+                    matched_items += 1
+                    duration = parse_optional_float(mp4_info.get("duration_sec"))
+                    if duration is not None:
+                        total_duration += duration
+                    has_audio = parse_bool(mp4_info.get("has_audio"))
+                    if has_audio:
+                        has_audio_items += 1
+                    width = mp4_info.get("width", "")
+                    height = mp4_info.get("height", "")
+                    resolution = f"{width}x{height}" if width and height else ""
+                    if resolution:
+                        resolutions.add(resolution)
+                    source_path = str(path_from_video_root(video_dir, mp4_info.get("relative_path", "")))
+                    source_exists = "yes" if Path(source_path).exists() else "no"
+
+                if chunk_info:
+                    packages.add(chunk_info["package"])
+                    if int(chunk_info["candidate_count"]) > 1:
+                        shared_chunk_items += 1
+
+            item = {
+                "sequence_key": sequence_key,
+                "item_order": item_order,
+                "sequence_number": number if number is not None else "",
+                "name": name,
+                "status": item_status,
+                "package": chunk_info["package"] if chunk_info else "",
+                "index": chunk_info["index"] if chunk_info else "",
+                "candidate_count": chunk_info["candidate_count"] if chunk_info else "",
+                "relative_path": mp4_info.get("relative_path", "") if mp4_info else "",
+                "source_path": source_path,
+                "source_path_exists": source_exists,
+                "duration_sec": format_seconds(duration),
+                "has_audio": "yes" if has_audio else "no",
+                "resolution": resolution,
+                "width": width,
+                "height": height,
+            }
+            item_rows.append(item)
+
+            can_extend_run = (
+                item_status == "ok"
+                and chunk_info is not None
+                and int(chunk_info["candidate_count"]) == 1
+                and source_path
+                and source_exists == "yes"
+            )
+            if not can_extend_run:
+                close_run()
+                continue
+
+            if current_run:
+                prev = current_run[-1]
+                prev_number = parse_optional_int(prev["sequence_number"])
+                prev_index = parse_optional_int(prev["index"])
+                current_index = parse_optional_int(item["index"])
+                number_is_next = number is None or prev_number is None or number == prev_number + 1
+                index_is_next = current_index is not None and prev_index is not None and current_index == prev_index + 1
+                same_pack = item["package"] == prev["package"]
+                same_resolution = item["resolution"] == prev["resolution"]
+                if not (number_is_next and index_is_next and same_pack and same_resolution):
+                    close_run()
+            current_run.append(item)
+
+        close_run()
+        action = review_action_for_sequence(
+            item_count=len(names),
+            matched_items=matched_items,
+            shared_chunk_items=shared_chunk_items,
+            missing_mapping_items=missing_mapping_items,
+            missing_mp4_items=missing_mp4_items,
+            ambiguous_name_items=ambiguous_name_items,
+            resolution_count=len(resolutions),
+            confidence=confidence,
+            coverage_ratio=coverage_ratio,
+        )
+        review_rows.append(
+            {
+                "sequence_key": sequence_key,
+                "ac_code": seq_row.get("ac_code", ""),
+                "debug_labels": seq_row.get("debug_labels", ""),
+                "confidence": confidence,
+                "source_recommendation": seq_row.get("recommendation", ""),
+                "review_action": action,
+                "item_count": len(names),
+                "matched_items": matched_items,
+                "shared_chunk_items": shared_chunk_items,
+                "missing_mapping_items": missing_mapping_items,
+                "missing_mp4_items": missing_mp4_items,
+                "ambiguous_name_items": ambiguous_name_items,
+                "duplicate_chunk_items": duplicate_chunk_items,
+                "has_audio_items": has_audio_items,
+                "total_duration_sec": format_seconds(total_duration),
+                "resolutions": ";".join(sorted(resolutions, key=natural_key)),
+                "packages": ";".join(sorted(packages)),
+                "first_number": seq_row.get("first_number", ""),
+                "last_number": seq_row.get("last_number", ""),
+                "longest_consecutive_run": seq_row.get("longest_consecutive_run", ""),
+                "number_coverage_ratio": seq_row.get("number_coverage_ratio", ""),
+                "native_seen": seq_row.get("native_seen", ""),
+            }
+        )
+
+    review_rows.sort(key=lambda row: (row["review_action"], -int(row["matched_items"]), natural_key(row["sequence_key"])))
+    item_rows.sort(key=lambda row: (natural_key(row["sequence_key"]), parse_optional_int(row["item_order"]) or 0))
+    run_rows.sort(key=lambda row: (-int(row["item_count"]), natural_key(row["sequence_key"]), parse_optional_int(row["start_number"]) or 0))
+
+    return {
+        "sequence_csv": sequence_csv,
+        "mp4_audit_path": mp4_audit_path,
+        "mp4_rows": mp4_rows,
+        "unmapped_mp4_rows": unmapped_mp4_rows,
+        "review_rows": review_rows,
+        "item_rows": item_rows,
+        "run_rows": run_rows,
+    }
+
+
+def command_video_review(args):
+    manifest_dir = Path(args.manifest_dir)
+    result = build_video_review(args)
+
+    sequence_path = manifest_dir / "video_review_sequences.csv"
+    items_path = manifest_dir / "video_review_items.csv"
+    runs_path = manifest_dir / "video_review_unique_runs.csv"
+    summary_path = manifest_dir / "video_review_summary.md"
+
+    write_csv(
+        sequence_path,
+        result["review_rows"],
+        [
+            "sequence_key",
+            "ac_code",
+            "debug_labels",
+            "confidence",
+            "source_recommendation",
+            "review_action",
+            "item_count",
+            "matched_items",
+            "shared_chunk_items",
+            "missing_mapping_items",
+            "missing_mp4_items",
+            "ambiguous_name_items",
+            "duplicate_chunk_items",
+            "has_audio_items",
+            "total_duration_sec",
+            "resolutions",
+            "packages",
+            "first_number",
+            "last_number",
+            "longest_consecutive_run",
+            "number_coverage_ratio",
+            "native_seen",
+        ],
+    )
+    write_csv(
+        items_path,
+        result["item_rows"],
+        [
+            "sequence_key",
+            "item_order",
+            "sequence_number",
+            "name",
+            "status",
+            "package",
+            "index",
+            "candidate_count",
+            "relative_path",
+            "source_path",
+            "source_path_exists",
+            "duration_sec",
+            "has_audio",
+            "resolution",
+            "width",
+            "height",
+        ],
+    )
+    write_csv(
+        runs_path,
+        result["run_rows"],
+        [
+            "sequence_key",
+            "start_number",
+            "end_number",
+            "item_count",
+            "package",
+            "first_index",
+            "last_index",
+            "total_duration_sec",
+            "has_audio_count",
+            "resolutions",
+            "first_relative_path",
+            "last_relative_path",
+            "recommendation",
+            "concat_plan",
+        ],
+    )
+
+    action_counts = defaultdict(int)
+    for row in result["review_rows"]:
+        action_counts[row["review_action"]] += 1
+    run_recommendation_counts = defaultdict(int)
+    for row in result["run_rows"]:
+        run_recommendation_counts[row["recommendation"]] += 1
+
+    lines = [
+        "# Video Review Summary",
+        "",
+        f"Video dir: {args.video_dir}",
+        f"Sequence CSV: {result['sequence_csv']}",
+        f"MP4 audit CSV: {result['mp4_audit_path']}",
+        f"MP4 audit rows: {len(result['mp4_rows'])}",
+        f"Unmapped MP4 audit rows: {len(result['unmapped_mp4_rows'])}",
+        "",
+        "## Sequence Review Actions",
+    ]
+    for action, count in sorted(action_counts.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {action}: {count}")
+    lines.extend(["", "## Unique Continuous Runs"])
+    lines.append(f"- minimum run length: {args.min_run}")
+    lines.append(f"- run count: {len(result['run_rows'])}")
+    for recommendation, count in sorted(run_recommendation_counts.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {recommendation}: {count}")
+    lines.extend(["", "## Outputs"])
+    lines.append(f"- {sequence_path}")
+    lines.append(f"- {items_path}")
+    lines.append(f"- {runs_path}")
+    if args.write_concat_plans:
+        lines.append(f"- {manifest_dir / 'video_review_concat_plans'}")
+    lines.extend(["", "## Notes"])
+    lines.append("- This command does not merge, move, or delete MP4 files.")
+    lines.append("- `candidate_for_preview_concat` means suitable for preview-list generation, not final proof of game playback order.")
+    lines.append("- Shared chunks remain review-only because multiple internal names point to the same CRID slice.")
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(f"[video-review] sequences: {len(result['review_rows'])}")
+    print(f"[video-review] sequence items: {len(result['item_rows'])}")
+    print(f"[video-review] unique continuous runs: {len(result['run_rows'])}")
+    print(f"[video-review] wrote {sequence_path}")
+    print(f"[video-review] wrote {items_path}")
+    print(f"[video-review] wrote {runs_path}")
+    print(f"[video-review] wrote {summary_path}")
+
+
 def merge_videos(video_dir: Path, execute: bool):
     files = find_existing_videos(video_dir)
     groups: dict[str, list[Path]] = defaultdict(list)
@@ -663,6 +1205,16 @@ def build_parser():
     organize.add_argument("--execute", action="store_true")
     organize.add_argument("--merge", action="store_true")
     organize.set_defaults(func=command_organize_videos)
+
+    review = sub.add_parser("video-review", help="review exported MP4s against internal sequence candidates")
+    review.add_argument("--video-dir", default=str(ROOT / "final_mp4_videos"))
+    review.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    review.add_argument("--mp4-audit", default="", help="optional mp4_ffprobe_audit.csv path")
+    review.add_argument("--sequence-csv", default="", help="optional video_sequence_candidates.csv path")
+    review.add_argument("--min-run", type=int, default=2, help="minimum unique contiguous run length to report")
+    review.add_argument("--write-concat-plans", action="store_true", help="write ffconcat text files for unique preview runs")
+    review.add_argument("--max-concat-plans", type=int, default=200, help="maximum ffconcat text files to write")
+    review.set_defaults(func=command_video_review)
 
     merge = sub.add_parser("merge-videos", help="merge already named acXXXX mp4 groups; dry-run by default")
     merge.add_argument("--video-dir", default=str(DEFAULT_OUTPUT_DIR / "videos"))

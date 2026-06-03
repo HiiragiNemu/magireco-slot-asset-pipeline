@@ -71,6 +71,12 @@ python magireco_asset_pipeline.py export-audio --sound-id-names --execute
 python magireco_asset_pipeline.py organize-videos
 ```
 
+对已导出的 MP4 生成序列复核报告，不合并视频：
+
+```powershell
+python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Backup_20260603_032042\magireco_final_mp4_videos --write-concat-plans
+```
+
 ## 外部工具
 
 - Python 3.10+

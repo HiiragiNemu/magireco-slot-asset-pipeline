@@ -168,21 +168,39 @@ python magireco_asset_pipeline.py organize-videos --execute --merge
 
 原因是当前视频序列候选仍需复核共享 chunk。
 
-## 下一轮自动化建议
+## 已完成的下一轮自动化
 
-下一轮应新增一个 `video-review` 命令：
+已新增 `video-review` 命令：
 
 ```powershell
-python magireco_asset_pipeline.py video-review --limit 200
+python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Backup_20260603_032042\magireco_final_mp4_videos --write-concat-plans
 ```
 
-建议功能：
+该命令会：
 
-- 扫描已导出的 MP4
-- 生成 `video_review.csv`
-- 用 ffprobe 记录时长、分辨率、codec、音轨
-- 用 ffmpeg 提取首帧/中间帧
-- 对同一 `sequence_key` 的候选做排序和连续性报告
-- 给出 `safe_to_merge`, `needs_manual_review`, `do_not_merge` 三类结论
+- 读取已导出 MP4 的 `ffprobe` 审计结果
+- 结合 `video_candidates.csv` 和 `video_sequence_candidates.csv`
+- 生成序列复核表、逐项表、唯一连续片段表
+- 可选生成 ffconcat 预览列表
+- 不移动、不删除、不生成最终合并视频
 
-这个命令是目前最值得继续开发的自动化步骤。
+当前结果：
+
+- 视频序列候选：263
+- 涉及共享 chunk、需复核：261
+- 存在同名映射歧义：2
+- `ac0902` 唯一连续预览片段：26
+- 已在 D 盘备份目录生成 26 个 `ac0902` 预览拼合 MP4，全部 `ffprobe` 通过
+
+## 当前下一步任务
+
+下一步应优先做两件事：
+
+1. 视觉复核 `ac0902` 的 26 个预览拼合视频，判断这些片段是否确实连续、是否存在明显断点或画面错序。
+2. 开始外部音频关联审计，重点查找 native/event 表中 `sound_id`、OGG bank、演出名或 `acXXXX` 之间的映射。
+
+暂不建议：
+
+- 全局合并 263 个序列
+- 给共享 chunk 强行指定单一演出名
+- 把无内嵌音轨视频和 OGG 按时长或文件序号硬匹配

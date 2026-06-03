@@ -133,3 +133,37 @@ snd_00067_bank01_ogg_00001.ogg
 - 视频拼合仍需共享 chunk 复核
 - z2d 真实图像格式仍需专门解码器或格式解析
 - 音频和视频是否存在独立同步表尚未完全确认
+
+## RAMDISK 全量导出复核
+
+已使用 48GB RAMDISK 完成全量导出，并备份到：
+
+```text
+D:\MagiaRe_RAMDISK_Backup_20260603_032042
+```
+
+导出结果：
+
+| 类型 | 数量 | 状态 |
+| --- | ---: | --- |
+| MP4 | 7801 | `ffprobe` 失败 0 |
+| 含内嵌音轨 MP4 | 456 | 与 CRID `@SFA` 扫描一致 |
+| 无内嵌音轨 MP4 | 7345 | 需要外部 OGG/PCM 关联审计 |
+| OGG | 9952 | `ffprobe` 失败 0 |
+| PCMRAW | 21 | 0 字节文件 0 |
+| Z2D raw | 12083 | 0 字节文件 0 |
+
+新增 `video-review` 命令后，已生成：
+
+- `asset_manifests/video_review_sequences.csv`
+- `asset_manifests/video_review_items.csv`
+- `asset_manifests/video_review_unique_runs.csv`
+- `asset_manifests/video_review_summary.md`
+- `asset_manifests/video_review_concat_plans/`
+
+复核结论：
+
+- 263 个视频序列候选中，261 个仍涉及共享 chunk，不能直接最终合并
+- 2 个序列存在同名映射歧义：`ac3409_263`, `ac8052_001`
+- `ac0902` 后半段存在 26 个唯一连续片段，可用于视觉预览
+- 已在 D 盘备份目录生成 26 个 `ac0902` 预览拼合 MP4，全部可被 `ffprobe` 读取，失败 0，均无音轨
