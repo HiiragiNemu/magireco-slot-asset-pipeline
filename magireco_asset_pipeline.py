@@ -64,6 +64,10 @@ AC_WITH_FINAL_NUMBER_RE = re.compile(
     r"^(?P<key>ac\d{4}[A-Za-z]*(?:_[A-Za-z0-9]+)*?)_(?P<number>\d+)$",
     re.IGNORECASE,
 )
+CANDIDATE_SLICE_RE = re.compile(
+    r"^(?P<package>main|patch)_video_(?P<index>\d+)_candidates(?P<candidates>\d+)$",
+    re.IGNORECASE,
+)
 
 
 def safe_name(value: str, fallback: str = "unnamed", max_len: int = 140) -> str:
@@ -1788,6 +1792,199 @@ def command_bili_metadata_audit(args):
     print(f"[bili-metadata-audit] wrote {summary_path}")
 
 
+def resolve_candidate_slice_dir(video_dir: Path) -> Path:
+    if video_dir.name.lower() == "multicandidate_slices":
+        return video_dir
+    nested = video_dir / "MultiCandidate_Slices"
+    if nested.exists():
+        return nested
+    return video_dir
+
+
+def parse_candidate_slice_path(path: Path) -> dict | None:
+    match = CANDIDATE_SLICE_RE.match(path.stem)
+    if not match:
+        return None
+    return {
+        "package": match.group("package").lower(),
+        "index": int(match.group("index")),
+        "index_text": match.group("index"),
+        "candidates": int(match.group("candidates")),
+        "path": path,
+    }
+
+
+def build_candidate_slice_runs(candidate_dir: Path) -> list[list[dict]]:
+    items = []
+    for path in candidate_dir.glob("*.mp4"):
+        info = parse_candidate_slice_path(path)
+        if info:
+            items.append(info)
+    items.sort(key=lambda item: (item["package"], item["index"]))
+
+    runs: list[list[dict]] = []
+    current: list[dict] = []
+    for item in items:
+        if (
+            current
+            and item["package"] == current[-1]["package"]
+            and item["candidates"] == current[-1]["candidates"]
+            and item["index"] == current[-1]["index"] + 1
+        ):
+            current.append(item)
+            continue
+        if current:
+            runs.append(current)
+        current = [item]
+    if current:
+        runs.append(current)
+    return runs
+
+
+def candidate_run_output_name(run: list[dict]) -> str:
+    first = run[0]
+    last = run[-1]
+    if len(run) == 1:
+        return first["path"].name
+    return (
+        f"{first['package']}_video_{first['index']:04d}-{last['index']:04d}"
+        f"_candidates{first['candidates']}.mp4"
+    )
+
+
+def collect_run_probe_summary(run: list[dict], probe: bool) -> dict:
+    if not probe:
+        return {"audio_source_count": "", "duration_sum_sec": ""}
+
+    audio_count = 0
+    duration_sum = 0.0
+    for item in run:
+        info = probe_mp4(item["path"])
+        if info.get("has_audio"):
+            audio_count += 1
+        duration = parse_optional_float(str(info.get("duration_sec", "")))
+        if duration is not None:
+            duration_sum += duration
+    return {
+        "audio_source_count": audio_count,
+        "duration_sum_sec": f"{duration_sum:.3f}",
+    }
+
+
+def write_candidate_concat_list(run: list[dict], list_path: Path):
+    list_path.parent.mkdir(parents=True, exist_ok=True)
+    list_path.write_text("\n".join(ffconcat_path(item["path"]) for item in run) + "\n", encoding="utf-8")
+
+
+def run_ffmpeg_candidate_merge(
+    run: list[dict],
+    output: Path,
+    list_path: Path,
+    hflip: bool,
+    drop_audio: bool,
+    crf: int,
+) -> bool:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if len(run) == 1:
+        cmd = ["ffmpeg", "-y", "-i", str(run[0]["path"])]
+    else:
+        write_candidate_concat_list(run, list_path)
+        cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path)]
+
+    video_filters = []
+    if hflip:
+        video_filters.append("hflip")
+    if video_filters:
+        cmd.extend(["-vf", ",".join(video_filters)])
+
+    cmd.extend(["-c:v", "libx264", "-crf", str(crf), "-pix_fmt", "yuv420p"])
+    if drop_audio:
+        cmd.append("-an")
+    else:
+        cmd.extend(["-c:a", "aac", "-b:a", "192k"])
+    cmd.append(str(output))
+
+    result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        print(f"[merge-candidate-runs] failed: {output.name}", file=sys.stderr)
+        print(result.stderr.decode("utf-8", errors="ignore")[-2000:], file=sys.stderr)
+        return False
+    return True
+
+
+def command_merge_candidate_runs(args):
+    candidate_dir = resolve_candidate_slice_dir(Path(args.video_dir))
+    out_dir = Path(args.out_dir)
+    output_video_dir = out_dir / candidate_dir.name
+    list_dir = out_dir / "concat_lists"
+    manifest_path = out_dir / "merge_candidate_runs_manifest.csv"
+
+    runs = build_candidate_slice_runs(candidate_dir)
+    rows = []
+    executed = 0
+    failed = 0
+    for run in runs:
+        first = run[0]
+        last = run[-1]
+        output_name = candidate_run_output_name(run)
+        status = "merged" if len(run) > 1 else "singleton"
+        if args.hflip:
+            status += "_hflip"
+        if args.drop_audio:
+            status += "_video_only"
+        output = output_video_dir / output_name
+        list_path = list_dir / f"{Path(output_name).stem}.ffconcat.txt"
+        probe_summary = collect_run_probe_summary(run, args.probe)
+        row = {
+            "output": output_name,
+            "status": status,
+            "source_count": len(run),
+            "package": first["package"],
+            "start_index": first["index"],
+            "end_index": last["index"],
+            "candidates": first["candidates"],
+            "audio_source_count": probe_summary["audio_source_count"],
+            "duration_sum_sec": probe_summary["duration_sum_sec"],
+            "list": str(list_path) if len(run) > 1 else "",
+        }
+        rows.append(row)
+
+        print(
+            f"[merge-candidate-runs] {output_name}: {len(run)} source(s), "
+            f"candidates={first['candidates']}"
+        )
+        if not args.execute:
+            continue
+        if run_ffmpeg_candidate_merge(run, output, list_path, args.hflip, args.drop_audio, args.crf):
+            executed += 1
+        else:
+            failed += 1
+
+    write_csv(
+        manifest_path,
+        rows,
+        [
+            "output",
+            "status",
+            "source_count",
+            "package",
+            "start_index",
+            "end_index",
+            "candidates",
+            "audio_source_count",
+            "duration_sum_sec",
+            "list",
+        ],
+    )
+    merged = sum(1 for row in rows if int(row["source_count"]) > 1)
+    singletons = len(rows) - merged
+    print(f"[merge-candidate-runs] candidate dir: {candidate_dir}")
+    print(f"[merge-candidate-runs] wrote {manifest_path}")
+    print(f"[merge-candidate-runs] runs: {len(rows)}; merged runs: {merged}; singletons: {singletons}")
+    if args.execute:
+        print(f"[merge-candidate-runs] executed: {executed}; failed: {failed}")
+
+
 def merge_videos(video_dir: Path, execute: bool):
     files = find_existing_videos(video_dir)
     groups: dict[str, list[Path]] = defaultdict(list)
@@ -1914,6 +2111,23 @@ def build_parser():
     merge.add_argument("--video-dir", default=str(DEFAULT_OUTPUT_DIR / "videos"))
     merge.add_argument("--execute", action="store_true")
     merge.set_defaults(func=command_merge_videos)
+
+    candidate_merge = sub.add_parser(
+        "merge-candidate-runs",
+        help="merge consecutive main/patch video slices with the same candidatesN suffix; dry-run by default",
+    )
+    candidate_merge.add_argument(
+        "--video-dir",
+        default=str(DEFAULT_OUTPUT_DIR / "videos"),
+        help="video root containing MultiCandidate_Slices, or the MultiCandidate_Slices folder itself",
+    )
+    candidate_merge.add_argument("--out-dir", default=str(DEFAULT_OUTPUT_DIR / "merged_candidate_runs"))
+    candidate_merge.add_argument("--execute", action="store_true")
+    candidate_merge.add_argument("--hflip", action="store_true", help="apply horizontal flip while encoding")
+    candidate_merge.add_argument("--drop-audio", action="store_true", help="write video-only output")
+    candidate_merge.add_argument("--probe", action="store_true", help="probe source audio count and duration for manifest")
+    candidate_merge.add_argument("--crf", type=int, default=16)
+    candidate_merge.set_defaults(func=command_merge_candidate_runs)
 
     return parser
 

@@ -89,6 +89,12 @@ python magireco_asset_pipeline.py sound-request-audit
 python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\review_special
 ```
 
+按 `MultiCandidate_Slices` 中连续的 `main_video_NNNN_candidatesX` 切片做候选数合并测试：
+
+```powershell
+python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\merge_tests\candidate_runs_command_execute_hflip_video_only --execute --hflip --drop-audio --probe
+```
+
 生成面向 B 站整理的标题、标签和说明候选报告：
 
 ```powershell

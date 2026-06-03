@@ -241,3 +241,133 @@ asset_manifests/bilibili_sound_label_candidates.csv
 - 263 个视频序列候选的时长、分辨率、音轨数量、共享 chunk 状态
 - 2480 条可读声音请求标签候选
 - `ac` 图像分组和示例素材名，可辅助判断故事、角色、结尾、简介、UI 场景
+
+## 2026-06-04 增量审计
+
+### review_special 关系确认
+
+`review_special` 目录是复核索引，不是原视频的唯一位置。当前在 NTFS 上优先使用 hardlink：
+
+- `review_special\blackish_video\main_video_1150.mp4` 与 `videos\Unclassified_Slices\main_video_1150.mp4` 是同一文件数据的 hardlink
+- `review_special\blackish_video\main_video_0529_candidates2.mp4` 与 `videos\MultiCandidate_Slices\main_video_0529_candidates2.mp4` 是同一文件数据的 hardlink
+
+结论：
+
+- 没有移动原视频
+- `review_special` 中的文件仍在 `videos` 分类目录中可见
+- `blackish_video` / `mostly_black_video` 只是亮度采样复核列表，不是删除列表；里面包含不少合法暗色素材、卡面、边框或 UI 片段
+
+### 音频位置确认
+
+当前 A 盘测试结果中：
+
+- 带内嵌音频 MP4：`A:\magireco_bili_fulltest_20260603\review_audio\with_embedded_audio`
+- 外部 OGG：`A:\magireco_bili_fulltest_20260603\audio_assets\audio\ogg_raw`
+- 外部 PCM：`A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_raw`
+
+内嵌音频统计：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 有视频无音轨 MP4 | 7345 |
+| 有视频有音轨 MP4 | 456 |
+| `MultiCandidate_Slices` 中有音轨 | 49 |
+| `Unclassified_Slices` 中有音轨 | 407 |
+| `ac0902_演出` 中有音轨 | 0 |
+
+456 个内嵌音频 MP4 的音频编码是 `alac`。外部 OGG/PCM 已导出并按 `sound_id.dat` 命名，但尚未找到可证明同步到具体视频片段的调度关系。
+
+### 候选数连续段合并测试
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\merge_tests\candidate_runs_command_execute_hflip_video_only --execute --hflip --drop-audio --probe
+```
+
+规则：
+
+- 只处理 `MultiCandidate_Slices`
+- 文件名需匹配 `main_video_NNNN_candidatesX.mp4` 或 `patch_video_NNNN_candidatesX.mp4`
+- 按 `package + index` 排序
+- 仅当 index 连续且 `candidatesX` 相同时合并
+- 单片仍输出一份，便于形成完整复核目录
+- 本次执行使用 `--hflip --drop-audio`，因此输出为水平翻转校正后的 video-only 测试结果
+
+结果：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 原 `MultiCandidate_Slices` MP4 | 607 |
+| 输出 MP4 | 73 |
+| 真正合并段 | 29 |
+| 单片保留 | 44 |
+| 执行失败 | 0 |
+
+示例：
+
+```text
+main_video_0071-0099_candidates24.mp4
+```
+
+该文件来自 29 个源片段，时长 48.100 秒，源片段中 3 个带内嵌音频；当前测试输出故意去掉音频，避免混合“有音轨/无音轨”片段时产生错误合并。
+
+### 镜像方向问题
+
+用户复核确认当前导出视频存在左右镜像问题。本轮生成了方向样张：
+
+```text
+A:\magireco_bili_fulltest_20260603\orientation_check
+```
+
+候选数合并测试输出已使用 `hflip` 做水平翻转校正。原 `videos` 全量目录未被改写。
+
+### 安装态拉取与完整性
+
+通过 MuMu / adb root 拉取安装态内容到：
+
+```text
+A:\magireco_installed_pull_20260603
+```
+
+拉取结果：
+
+| 目录 | 文件数 | 字节 |
+| --- | ---: | ---: |
+| `data_app_package` | 11 | 832841272 |
+| `data_user_0` | 16 | 154288355 |
+| `sdcard_Android_data` | 5 | 6158460910 |
+| `sdcard_Android_obb` | 0 | 0 |
+
+完整性判断：
+
+- 安装态 6 个 APK/split APK 与项目目录本地 APK/split APK 的 SHA256 全部一致
+- 安装态 `main.9...obb` 与 `patch.9...obb` 与本地 `downloaded_assets` 版本 SHA256 一致
+- 因此现有 APK/JADX/apktool 输入和 Python 复刻下载得到的 OBB 主资源没有发现缺失或偏差
+
+新增有价值内容：
+
+```text
+A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin
+A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
+`smz_add.bin` 是 `smz.bin` 的 32-bit 小端偏移表，共 9753 个偏移，定义 9752 个资源块。当前未识别为 OGG/PNG/JPEG/MP4，也不能直接用 zlib/bz2/lzma 解压；它更可能是额外图像、贴图或模型相关资源容器，后续需要单独格式研究。
+
+### D 盘归档
+
+本轮新增内容已复制到：
+
+```text
+D:\MagiaRe_RAMDISK_Delta_20260604_002343
+```
+
+归档内容包括：
+
+- 候选数合并测试输出与 manifest
+- 方向样张
+- 带内嵌音频 MP4 复核集合
+- `review_special` 复核目录
+- `OnDemandPack01` 和小型运行态文件
+
+没有重复归档全量 MP4、raw OGG/PCM、APK、OBB；这些已在旧 D 盘备份或本地工程中存在，且哈希/数量/总大小已验证一致。

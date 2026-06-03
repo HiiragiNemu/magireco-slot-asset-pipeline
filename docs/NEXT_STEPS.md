@@ -280,3 +280,54 @@ asset_manifests/bilibili_metadata_summary.md
 - 全局合并 263 个序列
 - 给共享 chunk 强行指定单一演出名
 - 把无内嵌音轨视频和 OGG 按时长或文件序号硬匹配
+
+## 已完成的候选数合并测试
+
+已新增 `merge-candidate-runs` 命令，用于复现按 `candidatesX` 连续段的测试合并：
+
+```powershell
+python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\merge_tests\candidate_runs_command_execute_hflip_video_only --execute --hflip --drop-audio --probe
+```
+
+本轮结果：
+
+- 输入：`MultiCandidate_Slices` 607 个 MP4
+- 输出：73 个 MP4
+- 真正合并段：29
+- 单片保留：44
+- 示例：`main_video_0071-0099_candidates24.mp4`
+- 该示例来自 29 个源片段，时长 48.100 秒，源片段中 3 个带内嵌音频
+
+注意：
+
+- 当前输出是 `--drop-audio` 的 video-only 测试版，因为同一合并段内可能混有有音轨/无音轨源片段。
+- 当前输出加了 `--hflip`，用于校正用户确认的左右镜像问题。
+- 该测试适合作为人工判断“减少视频数量是否可观看”的材料，不是最终投稿版。
+
+已归档到：
+
+```text
+D:\MagiaRe_RAMDISK_Delta_20260604_002343\merge_tests\candidate_runs_command_execute_hflip_video_only
+```
+
+## 安装态拉取后的下一步
+
+已确认：
+
+- 模拟器安装态 APK/split APK 与本地 APK/split APK 哈希一致
+- 模拟器安装态 main/patch OBB 与本地下载 OBB 哈希一致
+- Python 复刻下载得到的主资源没有发现缺失
+- 新增运行态资源主要是 Play Asset Delivery 的 `OnDemandPack01`
+
+下一步建议：
+
+1. 单独研究 `OnDemandPack01\assets\smz.bin` 与 `smz_add.bin`，判断是否为额外图像、贴图或模型。
+2. 继续在 `libGameProc.so` / binary 表里查找视频播放事件与 `sound_resource_id` 的同源调度结构。
+3. 对已带内嵌音频的 456 个 MP4，先做可投稿候选复核；这部分不需要外部 OGG 匹配。
+4. 对无内嵌音频但明显是演出长段的视频，只在找到官方调度证据后再合并 OGG/PCM。
+
+已归档到：
+
+```text
+D:\MagiaRe_RAMDISK_Delta_20260604_002343\installed_pull_delta
+```
