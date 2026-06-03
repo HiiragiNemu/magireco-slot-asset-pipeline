@@ -83,6 +83,18 @@ python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Ba
 python magireco_asset_pipeline.py sound-request-audit
 ```
 
+扫描已导出的 MP4，收集纯音频、无视频流、全黑或近黑画面复核候选：
+
+```powershell
+python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\review_special
+```
+
+生成面向 B 站整理的标题、标签和说明候选报告：
+
+```powershell
+python magireco_asset_pipeline.py bili-metadata-audit
+```
+
 ## 外部工具
 
 - Python 3.10+

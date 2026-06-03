@@ -234,6 +234,47 @@ asset_manifests/sound_request_audit.csv
 
 注意：`nearest_media` 只是声音表内的邻近 `.smz/.pcm` 候选，不能直接等同于视频同步关系。
 
+## 已完成的 B 站全量测试
+
+全量输出目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos
+```
+
+特殊复核目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_special
+```
+
+结果：
+
+- 输出 MP4：7801
+- 有视频无音轨：7345
+- 有视频有音轨：456
+- 纯音频/无视频 MP4：0
+- 全黑采样视频：133
+- 近黑采样视频：259
+
+优先人工审查：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_special\blackish_video
+A:\magireco_bili_fulltest_20260603\review_special\mostly_black_video
+A:\magireco_bili_fulltest_20260603\review_special\special_video_audit.csv
+asset_manifests/bilibili_video_metadata_candidates.csv
+asset_manifests/bilibili_sound_label_candidates.csv
+asset_manifests/bilibili_metadata_summary.md
+```
+
+下一步技术任务：
+
+1. 从 `bilibili_video_metadata_candidates.csv` 挑选高价值长序列，优先处理 `confidence=high` 且人工确认画面连续的项目。
+2. 从 `bilibili_sound_label_candidates.csv` 按 `演出`、`セリフ`、`WIN`、`CZ`、角色名筛选可能音频。
+3. 继续审计 native/event 调度，寻找视频序列与 `sound_resource_id` 的真实播放关系。
+4. 最终面向 B 站输出时，将已确认成品统一转为 `h264 + aac`，当前测试保留 `alac` 是为了不损失内嵌音频。
+
 暂不建议：
 
 - 全局合并 263 个序列

@@ -187,3 +187,57 @@ D:\MagiaRe_RAMDISK_Backup_20260603_032042
 - MP4 容器审计未发现“只有音频、没有视频流”的文件；7801 个 MP4 均有视频流
 - 456 个含内嵌音频的 MP4 中，三帧采样发现 2 个全黑画面片段、2 个近黑画面片段，这可能解释“像只有声音没有画面”的观察
 - `ac0902_*` 唯一命名视频共 483 个，全部无内嵌音轨；预览拼合后仍无音轨是符合原始 CRID 数据的
+
+## RAMDISK B 站全量测试
+
+已重新输出全量 MP4 到：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos
+```
+
+本轮没有启用未验证的序列合并，也没有把外部 OGG/PCM 强行混入视频。输出策略是：
+
+- CRID 内嵌 `@SFA` 音频：随视频封装进 MP4
+- 无内嵌 `@SFA` 的视频：保持无声
+- 外部 OGG/PCM：仅保留声音请求与标签候选，等待后续调度关系审计
+
+结果：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 输出 MP4 | 7801 |
+| 输出体积 | 3572329040 字节 |
+| 有视频无音轨 | 7345 |
+| 有视频有音轨 | 456 |
+| 纯音频/无视频 MP4 | 0 |
+| 全黑采样视频 | 133 |
+| 近黑采样视频 | 259 |
+
+特殊复核目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_special
+```
+
+其中：
+
+- `audio_only`：0 个文件
+- `blackish_video`：133 个文件
+- `mostly_black_video`：259 个文件
+
+B 站元数据候选已生成：
+
+```text
+asset_manifests/bilibili_metadata_summary.md
+asset_manifests/bilibili_video_metadata_candidates.csv
+asset_manifests/bilibili_sound_label_candidates.csv
+```
+
+当前可获取的投稿辅助信息包括：
+
+- 应用正式名：`スマスロ マギアレコード 魔法少女まどか☆マギカ外伝`
+- APK 版本：`versionName 1.0.0`, `versionCode 31`
+- 263 个视频序列候选的时长、分辨率、音轨数量、共享 chunk 状态
+- 2480 条可读声音请求标签候选
+- `ac` 图像分组和示例素材名，可辅助判断故事、角色、结尾、简介、UI 场景

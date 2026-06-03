@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import re
 import shutil
@@ -9,6 +10,7 @@ import struct
 import subprocess
 import sys
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path, PureWindowsPath
 
 
@@ -709,6 +711,217 @@ def format_seconds(value: float | None) -> str:
     return f"{value:.3f}"
 
 
+def probe_mp4(path: Path) -> dict:
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration:stream=index,codec_type,codec_name,width,height,duration",
+        "-of",
+        "json",
+        str(path),
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        return {"probe_ok": False, "probe_error": result.stderr.strip()}
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        return {"probe_ok": False, "probe_error": f"json decode failed: {exc}"}
+
+    streams = payload.get("streams", [])
+    video_streams = [stream for stream in streams if stream.get("codec_type") == "video"]
+    audio_streams = [stream for stream in streams if stream.get("codec_type") == "audio"]
+    video = video_streams[0] if video_streams else {}
+    audio = audio_streams[0] if audio_streams else {}
+    duration = payload.get("format", {}).get("duration") or video.get("duration") or audio.get("duration") or ""
+    return {
+        "probe_ok": True,
+        "probe_error": "",
+        "duration_sec": duration,
+        "has_video": bool(video_streams),
+        "has_audio": bool(audio_streams),
+        "video_codec": video.get("codec_name", ""),
+        "audio_codec": audio.get("codec_name", ""),
+        "width": video.get("width", ""),
+        "height": video.get("height", ""),
+    }
+
+
+def sample_video_luma(path: Path, duration_sec: float | None, samples: int) -> dict:
+    if duration_sec is None or duration_sec <= 0:
+        sample_times = [0.0]
+    else:
+        fractions = [0.5] if samples <= 1 else [0.1, 0.5, 0.9][:samples]
+        max_seek = max(0.0, duration_sec - 0.05)
+        sample_times = sorted({round(min(max_seek, max(0.0, duration_sec * frac)), 3) for frac in fractions})
+
+    means = []
+    nonblack_ratios = []
+    bright_ratios = []
+    failures = 0
+    expected = 64 * 64
+    for seek_time in sample_times:
+        cmd = [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-ss",
+            f"{seek_time:.3f}",
+            "-i",
+            str(path),
+            "-frames:v",
+            "1",
+            "-vf",
+            "scale=64:64,format=gray",
+            "-f",
+            "rawvideo",
+            "pipe:1",
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        frame = result.stdout
+        if result.returncode != 0 or len(frame) < expected:
+            failures += 1
+            continue
+        frame = frame[:expected]
+        means.append(sum(frame) / expected)
+        nonblack_ratios.append(sum(1 for value in frame if value > 8) / expected)
+        bright_ratios.append(sum(1 for value in frame if value > 24) / expected)
+
+    if not means:
+        return {
+            "avg_mean_luma": "",
+            "avg_nonblack_ratio": "",
+            "max_nonblack_ratio": "",
+            "max_bright_ratio": "",
+            "sample_failures": failures,
+            "blackish": False,
+            "mostly_black": False,
+        }
+
+    avg_mean_luma = sum(means) / len(means)
+    avg_nonblack_ratio = sum(nonblack_ratios) / len(nonblack_ratios)
+    max_nonblack_ratio = max(nonblack_ratios)
+    max_bright_ratio = max(bright_ratios)
+    return {
+        "avg_mean_luma": f"{avg_mean_luma:.3f}",
+        "avg_nonblack_ratio": f"{avg_nonblack_ratio:.5f}",
+        "max_nonblack_ratio": f"{max_nonblack_ratio:.5f}",
+        "max_bright_ratio": f"{max_bright_ratio:.5f}",
+        "sample_failures": failures,
+        "blackish": avg_mean_luma < 4.0 and max_nonblack_ratio < 0.01,
+        "mostly_black": avg_mean_luma < 12.0 and max_nonblack_ratio < 0.08,
+    }
+
+
+def place_review_copy(source: Path, target_dir: Path, mode: str) -> str:
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / source.name
+    if target.exists():
+        return str(target)
+    if mode == "hardlink":
+        try:
+            os.link(source, target)
+            return str(target)
+        except OSError:
+            pass
+    shutil.copy2(source, target)
+    return str(target)
+
+
+def review_one_special_video(path: Path, video_dir: Path, out_dir: Path, mode: str, samples: int) -> dict:
+    relative_path = str(path.relative_to(video_dir))
+    probe = probe_mp4(path)
+    row = {
+        "relative_path": relative_path,
+        "special_class": "",
+        "review_path": "",
+        "probe_ok": "yes" if probe.get("probe_ok") else "no",
+        "probe_error": probe.get("probe_error", ""),
+        "duration_sec": probe.get("duration_sec", ""),
+        "has_video": "yes" if probe.get("has_video") else "no",
+        "has_audio": "yes" if probe.get("has_audio") else "no",
+        "video_codec": probe.get("video_codec", ""),
+        "audio_codec": probe.get("audio_codec", ""),
+        "width": probe.get("width", ""),
+        "height": probe.get("height", ""),
+        "avg_mean_luma": "",
+        "avg_nonblack_ratio": "",
+        "max_nonblack_ratio": "",
+        "max_bright_ratio": "",
+        "sample_failures": "",
+    }
+
+    if not probe.get("probe_ok"):
+        row["special_class"] = "probe_failed"
+        row["review_path"] = place_review_copy(path, out_dir / "probe_failed", mode)
+        return row
+
+    has_video = bool(probe.get("has_video"))
+    has_audio = bool(probe.get("has_audio"))
+    if has_audio and not has_video:
+        row["special_class"] = "audio_only"
+        row["review_path"] = place_review_copy(path, out_dir / "audio_only", mode)
+        return row
+
+    if not has_video:
+        row["special_class"] = "no_video_stream"
+        row["review_path"] = place_review_copy(path, out_dir / "no_video_stream", mode)
+        return row
+
+    duration = parse_optional_float(str(probe.get("duration_sec", "")))
+    luma = sample_video_luma(path, duration, samples)
+    row.update(
+        {
+            "avg_mean_luma": luma["avg_mean_luma"],
+            "avg_nonblack_ratio": luma["avg_nonblack_ratio"],
+            "max_nonblack_ratio": luma["max_nonblack_ratio"],
+            "max_bright_ratio": luma["max_bright_ratio"],
+            "sample_failures": luma["sample_failures"],
+        }
+    )
+
+    if luma["blackish"]:
+        row["special_class"] = "blackish_video"
+        row["review_path"] = place_review_copy(path, out_dir / "blackish_video", mode)
+    elif luma["mostly_black"]:
+        row["special_class"] = "mostly_black_video"
+        row["review_path"] = place_review_copy(path, out_dir / "mostly_black_video", mode)
+    return row
+
+
+def read_text_if_exists(path: Path) -> str:
+    if not path.exists():
+        return ""
+    for encoding in ("utf-8", "utf-8-sig", "cp932"):
+        try:
+            return path.read_text(encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+    return path.read_text(encoding="utf-8", errors="ignore")
+
+
+def extract_xml_string(text: str, name: str) -> str:
+    match = re.search(rf'<string\s+name="{re.escape(name)}">(?P<value>.*?)</string>', text, re.DOTALL)
+    if not match:
+        return ""
+    value = re.sub(r"\s+", " ", match.group("value")).strip()
+    return value.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
+
+
+def extract_yaml_scalar(text: str, key: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(key)}:\s*(?P<value>.+?)\s*$", text)
+    return match.group("value").strip("'\"") if match else ""
+
+
+def first_nonempty(*values: str) -> str:
+    for value in values:
+        if value:
+            return value
+    return ""
+
+
 def review_action_for_sequence(
     item_count: int,
     matched_items: int,
@@ -1327,6 +1540,254 @@ def command_sound_request_audit(args):
     print(f"[sound-request-audit] wrote {summary_path}")
 
 
+def command_review_special_videos(args):
+    video_dir = Path(args.video_dir)
+    out_dir = Path(args.out_dir) if args.out_dir else video_dir / "_review_special"
+    files = sorted(
+        [
+            path
+            for path in video_dir.rglob("*.mp4")
+            if out_dir not in path.parents and "_review_special" not in path.parts
+        ],
+        key=lambda path: natural_key(str(path.relative_to(video_dir))),
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for class_dir in ("audio_only", "blackish_video", "mostly_black_video", "no_video_stream", "probe_failed"):
+        (out_dir / class_dir).mkdir(parents=True, exist_ok=True)
+    print(f"[review-special-videos] scanning {len(files)} MP4 files")
+    print(f"[review-special-videos] review dir: {out_dir}")
+
+    rows = []
+    processed = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [
+            executor.submit(review_one_special_video, path, video_dir, out_dir, args.mode, args.samples)
+            for path in files
+        ]
+        for future in as_completed(futures):
+            rows.append(future.result())
+            processed += 1
+            if processed % 250 == 0 or processed == len(files):
+                print(f"[review-special-videos] processed {processed}/{len(files)}")
+
+    rows.sort(key=lambda row: natural_key(row["relative_path"]))
+    audit_path = out_dir / "special_video_audit.csv"
+    write_csv(
+        audit_path,
+        rows,
+        [
+            "relative_path",
+            "special_class",
+            "review_path",
+            "probe_ok",
+            "probe_error",
+            "duration_sec",
+            "has_video",
+            "has_audio",
+            "video_codec",
+            "audio_codec",
+            "width",
+            "height",
+            "avg_mean_luma",
+            "avg_nonblack_ratio",
+            "max_nonblack_ratio",
+            "max_bright_ratio",
+            "sample_failures",
+        ],
+    )
+
+    counts = defaultdict(int)
+    for row in rows:
+        counts[row["special_class"] or "normal"] += 1
+    for class_name in ("normal", "audio_only", "blackish_video", "mostly_black_video", "no_video_stream", "probe_failed"):
+        counts.setdefault(class_name, 0)
+    summary_path = out_dir / "special_video_summary.md"
+    lines = [
+        "# Special Video Review Summary",
+        "",
+        f"Video dir: {video_dir}",
+        f"Scanned MP4 files: {len(rows)}",
+        "",
+        "## Classes",
+    ]
+    for key, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {key}: {count}")
+    lines += [
+        "",
+        "## Notes",
+        "- `audio_only` means ffprobe found audio streams but no video stream.",
+        "- `blackish_video` and `mostly_black_video` are based on sampled frame luminance.",
+        "- Review files are hardlinked when possible, otherwise copied.",
+    ]
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[review-special-videos] wrote {audit_path}")
+    print(f"[review-special-videos] wrote {summary_path}")
+
+
+def command_bili_metadata_audit(args):
+    manifest_dir = Path(args.manifest_dir)
+    strings_xml = read_text_if_exists(ROOT / "unpacked_base" / "res" / "values" / "strings.xml")
+    apktool_yml = read_text_if_exists(ROOT / "unpacked_base" / "apktool.yml")
+
+    ac_labels = {row["code"].lower(): row for row in read_csv(manifest_dir / "ac_code_labels.csv") if row.get("code")}
+    image_usage = {
+        row["ac_code"].lower(): row
+        for row in read_csv(manifest_dir / "internal_audit" / "image_ac_usage.csv")
+        if row.get("ac_code")
+    }
+    native_sequences = {
+        row["sequence_key"].lower(): row
+        for row in read_csv(manifest_dir / "internal_audit" / "native_sequence_candidates.csv")
+        if row.get("sequence_key")
+    }
+
+    sequence_rows = {
+        row["sequence_key"].lower(): row
+        for row in read_csv(manifest_dir / "video_review_sequences.csv")
+        if row.get("sequence_key")
+    }
+    run_groups: dict[str, list[dict]] = defaultdict(list)
+    for row in read_csv(manifest_dir / "video_review_unique_runs.csv"):
+        key = row.get("sequence_key", "").lower()
+        if key:
+            run_groups[key].append(row)
+
+    video_rows = []
+    for key, sequence in sorted(sequence_rows.items(), key=lambda item: natural_key(item[0])):
+        runs = run_groups.get(key, [])
+        ac_code = extract_ac_code(key) or key
+        label_row = ac_labels.get(ac_code, {})
+        image_row = image_usage.get(ac_code, {})
+        native_row = native_sequences.get(key, native_sequences.get(ac_code, {}))
+        durations = [parse_optional_float(row.get("total_duration_sec", "")) or 0.0 for row in runs]
+        item_counts = [parse_optional_int(row.get("item_count", "")) or 0 for row in runs]
+        audio_counts = [parse_optional_int(row.get("has_audio_count", "")) or 0 for row in runs]
+        longest_run = max(runs, key=lambda row: parse_optional_float(row.get("total_duration_sec", "")) or 0.0) if runs else {}
+        display_label = first_nonempty(label_row.get("primary_label", ""), native_row.get("debug_labels", ""), ac_code)
+        range_text = first_nonempty(
+            f"{longest_run.get('start_number', '')}-{longest_run.get('end_number', '')}".strip("-"),
+            f"{sequence.get('first_number', '')}-{sequence.get('last_number', '')}".strip("-"),
+        )
+        title_candidate = f"{display_label} {range_text}".strip()
+        video_rows.append(
+            {
+                "sequence_key": key,
+                "ac_code": ac_code,
+                "title_candidate": title_candidate,
+                "display_label": display_label,
+                "all_labels": label_row.get("all_labels", ""),
+                "confidence": sequence.get("confidence", ""),
+                "review_action": sequence.get("review_action", ""),
+                "sequence_item_count": sequence.get("item_count", ""),
+                "sequence_total_duration_sec": sequence.get("total_duration_sec", ""),
+                "sequence_has_audio_items": sequence.get("has_audio_items", ""),
+                "shared_chunk_items": sequence.get("shared_chunk_items", ""),
+                "resolutions": sequence.get("resolutions", ""),
+                "run_count": len(runs),
+                "total_run_duration_sec": f"{sum(durations):.3f}",
+                "longest_run_duration_sec": longest_run.get("total_duration_sec", ""),
+                "longest_run_items": longest_run.get("item_count", ""),
+                "longest_run_range": f"{longest_run.get('start_number', '')}-{longest_run.get('end_number', '')}".strip("-"),
+                "total_items": sum(item_counts),
+                "runs_with_embedded_audio": sum(1 for count in audio_counts if count > 0),
+                "image_ref_count": image_row.get("image_ref_count", ""),
+                "image_examples": image_row.get("examples", ""),
+                "native_token_count": native_row.get("native_token_count", ""),
+                "native_numbered_count": native_row.get("numbered_count", ""),
+            }
+        )
+
+    sound_rows = []
+    sound_keywords = re.compile(
+        r"(?:演出|セリフ|seq|BGM|Voice|voice|WIN|CZ|発展|前兆|激熱|プレミア|"
+        r"マギア|まどか|ほむら|杏子|さやか|マミ|いろは|やちよ|レナ|かえで|ももこ|フェリシア|鶴乃)"
+    )
+    for row in read_csv(manifest_dir / "sound_request_audit.csv"):
+        label = row.get("request_label", "")
+        if not label or not sound_keywords.search(label):
+            continue
+        sound_rows.append(
+            {
+                "sound_resource_id": row.get("sound_resource_id", ""),
+                "request_label": label,
+                "sound_bank": row.get("sound_bank", ""),
+                "suggested_name": row.get("suggested_name", ""),
+                "ogg_duration_sec": row.get("ogg_duration_sec", ""),
+                "nearest_media": row.get("nearest_media", ""),
+            }
+        )
+
+    video_csv = manifest_dir / "bilibili_video_metadata_candidates.csv"
+    write_csv(
+        video_csv,
+        video_rows,
+        [
+            "sequence_key",
+            "ac_code",
+            "title_candidate",
+            "display_label",
+            "all_labels",
+            "confidence",
+            "review_action",
+            "sequence_item_count",
+            "sequence_total_duration_sec",
+            "sequence_has_audio_items",
+            "shared_chunk_items",
+            "resolutions",
+            "run_count",
+            "total_run_duration_sec",
+            "longest_run_duration_sec",
+            "longest_run_items",
+            "longest_run_range",
+            "total_items",
+            "runs_with_embedded_audio",
+            "image_ref_count",
+            "image_examples",
+            "native_token_count",
+            "native_numbered_count",
+        ],
+    )
+
+    sound_csv = manifest_dir / "bilibili_sound_label_candidates.csv"
+    write_csv(
+        sound_csv,
+        sound_rows,
+        ["sound_resource_id", "request_label", "sound_bank", "suggested_name", "ogg_duration_sec", "nearest_media"],
+    )
+
+    summary_path = manifest_dir / "bilibili_metadata_summary.md"
+    lines = [
+        "# Bilibili Metadata Audit Summary",
+        "",
+        "## App",
+        f"- app_name: {extract_xml_string(strings_xml, 'app_name')}",
+        f"- app_icon_name: {extract_xml_string(strings_xml, 'app_icon_name')}",
+        f"- apk_version_name: {extract_yaml_scalar(apktool_yml, 'versionName')}",
+        f"- apk_version_code: {extract_yaml_scalar(apktool_yml, 'versionCode')}",
+        "",
+        "## Useful Local Sources",
+        "- `ac_code_labels.csv`: debug/display labels for ac codes, useful for title prefixes.",
+        "- `video_review_unique_runs.csv`: continuous unique video runs, useful for deciding upload units.",
+        "- `bilibili_video_metadata_candidates.csv`: joined video/title/image/native metadata candidates.",
+        "- `sound_request_audit.csv`: sound request labels and OGG mapping candidates.",
+        "- `bilibili_sound_label_candidates.csv`: filtered sound labels useful for upload titles/descriptions.",
+        "- `image_ac_usage.csv`: image asset names can identify story, character, ending, profile, and UI context.",
+        "",
+        "## Counts",
+        f"- video metadata rows: {len(video_rows)}",
+        f"- filtered sound label rows: {len(sound_rows)}",
+        "",
+        "## Limits",
+        "- Sound labels are not yet synchronized to video playback.",
+        "- `nearest_media` is a sound-table proximity candidate, not proof of timing.",
+        "- Shared video chunks still need manual review before final public upload grouping.",
+    ]
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[bili-metadata-audit] wrote {video_csv}")
+    print(f"[bili-metadata-audit] wrote {sound_csv}")
+    print(f"[bili-metadata-audit] wrote {summary_path}")
+
+
 def merge_videos(video_dir: Path, execute: bool):
     files = find_existing_videos(video_dir)
     groups: dict[str, list[Path]] = defaultdict(list)
@@ -1436,6 +1897,18 @@ def build_parser():
     sound_request.add_argument("--ogg-audit", default=str(DEFAULT_MANIFEST_DIR / "ramdisk_audit" / "ogg_ffprobe_audit.csv"))
     sound_request.add_argument("--context-bytes", type=int, default=320)
     sound_request.set_defaults(func=command_sound_request_audit)
+
+    special = sub.add_parser("review-special-videos", help="probe MP4s and collect audio-only or black-screen review cases")
+    special.add_argument("--video-dir", required=True)
+    special.add_argument("--out-dir", default="")
+    special.add_argument("--mode", choices=["copy", "hardlink"], default="hardlink")
+    special.add_argument("--workers", type=int, default=4)
+    special.add_argument("--samples", type=int, default=3)
+    special.set_defaults(func=command_review_special_videos)
+
+    bili = sub.add_parser("bili-metadata-audit", help="build Bilibili-oriented title/label metadata reports")
+    bili.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    bili.set_defaults(func=command_bili_metadata_audit)
 
     merge = sub.add_parser("merge-videos", help="merge already named acXXXX mp4 groups; dry-run by default")
     merge.add_argument("--video-dir", default=str(DEFAULT_OUTPUT_DIR / "videos"))
