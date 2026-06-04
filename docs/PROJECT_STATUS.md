@@ -458,6 +458,16 @@ asset_manifests/native_sound_video_summary.md
 
 这些数字大多可以作为 `sound_resource_id` 映射到 OGG，但部分也能作为 `ogg_chunk_index` 映射到另一个声音资源。例如 `9078` 作为 request id 没有 OGG 映射，但作为 OGG chunk index 对应 `snd_04718_bank03_ogg_09078.ogg`。因此当前不能只按数字文本直接合并音频，必须继续确认调用函数语义。
 
+PLT 解析后已确认关键调用语义：
+
+| PLT 地址 | 符号 | 作用判断 |
+| --- | --- | --- |
+| `0x449ca00` | `_Z10CTRLSNDLIBv` | 获取声音控制库对象 |
+| `0x449d5e0` | `C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char)` | 按字符串声音代码请求声音 |
+| `0x4492820` | `C_AnmBase::fnGetCallSignFlag(unsigned short)` | 演出标志判断 |
+
+因此 `ac5408` 中的 `9078`, `296`, `283`, `6825`, `26497`, `6830`, `8032`, `1049-1053` 应优先解释为 `fnReqSndSoundCode` 的声音代码字符串，而不是 OGG chunk index。`9078` 虽然作为 OGG index 能落到 `snd_04718_bank03_ogg_09078.ogg`，但该解释目前低优先级。
+
 ### D 盘归档
 
 本轮新增内容已复制到：

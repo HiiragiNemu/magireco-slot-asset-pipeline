@@ -185,3 +185,34 @@ A:\TEMP\pydeps_capstone
 ### 判断
 
 `ac5408` 是当前最有价值的反汇编样本，但这些数字字符串的语义仍未确定。它们可能是声音请求 ID、OGG index、hash/request 参数或内部事件参数。下一步必须继续追 `0x449d5e0`、`0x449ca00`、`0x4492820` 等内部调用目标，而不是直接把这些 OGG 合并到视频。
+
+### PLT 解析更新
+
+继续解析 `.rela.plt` 后，关键调用已能还原为导入符号：
+
+| PLT 地址 | 符号 |
+| --- | --- |
+| `0x449ca00` | `_Z10CTRLSNDLIBv` |
+| `0x449d5e0` | `_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKch` |
+| `0x4492820` | `_ZN9C_AnmBase17fnGetCallSignFlagEt` |
+| `0x449d210` | `_ZN9C_AnmBase19fnClearCallSignFlagEt` |
+| `0x4492190` | `_Z9MSTCOMCBKv` |
+| `0x4492630` | `_Z6KEYDEFv` |
+| `0x4492910` | `_ZN8C_KeyDef14fnGetSubKeyDefEt` |
+
+`_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKch` demangle 后是：
+
+```text
+C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char)
+```
+
+这使 `ac5408` 数字字符串的优先解释发生变化：它们应先视为“声音代码字符串”，而不是 OGG chunk index。
+
+按声音代码理解：
+
+- `1049`, `1050`, `1051`, `1052`, `1053`, `6825`, `6830`, `8032`, `26497` 在 `sound_id.dat` 中有 OGG 映射。
+- `283`, `296`, `9078` 在 `sound_id.dat` 中没有同号声音资源映射。
+- `9078` 对应的声音请求表行附近有 `EF230BC511AF008D5E5DD7934EF2.smz`，这更支持继续研究 SMZ 声音容器。
+- `9078` 也能作为 OGG chunk index 映射到 `snd_04718_bank03_ogg_09078.ogg`，但由于调用名是 `fnReqSndSoundCode`，不能优先采用 OGG index 解释。
+
+下一步应追 `C_CtrlSndLib::fnReqSndSoundCode` 的实现所在库，确认声音代码字符串如何落到 OGG/SMZ/request 表。
