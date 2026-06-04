@@ -468,6 +468,15 @@ PLT 解析后已确认关键调用语义：
 
 因此 `ac5408` 中的 `9078`, `296`, `283`, `6825`, `26497`, `6830`, `8032`, `1049-1053` 应优先解释为 `fnReqSndSoundCode` 的声音代码字符串，而不是 OGG chunk index。`9078` 虽然作为 OGG index 能落到 `snd_04718_bank03_ogg_09078.ogg`，但该解释目前低优先级。
 
+进一步追踪已确认完整派发链：
+
+```text
+fnReqSndSoundCode -> fnSendSndData -> SndReceiveMessage(0x201)
+  -> SndMngSetRequest -> SndMngFrameFunction -> zgSndReqCode -> zgSndReqId
+```
+
+这说明 `ac5408` 的数字字符串是官方声音代码输入。已在 `A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candidates` 生成只复制不移动的人工候选包；12 个 code 中 9 个复制到已有 OGG，`9078`, `296`, `283` 暂未匹配到同号 `sound_id.dat` 记录。
+
 ### D 盘归档
 
 本轮新增内容已复制到：

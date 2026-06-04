@@ -216,3 +216,71 @@ C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char)
 - `9078` 也能作为 OGG chunk index 映射到 `snd_04718_bank03_ogg_09078.ogg`，但由于调用名是 `fnReqSndSoundCode`，不能优先采用 OGG index 解释。
 
 下一步应追 `C_CtrlSndLib::fnReqSndSoundCode` 的实现所在库，确认声音代码字符串如何落到 OGG/SMZ/request 表。
+
+## 2026-06-05 - sound-code dispatch chain closed to zgSndReqCode
+
+### Native 调用链
+
+继续追 `C_CtrlSndLib`、`SndReceiveMessage`、`SndMngSetRequest`、`SndMngFrameFunction` 后，`ac5408` 的声音代码请求链路已经可以还原到低层声音系统：
+
+```text
+ac5408::fnSndRequest_BGM / fnPlaySND
+  -> C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char)
+  -> C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char, unsigned long)
+  -> request type 2, code string copied into ST_ReqSndData
+  -> C_CtrlSndLib::fnSendSndData(...)
+  -> SndReceiveMessage(0x201, message)
+  -> C_ReqGrpSnd::fnRegist / fnRequest
+  -> SndMngSetRequest(0x201, message)
+  -> SndMngFrameFunction()
+  -> zgSndReqCode(code_string, param, 0)
+  -> zgSndReqId(resolved_request_id, param, 0)
+```
+
+关键证据：
+
+- `fnReqSndSoundCode` 会写入 request type `2`。
+- `fnSendSndData` 对 type `2` 发送消息号 `0x201`，并把最多 0x40 字节的声音代码字符串复制进消息结构。
+- `SndMngSetRequest` 的 jump table 显示消息低 8 位 `1` 和 `9` 都进入字符串声音代码队列分支。
+- `SndMngFrameFunction` 对队列类型 `1/9` 调用 `zgSndReqCode`；对队列类型 `0` 调用 `zgSndReqHashCode`。
+- `zgSndReqCode` 会通过声音系统对象 vtable `+0x58` 把 code string 转为内部 request id，然后调用 `zgSndReqId`。
+
+### ac5408 人工审查候选包
+
+已在 A 盘生成只复制不移动的候选包：
+
+```text
+A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candidates
+```
+
+内容：
+
+- `ac5408_sound_code_candidates.csv`
+- `README.md`
+- `ogg_candidates\`
+
+本次检查的 12 个 code 中，9 个能按 `sound_resource_id == code` 复制到已导出的 OGG：
+
+| code | OGG |
+| --- | --- |
+| `6825` | `snd_06825_bank25_ogg_09363.ogg` |
+| `26497` | `snd_26497_bank29_ogg_06695.ogg` |
+| `6830` | `snd_06830_bank25_ogg_09368.ogg` |
+| `8032` | `snd_08032_bank31_ogg_09541.ogg` |
+| `1053` | `snd_01053_bank27_ogg_00415.ogg` |
+| `1052` | `snd_01052_bank27_ogg_00414.ogg` |
+| `1051` | `snd_01051_bank27_ogg_00413.ogg` |
+| `1050` | `snd_01050_bank27_ogg_00412.ogg` |
+| `1049` | `snd_01049_bank27_ogg_00411.ogg` |
+
+`9078`, `296`, `283` 目前没有同号 `sound_id.dat` OGG 映射。它们仍可能通过 code-to-request-id 表或 SMZ 资源解析到声音，不能按 OGG chunk index 强行匹配。
+
+### 判断
+
+官方声音请求链路已经确认存在，但还不能全局自动把 OGG/SMZ 混入视频。原因是：
+
+- code string 到 request id 的 vtable 解析仍需落到具体表文件。
+- `9078`, `296`, `283` 这类未匹配 code 很可能依赖 SMZ 或另一张 code 表。
+- 视频片段与声音请求之间还缺少时间轴或演出事件对应关系。
+
+下一步应继续定位 `zgSndReqCode` 使用的 code-to-request-id 数据源，并优先对 `ac5408` 生成小规模“视频片段 + 官方候选音频”的人工审查包，而不是直接做全量自动 mux。

@@ -355,7 +355,8 @@ asset_manifests/native_sound_video_evidence.csv
 
 1. 按 `smz_chunk_header_audit.csv` 分组抽样，比较 mono/stereo 推测字段、chunk 大小、header 常量和音频时长可能性。
 2. 运行 `native-sound-video-audit` 后，优先追 `ac5406`、`ac5407`、`ac5408` 的 `fnSndRequest_BGM` 和 `EVT_ac` 证据，因为它们比 `ac0902` 更接近可还原的声音请求链。
-3. 继续追 `C_CtrlSndLib::fnReqSndSoundCode(char const*, unsigned char)` 的实现，确认声音代码字符串如何映射到 `zg_snd_request_tbl.bin`、`zg_snd_hashreq_tbl.bin`、SMZ 或 OGG。
+3. 继续定位 `zgSndReqCode` 的 code-to-request-id 数据源，确认 `9078`, `296`, `283` 为什么没有同号 `sound_id.dat` OGG 映射。
 4. 对 `ac5102` 的 45 条 `EVT_ac` 标签建立事件名到视频素材的人工复核表。
 5. 对 `sound_hashreq_records.csv` 中已有标签的 request id，回查 `sound_request_audit.csv` 和 OGG 导出结果，建立人工音频候选列表。
 6. 暂时不要把 `.smz` 或 OGG 按文件序号、时长、相邻编号自动合并到视频；目前没有同步证据。
+7. 对 `ac5408` 先生成小规模“视频片段 + 官方候选音频”人工审查包，再决定是否扩展到其他 `ac` 组。
