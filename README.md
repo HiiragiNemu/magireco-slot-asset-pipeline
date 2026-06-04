@@ -83,6 +83,12 @@ python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Ba
 python magireco_asset_pipeline.py sound-request-audit
 ```
 
+审计声音请求表中的 `.smz/.pcm` 媒体名、`zg_snd_hashreq_tbl.bin` 哈希请求表，以及可选的安装态 `smz.bin/smz_add.bin`：
+
+```powershell
+python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
 扫描已导出的 MP4，收集纯音频、无视频流、全黑或近黑画面复核候选：
 
 ```powershell

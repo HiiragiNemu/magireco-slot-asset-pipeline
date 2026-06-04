@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-06-03
+更新时间：2026-06-05
 
 ## 审计范围
 
@@ -352,7 +352,52 @@ A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\
 A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
 ```
 
-`smz_add.bin` 是 `smz.bin` 的 32-bit 小端偏移表，共 9753 个偏移，定义 9752 个资源块。当前未识别为 OGG/PNG/JPEG/MP4，也不能直接用 zlib/bz2/lzma 解压；它更可能是额外图像、贴图或模型相关资源容器，后续需要单独格式研究。
+`smz_add.bin` 是 `smz.bin` 的 32-bit 小端偏移表，共 9753 个偏移，定义 9752 个资源块。2026-06-05 的增量审计修正了初步判断：它更可能是声音媒体容器，不是优先的图像/模型容器。
+
+## 2026-06-05 声音媒体与 SMZ 增量审计
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
+输出：
+
+```text
+asset_manifests/sound_hashreq_records.csv
+asset_manifests/smz_chunk_header_audit.csv
+asset_manifests/sound_media_summary.md
+```
+
+关键结果：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 声音请求表附近唯一 `.smz` 媒体名 | 9758 |
+| 声音请求表附近唯一 `.pcm` 媒体名 | 21 |
+| 声音请求表附近媒体引用总数 | 33601 |
+| `zg_snd_hashreq_tbl.bin` 记录 | 10420 |
+| 哈希表唯一 request id | 4689 |
+| 可关联到已解析声音请求行的哈希记录 | 3104 |
+| 可关联到已解析声音请求行的 request id | 1091 |
+| 安装态 `smz.bin` chunk | 9752 |
+| 推测 mono chunk | 6826 |
+| 推测 stereo chunk | 2926 |
+
+判断：
+
+- `OnDemandPack01\assets\smz.bin` 与 `smz_add.bin` 的 9752 个 chunk，和声音请求表中的 9758 个唯一 `.smz` 媒体名高度接近，因此应优先按声音媒体容器继续研究。
+- `zg_snd_hashreq_tbl.bin` 文件头包含 `48000`，很可能是音频采样率线索。
+- `zg_snd_hashreq_tbl.bin` 的记录结构目前可按 `8-byte hash + request_id + zero tail` 解析，但 8-byte hash 不是完整 28 hex 的 `.smz` 文件名，不能直接当成文件名映射。
+- 抽样切出的 `.smz` chunk 不能直接被 `ffprobe` 识别，仍需要研究游戏内解码器或 chunk header/codec。
+- 这次审计只加强了“声音请求和声音媒体容器”的地图，仍没有证明外部声音与具体视频片段的同步关系。
+
+对 B 站最终整理的影响：
+
+- 已确认 456 个 MP4 本身带内嵌音轨，可优先作为有声候选。
+- 7345 个无内嵌音轨 MP4 不能直接按 `.smz`、OGG 或 request id 强行配音。
+- 可先用声音请求标签筛选投稿标题、说明和人工复核候选，例如 `魔法少女変身`、`マギア`、`ストーリー`、`WIN`、角色名等。
 
 ### D 盘归档
 

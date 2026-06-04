@@ -9,7 +9,7 @@ import shutil
 import struct
 import subprocess
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path, PureWindowsPath
 
@@ -50,6 +50,7 @@ CHUNK_ARCHIVES = {
 GDB_PATH = ROOT / "unpacked_assets" / "assets" / "gdb.bin"
 SOUND_ID_PATH = ROOT / "unpacked_assets" / "assets" / "sound_id.dat"
 SOUND_REQUEST_TABLE_PATH = ROOT / "unpacked_assets" / "assets" / "zg_snd_request_tbl.bin"
+SOUND_HASHREQ_TABLE_PATH = ROOT / "unpacked_assets" / "assets" / "zg_snd_hashreq_tbl.bin"
 DEBUG_SMALI_FILES = [
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugProd.smali",
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugDispNameList.smali",
@@ -1544,6 +1545,224 @@ def command_sound_request_audit(args):
     print(f"[sound-request-audit] wrote {summary_path}")
 
 
+def parse_sound_hashreq_records(path: Path) -> tuple[tuple[int, ...], list[dict]]:
+    if not path.exists():
+        return tuple(), []
+    data = path.read_bytes()
+    if len(data) < 64:
+        return tuple(), []
+    header = struct.unpack("<16I", data[:64])
+    record_count = header[7] if header[7] and 64 + header[7] * 16 <= len(data) else (len(data) - 64) // 16
+    records = []
+    for index in range(record_count):
+        offset = 64 + index * 16
+        record = data[offset : offset + 16]
+        if len(record) < 16:
+            break
+        request_id = struct.unpack_from("<I", record, 8)[0]
+        tail = struct.unpack_from("<I", record, 12)[0]
+        records.append(
+            {
+                "record_index": index,
+                "offset_hex": f"0x{offset:x}",
+                "hash_le_hex": record[:8].hex().upper(),
+                "hash_be_hex": record[:8][::-1].hex().upper(),
+                "request_id": request_id,
+                "tail_u32": tail,
+            }
+        )
+    return header, records
+
+
+def extract_sound_media_counter(request_rows: list[dict]) -> Counter:
+    media = Counter()
+    for row in request_rows:
+        for field in ("media_before", "media_after", "nearest_media"):
+            for match in SOUND_MEDIA_NAME_RE.findall(row.get(field, "")):
+                media[match.upper()] += 1
+    return media
+
+
+def parse_smz_chunk_headers(smz_bin: Path, smz_add: Path) -> list[dict]:
+    if not smz_bin.exists() or not smz_add.exists():
+        return []
+    add_data = smz_add.read_bytes()
+    if len(add_data) % 4:
+        return []
+    offsets = list(struct.unpack(f"<{len(add_data) // 4}I", add_data))
+    rows = []
+    with smz_bin.open("rb") as f:
+        for index, (start, end) in enumerate(zip(offsets, offsets[1:])):
+            size = end - start
+            f.seek(start)
+            header = f.read(32)
+            if len(header) < 32:
+                continue
+            fields = struct.unpack("<8I", header)
+            if fields[1] == 380:
+                channel_guess = 1
+            elif fields[1] == 764:
+                channel_guess = 2
+            else:
+                channel_guess = fields[5] if fields[5] in (1, 2) else ""
+            rows.append(
+                {
+                    "chunk_index": index,
+                    "offset": start,
+                    "offset_hex": f"0x{start:x}",
+                    "size": size,
+                    "field0": fields[0],
+                    "field1": fields[1],
+                    "field2": fields[2],
+                    "field3": fields[3],
+                    "field4": fields[4],
+                    "field5": fields[5],
+                    "field6": fields[6],
+                    "field7": fields[7],
+                    "channel_guess": channel_guess,
+                }
+            )
+    return rows
+
+
+def command_sound_media_audit(args):
+    manifest_dir = Path(args.manifest_dir)
+    request_rows = read_csv(Path(args.sound_request_audit))
+    request_by_id: dict[int, list[dict]] = defaultdict(list)
+    for row in request_rows:
+        sound_id = parse_optional_int(row.get("sound_resource_id"))
+        if sound_id is not None:
+            request_by_id[sound_id].append(row)
+
+    media_counter = extract_sound_media_counter(request_rows)
+    unique_smz = sum(1 for name in media_counter if name.endswith(".SMZ"))
+    unique_pcm = sum(1 for name in media_counter if name.endswith(".PCM"))
+
+    header, hash_records = parse_sound_hashreq_records(Path(args.hashreq_table))
+    request_id_counts = Counter(int(row["request_id"]) for row in hash_records)
+    linked_hash_rows = sum(count for request_id, count in request_id_counts.items() if request_id in request_by_id)
+    linked_request_ids = sum(1 for request_id in request_id_counts if request_id in request_by_id)
+
+    hash_rows = []
+    for row in hash_records:
+        request_id = int(row["request_id"])
+        request_info = request_by_id.get(request_id, [{}])[0]
+        hash_rows.append(
+            row
+            | {
+                "request_label": request_info.get("request_label", ""),
+                "has_sound_id_record": request_info.get("has_sound_id_record", ""),
+                "suggested_name": request_info.get("suggested_name", ""),
+                "ogg_duration_sec": request_info.get("ogg_duration_sec", ""),
+            }
+        )
+
+    hash_csv = manifest_dir / "sound_hashreq_records.csv"
+    write_csv(
+        hash_csv,
+        hash_rows,
+        [
+            "record_index",
+            "offset_hex",
+            "hash_le_hex",
+            "hash_be_hex",
+            "request_id",
+            "tail_u32",
+            "request_label",
+            "has_sound_id_record",
+            "suggested_name",
+            "ogg_duration_sec",
+        ],
+    )
+
+    smz_rows = parse_smz_chunk_headers(Path(args.smz_bin), Path(args.smz_add)) if args.smz_bin and args.smz_add else []
+    smz_csv = manifest_dir / "smz_chunk_header_audit.csv"
+    if smz_rows:
+        write_csv(
+            smz_csv,
+            smz_rows,
+            [
+                "chunk_index",
+                "offset",
+                "offset_hex",
+                "size",
+                "field0",
+                "field1",
+                "field2",
+                "field3",
+                "field4",
+                "field5",
+                "field6",
+                "field7",
+                "channel_guess",
+            ],
+        )
+
+    channel_counts = Counter(str(row.get("channel_guess", "")) for row in smz_rows)
+    size_values = [int(row["size"]) for row in smz_rows]
+    top_hash_requests = []
+    for request_id, count in request_id_counts.most_common(20):
+        request_info = request_by_id.get(request_id, [{}])[0]
+        top_hash_requests.append(
+            f"- {request_id}: {count} hash rows; {request_info.get('request_label', '')}; {request_info.get('suggested_name', '')}".rstrip()
+        )
+
+    summary_path = manifest_dir / "sound_media_summary.md"
+    lines = [
+        "# Sound Media Audit Summary",
+        "",
+        f"Sound request audit: {args.sound_request_audit}",
+        f"Hash request table: {args.hashreq_table}",
+        "",
+        "## Media references from sound request table",
+        f"- unique `.smz` media names: {unique_smz}",
+        f"- unique `.pcm` media names: {unique_pcm}",
+        f"- total media references in proximity fields: {sum(media_counter.values())}",
+        "",
+        "## zg_snd_hashreq_tbl.bin",
+        f"- header_u32: {list(header)}",
+        f"- hash request rows: {len(hash_records)}",
+        f"- unique request ids: {len(request_id_counts)}",
+        f"- hash rows linked to parsed sound request rows: {linked_hash_rows}",
+        f"- request ids linked to parsed sound request rows: {linked_request_ids}",
+        f"- rows with nonzero tail_u32: {sum(1 for row in hash_records if int(row['tail_u32']))}",
+        "",
+        "## Top hash request fanout",
+        *top_hash_requests,
+        "",
+        "## SMZ installed pack",
+    ]
+    if smz_rows:
+        lines.extend(
+            [
+                f"- smz chunks: {len(smz_rows)}",
+                f"- chunk size min/max: {min(size_values)} / {max(size_values)}",
+                f"- guessed mono chunks: {channel_counts.get('1', 0)}",
+                f"- guessed stereo chunks: {channel_counts.get('2', 0)}",
+                f"- chunk header CSV: {smz_csv}",
+            ]
+        )
+    else:
+        lines.append("- SMZ chunk headers not parsed; pass `--smz-bin` and `--smz-add` to include installed-pack stats.")
+    lines.extend(
+        [
+            "",
+            "## Limits",
+            "- `zg_snd_hashreq_tbl.bin` maps 8-byte hashes to request ids, but these hashes are not the full 28-hex `.smz` media names.",
+            "- `.smz` chunks are not directly accepted by ffprobe; decoding still requires format work or game decoder behavior.",
+            "- This audit does not prove video-to-audio timing; it only improves the sound media/request side of the map.",
+        ]
+    )
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(f"[sound-media-audit] unique smz media: {unique_smz}")
+    print(f"[sound-media-audit] hash request rows: {len(hash_records)}")
+    print(f"[sound-media-audit] wrote {hash_csv}")
+    if smz_rows:
+        print(f"[sound-media-audit] wrote {smz_csv}")
+    print(f"[sound-media-audit] wrote {summary_path}")
+
+
 def command_review_special_videos(args):
     video_dir = Path(args.video_dir)
     out_dir = Path(args.out_dir) if args.out_dir else video_dir / "_review_special"
@@ -2094,6 +2313,14 @@ def build_parser():
     sound_request.add_argument("--ogg-audit", default=str(DEFAULT_MANIFEST_DIR / "ramdisk_audit" / "ogg_ffprobe_audit.csv"))
     sound_request.add_argument("--context-bytes", type=int, default=320)
     sound_request.set_defaults(func=command_sound_request_audit)
+
+    sound_media = sub.add_parser("sound-media-audit", help="audit .smz/.pcm media refs, hash request table, and optional installed SMZ pack")
+    sound_media.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    sound_media.add_argument("--sound-request-audit", default=str(DEFAULT_MANIFEST_DIR / "sound_request_audit.csv"))
+    sound_media.add_argument("--hashreq-table", default=str(SOUND_HASHREQ_TABLE_PATH))
+    sound_media.add_argument("--smz-bin", default="")
+    sound_media.add_argument("--smz-add", default="")
+    sound_media.set_defaults(func=command_sound_media_audit)
 
     special = sub.add_parser("review-special-videos", help="probe MP4s and collect audio-only or black-screen review cases")
     special.add_argument("--video-dir", required=True)

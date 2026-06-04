@@ -1,6 +1,6 @@
 # Next Steps
 
-更新时间：2026-06-03
+更新时间：2026-06-05
 
 ## 是否还有内容值得上传
 
@@ -321,8 +321,8 @@ D:\MagiaRe_RAMDISK_Delta_20260604_002343\merge_tests\candidate_runs_command_exec
 
 下一步建议：
 
-1. 单独研究 `OnDemandPack01\assets\smz.bin` 与 `smz_add.bin`，判断是否为额外图像、贴图或模型。
-2. 继续在 `libGameProc.so` / binary 表里查找视频播放事件与 `sound_resource_id` 的同源调度结构。
+1. 继续研究 `OnDemandPack01\assets\smz.bin` 与 `smz_add.bin` 的声音 chunk header 和解码方式。
+2. 继续在 `libGameProc.so` / binary 表里查找视频播放事件与 `sound_resource_id`、`zg_snd_hashreq_tbl.bin` request id 或 `.smz` hash 的同源调度结构。
 3. 对已带内嵌音频的 456 个 MP4，先做可投稿候选复核；这部分不需要外部 OGG 匹配。
 4. 对无内嵌音频但明显是演出长段的视频，只在找到官方调度证据后再合并 OGG/PCM。
 
@@ -331,3 +331,27 @@ D:\MagiaRe_RAMDISK_Delta_20260604_002343\merge_tests\candidate_runs_command_exec
 ```text
 D:\MagiaRe_RAMDISK_Delta_20260604_002343\installed_pull_delta
 ```
+
+## 声音媒体/SMZ 的下一步
+
+已完成的命令：
+
+```powershell
+python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
+优先审阅：
+
+```text
+asset_manifests/sound_media_summary.md
+asset_manifests/sound_hashreq_records.csv
+asset_manifests/smz_chunk_header_audit.csv
+asset_manifests/sound_request_audit.csv
+```
+
+下一步技术任务：
+
+1. 按 `smz_chunk_header_audit.csv` 分组抽样，比较 mono/stereo 推测字段、chunk 大小、header 常量和音频时长可能性。
+2. 在 native 字符串和反编译结果中搜索 `smz`、`hashreq`、`zg_snd_hashreq_tbl`、`48000`、`nsnd`、`sound_resource_id` 等线索。
+3. 对 `sound_hashreq_records.csv` 中已有标签的 request id，回查 `sound_request_audit.csv` 和 OGG 导出结果，建立人工音频候选列表。
+4. 暂时不要把 `.smz` 或 OGG 按文件序号、时长、相邻编号自动合并到视频；目前没有同步证据。
