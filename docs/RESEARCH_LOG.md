@@ -435,3 +435,146 @@ python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Downl
 ```
 
 当前没有执行 native 转换，因为 `adb connect 127.0.0.1:16384` 返回连接拒绝，模拟器目标不可用。本机已有 Frida 17.5.2；后续需要 Android 侧启动匹配版本 `frida-server` 后再验证。
+
+## 2026-06-05 - RAMDISK correction pass
+
+### User validation incorporated
+
+用户确认旧目录仍左右反向，并指出 `review_audio\with_embedded_audio` 实际混有大量静音音轨。已将“有音频流”和“可听声音”拆开处理。
+
+验证样本：
+
+| path | mean_volume | max_volume | result |
+| --- | ---: | ---: | --- |
+| `Unclassified_Slices\main_video_2243.mp4` | -91.0 dB | -91.0 dB | silent audio track |
+| `Unclassified_Slices\patch_video_1343.mp4` | -91.0 dB | -91.0 dB | silent audio track |
+| `MultiCandidate_Slices\main_video_0097_candidates24.mp4` | -10.3 dB | 0.0 dB | audible embedded audio |
+
+### Script changes
+
+`magireco_asset_pipeline.py` 新增：
+
+```powershell
+python magireco_asset_pipeline.py hflip-videos --input-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder h264_nvenc --workers 2
+python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos_hflip --out-dir A:\magireco_bili_fulltest_20260603\review_special_hflip_audible --audio-volume --workers 4
+python magireco_asset_pipeline.py convert-pcm-wav --input-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_raw --out-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo --execute --overwrite --audio-volume --workers 4
+```
+
+`review-special-videos --audio-volume` 新增 `silent_audio_track` 分类。默认阈值为 `max_volume <= -60 dB`。
+
+### Direction-correct output
+
+首轮 NVENC hflip：
+
+- input: 7801 MP4
+- ok: 7031
+- failed: 770
+- failure cause: NVENC minimum frame dimension limit on very small videos, e.g. 80x312, 144x48, 144x64
+
+随后删除 manifest 中 770 个失败的 0 字节输出，仅用 `libx264` 补跑缺失项：
+
+- libx264 ok: 770
+- skipped existing: 7031
+- final MP4 count: 7801
+- zero-byte output: 0
+
+当前方向正确视频树：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos_hflip
+```
+
+### Audible embedded audio audit
+
+对 `videos_hflip` 全量执行 `review-special-videos --audio-volume`：
+
+| class | count |
+| --- | ---: |
+| normal | 7096 |
+| silent_audio_track | 315 |
+| mostly_black_video | 259 |
+| blackish_video | 131 |
+| audio_only | 0 |
+| no_video_stream | 0 |
+| probe_failed | 0 |
+
+真正可听内嵌音频只有 141 个，已硬链接到：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_audio_hflip\audible_embedded_audio
+```
+
+### PCM conversion
+
+`.pcmraw` 文件头部规律：
+
+- 32 bytes custom header
+- first little-endian u32 equals payload size
+- payload is aligned for 16-bit stereo PCM
+- dominant exported OGG sample rate is 48000 Hz
+
+因此将 21 个 PCMRAW 转为 `s16le / 48000 Hz / stereo / skip 32 bytes` WAV：
+
+```text
+A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo
+```
+
+结果：
+
+- ok: 21
+- audible: 20
+- silent: `pcm_00018.wav`
+
+### Installed pull audit
+
+`A:\magireco_installed_pull_20260603` 已复查。核心新增数据是安装态 assetpack：
+
+```text
+data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin
+data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
+它们不在工程 `unpacked_assets\assets` 中，应该归档。用这组文件重跑 `sound-media-audit` 后结果稳定：
+
+- runtime SMZ chunks: 9752
+- structured SMZ media: 9758
+- request-present installed SMZ: 9752
+- request-only missing SMZ: 6
+- runtime-only SMZ: 0
+- PCM names: 21, all present
+
+`pad.bin` 只记录 assetpack 路径；`ACCESS_DATA.xml` 只记录 `ACCESS=true`。当前未从安装态用户数据发现额外的视频命名、演出合并或音视频同步表。
+
+### Frida native bridge attempt
+
+本机 Frida client 为 17.5.2。已下载并测试：
+
+```text
+frida-server-17.5.2-android-x86_64
+frida-server-17.5.2-android-arm64
+```
+
+当前 MuMu 设备：
+
+```text
+ro.product.cpu.abi = x86_64
+```
+
+游戏进程 `/proc/<pid>/maps` 显示实际游戏 native 库通过 native bridge 映射在：
+
+```text
+/system/lib64/arm64/...
+```
+
+结果：
+
+- x86_64 frida-server 可以 attach 普通宿主进程，但只能枚举宿主侧模块，不能看到 arm64 `libGameProc.so`。
+- arm64 frida-server 可以在 native bridge 下启动并显示版本，但 attach 时 server 关闭连接。
+- 因此当前 MuMu/native-bridge 环境暂不能直接用 Frida 调用 `zgSndCaptureConvertWav*`。
+
+脚本修正：
+
+- `tools/frida_smz_wav_probe.py` 已兼容 Frida 17，改用 `Process.findModuleByName()` 和 `module.enumerateExports()`。
+- 进程匹配已改为优先 `enumerate_applications()`，避免 Frida 17 的 `Process.identifier` 缺失问题。
+
+下一步若继续 native WAV 方案，优先考虑真 arm64 Android 环境、支持 arm64 app 的模拟器镜像，或改走静态还原 `DecoderSmz`。

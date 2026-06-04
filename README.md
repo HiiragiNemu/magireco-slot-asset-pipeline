@@ -117,6 +117,25 @@ python magireco_asset_pipeline.py native-sound-video-audit
 python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\review_special
 ```
 
+对已导出的 MP4 做水平翻转校正，输出到新的目录，不覆盖源目录：
+
+```powershell
+python magireco_asset_pipeline.py hflip-videos --input-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder h264_nvenc --workers 2
+python magireco_asset_pipeline.py hflip-videos --input-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder libx264 --workers 4
+```
+
+对方向正确的视频树重新做复核，并用 `volumedetect` 区分可听音轨和静音音轨：
+
+```powershell
+python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos_hflip --out-dir A:\magireco_bili_fulltest_20260603\review_special_hflip_audible --audio-volume --workers 4
+```
+
+将导出的 `.pcmraw` 封装为 foobar2000 可播放的 WAV：
+
+```powershell
+python magireco_asset_pipeline.py convert-pcm-wav --input-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_raw --out-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo --execute --overwrite --audio-volume --workers 4
+```
+
 按 `MultiCandidate_Slices` 中连续的 `main_video_NNNN_candidatesX` 切片做候选数合并测试：
 
 ```powershell

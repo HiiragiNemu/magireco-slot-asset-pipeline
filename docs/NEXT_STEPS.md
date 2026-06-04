@@ -298,6 +298,59 @@ python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_b
 - 示例：`main_video_0071-0099_candidates24.mp4`
 - 该示例来自 29 个源片段，时长 48.100 秒，源片段中 3 个带内嵌音频
 
+## 2026-06-05 后续执行顺序修正
+
+旧目录说明：
+
+- `A:\magireco_bili_fulltest_20260603\videos`：源测试输出，左右反向，不作为最终复核目录。
+- `A:\magireco_bili_fulltest_20260603\review_special`：旧方向的复核 hardlink 目录，不作为最终复核目录。
+- `A:\magireco_bili_fulltest_20260603\review_audio\with_embedded_audio`：只表示“有音频流”，不保证有可听声音。
+
+当前应优先审阅的新目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos_hflip
+A:\magireco_bili_fulltest_20260603\review_special_hflip_audible
+A:\magireco_bili_fulltest_20260603\review_audio_hflip\audible_embedded_audio
+A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo
+```
+
+人工审阅建议：
+
+1. 先看 `review_audio_hflip\audible_embedded_audio` 的 141 个视频，确认这些可听内嵌音频是否真的适合 B 站成品。
+2. 再看 `review_special_hflip_audible\silent_audio_track` 的 315 个视频，确认静音音轨是否可以当作无声视频处理。
+3. 再看 `review_special_hflip_audible\blackish_video` 和 `mostly_black_video`，这些不是垃圾列表，里面包含暗场、边框、UI、卡面等合法素材。
+4. 用 foobar2000 抽听 `pcm_wav_48k_stereo`，重点确认 48 kHz stereo 是否听感正确；`pcm_00018.wav` 已判定为静音。
+
+可复现命令：
+
+```powershell
+python magireco_asset_pipeline.py hflip-videos --input-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder h264_nvenc --workers 2
+python magireco_asset_pipeline.py hflip-videos --input-dir A:\magireco_bili_fulltest_20260603\videos --out-dir A:\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder libx264 --workers 4
+python magireco_asset_pipeline.py review-special-videos --video-dir A:\magireco_bili_fulltest_20260603\videos_hflip --out-dir A:\magireco_bili_fulltest_20260603\review_special_hflip_audible --audio-volume --workers 4
+python magireco_asset_pipeline.py convert-pcm-wav --input-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_raw --out-dir A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo --execute --overwrite --audio-volume --workers 4
+```
+
+下一步技术任务：
+
+1. 使用 Frida/native 转换入口验证 SMZ -> WAV，优先从已确认的 code 例子开始：`1049`, `1050`, `1051`, `1052`, `1053`, `6825`, `6830`, `8032`, `9078`。注意：当前 MuMu 是 `x86_64` + arm64 native bridge，Frida 不能稳定 attach 到 arm64 游戏 native 层；该路线需要真 arm64 环境、合适的 arm64 模拟器，或改为静态还原 `DecoderSmz`。
+2. 若 SMZ 可被 native 转 WAV，再生成 `code -> request_id -> SMZ -> WAV` 的人工审查包。
+3. 不要在未确认事件时间轴前把外部 SMZ/OGG 全量 mux 到视频。
+4. 对 B 站投稿成品，优先使用 `videos_hflip` 和已确认可听内嵌音频；外部音频只在找到官方调度关系后加入。
+
+安装态拉取归档建议：
+
+- 必须归档：`A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin`
+- 必须归档：`A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin`
+- 建议归档：`A:\magireco_installed_pull_20260603\sdcard_Android_data\files\gameData.bin`
+- 可低优先级归档：完整 `A:\magireco_installed_pull_20260603`
+
+完整 A 盘研究目录可在阶段完成后固实压缩到：
+
+```text
+D:\MagiReco_Reverse
+```
+
 注意：
 
 - 当前输出是 `--drop-audio` 的 video-only 测试版，因为同一合并段内可能混有有音轨/无音轨源片段。

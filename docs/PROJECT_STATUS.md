@@ -524,3 +524,153 @@ D:\MagiaRe_RAMDISK_Delta_20260604_002343
 - `OnDemandPack01` 和小型运行态文件
 
 没有重复归档全量 MP4、raw OGG/PCM、APK、OBB；这些已在旧 D 盘备份或本地工程中存在，且哈希/数量/总大小已验证一致。
+
+## 2026-06-05 RAMDISK 修正状态
+
+### 方向修正
+
+用户人工确认原始全量目录仍是左右反向，包括：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos
+A:\magireco_bili_fulltest_20260603\review_special
+A:\magireco_bili_fulltest_20260603\review_audio\with_embedded_audio
+```
+
+已新增 `hflip-videos` 命令，并在 A 盘生成方向正确的全量输出：
+
+```text
+A:\magireco_bili_fulltest_20260603\videos_hflip
+```
+
+执行结果：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 输入 MP4 | 7801 |
+| NVENC 首轮成功 | 7031 |
+| NVENC 因小尺寸失败 | 770 |
+| libx264 补跑成功 | 770 |
+| 最终 MP4 | 7801 |
+| 0 字节输出 | 0 |
+
+说明：
+
+- 原始 `videos` 未移动、未覆盖。
+- `videos_hflip` 是当前后续复核和投稿整理应使用的视频树。
+- `hflip_manifest_nvenc_firstpass.csv` 保留了首轮 NVENC 失败证据；当前 `hflip_manifest.csv` 是 libx264 补跑结果。
+
+### 内嵌音轨不等于可听声音
+
+用户指出 `review_audio\with_embedded_audio` 中部分文件实际无声。已用 `ffmpeg volumedetect` 复核，确认旧分类只表示“MP4 容器有音频流”，不表示“有可听声音”。
+
+关键样本：
+
+| 文件 | 音频流 | mean_volume | max_volume | 判断 |
+| --- | --- | ---: | ---: | --- |
+| `Unclassified_Slices\main_video_2243.mp4` | `alac` | -91.0 dB | -91.0 dB | 静音音轨 |
+| `Unclassified_Slices\patch_video_1343.mp4` | `alac` | -91.0 dB | -91.0 dB | 静音音轨 |
+| `MultiCandidate_Slices\main_video_0097_candidates24.mp4` | `alac` | -10.3 dB | 0.0 dB | 可听音轨 |
+
+已对方向正确的 `videos_hflip` 重新生成复核目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_special_hflip_audible
+```
+
+结果：
+
+| 类别 | 数量 |
+| --- | ---: |
+| normal | 7096 |
+| silent_audio_track | 315 |
+| mostly_black_video | 259 |
+| blackish_video | 131 |
+| audio_only | 0 |
+| no_video_stream | 0 |
+| probe_failed | 0 |
+
+音频响度统计：
+
+| audible_audio | 数量 |
+| --- | ---: |
+| yes | 141 |
+| no | 315 |
+| 空值/无音轨 | 7345 |
+
+已单独硬链接出 141 个方向正确且真正有可听内嵌音频的视频：
+
+```text
+A:\magireco_bili_fulltest_20260603\review_audio_hflip\audible_embedded_audio
+A:\magireco_bili_fulltest_20260603\review_audio_hflip\audible_embedded_audio_manifest.csv
+```
+
+### PCMRAW 转 WAV
+
+`pcm_raw` 下的 21 个 `.pcmraw` 不能被 foobar2000 直接播放，因为它们不是 WAV 容器。探测结果显示每个文件是：
+
+```text
+32 字节自定义头 + s16le PCM payload
+```
+
+其中第一个 little-endian `u32` 等于 `文件长度 - 32`。
+
+已新增 `convert-pcm-wav` 命令，并输出可播放 WAV：
+
+```text
+A:\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo
+```
+
+当前采用：
+
+```text
+s16le, 48000 Hz, stereo, skip 32 bytes
+```
+
+结果：
+
+| 项目 | 数量 |
+| --- | ---: |
+| PCMRAW 输入 | 21 |
+| WAV 输出成功 | 21 |
+| 可听 WAV | 20 |
+| 静音 WAV | 1 |
+
+静音样本：
+
+```text
+pcm_00018.wav
+```
+
+### 安装态拉取价值
+
+`A:\magireco_installed_pull_20260603` 已检查。相对旧 APK/下载包，最有价值的新增证据是安装态 Play Asset Delivery 目录：
+
+```text
+A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin
+A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
+```
+
+这些文件不在当前工程的 `unpacked_assets\assets` 常规资源目录中，必须保留用于 SMZ 声音研究。
+
+当前哈希：
+
+| 文件 | SHA256 |
+| --- | --- |
+| `smz.bin` | `AFBA721F0677DB90945711484D807C224250EDFA7E2945C4D1049B36777B501C` |
+| `smz_add.bin` | `EAB5C3DE37CBCB8AD437106AC319EAB67D7DB5A65457177195D15B4D4ADA7F82` |
+
+重新用安装态 `smz.bin/smz_add.bin` 执行 `sound-media-audit` 后确认：
+
+| 项目 | 数量 |
+| --- | ---: |
+| runtime SMZ chunks | 9752 |
+| runtime SMZ mono guess | 6826 |
+| runtime SMZ stereo guess | 2926 |
+| request 表有且安装态存在的 SMZ 名称 | 9752 |
+| request 表有但安装态缺失的 SMZ 名称 | 6 |
+| runtime SMZ 未被 request 表引用 | 0 |
+| runtime PCM 名称 | 21 |
+| request PCM 缺失 | 0 |
+
+`sdcard_Android_data\files` 中的 OBB 与项目已有 OBB 尺寸一致；`gameData.bin/configData.bin/pad.bin` 目前只发现安装路径、访问状态和小型运行状态信息，没有发现新的演出命名或视频同步表。

@@ -755,6 +755,48 @@ def probe_mp4(path: Path) -> dict:
     }
 
 
+def probe_audio_volume(path: Path) -> dict:
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostats",
+        "-v",
+        "info",
+        "-i",
+        str(path),
+        "-vn",
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        os.devnull,
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    mean_match = re.search(r"mean_volume:\s*(-?(?:inf|\d+(?:\.\d+)?))\s*dB", output, re.IGNORECASE)
+    max_match = re.search(r"max_volume:\s*(-?(?:inf|\d+(?:\.\d+)?))\s*dB", output, re.IGNORECASE)
+
+    def parse_db(match: re.Match | None) -> float | None:
+        if not match:
+            return None
+        value = match.group(1).lower()
+        if value == "-inf":
+            return float("-inf")
+        if value == "inf":
+            return float("inf")
+        return float(value)
+
+    mean_volume = parse_db(mean_match)
+    max_volume = parse_db(max_match)
+    return {
+        "audio_volume_ok": result.returncode == 0 and max_volume is not None,
+        "audio_volume_error": "" if result.returncode == 0 else (result.stderr or result.stdout).strip(),
+        "mean_volume_db": "" if mean_volume is None else f"{mean_volume:.1f}",
+        "max_volume_db": "" if max_volume is None else f"{max_volume:.1f}",
+        "max_volume_value": max_volume,
+    }
+
+
 def sample_video_luma(path: Path, duration_sec: float | None, samples: int) -> dict:
     if duration_sec is None or duration_sec <= 0:
         sample_times = [0.0]
@@ -836,7 +878,15 @@ def place_review_copy(source: Path, target_dir: Path, mode: str) -> str:
     return str(target)
 
 
-def review_one_special_video(path: Path, video_dir: Path, out_dir: Path, mode: str, samples: int) -> dict:
+def review_one_special_video(
+    path: Path,
+    video_dir: Path,
+    out_dir: Path,
+    mode: str,
+    samples: int,
+    audio_volume: bool,
+    silent_threshold_db: float,
+) -> dict:
     relative_path = str(path.relative_to(video_dir))
     probe = probe_mp4(path)
     row = {
@@ -850,6 +900,11 @@ def review_one_special_video(path: Path, video_dir: Path, out_dir: Path, mode: s
         "has_audio": "yes" if probe.get("has_audio") else "no",
         "video_codec": probe.get("video_codec", ""),
         "audio_codec": probe.get("audio_codec", ""),
+        "audio_volume_ok": "",
+        "audio_volume_error": "",
+        "mean_volume_db": "",
+        "max_volume_db": "",
+        "audible_audio": "",
         "width": probe.get("width", ""),
         "height": probe.get("height", ""),
         "avg_mean_luma": "",
@@ -866,6 +921,18 @@ def review_one_special_video(path: Path, video_dir: Path, out_dir: Path, mode: s
 
     has_video = bool(probe.get("has_video"))
     has_audio = bool(probe.get("has_audio"))
+    audible_audio = None
+    if audio_volume and has_audio:
+        volume = probe_audio_volume(path)
+        max_volume = volume.pop("max_volume_value")
+        audible_audio = max_volume is not None and max_volume > silent_threshold_db
+        row.update(
+            {
+                **volume,
+                "audible_audio": "yes" if audible_audio else "no",
+            }
+        )
+
     if has_audio and not has_video:
         row["special_class"] = "audio_only"
         row["review_path"] = place_review_copy(path, out_dir / "audio_only", mode)
@@ -874,6 +941,11 @@ def review_one_special_video(path: Path, video_dir: Path, out_dir: Path, mode: s
     if not has_video:
         row["special_class"] = "no_video_stream"
         row["review_path"] = place_review_copy(path, out_dir / "no_video_stream", mode)
+        return row
+
+    if has_audio and audible_audio is False:
+        row["special_class"] = "silent_audio_track"
+        row["review_path"] = place_review_copy(path, out_dir / "silent_audio_track", mode)
         return row
 
     duration = parse_optional_float(str(probe.get("duration_sec", "")))
@@ -2368,7 +2440,14 @@ def command_review_special_videos(args):
         key=lambda path: natural_key(str(path.relative_to(video_dir))),
     )
     out_dir.mkdir(parents=True, exist_ok=True)
-    for class_dir in ("audio_only", "blackish_video", "mostly_black_video", "no_video_stream", "probe_failed"):
+    for class_dir in (
+        "audio_only",
+        "silent_audio_track",
+        "blackish_video",
+        "mostly_black_video",
+        "no_video_stream",
+        "probe_failed",
+    ):
         (out_dir / class_dir).mkdir(parents=True, exist_ok=True)
     print(f"[review-special-videos] scanning {len(files)} MP4 files")
     print(f"[review-special-videos] review dir: {out_dir}")
@@ -2377,7 +2456,16 @@ def command_review_special_videos(args):
     processed = 0
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = [
-            executor.submit(review_one_special_video, path, video_dir, out_dir, args.mode, args.samples)
+            executor.submit(
+                review_one_special_video,
+                path,
+                video_dir,
+                out_dir,
+                args.mode,
+                args.samples,
+                args.audio_volume,
+                args.silent_threshold_db,
+            )
             for path in files
         ]
         for future in as_completed(futures):
@@ -2402,6 +2490,11 @@ def command_review_special_videos(args):
             "has_audio",
             "video_codec",
             "audio_codec",
+            "audio_volume_ok",
+            "audio_volume_error",
+            "mean_volume_db",
+            "max_volume_db",
+            "audible_audio",
             "width",
             "height",
             "avg_mean_luma",
@@ -2415,7 +2508,15 @@ def command_review_special_videos(args):
     counts = defaultdict(int)
     for row in rows:
         counts[row["special_class"] or "normal"] += 1
-    for class_name in ("normal", "audio_only", "blackish_video", "mostly_black_video", "no_video_stream", "probe_failed"):
+    for class_name in (
+        "normal",
+        "audio_only",
+        "silent_audio_track",
+        "blackish_video",
+        "mostly_black_video",
+        "no_video_stream",
+        "probe_failed",
+    ):
         counts.setdefault(class_name, 0)
     summary_path = out_dir / "special_video_summary.md"
     lines = [
@@ -2432,6 +2533,7 @@ def command_review_special_videos(args):
         "",
         "## Notes",
         "- `audio_only` means ffprobe found audio streams but no video stream.",
+        "- `silent_audio_track` means an audio stream exists but `volumedetect` max volume is at or below the configured threshold.",
         "- `blackish_video` and `mostly_black_video` are based on sampled frame luminance.",
         "- Review files are hardlinked when possible, otherwise copied.",
     ]
@@ -2602,6 +2704,341 @@ def command_bili_metadata_audit(args):
     print(f"[bili-metadata-audit] wrote {video_csv}")
     print(f"[bili-metadata-audit] wrote {sound_csv}")
     print(f"[bili-metadata-audit] wrote {summary_path}")
+
+
+def run_single_hflip_video(source: Path, output: Path, encoder: str, crf: int, cq: int, overwrite: bool) -> dict:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if output.exists() and not overwrite:
+        return {
+            "source": str(source),
+            "output": str(output),
+            "status": "skipped_exists",
+            "returncode": "",
+            "error": "",
+        }
+
+    cmd = ["ffmpeg", "-y", "-i", str(source), "-map", "0", "-vf", "hflip"]
+    if encoder == "h264_nvenc":
+        cmd.extend(["-c:v", "h264_nvenc", "-preset", "p6", "-cq", str(cq), "-pix_fmt", "yuv420p"])
+    else:
+        cmd.extend(["-c:v", "libx264", "-crf", str(crf), "-pix_fmt", "yuv420p"])
+    cmd.extend(["-c:a", "copy", "-c:s", "copy", str(output)])
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return {
+        "source": str(source),
+        "output": str(output),
+        "status": "ok" if result.returncode == 0 else "failed",
+        "returncode": result.returncode,
+        "error": "" if result.returncode == 0 else result.stderr.strip()[-4000:],
+    }
+
+
+def command_hflip_videos(args):
+    input_dir = Path(args.input_dir)
+    out_dir = Path(args.out_dir)
+    files = sorted(input_dir.rglob("*.mp4"), key=lambda path: natural_key(str(path.relative_to(input_dir))))
+    if args.limit:
+        files = files[: args.limit]
+    rows = []
+    manifest_path = out_dir / "hflip_manifest.csv"
+
+    print(f"[hflip-videos] input: {input_dir}")
+    print(f"[hflip-videos] output: {out_dir}")
+    print(f"[hflip-videos] files: {len(files)}")
+    if not args.execute:
+        for source in files:
+            output = out_dir / source.relative_to(input_dir)
+            rows.append(
+                {
+                    "source": str(source),
+                    "output": str(output),
+                    "status": "dry_run",
+                    "returncode": "",
+                    "error": "",
+                }
+            )
+        write_csv(manifest_path, rows, ["source", "output", "status", "returncode", "error"])
+        print(f"[hflip-videos] dry-run wrote {manifest_path}")
+        return
+
+    processed = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = []
+        for source in files:
+            output = out_dir / source.relative_to(input_dir)
+            futures.append(executor.submit(run_single_hflip_video, source, output, args.encoder, args.crf, args.cq, args.overwrite))
+        for future in as_completed(futures):
+            rows.append(future.result())
+            processed += 1
+            if processed % 250 == 0 or processed == len(files):
+                print(f"[hflip-videos] processed {processed}/{len(files)}")
+
+    rows.sort(key=lambda row: natural_key(row["source"]))
+    write_csv(manifest_path, rows, ["source", "output", "status", "returncode", "error"])
+    counts = Counter(row["status"] for row in rows)
+    summary_path = out_dir / "hflip_summary.md"
+    lines = [
+        "# HFlip Video Summary",
+        "",
+        f"Input: {input_dir}",
+        f"Output: {out_dir}",
+        f"Files: {len(rows)}",
+        f"Encoder: {args.encoder}",
+        "",
+        "## Status",
+        *[f"- {key}: {count}" for key, count in sorted(counts.items())],
+        "",
+        "## Notes",
+        "- Output preserves the source directory layout.",
+        "- Video is horizontally flipped and re-encoded; audio streams are copied without re-encoding.",
+        "- The source tree is not modified.",
+    ]
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[hflip-videos] wrote {manifest_path}")
+    print(f"[hflip-videos] wrote {summary_path}")
+
+
+def inspect_pcmraw(path: Path, header_bytes: int) -> dict:
+    raw_size = path.stat().st_size
+    with path.open("rb") as handle:
+        header = handle.read(header_bytes)
+    words = []
+    if len(header) >= 4:
+        for offset in range(0, min(len(header), 32), 4):
+            if offset + 4 <= len(header):
+                words.append(struct.unpack_from("<I", header, offset)[0])
+    payload_size = max(0, raw_size - header_bytes)
+    return {
+        "raw_size": raw_size,
+        "payload_size": payload_size,
+        "header_words_hex": " ".join(f"0x{word:08x}" for word in words),
+        "header0_payload_match": "yes" if words and words[0] == payload_size else "no",
+    }
+
+
+def probe_audio_stream(path: Path) -> dict:
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels,duration",
+        "-of",
+        "json",
+        str(path),
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        return {
+            "probe_ok": "no",
+            "probe_error": result.stderr.strip(),
+            "codec": "",
+            "sample_rate": "",
+            "channels": "",
+            "duration_sec": "",
+        }
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        return {
+            "probe_ok": "no",
+            "probe_error": str(exc),
+            "codec": "",
+            "sample_rate": "",
+            "channels": "",
+            "duration_sec": "",
+        }
+    streams = payload.get("streams") or []
+    if not streams:
+        return {
+            "probe_ok": "no",
+            "probe_error": "no streams",
+            "codec": "",
+            "sample_rate": "",
+            "channels": "",
+            "duration_sec": "",
+        }
+    stream = streams[0]
+    return {
+        "probe_ok": "yes",
+        "probe_error": "",
+        "codec": stream.get("codec_name", ""),
+        "sample_rate": stream.get("sample_rate", ""),
+        "channels": stream.get("channels", ""),
+        "duration_sec": stream.get("duration", ""),
+    }
+
+
+def convert_one_pcmraw_to_wav(source: Path, output: Path, args) -> dict:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    info = inspect_pcmraw(source, args.skip_header_bytes)
+    row = {
+        "source": str(source),
+        "output": str(output),
+        "status": "",
+        "returncode": "",
+        "error": "",
+        **info,
+        "codec": "",
+        "sample_rate": "",
+        "channels": "",
+        "duration_sec": "",
+        "audio_volume_ok": "",
+        "mean_volume_db": "",
+        "max_volume_db": "",
+        "audible_audio": "",
+    }
+
+    if output.exists() and not args.overwrite:
+        row["status"] = "skipped_exists"
+    else:
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-nostats",
+            "-f",
+            "s16le",
+            "-ar",
+            str(args.sample_rate),
+            "-ac",
+            str(args.channels),
+            "-skip_initial_bytes",
+            str(args.skip_header_bytes),
+            "-i",
+            str(source),
+            str(output),
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        row["status"] = "ok" if result.returncode == 0 else "failed"
+        row["returncode"] = result.returncode
+        row["error"] = "" if result.returncode == 0 else (result.stderr or result.stdout).strip()[-4000:]
+
+    if output.exists() and row["status"] != "failed":
+        probe = probe_audio_stream(output)
+        row.update(
+            {
+                "codec": probe["codec"],
+                "sample_rate": probe["sample_rate"],
+                "channels": probe["channels"],
+                "duration_sec": probe["duration_sec"],
+            }
+        )
+        if args.audio_volume:
+            volume = probe_audio_volume(output)
+            max_volume = volume.pop("max_volume_value")
+            row.update(
+                {
+                    "audio_volume_ok": "yes" if volume["audio_volume_ok"] else "no",
+                    "mean_volume_db": volume["mean_volume_db"],
+                    "max_volume_db": volume["max_volume_db"],
+                    "audible_audio": "yes" if max_volume is not None and max_volume > args.silent_threshold_db else "no",
+                }
+            )
+            if volume["audio_volume_error"]:
+                row["error"] = volume["audio_volume_error"][-4000:]
+    return row
+
+
+def command_convert_pcm_wav(args):
+    input_dir = Path(args.input_dir)
+    out_dir = Path(args.out_dir)
+    files = sorted(input_dir.rglob("*.pcmraw"), key=lambda path: natural_key(str(path.relative_to(input_dir))))
+    if args.limit:
+        files = files[: args.limit]
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"[convert-pcm-wav] input: {input_dir}")
+    print(f"[convert-pcm-wav] output: {out_dir}")
+    print(f"[convert-pcm-wav] files: {len(files)}")
+    print(
+        f"[convert-pcm-wav] format: s16le, {args.sample_rate} Hz, "
+        f"{args.channels} ch, skip {args.skip_header_bytes} bytes"
+    )
+
+    rows = []
+    if not args.execute:
+        for source in files:
+            output = out_dir / source.relative_to(input_dir).with_suffix(".wav")
+            rows.append(
+                {
+                    "source": str(source),
+                    "output": str(output),
+                    "status": "dry_run",
+                    "returncode": "",
+                    "error": "",
+                    **inspect_pcmraw(source, args.skip_header_bytes),
+                    "codec": "",
+                    "sample_rate": "",
+                    "channels": "",
+                    "duration_sec": "",
+                    "audio_volume_ok": "",
+                    "mean_volume_db": "",
+                    "max_volume_db": "",
+                    "audible_audio": "",
+                }
+            )
+    else:
+        processed = 0
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = []
+            for source in files:
+                output = out_dir / source.relative_to(input_dir).with_suffix(".wav")
+                futures.append(executor.submit(convert_one_pcmraw_to_wav, source, output, args))
+            for future in as_completed(futures):
+                rows.append(future.result())
+                processed += 1
+                if processed % 25 == 0 or processed == len(files):
+                    print(f"[convert-pcm-wav] processed {processed}/{len(files)}")
+
+    rows.sort(key=lambda row: natural_key(row["source"]))
+    fields = [
+        "source",
+        "output",
+        "status",
+        "returncode",
+        "error",
+        "raw_size",
+        "payload_size",
+        "header_words_hex",
+        "header0_payload_match",
+        "codec",
+        "sample_rate",
+        "channels",
+        "duration_sec",
+        "audio_volume_ok",
+        "mean_volume_db",
+        "max_volume_db",
+        "audible_audio",
+    ]
+    manifest_path = out_dir / "pcm_wav_manifest.csv"
+    write_csv(manifest_path, rows, fields)
+    counts = Counter(row["status"] for row in rows)
+    audible_counts = Counter(row["audible_audio"] or "not_checked" for row in rows)
+    summary_path = out_dir / "pcm_wav_summary.md"
+    lines = [
+        "# PCM WAV Conversion Summary",
+        "",
+        f"Input: {input_dir}",
+        f"Output: {out_dir}",
+        f"Files: {len(rows)}",
+        f"Format: s16le, {args.sample_rate} Hz, {args.channels} ch",
+        f"Skipped header bytes: {args.skip_header_bytes}",
+        "",
+        "## Status",
+        *[f"- {key}: {count}" for key, count in sorted(counts.items())],
+        "",
+        "## Audio volume",
+        *[f"- {key}: {count}" for key, count in sorted(audible_counts.items())],
+        "",
+        "## Notes",
+        "- Source `.pcmraw` files are not modified.",
+        "- The observed Magia Record slot PCM chunks use a 32-byte custom header before raw PCM payload.",
+        "- The default 48 kHz stereo output matches the dominant OGG resource sample rate and the observed PCM header channel field.",
+    ]
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[convert-pcm-wav] wrote {manifest_path}")
+    print(f"[convert-pcm-wav] wrote {summary_path}")
 
 
 def resolve_candidate_slice_dir(video_dir: Path) -> Path:
@@ -2875,6 +3312,20 @@ def build_parser():
     export_audio.add_argument("--sound-id-names", action="store_true", help="name OGG chunks using sound_id.dat")
     export_audio.set_defaults(func=command_export_audio)
 
+    pcm_wav = sub.add_parser("convert-pcm-wav", help="wrap exported .pcmraw chunks as playable WAV files; dry-run by default")
+    pcm_wav.add_argument("--input-dir", required=True)
+    pcm_wav.add_argument("--out-dir", required=True)
+    pcm_wav.add_argument("--execute", action="store_true")
+    pcm_wav.add_argument("--overwrite", action="store_true")
+    pcm_wav.add_argument("--workers", type=int, default=4)
+    pcm_wav.add_argument("--limit", type=int, default=0)
+    pcm_wav.add_argument("--sample-rate", type=int, default=48000)
+    pcm_wav.add_argument("--channels", type=int, default=2)
+    pcm_wav.add_argument("--skip-header-bytes", type=int, default=32)
+    pcm_wav.add_argument("--audio-volume", action="store_true", help="run ffmpeg volumedetect on generated WAV files")
+    pcm_wav.add_argument("--silent-threshold-db", type=float, default=-60.0)
+    pcm_wav.set_defaults(func=command_convert_pcm_wav)
+
     export_images = sub.add_parser("export-images", help="export z2d chunks; dry-run by default")
     export_images.add_argument("--out-dir", default=str(DEFAULT_OUTPUT_DIR))
     export_images.add_argument("--execute", action="store_true")
@@ -2947,11 +3398,30 @@ def build_parser():
     special.add_argument("--mode", choices=["copy", "hardlink"], default="hardlink")
     special.add_argument("--workers", type=int, default=4)
     special.add_argument("--samples", type=int, default=3)
+    special.add_argument("--audio-volume", action="store_true", help="run ffmpeg volumedetect for MP4s with audio streams")
+    special.add_argument(
+        "--silent-threshold-db",
+        type=float,
+        default=-60.0,
+        help="max_volume threshold used to classify silent audio tracks when --audio-volume is set",
+    )
     special.set_defaults(func=command_review_special_videos)
 
     bili = sub.add_parser("bili-metadata-audit", help="build Bilibili-oriented title/label metadata reports")
     bili.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
     bili.set_defaults(func=command_bili_metadata_audit)
+
+    hflip = sub.add_parser("hflip-videos", help="horizontally flip MP4s into a new tree; dry-run by default")
+    hflip.add_argument("--input-dir", required=True)
+    hflip.add_argument("--out-dir", required=True)
+    hflip.add_argument("--execute", action="store_true")
+    hflip.add_argument("--overwrite", action="store_true")
+    hflip.add_argument("--workers", type=int, default=2)
+    hflip.add_argument("--limit", type=int, default=0)
+    hflip.add_argument("--encoder", choices=["libx264", "h264_nvenc"], default="libx264")
+    hflip.add_argument("--crf", type=int, default=16)
+    hflip.add_argument("--cq", type=int, default=19)
+    hflip.set_defaults(func=command_hflip_videos)
 
     merge = sub.add_parser("merge-videos", help="merge already named acXXXX mp4 groups; dry-run by default")
     merge.add_argument("--video-dir", default=str(DEFAULT_OUTPUT_DIR / "videos"))

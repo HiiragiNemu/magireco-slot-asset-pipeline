@@ -33,8 +33,17 @@ function ptrToString(p) {
 }
 
 function findExport(name) {
-  const p = Module.findExportByName(LIB_NAME, name);
-  return p === null ? null : p;
+  const module = Process.findModuleByName(LIB_NAME);
+  if (module === null) {
+    return null;
+  }
+  const exports = module.enumerateExports();
+  for (const item of exports) {
+    if (item.name === name) {
+      return item.address;
+    }
+  }
+  return null;
 }
 
 function ensureDir(path) {
@@ -60,12 +69,12 @@ function requireExport(name) {
 
 rpc.exports = {
   status: function () {
-    const base = Module.findBaseAddress(LIB_NAME);
+    const module = Process.findModuleByName(LIB_NAME);
     const byHash = findExport('zgSndCaptureConvertWavByHashCode');
     const raw = findExport('zgSndCaptureConvertWav');
     return {
       pid: Process.id,
-      libGameProcBase: ptrToString(base),
+      libGameProcBase: module === null ? null : ptrToString(module.base),
       convertByHashExport: ptrToString(byHash),
       convertRawExport: ptrToString(raw)
     };
@@ -143,9 +152,19 @@ def attach_or_spawn(device, args: argparse.Namespace) -> tuple[int, bool]:
     if args.spawn:
         pid = device.spawn([args.package])
         return pid, True
+    try:
+        applications = device.enumerate_applications()
+    except Exception:
+        applications = []
+    for app in applications:
+        identifier = getattr(app, "identifier", "")
+        pid = int(getattr(app, "pid", 0) or 0)
+        if identifier == args.package and pid:
+            return pid, False
     processes = device.enumerate_processes()
     for process in processes:
-        if process.name == args.package or process.identifier == args.package:
+        identifier = getattr(process, "identifier", "")
+        if process.name == args.package or identifier == args.package:
             return process.pid, False
     raise SystemExit(f"process not found: {args.package}; start the game or pass --spawn")
 
