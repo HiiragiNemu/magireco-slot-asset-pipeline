@@ -51,6 +51,7 @@ GDB_PATH = ROOT / "unpacked_assets" / "assets" / "gdb.bin"
 SOUND_ID_PATH = ROOT / "unpacked_assets" / "assets" / "sound_id.dat"
 SOUND_REQUEST_TABLE_PATH = ROOT / "unpacked_assets" / "assets" / "zg_snd_request_tbl.bin"
 SOUND_HASHREQ_TABLE_PATH = ROOT / "unpacked_assets" / "assets" / "zg_snd_hashreq_tbl.bin"
+DEFAULT_NATIVE_LIB_PATH = ROOT / "unpacked_lib" / "lib" / "arm64-v8a" / "libGameProc.so"
 DEBUG_SMALI_FILES = [
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugProd.smali",
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugDispNameList.smali",
@@ -1738,22 +1739,38 @@ def parse_sound_hashreq_records(path: Path) -> tuple[tuple[int, ...], list[dict]
     if len(data) < 64:
         return tuple(), []
     header = struct.unpack("<16I", data[:64])
-    record_count = header[7] if header[7] and 64 + header[7] * 16 <= len(data) else (len(data) - 64) // 16
+    header_count = header[7]
+    if header_count and len(data) >= 64 + header_count * 16:
+        record_count = header_count
+        record_size = 16
+    elif header_count and len(data) >= 64 + header_count * 8:
+        record_count = header_count
+        record_size = 8
+    else:
+        record_size = 16 if (len(data) - 64) % 16 == 0 else 8
+        record_count = (len(data) - 64) // record_size
+    sample_rate = header[5] or 48000
     records = []
     for index in range(record_count):
-        offset = 64 + index * 16
-        record = data[offset : offset + 16]
-        if len(record) < 16:
+        offset = 64 + index * record_size
+        record = data[offset : offset + record_size]
+        if len(record) < record_size:
             break
-        request_id = struct.unpack_from("<I", record, 8)[0]
-        tail = struct.unpack_from("<I", record, 12)[0]
+        hash_u64 = struct.unpack_from("<Q", record, 0)[0]
+        sample_count = struct.unpack_from("<I", record, 8)[0] if record_size >= 12 else 0
+        tail = struct.unpack_from("<I", record, 12)[0] if record_size >= 16 else 0
+        duration = f"{sample_count / sample_rate:.6f}" if sample_rate and sample_count else ""
         records.append(
             {
                 "record_index": index,
                 "offset_hex": f"0x{offset:x}",
+                "record_format_bytes": record_size,
                 "hash_le_hex": record[:8].hex().upper(),
                 "hash_be_hex": record[:8][::-1].hex().upper(),
-                "request_id": request_id,
+                "hash_value_hex": f"0x{hash_u64:016X}",
+                "request_id": index,
+                "sample_count_u32": sample_count,
+                "duration_sec_at_header_rate": duration,
                 "tail_u32": tail,
             }
         )
@@ -1767,6 +1784,166 @@ def extract_sound_media_counter(request_rows: list[dict]) -> Counter:
             for match in SOUND_MEDIA_NAME_RE.findall(row.get(field, "")):
                 media[match.upper()] += 1
     return media
+
+
+def normalize_media_key(value: str) -> str:
+    value = value.strip().upper()
+    value = re.sub(r"\.(?:SMZ|PCM)$", "", value)
+    return value
+
+
+def c_string_from_blob(blob: bytes, offset: int) -> str:
+    if offset < 0 or offset >= len(blob):
+        return ""
+    end = blob.find(b"\x00", offset)
+    if end < 0:
+        end = len(blob)
+    return blob[offset:end].decode("utf-8", errors="ignore")
+
+
+def parse_elf_relocated_string_table(lib_path: Path, symbol_name: str) -> list[dict]:
+    if not lib_path.exists():
+        return []
+    data = lib_path.read_bytes()
+    if data[:4] != b"\x7fELF" or data[4] != 2 or data[5] != 1:
+        return []
+
+    section_offset = struct.unpack_from("<Q", data, 0x28)[0]
+    section_entry_size = struct.unpack_from("<H", data, 0x3A)[0]
+    section_count = struct.unpack_from("<H", data, 0x3C)[0]
+    section_string_index = struct.unpack_from("<H", data, 0x3E)[0]
+    sections = []
+    for index in range(section_count):
+        offset = section_offset + index * section_entry_size
+        sh = struct.unpack_from("<IIQQQQIIQQ", data, offset)
+        sections.append(
+            {
+                "index": index,
+                "name_offset": sh[0],
+                "type": sh[1],
+                "addr": sh[3],
+                "offset": sh[4],
+                "size": sh[5],
+                "link": sh[6],
+                "entry_size": sh[9],
+            }
+        )
+
+    section_strings = sections[section_string_index]
+    section_string_blob = data[section_strings["offset"] : section_strings["offset"] + section_strings["size"]]
+    for section in sections:
+        section["name"] = c_string_from_blob(section_string_blob, int(section["name_offset"]))
+
+    def va_to_file_offset(va: int) -> int | None:
+        for section in sections:
+            if section["type"] == 8:
+                continue
+            start = int(section["addr"])
+            end = start + int(section["size"])
+            if start <= va < end:
+                return int(section["offset"]) + (va - start)
+        program_offset = struct.unpack_from("<Q", data, 0x20)[0]
+        program_entry_size = struct.unpack_from("<H", data, 0x36)[0]
+        program_count = struct.unpack_from("<H", data, 0x38)[0]
+        for index in range(program_count):
+            offset = program_offset + index * program_entry_size
+            p_type, _flags, p_offset, p_vaddr, _p_paddr, p_filesz, _p_memsz, _align = struct.unpack_from(
+                "<IIQQQQQQ", data, offset
+            )
+            if p_type == 1 and p_vaddr <= va < p_vaddr + p_filesz:
+                return p_offset + (va - p_vaddr)
+        return None
+
+    dynsym = next((section for section in sections if section.get("name") == ".dynsym"), None)
+    rela_dyn = next((section for section in sections if section.get("name") == ".rela.dyn"), None)
+    if not dynsym or not rela_dyn or not dynsym["entry_size"] or not rela_dyn["entry_size"]:
+        return []
+    dynstr = sections[int(dynsym["link"])]
+    dynstr_blob = data[dynstr["offset"] : dynstr["offset"] + dynstr["size"]]
+
+    target = None
+    for index in range(int(dynsym["size"]) // int(dynsym["entry_size"])):
+        offset = int(dynsym["offset"]) + index * int(dynsym["entry_size"])
+        st_name, _st_info, _st_other, _st_shndx, st_value, st_size = struct.unpack_from("<IBBHQQ", data, offset)
+        if st_name and c_string_from_blob(dynstr_blob, st_name) == symbol_name:
+            target = {"value": st_value, "size": st_size}
+            break
+    if not target:
+        return []
+
+    base = int(target["value"])
+    size = int(target["size"])
+    rows = []
+    for _index in range(int(rela_dyn["size"]) // int(rela_dyn["entry_size"])):
+        offset = int(rela_dyn["offset"]) + _index * int(rela_dyn["entry_size"])
+        r_offset, r_info, r_addend = struct.unpack_from("<QQq", data, offset)
+        if not (base <= r_offset < base + size):
+            continue
+        slot_index = (r_offset - base) // 8
+        string_offset = va_to_file_offset(r_addend)
+        name = c_string_from_blob(data, string_offset) if string_offset is not None else ""
+        rows.append(
+            {
+                "slot_index": slot_index,
+                "reloc_offset_hex": f"0x{r_offset:x}",
+                "reloc_type": r_info & 0xFFFFFFFF,
+                "name_key": normalize_media_key(name),
+                "name_raw": name,
+                "string_va_hex": f"0x{r_addend:x}",
+            }
+        )
+    rows.sort(key=lambda row: int(row["slot_index"]))
+    return rows
+
+
+def build_structured_media_counters(reqdata_rows: list[dict]) -> tuple[Counter, Counter, dict[str, list[str]]]:
+    smz_counter = Counter()
+    pcm_counter = Counter()
+    examples: dict[str, list[str]] = defaultdict(list)
+    for row in reqdata_rows:
+        media = row.get("smz_media", "")
+        if not media:
+            continue
+        key = normalize_media_key(media)
+        if media.upper().endswith(".PCM"):
+            pcm_counter[key] += 1
+        else:
+            smz_counter[key] += 1
+        if len(examples[key]) < 5:
+            examples[key].append(f"{row.get('request_id', '')}:{row.get('code_name', '')}")
+    return smz_counter, pcm_counter, examples
+
+
+def build_media_name_chunk_rows(name_rows: list[dict], chunk_rows: list[dict], request_counter: Counter) -> list[dict]:
+    rows = []
+    for row in name_rows:
+        chunk_index = int(row["slot_index"])
+        chunk = chunk_rows[chunk_index] if chunk_index < len(chunk_rows) else {}
+        key = row["name_key"]
+        rows.append(
+            {
+                "chunk_index": chunk_index,
+                "media_name": row["name_raw"],
+                "name_key": key,
+                "request_ref_count": request_counter.get(key, 0),
+                "present_in_request_table": "yes" if key in request_counter else "no",
+                "offset": chunk.get("offset", ""),
+                "offset_hex": chunk.get("offset_hex", ""),
+                "size": chunk.get("size", ""),
+                "field0": chunk.get("field0", ""),
+                "field1": chunk.get("field1", ""),
+                "field2": chunk.get("field2", ""),
+                "field3": chunk.get("field3", ""),
+                "field4": chunk.get("field4", ""),
+                "field5": chunk.get("field5", ""),
+                "field6": chunk.get("field6", ""),
+                "field7": chunk.get("field7", ""),
+                "channel_guess": chunk.get("channel_guess", ""),
+                "string_va_hex": row.get("string_va_hex", ""),
+                "reloc_offset_hex": row.get("reloc_offset_hex", ""),
+            }
+        )
+    return rows
 
 
 def parse_smz_chunk_headers(smz_bin: Path, smz_add: Path) -> list[dict]:
@@ -1813,21 +1990,18 @@ def parse_smz_chunk_headers(smz_bin: Path, smz_add: Path) -> list[dict]:
 
 def command_sound_media_audit(args):
     manifest_dir = Path(args.manifest_dir)
-    request_rows = read_csv(Path(args.sound_request_audit))
+    structured_request_rows = read_csv(Path(args.sound_request_struct_requests))
+    structured_reqdata_rows = read_csv(Path(args.sound_request_struct_reqdata))
     request_by_id: dict[int, list[dict]] = defaultdict(list)
-    for row in request_rows:
-        sound_id = parse_optional_int(row.get("sound_resource_id"))
-        if sound_id is not None:
-            request_by_id[sound_id].append(row)
+    for row in structured_request_rows:
+        request_id = parse_optional_int(row.get("request_id"))
+        if request_id is not None:
+            request_by_id[request_id].append(row)
 
-    media_counter = extract_sound_media_counter(request_rows)
-    unique_smz = sum(1 for name in media_counter if name.endswith(".SMZ"))
-    unique_pcm = sum(1 for name in media_counter if name.endswith(".PCM"))
+    smz_counter, pcm_counter, media_examples = build_structured_media_counters(structured_reqdata_rows)
 
     header, hash_records = parse_sound_hashreq_records(Path(args.hashreq_table))
-    request_id_counts = Counter(int(row["request_id"]) for row in hash_records)
-    linked_hash_rows = sum(count for request_id, count in request_id_counts.items() if request_id in request_by_id)
-    linked_request_ids = sum(1 for request_id in request_id_counts if request_id in request_by_id)
+    linked_hash_rows = sum(1 for row in hash_records if int(row["request_id"]) in request_by_id)
 
     hash_rows = []
     for row in hash_records:
@@ -1836,10 +2010,10 @@ def command_sound_media_audit(args):
         hash_rows.append(
             row
             | {
-                "request_label": request_info.get("request_label", ""),
-                "has_sound_id_record": request_info.get("has_sound_id_record", ""),
-                "suggested_name": request_info.get("suggested_name", ""),
-                "ogg_duration_sec": request_info.get("ogg_duration_sec", ""),
+                "code_name": request_info.get("code_name", ""),
+                "first_smz_media": request_info.get("first_smz_media", ""),
+                "reqdata_count": request_info.get("reqdata_count", ""),
+                "marker_count": request_info.get("marker_count", ""),
             }
         )
 
@@ -1850,14 +2024,18 @@ def command_sound_media_audit(args):
         [
             "record_index",
             "offset_hex",
+            "record_format_bytes",
             "hash_le_hex",
             "hash_be_hex",
+            "hash_value_hex",
             "request_id",
+            "sample_count_u32",
+            "duration_sec_at_header_rate",
             "tail_u32",
-            "request_label",
-            "has_sound_id_record",
-            "suggested_name",
-            "ogg_duration_sec",
+            "code_name",
+            "first_smz_media",
+            "reqdata_count",
+            "marker_count",
         ],
     )
 
@@ -1884,40 +2062,111 @@ def command_sound_media_audit(args):
             ],
         )
 
+    native_lib = Path(args.native_lib)
+    smz_name_rows = parse_elf_relocated_string_table(native_lib, "loadFileSmz")
+    pcm_name_rows = parse_elf_relocated_string_table(native_lib, "loadFilePcm")
+    smz_name_chunk_rows = build_media_name_chunk_rows(smz_name_rows, smz_rows, smz_counter)
+    smz_name_chunk_csv = manifest_dir / "smz_name_chunk_map.csv"
+    write_csv(
+        smz_name_chunk_csv,
+        smz_name_chunk_rows,
+        [
+            "chunk_index",
+            "media_name",
+            "name_key",
+            "request_ref_count",
+            "present_in_request_table",
+            "offset",
+            "offset_hex",
+            "size",
+            "field0",
+            "field1",
+            "field2",
+            "field3",
+            "field4",
+            "field5",
+            "field6",
+            "field7",
+            "channel_guess",
+            "string_va_hex",
+            "reloc_offset_hex",
+        ],
+    )
+    pcm_name_csv = manifest_dir / "pcm_name_table.csv"
+    pcm_name_table_rows = build_media_name_chunk_rows(pcm_name_rows, [], pcm_counter)
+    write_csv(
+        pcm_name_csv,
+        pcm_name_table_rows,
+        [
+            "chunk_index",
+            "media_name",
+            "name_key",
+            "request_ref_count",
+            "present_in_request_table",
+            "offset",
+            "offset_hex",
+            "size",
+            "field0",
+            "field1",
+            "field2",
+            "field3",
+            "field4",
+            "field5",
+            "field6",
+            "field7",
+            "channel_guess",
+            "string_va_hex",
+            "reloc_offset_hex",
+        ],
+    )
+
+    smz_name_keys = {row["name_key"] for row in smz_name_rows}
+    pcm_name_keys = {row["name_key"] for row in pcm_name_rows}
+    request_smz_keys = set(smz_counter)
+    request_pcm_keys = set(pcm_counter)
+    request_only_keys = sorted(request_smz_keys - smz_name_keys)
+    installed_only_keys = sorted(smz_name_keys - request_smz_keys)
+    missing_rows = [
+        {
+            "smz_media": f"{key}.smz",
+            "request_ref_count": smz_counter[key],
+            "request_examples": ";".join(media_examples.get(key, [])),
+        }
+        for key in request_only_keys
+    ]
+    missing_csv = manifest_dir / "smz_request_missing_from_installed_pack.csv"
+    write_csv(missing_csv, missing_rows, ["smz_media", "request_ref_count", "request_examples"])
+
     channel_counts = Counter(str(row.get("channel_guess", "")) for row in smz_rows)
     size_values = [int(row["size"]) for row in smz_rows]
-    top_hash_requests = []
-    for request_id, count in request_id_counts.most_common(20):
-        request_info = request_by_id.get(request_id, [{}])[0]
-        top_hash_requests.append(
-            f"- {request_id}: {count} hash rows; {request_info.get('request_label', '')}; {request_info.get('suggested_name', '')}".rstrip()
-        )
+    sample_counts = [int(row["sample_count_u32"]) for row in hash_rows if str(row.get("sample_count_u32", "")).isdigit()]
 
     summary_path = manifest_dir / "sound_media_summary.md"
     lines = [
         "# Sound Media Audit Summary",
         "",
-        f"Sound request audit: {args.sound_request_audit}",
+        f"Structured request table: {args.sound_request_struct_requests}",
+        f"Structured ReqData table: {args.sound_request_struct_reqdata}",
         f"Hash request table: {args.hashreq_table}",
+        f"Native library: {native_lib}",
         "",
-        "## Media references from sound request table",
-        f"- unique `.smz` media names: {unique_smz}",
-        f"- unique `.pcm` media names: {unique_pcm}",
-        f"- total media references in proximity fields: {sum(media_counter.values())}",
+        "## Structured request media references",
+        f"- unique SMZ names in ReqData: {len(smz_counter)}",
+        f"- total SMZ references in ReqData: {sum(smz_counter.values())}",
+        f"- unique PCM names in ReqData: {len(pcm_counter)}",
+        f"- total PCM references in ReqData: {sum(pcm_counter.values())}",
         "",
         "## zg_snd_hashreq_tbl.bin",
         f"- header_u32: {list(header)}",
         f"- hash request rows: {len(hash_records)}",
-        f"- unique request ids: {len(request_id_counts)}",
-        f"- hash rows linked to parsed sound request rows: {linked_hash_rows}",
-        f"- request ids linked to parsed sound request rows: {linked_request_ids}",
+        f"- hash rows linked by record index to structured requests: {linked_hash_rows}",
+        f"- record format bytes: {hash_records[0]['record_format_bytes'] if hash_records else ''}",
+        f"- rows with nonzero sample_count_u32: {sum(1 for row in hash_rows if int(row['sample_count_u32']))}",
         f"- rows with nonzero tail_u32: {sum(1 for row in hash_records if int(row['tail_u32']))}",
-        "",
-        "## Top hash request fanout",
-        *top_hash_requests,
-        "",
-        "## SMZ installed pack",
     ]
+    if sample_counts:
+        lines.append(f"- sample_count_u32 min/max: {min(sample_counts)} / {max(sample_counts)}")
+    lines.extend(["", "## SMZ installed pack"])
     if smz_rows:
         lines.extend(
             [
@@ -1933,19 +2182,39 @@ def command_sound_media_audit(args):
     lines.extend(
         [
             "",
+            "## Runtime media name tables",
+            f"- loadFileSmz relocated names: {len(smz_name_rows)}",
+            f"- loadFilePcm relocated names: {len(pcm_name_rows)}",
+            f"- SMZ request names present in installed runtime table: {len(request_smz_keys & smz_name_keys)}",
+            f"- SMZ request names missing from installed runtime table: {len(request_only_keys)}",
+            f"- SMZ runtime names not referenced by structured ReqData: {len(installed_only_keys)}",
+            f"- PCM request names present in runtime table: {len(request_pcm_keys & pcm_name_keys)}",
+            f"- PCM request names missing from runtime table: {len(request_pcm_keys - pcm_name_keys)}",
+            f"- SMZ name/chunk CSV: {smz_name_chunk_csv}",
+            f"- SMZ request-only CSV: {missing_csv}",
+            f"- PCM name table CSV: {pcm_name_csv}",
+        ]
+    )
+    lines.extend(
+        [
+            "",
             "## Limits",
-            "- `zg_snd_hashreq_tbl.bin` maps 8-byte hashes to request ids, but these hashes are not the full 28-hex `.smz` media names.",
+            "- `zg_snd_hashreq_tbl.bin` records are aligned by request index; the third u32 is not a request id.",
+            "- `loadFileSmz` proves the official name-to-chunk order for installed SMZ assets, but it does not decode audio by itself.",
             "- `.smz` chunks are not directly accepted by ffprobe; decoding still requires format work or game decoder behavior.",
             "- This audit does not prove video-to-audio timing; it only improves the sound media/request side of the map.",
         ]
     )
     summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    print(f"[sound-media-audit] unique smz media: {unique_smz}")
+    print(f"[sound-media-audit] structured smz media: {len(smz_counter)}")
+    print(f"[sound-media-audit] structured pcm media: {len(pcm_counter)}")
     print(f"[sound-media-audit] hash request rows: {len(hash_records)}")
     print(f"[sound-media-audit] wrote {hash_csv}")
     if smz_rows:
         print(f"[sound-media-audit] wrote {smz_csv}")
+    print(f"[sound-media-audit] wrote {smz_name_chunk_csv}")
+    print(f"[sound-media-audit] wrote {missing_csv}")
     print(f"[sound-media-audit] wrote {summary_path}")
 
 
@@ -2654,7 +2923,10 @@ def build_parser():
     sound_media = sub.add_parser("sound-media-audit", help="audit .smz/.pcm media refs, hash request table, and optional installed SMZ pack")
     sound_media.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
     sound_media.add_argument("--sound-request-audit", default=str(DEFAULT_MANIFEST_DIR / "sound_request_audit.csv"))
+    sound_media.add_argument("--sound-request-struct-requests", default=str(DEFAULT_MANIFEST_DIR / "sound_request_struct_requests.csv"))
+    sound_media.add_argument("--sound-request-struct-reqdata", default=str(DEFAULT_MANIFEST_DIR / "sound_request_struct_reqdata.csv"))
     sound_media.add_argument("--hashreq-table", default=str(SOUND_HASHREQ_TABLE_PATH))
+    sound_media.add_argument("--native-lib", default=str(DEFAULT_NATIVE_LIB_PATH))
     sound_media.add_argument("--smz-bin", default="")
     sound_media.add_argument("--smz-add", default="")
     sound_media.set_defaults(func=command_sound_media_audit)

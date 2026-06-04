@@ -367,6 +367,9 @@ python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_instal
 ```text
 asset_manifests/sound_hashreq_records.csv
 asset_manifests/smz_chunk_header_audit.csv
+asset_manifests/smz_name_chunk_map.csv
+asset_manifests/smz_request_missing_from_installed_pack.csv
+asset_manifests/pcm_name_table.csv
 asset_manifests/sound_media_summary.md
 ```
 
@@ -374,24 +377,30 @@ asset_manifests/sound_media_summary.md
 
 | 项目 | 数量 |
 | --- | ---: |
-| 声音请求表附近唯一 `.smz` 媒体名 | 9758 |
-| 声音请求表附近唯一 `.pcm` 媒体名 | 21 |
-| 声音请求表附近媒体引用总数 | 33601 |
+| 结构化 ReqData 唯一 SMZ 媒体名 | 9758 |
+| 结构化 ReqData SMZ 引用 | 10944 |
+| 结构化 ReqData 唯一 PCM 媒体名 | 21 |
+| 结构化 ReqData PCM 引用 | 21 |
 | `zg_snd_hashreq_tbl.bin` 记录 | 10420 |
-| 哈希表唯一 request id | 4689 |
-| 可关联到已解析声音请求行的哈希记录 | 3104 |
-| 可关联到已解析声音请求行的 request id | 1091 |
+| 通过记录序号关联到结构化 request 的 hash 行 | 10420 |
+| 非零 `sample_count_u32` 行 | 9936 |
 | 安装态 `smz.bin` chunk | 9752 |
+| `loadFileSmz` relocated 名称 | 9752 |
+| request 表中存在且安装态存在的 SMZ 名称 | 9752 |
+| request 表有但安装态表无的 SMZ 名称 | 6 |
+| 安装态有但 request 表未引用的 SMZ 名称 | 0 |
+| `loadFilePcm` relocated 名称 | 21 |
+| request 表中存在且安装态存在的 PCM 名称 | 21 |
 | 推测 mono chunk | 6826 |
 | 推测 stereo chunk | 2926 |
 
 判断：
 
-- `OnDemandPack01\assets\smz.bin` 与 `smz_add.bin` 的 9752 个 chunk，和声音请求表中的 9758 个唯一 `.smz` 媒体名高度接近，因此应优先按声音媒体容器继续研究。
-- `zg_snd_hashreq_tbl.bin` 文件头包含 `48000`，很可能是音频采样率线索。
-- `zg_snd_hashreq_tbl.bin` 的记录结构目前可按 `8-byte hash + request_id + zero tail` 解析，但 8-byte hash 不是完整 28 hex 的 `.smz` 文件名，不能直接当成文件名映射。
-- 抽样切出的 `.smz` chunk 不能直接被 `ffprobe` 识别，仍需要研究游戏内解码器或 chunk header/codec。
-- 这次审计只加强了“声音请求和声音媒体容器”的地图，仍没有证明外部声音与具体视频片段的同步关系。
+- `DecoderSmz::open_stream()` 使用 `loadFileSmz` 名称表查找媒体 basename，再使用 `g_SMZDataAddress[i]..[i+1]` 从 `smz.bin` 取 chunk；官方 SMZ 名称到 chunk 序号的映射已经可以生成。
+- `SndInitManager()` 会把 `smz_add.bin` 读入 `g_SMZDataAddress`，把 `pcm_add.bin` 读入 `g_PCMDataAddress`。
+- `zg_snd_hashreq_tbl.bin` 是 `64 + 10420 * 16` 字节；记录按 request index 对齐，结构为 `8-byte hash + sample_count_u32 + zero tail`。旧判断里的第三个字段不是 request id。
+- 抽样切出的 `.smz` chunk 不能直接被 `ffprobe` 或简单跳过 header 的 MP3 探测识别；后续仍需要复用/还原游戏内 `DecoderSmz` 解码器，或做运行态音频捕获。
+- 这次审计解决了“官方 SMZ 媒体名 -> 安装态 chunk”的地图，但仍没有证明外部声音与具体视频片段的同步关系。
 
 对 B 站最终整理的影响：
 

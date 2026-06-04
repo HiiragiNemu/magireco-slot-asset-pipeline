@@ -55,26 +55,31 @@ python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_instal
 - 前 64 字节是 16 个 little-endian `u32` header。
 - header 中包含 `48000`，很可能是采样率线索。
 - header 中包含 `10420`，与后续 16 字节记录数一致。
-- 每条记录可解析为 `8-byte hash + request_id + zero tail`。
+- 每条记录可解析为 `8-byte hash + sample_count_u32 + zero tail`。
+- request id 是记录序号，不是第三个 `u32` 字段。
 
 当前统计：
 
 | 项目 | 数量 |
 | --- | ---: |
-| 声音请求表附近唯一 `.smz` 媒体名 | 9758 |
-| 声音请求表附近唯一 `.pcm` 媒体名 | 21 |
-| 声音请求表附近媒体引用总数 | 33601 |
+| 结构化 ReqData 唯一 SMZ 媒体名 | 9758 |
+| 结构化 ReqData SMZ 引用 | 10944 |
+| 结构化 ReqData 唯一 PCM 媒体名 | 21 |
+| 结构化 ReqData PCM 引用 | 21 |
 | `zg_snd_hashreq_tbl.bin` 记录 | 10420 |
-| 哈希表唯一 request id | 4689 |
-| 可关联到已解析声音请求行的哈希记录 | 3104 |
-| 可关联到已解析声音请求行的 request id | 1091 |
+| 通过记录序号关联到结构化 request 的 hash 行 | 10420 |
+| 非零 `sample_count_u32` 行 | 9936 |
 | 安装态 `smz.bin` chunk | 9752 |
+| `loadFileSmz` relocated 名称 | 9752 |
+| request 表有且安装态存在的 SMZ 名称 | 9752 |
+| request 表有但安装态表无的 SMZ 名称 | 6 |
+| 安装态有但 request 表未引用的 SMZ 名称 | 0 |
 | 推测 mono chunk | 6826 |
 | 推测 stereo chunk | 2926 |
 
 ### 限制
 
-- `zg_snd_hashreq_tbl.bin` 的 8-byte hash 不是完整的 28 hex `.smz` 媒体名，当前不能直接建立 `.smz filename -> request_id` 的最终映射。
+- `zg_snd_hashreq_tbl.bin` 的 8-byte hash 不是完整的 28 hex `.smz` 媒体名，不能直接当成文件名映射。
 - 抽样 `.smz` chunk 不能直接被 `ffprobe` 识别。
 - 这次审计没有证明外部音频和具体视频片段之间的同步关系。
 - 不能把 OGG、PCM 或 `.smz` 按时长、编号或相邻关系强行合并到视频。
@@ -298,7 +303,8 @@ asset_manifests\sound_request_struct_summary.md
 - requests: 10420
 - ReqData rows: 11083
 - requests without SMZ media: 58
-- unique SMZ media names: 9779
+- unique media names: 9779
+- after extension split: 9758 SMZ + 21 PCM
 
 ### ac5408 结构化候选包
 
@@ -328,3 +334,66 @@ A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_structured_code_to_sm
 ### 判断
 
 官方声音链路现在应优先按 code-to-request-table-to-SMZ 理解，而不是按 code-to-OGG 理解。下一步重点是把 request table 中的 SMZ 媒体名与 `OnDemandPack01\assets\smz.bin/smz_add.bin` 的 chunk 建立可验证对应，并研究 SMZ 解码或复用游戏内解码结果。
+
+## 2026-06-05 - runtime SMZ name/chunk map closed
+
+### Native relocation table
+
+`DecoderSmz::open_stream()` 不按 hash 猜 chunk。它先从请求媒体名中取 basename，再遍历 native `loadFileSmz` 指针表做 `strcmp`，匹配成功后使用 `g_SMZDataAddress[i]..[i+1]` 作为 `smz.bin` 中的 offset/size。
+
+`SndInitManager()` 会把 `smz_add.bin` 读入 `g_SMZDataAddress`，把 `pcm_add.bin` 读入 `g_PCMDataAddress`。
+
+`loadFileSmz` 和 `loadFilePcm` 的表项由 `.rela.dyn` relative relocation 填充：
+
+- `loadFileSmz`: 9752 个名称，匹配 9752 个 `smz.bin` chunk。
+- `loadFilePcm`: 21 个名称，匹配全部 21 个 PCM request media。
+
+### Corrected hash request table
+
+`zg_snd_hashreq_tbl.bin` 是 `64 + 10420 * 16` 字节。记录按 request index 对齐：
+
+- 8 bytes: hash
+- u32: sample/play length field
+- u32: zero tail
+
+request id 是记录序号，不是第三个 `u32`。早期 `sound_hashreq_records.csv` 中把第三个字段命名为 request id 的判断已经修正。
+
+### New outputs
+
+`sound-media-audit` 现在会生成：
+
+```text
+asset_manifests\smz_name_chunk_map.csv
+asset_manifests\pcm_name_table.csv
+asset_manifests\smz_request_missing_from_installed_pack.csv
+asset_manifests\sound_hashreq_records.csv
+```
+
+当前统计：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 结构化 SMZ media | 9758 |
+| 结构化 SMZ references | 10944 |
+| 结构化 PCM media | 21 |
+| runtime SMZ names/chunks | 9752 |
+| runtime PCM names | 21 |
+| request 表有且安装态存在的 SMZ 名称 | 9752 |
+| request 表有但安装态表无的 SMZ 名称 | 6 |
+| 安装态有但 request 表未引用的 SMZ 名称 | 0 |
+| 非零 `sample_count_u32` hash rows | 9936 |
+
+6 个 request-only SMZ 名称是：
+
+```text
+1AF9169B573A7DC8A0DD38205512.smz
+88D3F9E5BBF6C1FC58D1B3FD2DA2.smz
+935011FC5F51AD6099D4882E17F2.smz
+A4B82FCFB2F6A1B9655902525172.smz
+B31749A51FD50294110A8BC28982.smz
+C509F2C208EABC314652AF8DDC12.smz
+```
+
+### Decode status
+
+临时样本切片和常见 MP3 skip 探测均失败；`.smz` 不是简单的“跳过 header 后得到 MP3”。下一步应优先还原/复用 native `DecoderSmz`，或者在模拟器运行态捕获声音输出。当前仍不能把外部 SMZ/OGG 自动 mux 到视频。

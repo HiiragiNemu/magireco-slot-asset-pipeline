@@ -346,6 +346,9 @@ python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_instal
 asset_manifests/sound_media_summary.md
 asset_manifests/sound_hashreq_records.csv
 asset_manifests/smz_chunk_header_audit.csv
+asset_manifests/smz_name_chunk_map.csv
+asset_manifests/smz_request_missing_from_installed_pack.csv
+asset_manifests/pcm_name_table.csv
 asset_manifests/sound_request_audit.csv
 asset_manifests/native_sound_video_summary.md
 asset_manifests/native_sound_video_evidence.csv
@@ -353,11 +356,11 @@ asset_manifests/native_sound_video_evidence.csv
 
 下一步技术任务：
 
-1. 按 `smz_chunk_header_audit.csv` 分组抽样，比较 mono/stereo 推测字段、chunk 大小、header 常量和音频时长可能性。
-2. 运行 `native-sound-video-audit` 后，优先追 `ac5406`、`ac5407`、`ac5408` 的 `fnSndRequest_BGM` 和 `EVT_ac` 证据，因为它们比 `ac0902` 更接近可还原的声音请求链。
-3. 使用 `sound_request_struct_reqdata.csv` 建立 code -> request id -> SMZ media 的精确候选表，不再把 code 直接等同于 `sound_id.dat` 的 `sound_resource_id`。
-4. 对 `ac5102` 的 45 条 `EVT_ac` 标签建立事件名到视频素材的人工复核表。
-5. 对 `sound_hashreq_records.csv` 中已有标签的 request id，回查 `sound_request_audit.csv` 和 OGG 导出结果，建立人工音频候选列表。
-6. 继续把 request table 的 SMZ media 名称与 `OnDemandPack01\assets\smz.bin/smz_add.bin` chunk 建立对应，并研究 SMZ 解码方式。
+1. 以 `smz_name_chunk_map.csv` 作为官方 SMZ 名称到 `smz.bin` chunk 的基准表；这一步已不需要继续靠 hash 猜测。
+2. 研究 `DecoderSmz`：优先尝试最小 native 解码 harness；若成本过高，再考虑用模拟器运行态捕获声音输出。
+3. 使用 `sound_request_struct_reqdata.csv` 建立 code -> request id -> SMZ media -> chunk index 的候选表，不再把 code 直接等同于 `sound_id.dat` 的 `sound_resource_id`。
+4. 单独审查 6 个 request 表存在但安装态 `loadFileSmz` 不存在的 SMZ 名称，判断是否是空请求、兼容遗留项或另一个包中的资源。
+5. 继续追 native/event 调度，寻找视频序列与 request code、request id 或 SMZ media 的同源关系。
+6. 对 `ac5102` 的 45 条 `EVT_ac` 标签建立事件名到视频素材的人工复核表。
 7. 暂时不要把 `.smz` 或 OGG 按文件序号、时长、相邻编号自动合并到视频；目前没有同步证据。
-8. 对 `ac5408` 先生成小规模“视频片段 + 官方 SMZ 候选音频”人工审查包，再决定是否扩展到其他 `ac` 组。
+8. 对 `ac5408` 先生成小规模“视频片段 + 官方 SMZ 候选音频”的人工审查包，前提是 SMZ 已能解码或可从运行态捕获为 WAV/OGG。

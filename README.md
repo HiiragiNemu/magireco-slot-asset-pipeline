@@ -95,6 +95,16 @@ python magireco_asset_pipeline.py sound-request-struct-audit
 python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
 ```
 
+当前版本还会读取 `libGameProc.so` 中 `loadFileSmz` / `loadFilePcm` 的 relocated name table，生成官方媒体名到安装态 chunk 的对应表：
+
+```text
+asset_manifests/smz_name_chunk_map.csv
+asset_manifests/pcm_name_table.csv
+asset_manifests/smz_request_missing_from_installed_pack.csv
+```
+
+注意：`zg_snd_hashreq_tbl.bin` 的 request id 是记录序号，第三个 `u32` 是 sample/play length 字段，不是 request id。
+
 从已有 native 字符串清单中提取声音请求、SMZ 表和 `EVT_ac` 事件标签证据：
 
 ```powershell
