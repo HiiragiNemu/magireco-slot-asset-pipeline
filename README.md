@@ -129,12 +129,20 @@ python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_b
 python magireco_asset_pipeline.py bili-metadata-audit
 ```
 
+当模拟器已运行并且 Android 侧有匹配版本的 `frida-server` 时，可以探测 native WAV 转换入口。无 `--code` 参数时只做状态检查：
+
+```powershell
+python tools\frida_smz_wav_probe.py --usb
+python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Download/magireco_wav_probe
+```
+
 ## 外部工具
 
 - Python 3.10+
 - FFmpeg，用于视频封装、音频合并、候选拼接
 - JADX，用于生成本地 `jadx_audit/base_src_only`
 - 可选：`requests`, `tqdm`, `mitmproxy`
+- 可选：Frida，用于在模拟器进程内调用 native WAV 转换探针
 
 ## 安全原则
 

@@ -364,3 +364,16 @@ asset_manifests/native_sound_video_evidence.csv
 6. 对 `ac5102` 的 45 条 `EVT_ac` 标签建立事件名到视频素材的人工复核表。
 7. 暂时不要把 `.smz` 或 OGG 按文件序号、时长、相邻编号自动合并到视频；目前没有同步证据。
 8. 对 `ac5408` 先生成小规模“视频片段 + 官方 SMZ 候选音频”的人工审查包，前提是 SMZ 已能解码或可从运行态捕获为 WAV/OGG。
+
+已准备 Frida 探针：
+
+```powershell
+python tools\frida_smz_wav_probe.py --usb
+python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Download/magireco_wav_probe
+```
+
+限制：
+
+- 需要 Android 侧运行与本机 Frida 版本匹配的 `frida-server`。
+- 需要游戏进程已启动，并且声音系统已经初始化。
+- 当前模拟器 ADB 端口不可连接，因此尚未实际调用 native 转换函数。

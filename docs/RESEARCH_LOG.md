@@ -397,3 +397,41 @@ C509F2C208EABC314652AF8DDC12.smz
 ### Decode status
 
 临时样本切片和常见 MP3 skip 探测均失败；`.smz` 不是简单的“跳过 header 后得到 MP3”。下一步应优先还原/复用 native `DecoderSmz`，或者在模拟器运行态捕获声音输出。当前仍不能把外部 SMZ/OGG 自动 mux 到视频。
+
+## 2026-06-05 - native WAV conversion entry found
+
+### Symbols
+
+`libGameProc.so` 暴露了可疑的内部 WAV 转换入口：
+
+```text
+zgSndCaptureConvertWav
+zgSndCaptureConvertWavByHashCode
+zg::snd::CaptureCtrlImpl::writeWaveFile(bool)
+zg::snd::DecoderImpl::openForConvert(char const*, vector<TagZGSndMarker>&, SndDataHeader&)
+```
+
+`writeWaveFile()` 会拼接 `.wav` 后缀，用 `fopen(..., "wb")` 写文件，并输出 `[zgSnd] convert end` 日志。`DecoderImpl::openForConvert()` 会按媒体名分派到 `DecoderPcm::openForConvert()` 或 `DecoderSmz::openForConvert()`。
+
+### Inferred call shape
+
+`zgSndCaptureConvertWav(char const* mediaName, char const* outputDir, char const* outputStem)` 形式比较明确：它开启转换模式，调用 vtable `+0x128`，再关闭转换模式。
+
+`zgSndCaptureConvertWavByHashCode(char const* code, char const* outputDir)` 先把 code 交给声音运行时对象解析 request，再取 request 的第一个媒体名，最后调用同一个 vtable `+0x128` 转 WAV。它依赖运行时全局声音对象已初始化；单独 `dlopen` Android so 不足以保证可用。
+
+### Probe script
+
+新增脚本：
+
+```text
+tools\frida_smz_wav_probe.py
+```
+
+用法：
+
+```powershell
+python tools\frida_smz_wav_probe.py --usb
+python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Download/magireco_wav_probe
+```
+
+当前没有执行 native 转换，因为 `adb connect 127.0.0.1:16384` 返回连接拒绝，模拟器目标不可用。本机已有 Frida 17.5.2；后续需要 Android 侧启动匹配版本 `frida-server` 后再验证。
