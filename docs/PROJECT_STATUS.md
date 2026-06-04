@@ -674,3 +674,36 @@ A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\
 | request PCM 缺失 | 0 |
 
 `sdcard_Android_data\files` 中的 OBB 与项目已有 OBB 尺寸一致；`gameData.bin/configData.bin/pad.bin` 目前只发现安装路径、访问状态和小型运行状态信息，没有发现新的演出命名或视频同步表。
+
+### 本阶段 D 盘归档
+
+已将本阶段 RAMDISK 研究成果固实压缩到：
+
+```text
+D:\MagiReco_Reverse\MagiaRe_RAMDISK_Research_20260605_hflip_audio_installed_pull.7z
+```
+
+归档范围：
+
+```text
+A:\magireco_bili_fulltest_20260603
+A:\magireco_installed_pull_20260603
+A:\timelines
+```
+
+未纳入归档：
+
+- A 盘系统目录
+- `A:\TEMP`
+- Frida 临时下载/解压二进制
+- 0 字节 `gamerecording.pb`
+
+7-Zip 校验结果：
+
+| 项目 | 数值 |
+| --- | ---: |
+| Folders | 86 |
+| Files | 27904 |
+| 原始大小 | 16163305230 bytes |
+| 压缩大小 | 13731737346 bytes |
+| `7z t` | Everything is Ok |

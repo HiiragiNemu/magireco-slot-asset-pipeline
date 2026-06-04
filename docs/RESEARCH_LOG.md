@@ -578,3 +578,29 @@ ro.product.cpu.abi = x86_64
 - 进程匹配已改为优先 `enumerate_applications()`，避免 Frida 17 的 `Process.identifier` 缺失问题。
 
 下一步若继续 native WAV 方案，优先考虑真 arm64 Android 环境、支持 arm64 app 的模拟器镜像，或改走静态还原 `DecoderSmz`。
+
+### Archive
+
+本阶段 RAMDISK 研究目录已归档：
+
+```text
+D:\MagiReco_Reverse\MagiaRe_RAMDISK_Research_20260605_hflip_audio_installed_pull.7z
+```
+
+归档包含：
+
+```text
+A:\magireco_bili_fulltest_20260603
+A:\magireco_installed_pull_20260603
+A:\timelines
+```
+
+7-Zip test passed:
+
+```text
+Folders: 86
+Files: 27904
+Size: 16163305230
+Compressed: 13731737346
+Everything is Ok
+```
