@@ -85,3 +85,54 @@ python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_instal
 2. 在 native/JADX/smali 里追查 `zg_snd_hashreq_tbl.bin`、`smz`、`sound_resource_id`、request id 与视频调度的关系。
 3. 对已有官方标签的声音请求先建立人工候选池，用于 B 站标题、说明、标签和后续手工试听。
 4. 只对 456 个自带内嵌音轨的 MP4 先推进有声投稿候选；无内嵌音轨视频等待同步证据。
+
+## 2026-06-05 - Native sound/video string evidence
+
+### 新增命令
+
+新增 `native-sound-video-audit`：
+
+```powershell
+python magireco_asset_pipeline.py native-sound-video-audit
+```
+
+该命令读取：
+
+- `asset_manifests\internal_audit\native_strings.csv`
+
+该命令输出：
+
+- `asset_manifests\native_sound_video_evidence.csv`
+- `asset_manifests\native_sound_video_summary.md`
+
+### 关键结论
+
+当前 native 字符串证据统计：
+
+| 类别 | 数量 |
+| --- | ---: |
+| `sound_media_table` | 6 |
+| `sound_request_symbol` | 16 |
+| `event_label` | 588 |
+| `ac_play_method` | 15 |
+
+明确看到的资源/表：
+
+- `smz.bin`
+- `smz_add.bin`
+- `zg_snd_hashreq_tbl.bin`
+- `sound_id.dat`
+- `ogg.bin`
+- `ogg_add.bin`
+
+明确看到的声音/事件线索：
+
+- Java/smali 层只有 `SndMng.nsmSndReq(int)` native 入口。
+- `ac5406`, `ac5407`, `ac5408` 有专用 `fnSndRequest_BGM` native 符号。
+- `ac1101` 至 `ac1206` 以及 `ac5209` 出现在 `C_ObjNml::fnSndRequest_BGM_DIR()` 证据中。
+- `ac5102` 有 45 条 `EVT_ac` 事件标签，但没有直接字符串级 `sound_request_symbol`。
+- `ac0902`, `ac4921`, `ac0904`, `ac3409`, `ac3410` 当前没有直接字符串级声音请求或 `EVT_ac` 证据。
+
+### 判断
+
+这证明 native 里确实存在演出事件与声音请求的同层线索，但目前仍只是符号/字符串级证据，不是最终同步表。下一步应优先追 `ac5406-5408`，因为它们同时有 `fnSndRequest_BGM`、`fnPlaySND`/`fnPlayAnm` 类方法和 `EVT_ac` 标签，最适合作为还原声音请求链的样本。

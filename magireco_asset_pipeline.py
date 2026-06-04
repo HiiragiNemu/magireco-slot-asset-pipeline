@@ -1763,6 +1763,144 @@ def command_sound_media_audit(args):
     print(f"[sound-media-audit] wrote {summary_path}")
 
 
+def classify_native_sound_video_value(value: str) -> list[str]:
+    categories = []
+    if re.search(r"\b(?:smz(?:_add)?\.bin|zg_snd_hashreq_tbl\.bin|sound_id\.dat|ogg(?:_add)?\.bin)\b", value, re.IGNORECASE):
+        categories.append("sound_media_table")
+    if re.search(r"(?:fnSndRequest|nsmSndReq|SndReq|fnRxSndReqApp)", value):
+        categories.append("sound_request_symbol")
+    if re.search(r"EVT_ac\d{4}", value, re.IGNORECASE):
+        categories.append("event_label")
+    if re.search(r"(?:C_ac\d{4}.*fnPlayAnm|C_ac\d{4}.*fnPlaySND|C_ac\d{4}.*fnPlayLED)", value, re.IGNORECASE):
+        categories.append("ac_play_method")
+    return categories
+
+
+def command_native_sound_video_audit(args):
+    manifest_dir = Path(args.manifest_dir)
+    native_strings_path = Path(args.native_strings)
+    native_rows = read_csv(native_strings_path)
+    focus_acs = [item.lower() for item in args.focus_ac.split(",") if item.strip()]
+
+    evidence_rows = []
+    for row in native_rows:
+        value = row.get("value", "")
+        categories = classify_native_sound_video_value(value)
+        if not categories:
+            continue
+        ac_code = extract_ac_code(value)
+        egrp_match = re.search(r"EGRP_(ac\d{4})", value, re.IGNORECASE)
+        event_match = re.search(r"EVT_(ac\d{4})", value, re.IGNORECASE)
+        if egrp_match:
+            ac_code = egrp_match.group(1).lower()
+        elif event_match:
+            ac_code = event_match.group(1).lower()
+        evidence_rows.append(
+            {
+                "category": ";".join(categories),
+                "ac_code": ac_code,
+                "library": row.get("library", ""),
+                "first_offset_hex": row.get("first_offset_hex", ""),
+                "tags": row.get("tags", ""),
+                "value": value,
+            }
+        )
+
+    evidence_rows.sort(key=lambda row: (row["category"], natural_key(row["ac_code"]), row["library"], row["first_offset_hex"]))
+    evidence_csv = manifest_dir / "native_sound_video_evidence.csv"
+    write_csv(
+        evidence_csv,
+        evidence_rows,
+        ["category", "ac_code", "library", "first_offset_hex", "tags", "value"],
+    )
+
+    category_counts = Counter()
+    ac_counts = Counter()
+    focus_counts = {ac: Counter() for ac in focus_acs}
+    for row in evidence_rows:
+        categories = row["category"].split(";")
+        for category in categories:
+            category_counts[category] += 1
+            if row["ac_code"]:
+                focus_counts.setdefault(row["ac_code"], Counter())[category] += 1
+        if row["ac_code"]:
+            ac_counts[row["ac_code"]] += 1
+
+    bgm_dir_acs = sorted(
+        {
+            row["ac_code"]
+            for row in evidence_rows
+            if "sound_request_symbol" in row["category"] and "fnSndRequest_BGM_DIR" in row["value"] and row["ac_code"]
+        },
+        key=natural_key,
+    )
+    ac_bgm_methods = sorted(
+        {
+            row["ac_code"]
+            for row in evidence_rows
+            if "sound_request_symbol" in row["category"]
+            and "fnSndRequest_BGM" in row["value"]
+            and "fnSndRequest_BGM_DIR" not in row["value"]
+            and row["ac_code"]
+        },
+        key=natural_key,
+    )
+    event_acs = sorted(
+        {row["ac_code"] for row in evidence_rows if "event_label" in row["category"] and row["ac_code"]},
+        key=natural_key,
+    )
+    direct_media_values = sorted(
+        {row["value"] for row in evidence_rows if "sound_media_table" in row["category"]},
+        key=natural_key,
+    )
+
+    summary_path = manifest_dir / "native_sound_video_summary.md"
+    lines = [
+        "# Native Sound/Video Evidence Summary",
+        "",
+        f"Native strings source: {native_strings_path}",
+        f"Evidence CSV: {evidence_csv}",
+        "",
+        "## Category counts",
+        *[f"- {category}: {count}" for category, count in sorted(category_counts.items())],
+        "",
+        "## Direct media/table strings",
+        *[f"- {value}" for value in direct_media_values],
+        "",
+        "## Native sound request evidence",
+        f"- `fnSndRequest_BGM` class methods: {', '.join(ac_bgm_methods) if ac_bgm_methods else '(none found)'}",
+        f"- `fnSndRequest_BGM_DIR` EGRP groups: {', '.join(bgm_dir_acs) if bgm_dir_acs else '(none found)'}",
+        f"- `EVT_ac` groups: {', '.join(event_acs) if event_acs else '(none found)'}",
+        "",
+        "## Focus AC counts",
+    ]
+    for ac in focus_acs:
+        counts = focus_counts.get(ac, Counter())
+        lines.append(
+            f"- {ac}: sound_request_symbol={counts.get('sound_request_symbol', 0)}, "
+            f"event_label={counts.get('event_label', 0)}, "
+            f"ac_play_method={counts.get('ac_play_method', 0)}, "
+            f"sound_media_table={counts.get('sound_media_table', 0)}"
+        )
+    lines.extend(
+        [
+            "",
+            "## Interpretation",
+            "- This is string-level/native-symbol evidence only. It does not prove a playable video-to-audio sync map.",
+            "- `smz.bin`, `smz_add.bin`, and `zg_snd_hashreq_tbl.bin` are referenced from `libGameProc.so`, not from Java-level app code.",
+            "- `SndMng.nsmSndReq(int)` is the Java/smali entry to native sound requests, but the meaningful request routing is native.",
+            "- `ac5406`, `ac5407`, and `ac5408` expose dedicated `fnSndRequest_BGM` symbols plus `EVT_ac` labels.",
+            "- `ac1101` through `ac1206` and `ac5209` appear in generic `C_ObjNml::fnSndRequest_BGM_DIR()` evidence.",
+            "- No direct string-level `ac0902` sound request evidence was found in this audit.",
+        ]
+    )
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(f"[native-sound-video-audit] evidence rows: {len(evidence_rows)}")
+    print(f"[native-sound-video-audit] wrote {evidence_csv}")
+    print(f"[native-sound-video-audit] wrote {summary_path}")
+
+
 def command_review_special_videos(args):
     video_dir = Path(args.video_dir)
     out_dir = Path(args.out_dir) if args.out_dir else video_dir / "_review_special"
@@ -2321,6 +2459,16 @@ def build_parser():
     sound_media.add_argument("--smz-bin", default="")
     sound_media.add_argument("--smz-add", default="")
     sound_media.set_defaults(func=command_sound_media_audit)
+
+    native_sound_video = sub.add_parser("native-sound-video-audit", help="summarize native string evidence for sound/video linkage")
+    native_sound_video.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    native_sound_video.add_argument("--native-strings", default=str(DEFAULT_MANIFEST_DIR / "internal_audit" / "native_strings.csv"))
+    native_sound_video.add_argument(
+        "--focus-ac",
+        default="ac0902,ac4921,ac0904,ac3409,ac3410,ac5102,ac5406,ac5407,ac5408",
+        help="comma-separated AC groups to highlight",
+    )
+    native_sound_video.set_defaults(func=command_native_sound_video_audit)
 
     special = sub.add_parser("review-special-videos", help="probe MP4s and collect audio-only or black-screen review cases")
     special.add_argument("--video-dir", required=True)

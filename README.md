@@ -89,6 +89,12 @@ python magireco_asset_pipeline.py sound-request-audit
 python magireco_asset_pipeline.py sound-media-audit --smz-bin A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add A:\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
 ```
 
+从已有 native 字符串清单中提取声音请求、SMZ 表和 `EVT_ac` 事件标签证据：
+
+```powershell
+python magireco_asset_pipeline.py native-sound-video-audit
+```
+
 扫描已导出的 MP4，收集纯音频、无视频流、全黑或近黑画面复核候选：
 
 ```powershell

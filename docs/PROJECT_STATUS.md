@@ -399,6 +399,44 @@ asset_manifests/sound_media_summary.md
 - 7345 个无内嵌音轨 MP4 不能直接按 `.smz`、OGG 或 request id 强行配音。
 - 可先用声音请求标签筛选投稿标题、说明和人工复核候选，例如 `魔法少女変身`、`マギア`、`ストーリー`、`WIN`、角色名等。
 
+### Native 声音/视频字符串证据
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py native-sound-video-audit
+```
+
+输出：
+
+```text
+asset_manifests/native_sound_video_evidence.csv
+asset_manifests/native_sound_video_summary.md
+```
+
+结果：
+
+| 类别 | 数量 |
+| --- | ---: |
+| `sound_media_table` | 6 |
+| `sound_request_symbol` | 16 |
+| `event_label` | 588 |
+| `ac_play_method` | 15 |
+
+关键证据：
+
+- `smz.bin`, `smz_add.bin`, `zg_snd_hashreq_tbl.bin`, `sound_id.dat`, `ogg.bin`, `ogg_add.bin` 均出现在 native 字符串证据中。
+- Java/smali 只暴露 `SndMng.nsmSndReq(int)` 入口，真正的声音请求路由仍在 native。
+- `ac5406`, `ac5407`, `ac5408` 有专用 `fnSndRequest_BGM` native 符号，并且有 `EVT_ac` 标签。
+- `ac1101` 至 `ac1206` 以及 `ac5209` 出现在 `C_ObjNml::fnSndRequest_BGM_DIR()` 证据中。
+- `ac5102` 有 45 条 `EVT_ac` 标签，但当前字符串级审计没有看到直接 `sound_request_symbol`。
+- `ac0902`, `ac4921`, `ac0904`, `ac3409`, `ac3410` 当前没有直接字符串级声音请求或 `EVT_ac` 证据。
+
+判断：
+
+- 该结果支持“视频/演出和声音存在 native 事件层关联”的方向。
+- 但它仍是字符串级证据，不是最终同步表；不能据此自动把 OGG/SMZ 合并到 `ac0902` 或其他视频。
+
 ### D 盘归档
 
 本轮新增内容已复制到：
