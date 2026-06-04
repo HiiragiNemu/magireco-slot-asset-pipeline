@@ -1545,6 +1545,192 @@ def command_sound_request_audit(args):
     print(f"[sound-request-audit] wrote {summary_path}")
 
 
+def decode_fixed_c_string(raw: bytes) -> str:
+    return decode_table_string(raw.split(b"\x00", 1)[0])
+
+
+def parse_sound_request_struct_table(path: Path) -> tuple[tuple[int, ...], list[dict], list[dict]]:
+    if not path.exists():
+        return tuple(), [], []
+    data = path.read_bytes()
+    if len(data) < 64:
+        return tuple(), [], []
+    header = struct.unpack("<16I", data[:64])
+    request_count = header[7]
+    offset = 64
+    request_rows: list[dict] = []
+    reqdata_rows: list[dict] = []
+
+    for request_id in range(request_count):
+        request_offset = offset
+        if offset + 0x48 > len(data):
+            break
+        request_header = data[offset : offset + 0x48]
+        code_name = decode_fixed_c_string(request_header[:0x40])
+        reqdata_count, marker_count = struct.unpack_from("<II", request_header, 0x40)
+        offset += 0x48
+
+        first_media = ""
+        media_count = 0
+        for reqdata_index in range(reqdata_count):
+            reqdata_offset = offset
+            if offset + 0x60 > len(data):
+                break
+            reqdata = data[offset : offset + 0x60]
+            fields = struct.unpack("<24I", reqdata)
+            smz_media = decode_fixed_c_string(reqdata[0x28:0x48])
+            if smz_media:
+                media_count += 1
+                if not first_media:
+                    first_media = smz_media
+
+            raw_mode_a = struct.unpack_from("<i", reqdata, 0x58)[0]
+            raw_mode_b = struct.unpack_from("<i", reqdata, 0x5C)[0]
+            mode_a = raw_mode_a % 5
+            mode_b = raw_mode_b % 3
+            offset += 0x60
+
+            fade_hex = ""
+            ducking_hex = ""
+            if mode_a != 0:
+                fade = data[offset : offset + 0x0C]
+                fade_hex = fade.hex().upper()
+                offset += 0x0C
+            if mode_b == 2:
+                ducking = data[offset : offset + 0x28]
+                ducking_hex = ducking.hex().upper()
+                offset += 0x28
+
+            row = {
+                "request_id": request_id,
+                "code_name": code_name,
+                "request_offset_hex": f"0x{request_offset:x}",
+                "reqdata_index": reqdata_index,
+                "reqdata_offset_hex": f"0x{reqdata_offset:x}",
+                "reqdata_count": reqdata_count,
+                "marker_count": marker_count,
+                "smz_media": smz_media,
+                "reqdata_type": fields[0],
+                "reqdata_variant": fields[2],
+                "reqdata_group_or_channel": fields[5],
+                "reqdata_flag": fields[18],
+                "reqdata_ref_id_a": fields[20],
+                "reqdata_ref_id_b": fields[21],
+                "mode_a_raw": raw_mode_a,
+                "mode_a_mod5": mode_a,
+                "mode_b_raw": raw_mode_b,
+                "mode_b_mod3": mode_b,
+                "fade_extra_hex": fade_hex,
+                "ducking_extra_hex": ducking_hex,
+            }
+            for field_index, value in enumerate(fields):
+                row[f"u32_{field_index:02d}"] = value
+            reqdata_rows.append(row)
+
+        for _ in range(marker_count):
+            offset += 0x24
+
+        request_rows.append(
+            {
+                "request_id": request_id,
+                "code_name": code_name,
+                "request_offset_hex": f"0x{request_offset:x}",
+                "reqdata_count": reqdata_count,
+                "marker_count": marker_count,
+                "reqdata_media_count": media_count,
+                "first_smz_media": first_media,
+            }
+        )
+
+    return header, request_rows, reqdata_rows
+
+
+def command_sound_request_struct_audit(args):
+    manifest_dir = Path(args.manifest_dir)
+    table_path = Path(args.table_path)
+    header, request_rows, reqdata_rows = parse_sound_request_struct_table(table_path)
+
+    request_csv = manifest_dir / "sound_request_struct_requests.csv"
+    reqdata_csv = manifest_dir / "sound_request_struct_reqdata.csv"
+    request_fields = [
+        "request_id",
+        "code_name",
+        "request_offset_hex",
+        "reqdata_count",
+        "marker_count",
+        "reqdata_media_count",
+        "first_smz_media",
+    ]
+    reqdata_fields = [
+        "request_id",
+        "code_name",
+        "request_offset_hex",
+        "reqdata_index",
+        "reqdata_offset_hex",
+        "reqdata_count",
+        "marker_count",
+        "smz_media",
+        "reqdata_type",
+        "reqdata_variant",
+        "reqdata_group_or_channel",
+        "reqdata_flag",
+        "reqdata_ref_id_a",
+        "reqdata_ref_id_b",
+        "mode_a_raw",
+        "mode_a_mod5",
+        "mode_b_raw",
+        "mode_b_mod3",
+        "fade_extra_hex",
+        "ducking_extra_hex",
+    ] + [f"u32_{field_index:02d}" for field_index in range(24)]
+    write_csv(request_csv, request_rows, request_fields)
+    write_csv(reqdata_csv, reqdata_rows, reqdata_fields)
+
+    code_to_request = {row["code_name"]: row for row in request_rows if row["code_name"]}
+    focus_codes = [code.strip() for code in args.focus_codes.split(",") if code.strip()]
+    focus_lines = []
+    if focus_codes:
+        focus_lines.extend(["", "## Focus Codes", "", "| code | request_id | reqdata | markers | first_smz_media |", "| --- | ---: | ---: | ---: | --- |"])
+        for code in focus_codes:
+            row = code_to_request.get(code)
+            if row:
+                focus_lines.append(
+                    f"| `{code}` | {row['request_id']} | {row['reqdata_count']} | {row['marker_count']} | `{row['first_smz_media']}` |"
+                )
+            else:
+                focus_lines.append(f"| `{code}` |  |  |  |  |")
+
+    unique_media = {row["smz_media"] for row in reqdata_rows if row["smz_media"]}
+    no_media = sum(1 for row in request_rows if not row["first_smz_media"])
+    summary_path = manifest_dir / "sound_request_struct_summary.md"
+    lines = [
+        "# Structured Sound Request Table Summary",
+        "",
+        f"Table: {table_path}",
+        f"Header u32: {list(header)}",
+        f"Requests parsed: {len(request_rows)}",
+        f"ReqData rows parsed: {len(reqdata_rows)}",
+        f"Requests without SMZ media: {no_media}",
+        f"Unique SMZ media names: {len(unique_media)}",
+        "",
+        "## Format Notes",
+        "- Native loader reads a 0x40 common header.",
+        "- Each request starts with a 0x48 header: 0x40-byte code string, u32 reqdata_count, u32 marker_count.",
+        "- Each ReqData starts with 0x60 bytes; optional 0x0C fade data follows when signed u32_22 % 5 is nonzero.",
+        "- Optional 0x28 ducking data follows when signed u32_23 % 3 equals 2.",
+        "- Each marker is 0x24 bytes.",
+        "- `RequestCtrl::codeName2ReqId` maps code strings to the parsed request index, not to `sound_id.dat` sound_resource_id.",
+    ] + focus_lines
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(f"[sound-request-struct-audit] requests: {len(request_rows)}")
+    print(f"[sound-request-struct-audit] reqdata rows: {len(reqdata_rows)}")
+    print(f"[sound-request-struct-audit] unique SMZ media: {len(unique_media)}")
+    print(f"[sound-request-struct-audit] wrote {request_csv}")
+    print(f"[sound-request-struct-audit] wrote {reqdata_csv}")
+    print(f"[sound-request-struct-audit] wrote {summary_path}")
+
+
 def parse_sound_hashreq_records(path: Path) -> tuple[tuple[int, ...], list[dict]]:
     if not path.exists():
         return tuple(), []
@@ -2451,6 +2637,19 @@ def build_parser():
     sound_request.add_argument("--ogg-audit", default=str(DEFAULT_MANIFEST_DIR / "ramdisk_audit" / "ogg_ffprobe_audit.csv"))
     sound_request.add_argument("--context-bytes", type=int, default=320)
     sound_request.set_defaults(func=command_sound_request_audit)
+
+    sound_request_struct = sub.add_parser(
+        "sound-request-struct-audit",
+        help="parse zg_snd_request_tbl.bin using the native request/ReqData layout",
+    )
+    sound_request_struct.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    sound_request_struct.add_argument("--table-path", default=str(SOUND_REQUEST_TABLE_PATH))
+    sound_request_struct.add_argument(
+        "--focus-codes",
+        default="9078,296,283,6825,26497,6830,8032,1053,1052,1051,1050,1049",
+        help="comma-separated sound code names to summarize",
+    )
+    sound_request_struct.set_defaults(func=command_sound_request_struct_audit)
 
     sound_media = sub.add_parser("sound-media-audit", help="audit .smz/.pcm media refs, hash request table, and optional installed SMZ pack")
     sound_media.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))

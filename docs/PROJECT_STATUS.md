@@ -475,7 +475,28 @@ fnReqSndSoundCode -> fnSendSndData -> SndReceiveMessage(0x201)
   -> SndMngSetRequest -> SndMngFrameFunction -> zgSndReqCode -> zgSndReqId
 ```
 
-这说明 `ac5408` 的数字字符串是官方声音代码输入。已在 `A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candidates` 生成只复制不移动的人工候选包；12 个 code 中 9 个复制到已有 OGG，`9078`, `296`, `283` 暂未匹配到同号 `sound_id.dat` 记录。
+这说明 `ac5408` 的数字字符串是官方声音代码输入。继续解析 `RequestCtrl::loadRequestTbl()` 后确认：code string 会映射到 `zg_snd_request_tbl.bin` 中的 request index，不等于 `sound_id.dat` 的 `sound_resource_id`。因此早期按 `sound_resource_id == code` 复制 OGG 的 `A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candidates` 已降级为低置信度参考。
+
+新的结构化候选包位于：
+
+```text
+A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_structured_code_to_smz
+```
+
+重点 code 的官方映射示例：
+
+| code | request_id | first SMZ |
+| --- | ---: | --- |
+| `9078` | 2074 | `2A40747716A2B334129B4E859D42.smz` |
+| `1049` | 444 | `F53FACA2830323AB642C1AD01802.smz` |
+| `1050` | 445 | `83D6634F254D3A407E8028CC1732.smz` |
+| `1051` | 446 | `22F05E94C422EDECF73A66E214B2.smz` |
+| `1052` | 447 | `B91EA87EC141173B3EF70D8B4052.smz` |
+| `1053` | 448 | `8A4A233E6BB8CFB14C79E1F234F2.smz` |
+| `6825` | 1492 | `1622D09E2ADD3F9E609DCF959772.smz` |
+| `6830` | 1497 | `37288F4F4F95C8C8146FA2035B22.smz` |
+| `8032` | 1678 | `6C42AA7341BB599291C9B7D35312.smz` |
+| `26497` | 8297 | `219AB8B97C4E29291BB44B4EFBB2.smz` |
 
 ### D 盘归档
 

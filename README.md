@@ -83,6 +83,12 @@ python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Ba
 python magireco_asset_pipeline.py sound-request-audit
 ```
 
+按 native `RequestCtrl::loadRequestTbl()` 的结构解析 `zg_snd_request_tbl.bin`，生成精确的 code -> request id -> ReqData/SMZ 审计：
+
+```powershell
+python magireco_asset_pipeline.py sound-request-struct-audit
+```
+
 审计声音请求表中的 `.smz/.pcm` 媒体名、`zg_snd_hashreq_tbl.bin` 哈希请求表，以及可选的安装态 `smz.bin/smz_add.bin`：
 
 ```powershell

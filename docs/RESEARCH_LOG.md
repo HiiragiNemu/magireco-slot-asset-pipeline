@@ -245,35 +245,15 @@ ac5408::fnSndRequest_BGM / fnPlaySND
 - `SndMngFrameFunction` 对队列类型 `1/9` 调用 `zgSndReqCode`；对队列类型 `0` 调用 `zgSndReqHashCode`。
 - `zgSndReqCode` 会通过声音系统对象 vtable `+0x58` 把 code string 转为内部 request id，然后调用 `zgSndReqId`。
 
-### ac5408 人工审查候选包
+### ac5408 旧 OGG 候选包
 
-已在 A 盘生成只复制不移动的候选包：
+早期曾在 A 盘生成只复制不移动的 OGG 候选包：
 
 ```text
 A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candidates
 ```
 
-内容：
-
-- `ac5408_sound_code_candidates.csv`
-- `README.md`
-- `ogg_candidates\`
-
-本次检查的 12 个 code 中，9 个能按 `sound_resource_id == code` 复制到已导出的 OGG：
-
-| code | OGG |
-| --- | --- |
-| `6825` | `snd_06825_bank25_ogg_09363.ogg` |
-| `26497` | `snd_26497_bank29_ogg_06695.ogg` |
-| `6830` | `snd_06830_bank25_ogg_09368.ogg` |
-| `8032` | `snd_08032_bank31_ogg_09541.ogg` |
-| `1053` | `snd_01053_bank27_ogg_00415.ogg` |
-| `1052` | `snd_01052_bank27_ogg_00414.ogg` |
-| `1051` | `snd_01051_bank27_ogg_00413.ogg` |
-| `1050` | `snd_01050_bank27_ogg_00412.ogg` |
-| `1049` | `snd_01049_bank27_ogg_00411.ogg` |
-
-`9078`, `296`, `283` 目前没有同号 `sound_id.dat` OGG 映射。它们仍可能通过 code-to-request-id 表或 SMZ 资源解析到声音，不能按 OGG chunk index 强行匹配。
+该包是按 `sound_resource_id == code` 做的启发式复制。结构化解析 `zg_snd_request_tbl.bin` 后已经确认：code string 映射到 request index，不等于 `sound_id.dat` 的 `sound_resource_id`。因此这个 OGG 包已降级为低置信度参考，不能作为官方音频合并依据。
 
 ### 判断
 
@@ -284,3 +264,67 @@ A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_official_code_candida
 - 视频片段与声音请求之间还缺少时间轴或演出事件对应关系。
 
 下一步应继续定位 `zgSndReqCode` 使用的 code-to-request-id 数据源，并优先对 `ac5408` 生成小规模“视频片段 + 官方候选音频”的人工审查包，而不是直接做全量自动 mux。
+
+## 2026-06-05 - structured request table parser
+
+### Native 结构确认
+
+继续反汇编 `zg::snd::RequestCtrl::loadRequestTbl()` 和 `codeName2ReqId(char const*)` 后，确认 `zg_snd_request_tbl.bin` 的结构：
+
+- 文件头是 0x40 字节，`u32[7]` 是 request 数量，本包为 10420。
+- 每条 request 先读 0x48 字节：0x40 字节 code string、u32 `reqdata_count`、u32 `marker_count`。
+- 每条 ReqData 先读 0x60 字节。
+- 若 ReqData 的 signed `u32_22 % 5 != 0`，后面还有 0x0C fade 数据。
+- 若 ReqData 的 signed `u32_23 % 3 == 2`，后面还有 0x28 ducking 数据。
+- 每条 marker 是 0x24 字节。
+- `codeName2ReqId` 查的是 `RequestCtrl + 0x28` 的 `std::map<string,uint32>`，返回 request index；找不到返回 `-1`。
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py sound-request-struct-audit
+```
+
+输出：
+
+```text
+asset_manifests\sound_request_struct_requests.csv
+asset_manifests\sound_request_struct_reqdata.csv
+asset_manifests\sound_request_struct_summary.md
+```
+
+本次解析结果：
+
+- requests: 10420
+- ReqData rows: 11083
+- requests without SMZ media: 58
+- unique SMZ media names: 9779
+
+### ac5408 结构化候选包
+
+已在 A 盘生成新的结构化候选包：
+
+```text
+A:\magireco_bili_fulltest_20260603\sound_code_tests\ac5408_structured_code_to_smz
+```
+
+重点 code 的官方 request 表映射：
+
+| code | request_id | first SMZ |
+| --- | ---: | --- |
+| `9078` | 2074 | `2A40747716A2B334129B4E859D42.smz` |
+| `296` | 101 | none |
+| `283` | 95 | none |
+| `6825` | 1492 | `1622D09E2ADD3F9E609DCF959772.smz` |
+| `26497` | 8297 | `219AB8B97C4E29291BB44B4EFBB2.smz` |
+| `6830` | 1497 | `37288F4F4F95C8C8146FA2035B22.smz` |
+| `8032` | 1678 | `6C42AA7341BB599291C9B7D35312.smz` |
+| `1053` | 448 | `8A4A233E6BB8CFB14C79E1F234F2.smz` |
+| `1052` | 447 | `B91EA87EC141173B3EF70D8B4052.smz` |
+| `1051` | 446 | `22F05E94C422EDECF73A66E214B2.smz` |
+| `1050` | 445 | `83D6634F254D3A407E8028CC1732.smz` |
+| `1049` | 444 | `F53FACA2830323AB642C1AD01802.smz` |
+
+### 判断
+
+官方声音链路现在应优先按 code-to-request-table-to-SMZ 理解，而不是按 code-to-OGG 理解。下一步重点是把 request table 中的 SMZ 媒体名与 `OnDemandPack01\assets\smz.bin/smz_add.bin` 的 chunk 建立可验证对应，并研究 SMZ 解码或复用游戏内解码结果。
