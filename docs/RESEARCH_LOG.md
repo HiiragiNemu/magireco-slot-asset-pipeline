@@ -136,3 +136,52 @@ python magireco_asset_pipeline.py native-sound-video-audit
 ### 判断
 
 这证明 native 里确实存在演出事件与声音请求的同层线索，但目前仍只是符号/字符串级证据，不是最终同步表。下一步应优先追 `ac5406-5408`，因为它们同时有 `fnSndRequest_BGM`、`fnPlaySND`/`fnPlayAnm` 类方法和 `EVT_ac` 标签，最适合作为还原声音请求链的样本。
+
+## 2026-06-05 - ac5408 symbol and disassembly sample
+
+### 工具状态
+
+本机 PATH 中没有可直接使用的 `llvm-objdump`、`objdump`、`readelf` 或 `nm`。本轮用纯 Python 解析 `libGameProc.so` 的 ELF header、program header 和 `.dynsym`，并临时安装 Capstone 到：
+
+```text
+A:\TEMP\pydeps_capstone
+```
+
+该目录不属于仓库，不提交。
+
+### 符号表结论
+
+`libGameProc.so` 保留 `.dynsym`，可以拿到 `ac5406-5408` 的函数地址和大小：
+
+| 函数 | 地址 | 大小 |
+| --- | ---: | ---: |
+| `C_ac5406::fnSndRequest_BGM()` | `0x43e9eb4` | 4 |
+| `C_ac5407::fnSndRequest_BGM()` | `0x43ea9e8` | 4 |
+| `C_ac5408::fnSndRequest_BGM()` | `0x43ec088` | 88 |
+| `C_ac5408::fnPlaySND()` | `0x43eaef0` | 836 |
+| `C_ac5408::fnSetEventCode()` | `0x43ead34` | 344 |
+
+反汇编确认：
+
+- `ac5406::fnSndRequest_BGM()` 是单条 `ret`。
+- `ac5407::fnSndRequest_BGM()` 是单条 `ret`。
+- `ac5408::fnSndRequest_BGM()` 有实际逻辑，会加载数字字符串 `9078` 并调用内部函数。
+
+### ac5408 数字字符串
+
+`ac5408` 声音相关函数中出现以下数字字符串：
+
+| 来源函数 | 数字字符串 |
+| --- | --- |
+| `fnSndRequest_BGM` | `9078` |
+| `fnPlaySND` | `296`, `283`, `6825`, `26497`, `6830`, `8032`, `1053`, `1052`, `1051`, `1050`, `1049` |
+
+按现有声音清单查询：
+
+- `6825`, `26497`, `6830`, `8032`, `1053`, `1052`, `1051`, `1050`, `1049` 都能作为 `sound_resource_id` 映射到 OGG。
+- `296`, `283`, `9078` 不能作为有 OGG 的 `sound_resource_id`，但能作为 `ogg_chunk_index` 映射到其他声音资源。
+- `9078` 作为 OGG chunk index 对应 `snd_04718_bank03_ogg_09078.ogg`，标签是 `復活成功【WIN】_019`；但作为 request id 9078 当前没有 `sound_id.dat` 映射。
+
+### 判断
+
+`ac5408` 是当前最有价值的反汇编样本，但这些数字字符串的语义仍未确定。它们可能是声音请求 ID、OGG index、hash/request 参数或内部事件参数。下一步必须继续追 `0x449d5e0`、`0x449ca00`、`0x4492820` 等内部调用目标，而不是直接把这些 OGG 合并到视频。

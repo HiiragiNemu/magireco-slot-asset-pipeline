@@ -437,6 +437,27 @@ asset_manifests/native_sound_video_summary.md
 - 该结果支持“视频/演出和声音存在 native 事件层关联”的方向。
 - 但它仍是字符串级证据，不是最终同步表；不能据此自动把 OGG/SMZ 合并到 `ac0902` 或其他视频。
 
+### ac5408 反汇编样本
+
+本机没有现成 `objdump/readelf`，因此本轮使用纯 Python 解析 ELF `.dynsym`，并临时将 Capstone 安装到 `A:\TEMP\pydeps_capstone` 做只读反汇编。
+
+关键函数地址：
+
+| 函数 | 地址 | 大小 | 判断 |
+| --- | ---: | ---: | --- |
+| `C_ac5406::fnSndRequest_BGM()` | `0x43e9eb4` | 4 | 只有 `ret` |
+| `C_ac5407::fnSndRequest_BGM()` | `0x43ea9e8` | 4 | 只有 `ret` |
+| `C_ac5408::fnSndRequest_BGM()` | `0x43ec088` | 88 | 有实际逻辑 |
+
+`ac5408` 相关函数中反汇编出的数字字符串：
+
+| 来源函数 | 数字字符串 |
+| --- | --- |
+| `fnSndRequest_BGM` | `9078` |
+| `fnPlaySND` | `296`, `283`, `6825`, `26497`, `6830`, `8032`, `1053`, `1052`, `1051`, `1050`, `1049` |
+
+这些数字大多可以作为 `sound_resource_id` 映射到 OGG，但部分也能作为 `ogg_chunk_index` 映射到另一个声音资源。例如 `9078` 作为 request id 没有 OGG 映射，但作为 OGG chunk index 对应 `snd_04718_bank03_ogg_09078.ogg`。因此当前不能只按数字文本直接合并音频，必须继续确认调用函数语义。
+
 ### D 盘归档
 
 本轮新增内容已复制到：
