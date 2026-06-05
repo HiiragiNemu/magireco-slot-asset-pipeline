@@ -253,3 +253,52 @@ NFKC-normalized display form. This converts half-width Japanese characters for
 readability without deleting technical prefixes, variant numbers, or the raw
 evidence. Each description now reports audible, silent-video, and subtitle
 event counts separately.
+
+## Initial audible-part audit and corrections
+
+The completed 294-part audible build produced 588 logical files:
+
+- encoded outputs: 359
+- no-dialogue subtitle hard links: 229
+- missing outputs: 0
+- build failures: 0
+
+The first independent audit found no duration, audibility, or storage-relation
+failures. It flagged nine parts for average-frame-rate deviation and eight
+parts for unsafe decoded peaks.
+
+Decoded frame counts showed the frame-rate flags were event-boundary
+quantization rather than real playback-rate errors. Across the nine parts,
+the difference from `planned duration * 30` was 0.045 to 0.476 frame per
+event. The audit now adds half a frame per normalized event, divided by
+duration, to the base average-frame-rate tolerance.
+
+The peak flags were real: seven parts reached 0.0 dBFS and one reached
+-0.4 dBFS. The final audio chain now applies a hard limiter after loudness
+normalization, with 1 dB of AAC encoding headroom below the requested
+true-peak target.
+
+All eight affected parts were rebuilt from event sources. `ac7202` P252 has
+independent subtitle media, so both editions were encoded; the other seven
+parts restored their subtitle filenames as hard links after rebuilding the
+no-subtitle media.
+
+Final audible-part audit:
+
+- logical outputs: 588
+- unique physical media files: 359
+- missing outputs: 0
+- stream contract failures: 0
+- duration failures: 0
+- audio expectation failures: 0
+- peak safety failures: 0
+- storage relation failures: 0
+- highest decoded peak: -0.5 dBFS
+- expected and actual shared-file pairs: 229
+
+Authoritative audit output:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  bilibili_part_output_audit_audible_final_v3\
+```

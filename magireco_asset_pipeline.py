@@ -4564,7 +4564,10 @@ def command_build_bilibili_part(args):
                     "-af",
                     (
                         f"loudnorm=I={args.loudness_i:.3f}:"
-                        f"LRA=11:TP={args.true_peak_db:.3f}"
+                        f"LRA=11:TP={args.true_peak_db:.3f},"
+                        "alimiter="
+                        f"limit={10 ** ((args.true_peak_db - 1.0) / 20):.6f}:"
+                        "level=disabled:attack=5:release=50"
                     ),
                     "-c:a",
                     "aac",
@@ -4808,6 +4811,11 @@ def command_bilibili_part_output_audit(args):
             or media.get("frame_rate", "")
         )
         event_count = parse_optional_int(part.get("event_count")) or 0
+        frame_rate_tolerance = args.fps_tolerance
+        if actual_duration is not None and actual_duration > 0:
+            frame_rate_tolerance += (
+                0.5 * event_count / actual_duration
+            )
         duration_tolerance = (
             args.duration_tolerance_sec
             + event_count / max(args.fps, 1.0)
@@ -4825,7 +4833,7 @@ def command_bilibili_part_output_audit(args):
             and media.get("audio_codec") == args.audio_codec
             and expected_canvas == (width, height)
             and actual_fps is not None
-            and abs(actual_fps - args.fps) <= args.fps_tolerance
+            and abs(actual_fps - args.fps) <= frame_rate_tolerance
             and parse_optional_int(media.get("audio_sample_rate"))
             == args.audio_sample_rate
             and parse_optional_int(media.get("audio_channels"))
@@ -4862,6 +4870,9 @@ def command_bilibili_part_output_audit(args):
             "height": media["height"],
             "frame_rate": media["frame_rate"],
             "average_frame_rate": media["average_frame_rate"],
+            "frame_rate_tolerance_fps": (
+                f"{frame_rate_tolerance:.6f}"
+            ),
             "audio_sample_rate": media["audio_sample_rate"],
             "audio_channels": media["audio_channels"],
             "stream_contract_ok": "yes" if stream_contract_ok else "no",
@@ -4982,6 +4993,12 @@ def command_bilibili_part_output_audit(args):
                 (
                     "Duration tolerance is the configured base plus one "
                     "frame per normalized event to cover timestamp rounding."
+                ),
+                (
+                    "Average-frame-rate tolerance is the configured base plus "
+                    "half a frame per normalized event divided by duration. "
+                    "This covers independent event-boundary quantization "
+                    "without accepting a different nominal playback rate."
                 ),
                 (
                     "Audio audibility is measured from decoded samples; "

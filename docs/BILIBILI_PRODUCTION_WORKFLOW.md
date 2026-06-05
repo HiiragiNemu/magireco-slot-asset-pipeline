@@ -122,6 +122,10 @@ The audit verifies streams, canvas, average frame rate, 48 kHz stereo AAC,
 decoded audibility, decoded peak, planned duration, and the hard-link relation
 between editions that contain no subtitle events.
 
+The completed audible set passed all 588 logical-output checks. It contains
+359 unique physical media files and 229 verified no-dialogue hard-link pairs;
+the highest decoded peak is -0.5 dBFS.
+
 Verify all burned-subtitle event sources independently with:
 
 ```powershell
@@ -142,6 +146,16 @@ report `r_frame_rate=60/1` when a few boundary packets last 50 ms even though
 its frame count and duration are approximately 30 fps. Duration tolerance is
 the configured base plus one frame per normalized event, which bounds the
 timestamp rounding accumulated across the part.
+
+Average-frame-rate tolerance uses the configured base plus half a frame per
+normalized event divided by the part duration. Full frame counts measured on
+the initially flagged outputs differed from `planned duration * 30` by only
+0.045 to 0.476 frame per event. This distinguishes event-boundary timestamp
+quantization from a genuinely wrong playback rate.
+
+The final audio chain applies a hard limiter after loudness normalization. Its
+limit includes 1 dB of AAC encoding headroom below the requested true-peak
+target; decoded output is still checked independently.
 
 ## Quality gates
 
