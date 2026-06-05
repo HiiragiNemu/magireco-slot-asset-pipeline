@@ -4265,6 +4265,9 @@ def command_build_bilibili_part(args):
                 else part["subtitle_output_name"]
             )
             output_path = (out_dir / output_name).resolve()
+            no_subtitles_part_path = (
+                out_dir / part["no_subtitles_output_name"]
+            ).resolve()
             work_dir = (
                 work_root / safe_name(part["part_key"]) / safe_name(edition)
             ).resolve()
@@ -4286,6 +4289,43 @@ def command_build_bilibili_part(args):
                 "output_size_bytes": "",
                 "error": "",
             }
+            subtitle_event_count = (
+                parse_optional_int(part.get("subtitle_event_count")) or 0
+            )
+            if (
+                edition == "subtitles"
+                and subtitle_event_count == 0
+                and no_subtitles_part_path.exists()
+            ):
+                if output_path.exists() and not args.overwrite:
+                    row["status"] = "exists"
+                elif not args.execute:
+                    row["status"] = "would_link_no_subtitles"
+                else:
+                    if output_path.exists():
+                        output_path.unlink()
+                    try:
+                        os.link(no_subtitles_part_path, output_path)
+                        row["status"] = "linked_no_subtitles"
+                    except OSError:
+                        shutil.copy2(no_subtitles_part_path, output_path)
+                        row["status"] = "copied_no_subtitles"
+                    linked_probe = probe_mp4(output_path)
+                    row.update(
+                        {
+                            "duration_sec": linked_probe.get("duration_sec", ""),
+                            "has_video": (
+                                "yes" if linked_probe.get("has_video") else "no"
+                            ),
+                            "has_audio": (
+                                "yes" if linked_probe.get("has_audio") else "no"
+                            ),
+                            "audible_audio": "yes",
+                            "output_size_bytes": output_path.stat().st_size,
+                        }
+                    )
+                manifest_rows.append(row)
+                continue
             if output_path.exists() and not args.overwrite:
                 row["status"] = "exists"
                 manifest_rows.append(row)

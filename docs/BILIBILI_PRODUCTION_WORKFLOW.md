@@ -70,6 +70,10 @@ The builder:
 6. Applies whole-part loudness and true-peak control.
 7. Encodes one final 48 kHz stereo AAC stream.
 
+When a part contains no subtitle events, the subtitle filename is created as a
+hard link to the no-subtitle output on the same volume. Both filenames remain
+available without storing duplicate media bytes.
+
 Verified P002 result:
 
 - Events: 12
