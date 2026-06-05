@@ -74,6 +74,27 @@ When a part contains no subtitle events, the subtitle filename is created as a
 hard link to the no-subtitle output on the same volume. Both filenames remain
 available without storing duplicate media bytes.
 
+The complete 8,482-event plan can also reuse an already-built audible plan.
+Pass the three `--reuse-*` arguments together:
+
+```powershell
+python magireco_asset_pipeline.py build-bilibili-part `
+  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v3_limited_complete\bilibili_event_sequence.csv `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v3_limited_complete\bilibili_parts.csv `
+  --out-dir D:\MagiReco_Reverse\magireco_bilibili_parts_all_20260606 `
+  --all-parts --edition both `
+  --reuse-sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_event_sequence.csv `
+  --reuse-parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --reuse-output-dir D:\MagiReco_Reverse\magireco_bilibili_parts_audible_20260606 `
+  --encoder h264_nvenc --cq 19 --audio-bitrate 256k `
+  --loudness-i -16 --true-peak-db -3 --cleanup-work --execute
+```
+
+Reuse requires an exact event-sequence signature: event name, canvas, planned
+duration, separator duration, no-subtitle input, and subtitle-edition input.
+The output is hard-linked when both directories are on the same volume, with a
+copy fallback only when linking is unavailable.
+
 Verified P002 result:
 
 - Events: 12

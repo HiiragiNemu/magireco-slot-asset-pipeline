@@ -3095,7 +3095,12 @@ def command_build_event_dgm_composite(args):
         )
         audio_output = "asilence"
 
-    cmd.extend(["-filter_complex", ";".join(filters)])
+    filter_script_path = out_dir / "composite_filter_complex.txt"
+    filter_script_path.write_text(
+        ";\n".join(filters) + "\n",
+        encoding="utf-8",
+    )
+    cmd.extend(["-filter_complex_script", str(filter_script_path)])
     cmd.extend(["-map", f"[{current_video}]", "-map", f"[{audio_output}]"])
     if effective_encoder == "h264_nvenc":
         cmd.extend(["-c:v", "h264_nvenc", "-preset", "p4", "-cq", str(args.cq)])
@@ -4204,6 +4209,20 @@ def normalize_bilibili_segment(
     }
 
 
+def bilibili_part_sequence_signature(rows: list[dict]) -> tuple:
+    return tuple(
+        (
+            row.get("event_name", ""),
+            row.get("canvas", ""),
+            row.get("event_duration_sec", ""),
+            row.get("spacer_after_sec", ""),
+            row.get("no_subtitles_input", ""),
+            row.get("subtitle_edition_input", ""),
+        )
+        for row in rows
+    )
+
+
 def command_build_bilibili_part(args):
     sequence_rows = read_csv(Path(args.sequence_csv))
     part_rows = read_csv(Path(args.parts_csv))
@@ -4245,6 +4264,46 @@ def command_build_bilibili_part(args):
             key=lambda row: parse_optional_int(row.get("event_order_in_part")) or 0
         )
 
+    reuse_values = (
+        args.reuse_sequence_csv,
+        args.reuse_parts_csv,
+        args.reuse_output_dir,
+    )
+    if any(reuse_values) and not all(reuse_values):
+        raise ValueError(
+            "reuse requires --reuse-sequence-csv, --reuse-parts-csv, "
+            "and --reuse-output-dir together"
+        )
+    reuse_by_signature = {}
+    reuse_output_dir = (
+        Path(args.reuse_output_dir).resolve()
+        if args.reuse_output_dir
+        else None
+    )
+    if reuse_output_dir is not None:
+        reuse_sequence_rows = read_csv(Path(args.reuse_sequence_csv))
+        reuse_part_rows = read_csv(Path(args.reuse_parts_csv))
+        reuse_parts_by_number = {
+            parse_optional_int(row.get("global_part_number")): row
+            for row in reuse_part_rows
+        }
+        reuse_sequence_by_part: dict[int, list[dict]] = defaultdict(list)
+        for row in reuse_sequence_rows:
+            number = parse_optional_int(row.get("global_part_number"))
+            if number is not None:
+                reuse_sequence_by_part[number].append(row)
+        for number, rows in reuse_sequence_by_part.items():
+            rows.sort(
+                key=lambda row: (
+                    parse_optional_int(row.get("event_order_in_part")) or 0
+                )
+            )
+            reuse_part = reuse_parts_by_number.get(number)
+            if reuse_part is not None:
+                reuse_by_signature[
+                    bilibili_part_sequence_signature(rows)
+                ] = reuse_part
+
     manifest_rows = []
     for part in selected_parts:
         part_number = parse_optional_int(part.get("global_part_number"))
@@ -4253,6 +4312,9 @@ def command_build_bilibili_part(args):
         events = sequence_by_part.get(part_number, [])
         if not events:
             continue
+        reuse_part = reuse_by_signature.get(
+            bilibili_part_sequence_signature(events)
+        )
         for edition in editions:
             source_field = (
                 "no_subtitles_input"
@@ -4292,14 +4354,67 @@ def command_build_bilibili_part(args):
             subtitle_event_count = (
                 parse_optional_int(part.get("subtitle_event_count")) or 0
             )
+            if output_path.exists() and not args.overwrite:
+                row["status"] = "exists"
+                manifest_rows.append(row)
+                continue
+            reuse_source = None
+            if reuse_part is not None and reuse_output_dir is not None:
+                reuse_name_field = (
+                    "no_subtitles_output_name"
+                    if edition == "no-subtitles"
+                    else "subtitle_output_name"
+                )
+                reuse_source = (
+                    reuse_output_dir / reuse_part.get(reuse_name_field, "")
+                ).resolve()
+                if not reuse_source.is_relative_to(reuse_output_dir):
+                    raise ValueError(
+                        "resolved reusable Bilibili source escaped its root"
+                    )
+            if reuse_source is not None and reuse_source.exists():
+                if not args.execute:
+                    row["status"] = "would_reuse_part"
+                else:
+                    if output_path.exists():
+                        output_path.unlink()
+                    try:
+                        os.link(reuse_source, output_path)
+                        row["status"] = "linked_reused_part"
+                    except OSError:
+                        shutil.copy2(reuse_source, output_path)
+                        row["status"] = "copied_reused_part"
+                    reused_probe = probe_mp4(output_path)
+                    reused_volume = probe_audio_volume(output_path)
+                    reused_max_volume = reused_volume.pop("max_volume_value")
+                    row.update(
+                        {
+                            "duration_sec": reused_probe.get(
+                                "duration_sec", ""
+                            ),
+                            "has_video": (
+                                "yes" if reused_probe.get("has_video") else "no"
+                            ),
+                            "has_audio": (
+                                "yes" if reused_probe.get("has_audio") else "no"
+                            ),
+                            "audible_audio": (
+                                "yes"
+                                if reused_max_volume is not None
+                                and reused_max_volume > args.threshold_db
+                                else "no"
+                            ),
+                            "output_size_bytes": output_path.stat().st_size,
+                        }
+                    )
+                manifest_rows.append(row)
+                continue
             if (
                 edition == "subtitles"
                 and subtitle_event_count == 0
                 and no_subtitles_part_path.exists()
             ):
-                if output_path.exists() and not args.overwrite:
-                    row["status"] = "exists"
-                elif not args.execute:
+                if not args.execute:
                     row["status"] = "would_link_no_subtitles"
                 else:
                     if output_path.exists():
@@ -4324,10 +4439,6 @@ def command_build_bilibili_part(args):
                             "output_size_bytes": output_path.stat().st_size,
                         }
                     )
-                manifest_rows.append(row)
-                continue
-            if output_path.exists() and not args.overwrite:
-                row["status"] = "exists"
                 manifest_rows.append(row)
                 continue
             if not args.execute:
@@ -10510,6 +10621,9 @@ def build_parser():
     build_bilibili_part.add_argument("--sequence-csv", required=True)
     build_bilibili_part.add_argument("--parts-csv", required=True)
     build_bilibili_part.add_argument("--out-dir", required=True)
+    build_bilibili_part.add_argument("--reuse-sequence-csv", default="")
+    build_bilibili_part.add_argument("--reuse-parts-csv", default="")
+    build_bilibili_part.add_argument("--reuse-output-dir", default="")
     build_bilibili_part.add_argument("--part-number", type=int, action="append")
     build_bilibili_part.add_argument("--part-key", action="append")
     build_bilibili_part.add_argument("--all-parts", action="store_true")

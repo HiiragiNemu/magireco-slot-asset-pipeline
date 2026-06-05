@@ -128,3 +128,47 @@ approximately 30 fps. The audit now uses `avg_frame_rate`.
 Fixed duration tolerance was also rejected. Concatenating many independently
 normalized events accumulates sub-frame timestamp rounding, so the accepted
 bound is now a small base tolerance plus one frame per event.
+
+## Complete-plan reuse
+
+The final plan contains:
+
+- 8,482 event/canvas rows
+- 413 upload parts
+- 5,485 audible events
+- 2,997 silent visual events
+- 284 subtitle events
+- 65 parts with independent subtitle media
+- 348 parts eligible for no-dialogue hard-link aliases
+
+Exact comparison with the 294-part audible plan found 202 complete parts with
+identical event sequences. These parts cover 3,186 events and can be reused
+without re-encoding; 211 complete-plan parts still require encoding.
+
+The builder now accepts a reusable sequence, part table, and output directory.
+It matches event name, canvas, duration, separator, and both edition input
+paths. A live P002 -> complete-plan P006 test produced two
+`linked_reused_part` results, and both target file IDs matched the source file
+IDs.
+
+## Complete event tree
+
+The first complete pass exposed four failed `ac8050` canvases. Each event had
+94 simultaneous layer tracks; its generated FFmpeg command was approximately
+33.9 KB and exceeded the Windows process command-line limit. The assets and all
+94 rendered layer tracks were valid.
+
+The compositor now writes the filter graph to
+`composite_filter_complex.txt` and passes it with
+`-filter_complex_script`. This reduced the process command line from about
+33.9 KB to about 16.5 KB without changing the filter graph.
+
+The repair pass completed all four events. Final event-tree counts:
+
+- production rows: 8,482
+- no-subtitle MP4 files: 8,482
+- burned-subtitle MP4 files: 284
+- SRT files: 284
+- missing planned inputs: 0
+- failed batch rows: 0
+- generated layer residues: 0

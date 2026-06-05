@@ -93,6 +93,11 @@ Verified limited-audio output:
 - Highest decoded peak: -0.9 dBFS
 - Independent burned-subtitle outputs: 284
 
+Large simultaneous-layer events use a UTF-8 `filter_complex` script file
+instead of an inline filter argument. This avoids the Windows process
+command-line limit; `ac8050` includes four valid 94-layer canvases that exceed
+the limit when represented inline.
+
 ## Subtitle behavior
 
 Subtitles are generated only from exact `cap*` dialogue resources. Visual text
