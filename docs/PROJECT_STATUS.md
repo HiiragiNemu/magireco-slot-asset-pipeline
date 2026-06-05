@@ -793,3 +793,22 @@ asset_manifests\subtitle_dialogue_candidates_summary.md
 - chunk 前 32 字节为自定义头，后续没有标准 MPEG frame sync。
 - 官方解码优先路线仍是调用游戏自身 `zgSndCaptureConvertWav*`；MuMu x86_64 + arm64 native bridge 环境下 Frida 仍不稳定。
 - 静态路线需要还原 `DecoderSmz::openForConvert/read_frame/decode_frame`，成本高于简单解包。
+
+### 本轮归档
+
+已重新归档包含运动审计和字幕候选的 A 盘研究目录：
+
+```text
+D:\MagiReco_Reverse\MagiaRe_RAMDISK_Research_20260605_motion_subtitle.7z
+```
+
+校验结果：
+
+| 项目 | 数值 |
+| --- | ---: |
+| Folders | 118 |
+| Files | 31543 |
+| 原始大小 | 16639306919 bytes |
+| 压缩大小 | 14999419536 bytes |
+| Solid | yes |
+| `7z t` | Everything is Ok |

@@ -781,3 +781,35 @@ SMZ chunk 头部复核：
 1. 如果能换到真 arm64 环境，优先调用游戏自身 `zgSndCaptureConvertWav*` 转 WAV。
 2. 如果继续静态路线，需要围绕 `DecoderSmz::openForConvert()`、`read_frame()`、`decode_frame()` 还原最小解码器，不应再尝试“跳过头交给 ffmpeg”。
 3. 在 SMZ 可稳定解码前，不把外部 SMZ 强行 mux 到视频。
+
+## 2026-06-05 - updated RAMDISK archive after motion/subtitle pass
+
+本轮新增运动审计、台词候选和更新后的文档记录后，已重新归档 A 盘研究目录：
+
+```text
+D:\MagiReco_Reverse\MagiaRe_RAMDISK_Research_20260605_motion_subtitle.7z
+```
+
+归档输入：
+
+```text
+A:\magireco_bili_fulltest_20260603
+A:\magireco_installed_pull_20260603
+A:\timelines
+```
+
+7-Zip 结果：
+
+| item | value |
+| --- | ---: |
+| folders | 118 |
+| files | 31543 |
+| original size | 16639306919 bytes |
+| compressed size | 14999419536 bytes |
+| solid | yes |
+| test | Everything is Ok |
+
+说明：
+
+- 该归档包含 `motion_audit_videos_hflip`、`motion_audit_audible_embedded`、字幕候选输入清单和前序 hflip/audio/installed pull 研究结果。
+- `motion_audit_*\\review` 目录是 hardlink/copy 复核索引；压缩包内用于保留当时的人工审查视图。
