@@ -10,6 +10,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import unicodedata
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path, PureWindowsPath
@@ -3846,7 +3847,12 @@ def command_bilibili_upload_review(args):
         root = part.get("event_root", "")
         meta = root_meta.get(root, {})
         primary_label = meta.get("primary_label_candidate", "")
+        primary_label_display = unicodedata.normalize("NFKC", primary_label)
         label_candidates = split_semicolon(meta.get("label_candidates", ""))
+        label_candidates_display = ";".join(
+            unicodedata.normalize("NFKC", value)
+            for value in label_candidates
+        )
         review_reasons = []
         if not primary_label:
             review_reasons.append("missing_eventcn_label")
@@ -3859,7 +3865,7 @@ def command_bilibili_upload_review(args):
 
         root_part_index = parse_optional_int(part.get("root_part_index")) or 1
         root_part_count = parse_optional_int(part.get("root_part_count")) or 1
-        title_label = primary_label or "演出集"
+        title_label = primary_label_display or "演出集"
         part_suffix = (
             f" {root_part_index}/{root_part_count}"
             if root_part_count > 1
@@ -3870,11 +3876,18 @@ def command_bilibili_upload_review(args):
             f"[{part.get('canvas', '')}]{part_suffix}"
         )
         title_candidate = title_candidate[: args.max_title_length].rstrip()
+        event_count = parse_optional_int(part.get("event_count")) or 0
+        audible_event_count = (
+            parse_optional_int(part.get("audible_event_count")) or 0
+        )
+        silent_event_count = max(0, event_count - audible_event_count)
         description_candidate = (
             f"公式イベントコード: {root}\n"
             f"収録範囲: {part.get('first_event', '')} - "
             f"{part.get('last_event', '')}\n"
-            f"イベント数: {part.get('event_count', '')}\n"
+            f"イベント数: {event_count}\n"
+            f"音声付きイベント数: {audible_event_count}\n"
+            f"無音映像イベント数: {silent_event_count}\n"
             f"字幕対象イベント数: {part.get('subtitle_event_count', '')}\n"
             "GDB -> Z2D -> DGM -> CRI の公式参照関係に基づく再構成。"
         )
@@ -3889,8 +3902,14 @@ def command_bilibili_upload_review(args):
                 "duration_min": part.get("duration_min", ""),
                 "first_event": part.get("first_event", ""),
                 "last_event": part.get("last_event", ""),
+                "audible_event_count": audible_event_count,
+                "silent_event_count": silent_event_count,
                 "eventcn_primary_label": primary_label,
+                "eventcn_primary_label_display": primary_label_display,
                 "eventcn_label_candidates": meta.get("label_candidates", ""),
+                "eventcn_label_candidates_display": (
+                    label_candidates_display
+                ),
                 "eventcn_label_candidate_count": len(label_candidates),
                 "title_candidate": title_candidate,
                 "description_candidate": description_candidate,

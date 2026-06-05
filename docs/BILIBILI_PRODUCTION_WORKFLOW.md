@@ -182,6 +182,10 @@ python magireco_asset_pipeline.py bilibili-upload-review `
 
 Fill `review_status`, `approved_title`, and `review_notes` before upload.
 
+The review table preserves raw EventCn labels for evidence and also includes
+NFKC-normalized display labels for readable Japanese titles. Descriptions list
+audible, silent-video, and subtitle event counts separately.
+
 The old smali/debug `ac_code_labels.csv` table is intentionally excluded from
 title generation. It contains labels from unrelated residual game content and
 is not reliable evidence for this title.

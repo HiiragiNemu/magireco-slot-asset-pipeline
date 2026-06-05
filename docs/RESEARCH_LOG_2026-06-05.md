@@ -245,3 +245,11 @@ A:\magireco_bili_fulltest_20260603\
     subtitle_burn_audit.csv
     subtitle_burn_audit_summary.md
 ```
+
+## Upload-title review normalization
+
+The upload review manifest now keeps both the original EventCn label and an
+NFKC-normalized display form. This converts half-width Japanese characters for
+readability without deleting technical prefixes, variant numbers, or the raw
+evidence. Each description now reports audible, silent-video, and subtitle
+event counts separately.
