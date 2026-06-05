@@ -4267,8 +4267,14 @@ def command_build_bilibili_part(args):
         raise ValueError("upload canvas is required")
     width, height = upload_canvas
     out_dir = Path(args.out_dir).resolve()
+    manifest_dir = (
+        Path(args.manifest_dir).resolve()
+        if args.manifest_dir
+        else out_dir
+    )
     work_root = (out_dir / "_work").resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    manifest_dir.mkdir(parents=True, exist_ok=True)
     sequence_by_part: dict[int, list[dict]] = defaultdict(list)
     for row in sequence_rows:
         number = parse_optional_int(row.get("global_part_number"))
@@ -4620,11 +4626,11 @@ def command_build_bilibili_part(args):
                 row["error"] = str(exc)
             manifest_rows.append(row)
 
-    manifest_path = out_dir / "bilibili_part_build.csv"
+    manifest_path = manifest_dir / "bilibili_part_build.csv"
     fields = list(manifest_rows[0].keys()) if manifest_rows else []
     write_csv(manifest_path, manifest_rows, fields)
     counts = Counter(row["status"] for row in manifest_rows)
-    summary_path = out_dir / "bilibili_part_build_summary.md"
+    summary_path = manifest_dir / "bilibili_part_build_summary.md"
     summary_path.write_text(
         "\n".join(
             [
@@ -10890,6 +10896,11 @@ def build_parser():
     build_bilibili_part.add_argument("--sequence-csv", required=True)
     build_bilibili_part.add_argument("--parts-csv", required=True)
     build_bilibili_part.add_argument("--out-dir", required=True)
+    build_bilibili_part.add_argument(
+        "--manifest-dir",
+        default="",
+        help="optional separate directory for build CSV and summary",
+    )
     build_bilibili_part.add_argument("--reuse-sequence-csv", default="")
     build_bilibili_part.add_argument("--reuse-parts-csv", default="")
     build_bilibili_part.add_argument("--reuse-output-dir", default="")

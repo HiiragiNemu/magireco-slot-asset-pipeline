@@ -302,3 +302,7 @@ Authoritative audit output:
 A:\magireco_bili_fulltest_20260603\
   bilibili_part_output_audit_audible_final_v3\
 ```
+
+The part builder now accepts `--manifest-dir` so disjoint part selections can
+run concurrently without overwriting each other's build CSV and summary.
+Concurrent selections must remain non-overlapping.

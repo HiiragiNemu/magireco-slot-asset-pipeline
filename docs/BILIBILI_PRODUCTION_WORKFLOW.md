@@ -95,6 +95,11 @@ duration, separator duration, no-subtitle input, and subtitle-edition input.
 The output is hard-linked when both directories are on the same volume, with a
 copy fallback only when linking is unavailable.
 
+Disjoint part selections can run concurrently against the same output
+directory when each process uses a different `--manifest-dir`. Work
+directories and media filenames are part-specific; selections must not
+overlap.
+
 Verified P002 result:
 
 - Events: 12
