@@ -10,8 +10,28 @@
 
 下一步执行建议见 [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)。
 
+最新的官方事件重建结论见
+[docs/OFFICIAL_EVENT_PIPELINE.md](docs/OFFICIAL_EVENT_PIPELINE.md)。
+
+B站分P生产流程见
+[docs/BILIBILI_PRODUCTION_WORKFLOW.md](docs/BILIBILI_PRODUCTION_WORKFLOW.md)。
+
+本阶段研究记录见
+[docs/RESEARCH_LOG_2026-06-05.md](docs/RESEARCH_LOG_2026-06-05.md)。
+
+当前最终生产不再使用 `main_video_NNNN_candidatesX` 数字候选关系，也不使用
+`low_motion` / `short_static` / `static_like` 目录做判断。权威链路为
+`GDB event -> Z2D -> DGM -> native CRI -> MP4`。
+
 主要结果：
 
+- 精确官方事件：7753
+- 精确事件/画布输出：8482
+- 有声无字幕输出：5201
+- 有声有字幕输出：284
+- 静音视觉输出：2997
+- 已全量验证有声事件/画布：5485
+- 有声B站分P计划：294
 - 视频 CRID chunk：7801
 - 可唯一命名视频 chunk：483
 - 多候选共享视频 chunk：607
@@ -22,7 +42,7 @@
 - `sound_id.dat` 音频映射记录：9951
 - 含内嵌 `@SFA` 音频的视频 slice：456
 - PCM chunk：21
-- 视频连续序列候选：263，其中 175 组为高置信候选，但仍需复核共享 chunk 后再合并
+- 视频连续序列候选：263，其中 175 组为旧候选分析结果，不用于最终官方事件合并
 
 ## 不上传的数据
 
