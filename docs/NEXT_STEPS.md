@@ -430,3 +430,31 @@ python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Downl
 - 需要 Android 侧运行与本机 Frida 版本匹配的 `frida-server`。
 - 需要游戏进程已启动，并且声音系统已经初始化。
 - 当前模拟器 ADB 端口不可连接，因此尚未实际调用 native 转换函数。
+
+## 2026-06-05 当前修正后的下一步
+
+优先使用的新审查产物：
+
+```text
+A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip\motion_audit_summary.md
+A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip\motion_audit.csv
+A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip\review
+A:\magireco_bili_fulltest_20260603\motion_audit_audible_embedded\motion_audit_summary.md
+asset_manifests\subtitle_dialogue_candidates.csv
+asset_manifests\subtitle_dialogue_candidates_summary.md
+```
+
+人工审查建议：
+
+1. 先看 `motion_audit_audible_embedded\review`，确认 31 个有声但短/低运动/静止的片段哪些适合保留。
+2. 再看 `motion_audit_videos_hflip\review\very_short`、`short_static`、`static_like`，把它们视为素材/分支片段，不作为独立投稿 P 的默认候选。
+3. 用 `subtitle_dialogue_candidates.csv` 检查 `speaker_hint` 和 `subtitle_text` 是否可作为字幕文本初稿；不要先做时间轴。
+4. 对 `normal_motion` 长视频和已合并候选视频优先做 B 站成品复核。
+
+技术下一步顺序：
+
+1. 先建立“视频成品候选池”：排除 `very_short` 和明显静止素材，保留 `normal_motion`、人工确认连续的候选数合并段、141 个可听内嵌音轨视频。
+2. 继续 SMZ 解码路线：优先真 arm64 环境调用 `zgSndCaptureConvertWav*`；若继续静态路线，从 `DecoderSmz::openForConvert/read_frame/decode_frame` 还原，不再尝试 ffmpeg 直接识别。
+3. 在 SMZ 可解码后，生成 `code -> request_id -> SMZ -> WAV -> subtitle_text` 的人工审查包。
+4. 只有在找到事件时间轴或人工确认配对后，才把外部 SMZ/OGG mux 到视频。
+5. 字幕版视频应作为第二阶段产物：先得到正确有声无字幕版，再基于同一合并清单生成 ASS/SRT 嵌入或外挂字幕版。

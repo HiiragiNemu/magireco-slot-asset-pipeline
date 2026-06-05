@@ -863,6 +863,65 @@ def sample_video_luma(path: Path, duration_sec: float | None, samples: int) -> d
     }
 
 
+def sample_video_motion(path: Path, sample_fps: float, max_frames: int) -> dict:
+    expected = 64 * 64
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-vf",
+        f"fps={sample_fps},scale=64:64,format=gray",
+        "-frames:v",
+        str(max_frames),
+        "-f",
+        "rawvideo",
+        "pipe:1",
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        return {
+            "motion_ok": False,
+            "motion_error": result.stderr.decode("utf-8", errors="ignore").strip(),
+            "sampled_frames": 0,
+            "avg_frame_diff": "",
+            "max_frame_diff": "",
+        }
+
+    data = result.stdout
+    frame_count = len(data) // expected
+    if frame_count <= 0:
+        return {
+            "motion_ok": False,
+            "motion_error": "no sampled frames",
+            "sampled_frames": 0,
+            "avg_frame_diff": "",
+            "max_frame_diff": "",
+        }
+    frames = [memoryview(data[index * expected : (index + 1) * expected]) for index in range(frame_count)]
+    diffs = []
+    for before, after in zip(frames, frames[1:]):
+        total = 0
+        for left, right in zip(before, after):
+            total += abs(left - right)
+        diffs.append(total / expected)
+
+    if not diffs:
+        avg_diff = 0.0
+        max_diff = 0.0
+    else:
+        avg_diff = sum(diffs) / len(diffs)
+        max_diff = max(diffs)
+    return {
+        "motion_ok": True,
+        "motion_error": "",
+        "sampled_frames": frame_count,
+        "avg_frame_diff": f"{avg_diff:.4f}",
+        "max_frame_diff": f"{max_diff:.4f}",
+    }
+
+
 def place_review_copy(source: Path, target_dir: Path, mode: str) -> str:
     target_dir.mkdir(parents=True, exist_ok=True)
     target = target_dir / source.name
@@ -2542,6 +2601,365 @@ def command_review_special_videos(args):
     print(f"[review-special-videos] wrote {summary_path}")
 
 
+def classify_motion_video(row: dict, args) -> str:
+    if row.get("probe_ok") != "yes":
+        return "probe_failed"
+    if row.get("has_video") != "yes":
+        return "no_video_stream"
+
+    duration = parse_optional_float(row.get("duration_sec"))
+    avg_diff = parse_optional_float(row.get("avg_frame_diff"))
+    if duration is not None and duration <= args.very_short_threshold_sec:
+        return "very_short"
+    if avg_diff is None:
+        return "motion_probe_failed"
+    if duration is not None and duration <= args.short_threshold_sec and avg_diff <= args.static_threshold:
+        return "short_static"
+    if duration is not None and duration <= args.short_threshold_sec:
+        return "short"
+    if avg_diff <= args.static_threshold:
+        return "static_like"
+    if avg_diff <= args.low_motion_threshold:
+        return "low_motion"
+    return "normal_motion"
+
+
+def motion_audit_one(path: Path, video_dir: Path, out_dir: Path, args) -> dict:
+    relative_path = str(path.relative_to(video_dir))
+    probe = probe_mp4(path)
+    row = {
+        "relative_path": relative_path,
+        "motion_class": "",
+        "review_path": "",
+        "probe_ok": "yes" if probe.get("probe_ok") else "no",
+        "probe_error": probe.get("probe_error", ""),
+        "duration_sec": probe.get("duration_sec", ""),
+        "has_video": "yes" if probe.get("has_video") else "no",
+        "has_audio": "yes" if probe.get("has_audio") else "no",
+        "video_codec": probe.get("video_codec", ""),
+        "audio_codec": probe.get("audio_codec", ""),
+        "width": probe.get("width", ""),
+        "height": probe.get("height", ""),
+        "audio_volume_ok": "",
+        "audio_volume_error": "",
+        "mean_volume_db": "",
+        "max_volume_db": "",
+        "audible_audio": "",
+        "motion_ok": "",
+        "motion_error": "",
+        "sampled_frames": "",
+        "avg_frame_diff": "",
+        "max_frame_diff": "",
+    }
+
+    if probe.get("probe_ok") and probe.get("has_audio") and args.audio_volume:
+        volume = probe_audio_volume(path)
+        max_volume = volume.pop("max_volume_value")
+        audible_audio = max_volume is not None and max_volume > args.silent_threshold_db
+        row.update(
+            {
+                **volume,
+                "audible_audio": "yes" if audible_audio else "no",
+            }
+        )
+
+    if probe.get("probe_ok") and probe.get("has_video"):
+        motion = sample_video_motion(path, args.sample_fps, args.max_frames)
+        row.update(
+            {
+                "motion_ok": "yes" if motion.get("motion_ok") else "no",
+                "motion_error": motion.get("motion_error", ""),
+                "sampled_frames": motion.get("sampled_frames", ""),
+                "avg_frame_diff": motion.get("avg_frame_diff", ""),
+                "max_frame_diff": motion.get("max_frame_diff", ""),
+            }
+        )
+
+    row["motion_class"] = classify_motion_video(row, args)
+    if args.collect_review and row["motion_class"] in {
+        "very_short",
+        "short_static",
+        "static_like",
+        "low_motion",
+        "motion_probe_failed",
+        "probe_failed",
+        "no_video_stream",
+    }:
+        target_dir = out_dir / "review" / row["motion_class"] / path.parent.name
+        row["review_path"] = place_review_copy(path, target_dir, args.mode)
+    return row
+
+
+def command_motion_audit(args):
+    video_dir = Path(args.video_dir)
+    out_dir = Path(args.out_dir) if args.out_dir else video_dir / "_motion_audit"
+    files = sorted(
+        [
+            path
+            for path in video_dir.rglob("*.mp4")
+            if out_dir not in path.parents and "_motion_audit" not in path.parts
+        ],
+        key=lambda path: natural_key(str(path.relative_to(video_dir))),
+    )
+    if args.limit:
+        files = files[: args.limit]
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"[motion-audit] scanning {len(files)} MP4 files")
+    print(f"[motion-audit] video dir: {video_dir}")
+    print(f"[motion-audit] output dir: {out_dir}")
+
+    rows = []
+    processed = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [executor.submit(motion_audit_one, path, video_dir, out_dir, args) for path in files]
+        for future in as_completed(futures):
+            rows.append(future.result())
+            processed += 1
+            if processed % 250 == 0 or processed == len(files):
+                print(f"[motion-audit] processed {processed}/{len(files)}")
+
+    rows.sort(key=lambda row: natural_key(row["relative_path"]))
+    fieldnames = [
+        "relative_path",
+        "motion_class",
+        "review_path",
+        "probe_ok",
+        "probe_error",
+        "duration_sec",
+        "has_video",
+        "has_audio",
+        "video_codec",
+        "audio_codec",
+        "width",
+        "height",
+        "audio_volume_ok",
+        "audio_volume_error",
+        "mean_volume_db",
+        "max_volume_db",
+        "audible_audio",
+        "motion_ok",
+        "motion_error",
+        "sampled_frames",
+        "avg_frame_diff",
+        "max_frame_diff",
+    ]
+    audit_path = out_dir / "motion_audit.csv"
+    write_csv(audit_path, rows, fieldnames)
+
+    counts = Counter(row["motion_class"] for row in rows)
+    resolutions = Counter(f'{row.get("width", "")}x{row.get("height", "")}' for row in rows)
+    audio_counts = Counter(row.get("audible_audio", "") or row.get("has_audio", "") for row in rows)
+    longest = sorted(
+        rows,
+        key=lambda row: parse_optional_float(row.get("duration_sec")) or 0.0,
+        reverse=True,
+    )[:15]
+    static_examples = [
+        row
+        for row in rows
+        if row["motion_class"] in {"very_short", "short_static", "static_like", "low_motion"}
+    ][:30]
+
+    summary_path = out_dir / "motion_audit_summary.md"
+    lines = [
+        "# Motion Audit Summary",
+        "",
+        f"Video dir: {video_dir}",
+        f"Scanned MP4 files: {len(rows)}",
+        f"Sample FPS: {args.sample_fps}",
+        f"Max sampled frames: {args.max_frames}",
+        "",
+        "## Motion Classes",
+    ]
+    for key, count in sorted(counts.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## Resolutions"])
+    for key, count in sorted(resolutions.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## Audio Column Summary"])
+    for key, count in sorted(audio_counts.items(), key=lambda item: (item[0], item[1])):
+        lines.append(f"- {key or '(not checked)'}: {count}")
+    lines.extend(["", "## Longest Files"])
+    for row in longest:
+        lines.append(
+            f"- {row['relative_path']}: {format_seconds(parse_optional_float(row.get('duration_sec')))}s, "
+            f"{row.get('width')}x{row.get('height')}, class={row['motion_class']}, "
+            f"avg_diff={row.get('avg_frame_diff')}, max_diff={row.get('max_frame_diff')}"
+        )
+    lines.extend(["", "## Review Examples"])
+    for row in static_examples:
+        lines.append(
+            f"- {row['relative_path']}: {format_seconds(parse_optional_float(row.get('duration_sec')))}s, "
+            f"class={row['motion_class']}, avg_diff={row.get('avg_frame_diff')}, "
+            f"max_diff={row.get('max_frame_diff')}, audio={row.get('audible_audio') or row.get('has_audio')}"
+        )
+    lines.extend(
+        [
+            "",
+            "## Class Definitions",
+            f"- `very_short`: duration <= {args.very_short_threshold_sec}s.",
+            f"- `short_static`: duration <= {args.short_threshold_sec}s and average frame diff <= {args.static_threshold}.",
+            f"- `static_like`: longer than short threshold but average frame diff <= {args.static_threshold}.",
+            f"- `low_motion`: average frame diff <= {args.low_motion_threshold}.",
+            "- `normal_motion`: no short/static/low-motion rule matched.",
+            "- Review files are hardlinked when possible, otherwise copied. Source files are not moved.",
+        ]
+    )
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    print(f"[motion-audit] wrote {audit_path}")
+    print(f"[motion-audit] wrote {summary_path}")
+
+
+def parse_code_name_label(code_name: str) -> dict:
+    match = re.match(r"^(?P<code>\d+)_(?P<label>.+)$", code_name or "")
+    if not match:
+        return {"code": "", "label": code_name or "", "speaker_hint": "", "subtitle_text": ""}
+
+    label = match.group("label")
+    speaker_hint = ""
+    subtitle_text = ""
+    for marker in ("イヴセリフ_", "セリフ_", "台詞_"):
+        if marker in label:
+            before, after = label.split(marker, 1)
+            speaker_hint = before.strip("_")
+            subtitle_text = after.strip("_-")
+            break
+    return {
+        "code": match.group("code"),
+        "label": label,
+        "speaker_hint": speaker_hint,
+        "subtitle_text": subtitle_text,
+    }
+
+
+def command_subtitle_candidates(args):
+    manifest_dir = Path(args.manifest_dir)
+    hash_rows = read_csv(manifest_dir / "sound_hashreq_records.csv")
+    sound_rows = {
+        row.get("sound_resource_id", ""): row
+        for row in read_csv(manifest_dir / "sound_request_audit.csv")
+        if row.get("sound_resource_id")
+    }
+    smz_rows = {
+        row.get("name_key", "").lower(): row
+        for row in read_csv(manifest_dir / "smz_name_chunk_map.csv")
+        if row.get("name_key")
+    }
+
+    rows = []
+    for row in hash_rows:
+        code_name = row.get("code_name", "")
+        strict_dialogue = bool(re.search(r"セリフ|台詞", code_name))
+        voice_label = bool(re.search(r"Voice|ボイス", code_name, re.IGNORECASE))
+        if not strict_dialogue and not (args.include_voice and voice_label):
+            continue
+        if not args.include_control and re.search(r"停止|消音|ミュート|mute|stop", code_name, re.IGNORECASE):
+            continue
+
+        parsed = parse_code_name_label(code_name)
+        sound = sound_rows.get(parsed["code"], {})
+        media = row.get("first_smz_media", "")
+        media_key = media.removesuffix(".smz").lower()
+        smz = smz_rows.get(media_key, {})
+        label_type = "dialogue" if strict_dialogue else "voice_label"
+        rows.append(
+            {
+                "request_id": row.get("request_id", ""),
+                "sound_code": parsed["code"],
+                "label_type": label_type,
+                "code_name": code_name,
+                "label": parsed["label"],
+                "speaker_hint": parsed["speaker_hint"],
+                "subtitle_text": parsed["subtitle_text"],
+                "sample_count_u32": row.get("sample_count_u32", ""),
+                "duration_sec_at_header_rate": row.get("duration_sec_at_header_rate", ""),
+                "first_smz_media": media,
+                "smz_chunk_index": smz.get("chunk_index", ""),
+                "smz_chunk_size": smz.get("size", ""),
+                "smz_channel_guess": smz.get("channel_guess", ""),
+                "has_runtime_smz": "yes" if smz else "no",
+                "request_label": sound.get("request_label", ""),
+                "suggested_ogg_name": sound.get("suggested_name", ""),
+                "ogg_duration_sec": sound.get("ogg_duration_sec", ""),
+                "nearest_media": sound.get("nearest_media", ""),
+            }
+        )
+
+    rows.sort(key=lambda item: (parse_optional_int(item.get("sound_code")) or 0, parse_optional_int(item.get("request_id")) or 0))
+    out_csv = manifest_dir / "subtitle_dialogue_candidates.csv"
+    write_csv(
+        out_csv,
+        rows,
+        [
+            "request_id",
+            "sound_code",
+            "label_type",
+            "code_name",
+            "label",
+            "speaker_hint",
+            "subtitle_text",
+            "sample_count_u32",
+            "duration_sec_at_header_rate",
+            "first_smz_media",
+            "smz_chunk_index",
+            "smz_chunk_size",
+            "smz_channel_guess",
+            "has_runtime_smz",
+            "request_label",
+            "suggested_ogg_name",
+            "ogg_duration_sec",
+            "nearest_media",
+        ],
+    )
+
+    label_counts = Counter(row["label_type"] for row in rows)
+    speaker_counts = Counter(row["speaker_hint"] or "(none)" for row in rows)
+    has_smz = Counter(row["has_runtime_smz"] for row in rows)
+    has_ogg = Counter("yes" if row["suggested_ogg_name"] else "no" for row in rows)
+
+    summary_path = manifest_dir / "subtitle_dialogue_candidates_summary.md"
+    lines = [
+        "# Subtitle Dialogue Candidate Summary",
+        "",
+        f"Rows: {len(rows)}",
+        f"Include voice labels: {'yes' if args.include_voice else 'no'}",
+        f"Include control labels: {'yes' if args.include_control else 'no'}",
+        "",
+        "## Label Types",
+    ]
+    for key, count in sorted(label_counts.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## Runtime SMZ"])
+    for key, count in sorted(has_smz.items()):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## OGG Name Mapping"])
+    for key, count in sorted(has_ogg.items()):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## Speaker Hints"])
+    for key, count in speaker_counts.most_common(30):
+        lines.append(f"- {key}: {count}")
+    lines.extend(["", "## Examples"])
+    for row in rows[:30]:
+        lines.append(
+            f"- code {row['sound_code']} request {row['request_id']}: "
+            f"{row['speaker_hint']} / {row['subtitle_text'] or row['label']}"
+        )
+    lines.extend(
+        [
+            "",
+            "## Limits",
+            "- These rows are dialogue/voice text candidates, not timed subtitles.",
+            "- Timing still requires an event timeline, decoded SMZ duration, or manual alignment to merged video.",
+            "- `subtitle_text` is parsed from sound labels and may be abbreviated by the original table.",
+        ]
+    )
+    summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"[subtitle-candidates] wrote {out_csv}")
+    print(f"[subtitle-candidates] wrote {summary_path}")
+
+
 def command_bili_metadata_audit(args):
     manifest_dir = Path(args.manifest_dir)
     strings_xml = read_text_if_exists(ROOT / "unpacked_base" / "res" / "values" / "strings.xml")
@@ -3406,6 +3824,29 @@ def build_parser():
         help="max_volume threshold used to classify silent audio tracks when --audio-volume is set",
     )
     special.set_defaults(func=command_review_special_videos)
+
+    motion = sub.add_parser("motion-audit", help="probe MP4 motion/static traits and collect review cases")
+    motion.add_argument("--video-dir", required=True)
+    motion.add_argument("--out-dir", default="")
+    motion.add_argument("--mode", choices=["copy", "hardlink"], default="hardlink")
+    motion.add_argument("--workers", type=int, default=4)
+    motion.add_argument("--limit", type=int, default=0)
+    motion.add_argument("--sample-fps", type=float, default=5.0)
+    motion.add_argument("--max-frames", type=int, default=180)
+    motion.add_argument("--very-short-threshold-sec", type=float, default=1.0)
+    motion.add_argument("--short-threshold-sec", type=float, default=2.0)
+    motion.add_argument("--static-threshold", type=float, default=0.5)
+    motion.add_argument("--low-motion-threshold", type=float, default=3.0)
+    motion.add_argument("--audio-volume", action="store_true", help="run ffmpeg volumedetect for MP4s with audio streams")
+    motion.add_argument("--silent-threshold-db", type=float, default=-60.0)
+    motion.add_argument("--collect-review", action="store_true", help="hardlink/copy non-normal classes into review folders")
+    motion.set_defaults(func=command_motion_audit)
+
+    subtitles = sub.add_parser("subtitle-candidates", help="export dialogue/voice label candidates for later subtitle work")
+    subtitles.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))
+    subtitles.add_argument("--include-voice", action="store_true", help="include non-dialogue Voice/ボイス labels")
+    subtitles.add_argument("--include-control", action="store_true", help="include stop/mute/control labels")
+    subtitles.set_defaults(func=command_subtitle_candidates)
 
     bili = sub.add_parser("bili-metadata-audit", help="build Bilibili-oriented title/label metadata reports")
     bili.add_argument("--manifest-dir", default=str(DEFAULT_MANIFEST_DIR))

@@ -707,3 +707,89 @@ A:\timelines
 | 原始大小 | 16163305230 bytes |
 | 压缩大小 | 13731737346 bytes |
 | `7z t` | Everything is Ok |
+
+## 2026-06-05 运动审计与字幕候选
+
+### 极短/静止视频审计
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py motion-audit --video-dir A:\magireco_bili_fulltest_20260603\videos_hflip --out-dir A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip --collect-review --workers 4
+```
+
+全量方向正确视频树结果：
+
+| 类别 | 数量 |
+| --- | ---: |
+| normal_motion | 2671 |
+| very_short | 2371 |
+| short | 1530 |
+| low_motion | 490 |
+| short_static | 426 |
+| static_like | 313 |
+
+真正可听内嵌音轨的 141 个视频结果：
+
+| 类别 | 数量 |
+| --- | ---: |
+| normal_motion | 93 |
+| short | 17 |
+| low_motion | 16 |
+| static_like | 8 |
+| very_short | 4 |
+| short_static | 3 |
+
+关键判断：
+
+- 大量 1 秒以内视频、短静止视频是游戏素材/分支/触发资源形态，不是导出脚本单点失败。
+- `main_video_0294_candidates4.mp4` 和 `main_video_0303_candidates4.mp4` 有音轨但极短且低运动，人工听感接近无声是合理的。
+- `patch_video_1199.mp4` 和 `patch_video_1205.mp4` 属于正常运动长片段；上下镜像更像场景内反射构图，不是需要修正的整体方向问题。
+
+当前审查目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\motion_audit_audible_embedded
+A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip
+```
+
+### 字幕/台词候选
+
+新增命令：
+
+```powershell
+python magireco_asset_pipeline.py subtitle-candidates
+```
+
+输出：
+
+```text
+asset_manifests\subtitle_dialogue_candidates.csv
+asset_manifests\subtitle_dialogue_candidates_summary.md
+```
+
+严格台词候选：
+
+| 项目 | 数量 |
+| --- | ---: |
+| 台词行 | 896 |
+| 可连接 runtime SMZ | 896 |
+| 可连接 OGG 命名 | 886 |
+| 解析出 `subtitle_text` | 877 |
+
+判断：
+
+- 项目已经能提取大量官方台词标签，可作为字幕版文本初稿。
+- 这些不是 timed subtitles；最终字幕还需要事件时间轴、SMZ/OGG 解码时长或人工对齐。
+- 原始标签存在截断，不能把 `subtitle_text` 直接视为完整官方台本。
+
+### SMZ 状态修正
+
+`DecoderSmz` native 符号包含 `frame_get_side_info`、`frame_get_scale_factors`、`frame_dequantize_sample`、`dct36/dct64`、`decode_frame`、`openForConvert` 等 MP3 Layer III 风格流程。
+
+当前判断：
+
+- SMZ 不是简单“跳过 header 后交给 ffmpeg”的容器。
+- chunk 前 32 字节为自定义头，后续没有标准 MPEG frame sync。
+- 官方解码优先路线仍是调用游戏自身 `zgSndCaptureConvertWav*`；MuMu x86_64 + arm64 native bridge 环境下 Frida 仍不稳定。
+- 静态路线需要还原 `DecoderSmz::openForConvert/read_frame/decode_frame`，成本高于简单解包。

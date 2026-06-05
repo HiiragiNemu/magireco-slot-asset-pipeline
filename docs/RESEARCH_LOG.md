@@ -604,3 +604,180 @@ Size: 16163305230
 Compressed: 13731737346
 Everything is Ok
 ```
+
+## 2026-06-05 - motion/static video audit
+
+### New command
+
+新增 `motion-audit`，用于量化“极短、静止、低运动”视频片段：
+
+```powershell
+python magireco_asset_pipeline.py motion-audit --video-dir A:\magireco_bili_fulltest_20260603\review_audio_hflip\audible_embedded_audio --out-dir A:\magireco_bili_fulltest_20260603\motion_audit_audible_embedded --audio-volume --collect-review --workers 4
+python magireco_asset_pipeline.py motion-audit --video-dir A:\magireco_bili_fulltest_20260603\videos_hflip --out-dir A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip --collect-review --workers 4
+```
+
+该命令：
+
+- 使用 `ffprobe` 读取时长、分辨率和音轨。
+- 使用 `ffmpeg` 以 5 fps 抽取 64x64 灰度帧，计算相邻帧平均差值。
+- 输出 `motion_audit.csv` 与 `motion_audit_summary.md`。
+- `--collect-review` 只 hardlink/copy 复核样本，不移动源文件。
+
+### Audible embedded subset
+
+对 141 个方向正确且可听内嵌音轨视频的结果：
+
+| class | count |
+| --- | ---: |
+| normal_motion | 93 |
+| short | 17 |
+| low_motion | 16 |
+| static_like | 8 |
+| very_short | 4 |
+| short_static | 3 |
+
+关键样本：
+
+| path | class | duration | avg diff | max diff | audio |
+| --- | --- | ---: | ---: | ---: | --- |
+| `MultiCandidate_Slices\main_video_0294_candidates4.mp4` | `very_short` | 0.500s | 0.3094 | 0.4832 | yes |
+| `MultiCandidate_Slices\main_video_0303_candidates4.mp4` | `very_short` | 0.433s | 0.1367 | 0.1367 | yes |
+| `MultiCandidate_Slices\main_video_0306_candidates4.mp4` | `short` | 1.800s | 5.6868 | 21.6313 | yes |
+| `Unclassified_Slices\patch_video_1199.mp4` | `normal_motion` | 21.667s | 4.1788 | 103.8496 | yes |
+| `Unclassified_Slices\patch_video_1205.mp4` | `normal_motion` | 20.000s | 6.5107 | 101.2427 | yes |
+| `Unclassified_Slices\patch_video_1207.mp4` | `low_motion` | 90.000s | 2.2950 | 27.8550 | yes |
+
+判断：
+
+- `0294` 和 `0303` 不是“导出失败”，而是极短、低运动、有低音量音轨的触发/分支素材。
+- `0306` 短但动态且音量高，适合保留为短有声候选。
+- `1199` 和 `1205` 是正常运动长片段；用户看到的上下镜像更像画面内水面/反射构图，不是方向错误。
+
+### Full hflip video tree
+
+对 7801 个方向正确视频的全量结果：
+
+| class | count |
+| --- | ---: |
+| normal_motion | 2671 |
+| very_short | 2371 |
+| short | 1530 |
+| low_motion | 490 |
+| short_static | 426 |
+| static_like | 313 |
+
+复核 hardlink/copy 目录：
+
+```text
+A:\magireco_bili_fulltest_20260603\motion_audit_videos_hflip\review
+```
+
+其中：
+
+| review class | files |
+| --- | ---: |
+| very_short | 2371 |
+| low_motion | 490 |
+| short_static | 426 |
+| static_like | 313 |
+
+结论：
+
+- 碎片化和静止片段是资源形态本身，不是单纯导出错误。
+- 面向 B 站的成品不应把这些片段全部作为独立 P 上传。
+- 下一步合并策略应优先把 `very_short`、`short_static`、`static_like` 作为素材/分支片段处理；`normal_motion` 和人工确认连续的合并段优先成为投稿候选。
+
+## 2026-06-05 - subtitle/dialogue candidates
+
+### New command
+
+新增 `subtitle-candidates`：
+
+```powershell
+python magireco_asset_pipeline.py subtitle-candidates
+```
+
+输出：
+
+```text
+asset_manifests\subtitle_dialogue_candidates.csv
+asset_manifests\subtitle_dialogue_candidates_summary.md
+```
+
+该命令从 `sound_hashreq_records.csv` 的 `code_name` 和 `sound_request_audit.csv` 的 `request_label` 中提取 `セリフ/台詞` 台词标签，并连接：
+
+- request id / sound code
+- SMZ 媒体名
+- runtime SMZ chunk index
+- 可选 OGG 命名
+- 解析出的 `speaker_hint`
+- 解析出的 `subtitle_text`
+
+### Result
+
+严格台词结果：
+
+| item | count |
+| --- | ---: |
+| dialogue rows | 896 |
+| rows with runtime SMZ | 896 |
+| rows with OGG mapping | 886 |
+| rows with parsed subtitle text | 877 |
+
+Top speaker hints：
+
+| speaker | count |
+| --- | ---: |
+| `iro` | 109 |
+| `yac` | 102 |
+| `fer` | 55 |
+| `tur` | 49 |
+| `mihu` | 42 |
+| `mom` | 36 |
+| `sana` | 34 |
+| `rena` | 28 |
+| `toka` | 27 |
+| `tukuyo` | 26 |
+
+示例：
+
+| sound code | speaker | subtitle text |
+| --- | --- | --- |
+| `15250` | `iro` | `私は環環いろはです` |
+| `15251` | `iro` | `魔法少女が私のやりたいこと` |
+| `15252` | `iro` | `私どうしてういのことを忘れ` |
+| `15266` | `iro` | `あはは` |
+
+判断：
+
+- 这些是字幕文本候选，不是已定时字幕。
+- 字幕版最终需要事件时间轴、解码后的 SMZ/OGG 时长，或人工对齐到合并后视频。
+- 原始标签有截断和省略，`subtitle_text` 应作为初稿，不能直接视为官方完整台本。
+
+## 2026-06-05 - SMZ decoder/static status update
+
+`DecoderSmz` 不是简单容器解包。native 符号显示它包含 MP3 Layer III 风格的解码流程：
+
+```text
+DecoderSmz::frame_get_side_info
+DecoderSmz::frame_get_scale_factors
+DecoderSmz::frame_dequantize_sample
+DecoderSmz::frame_hybrid
+DecoderSmz::frame_antialias
+DecoderSmz::dct36
+DecoderSmz::dct64
+DecoderSmz::decode_frame
+DecoderSmz::openForConvert
+```
+
+SMZ chunk 头部复核：
+
+- chunk 前 32 字节是固定结构。
+- 之后没有标准 MPEG frame sync，`ffprobe` 无法直接识别是合理结果。
+- `field1=380` 对应 mono 猜测，`field1=764` 对应 stereo 猜测；当前统计仍为 mono 6826、stereo 2926。
+
+当前优先路线：
+
+1. 如果能换到真 arm64 环境，优先调用游戏自身 `zgSndCaptureConvertWav*` 转 WAV。
+2. 如果继续静态路线，需要围绕 `DecoderSmz::openForConvert()`、`read_frame()`、`decode_frame()` 还原最小解码器，不应再尝试“跳过头交给 ffmpeg”。
+3. 在 SMZ 可稳定解码前，不把外部 SMZ 强行 mux 到视频。
