@@ -162,13 +162,38 @@ The final audio chain applies a hard limiter after loudness normalization. Its
 limit includes 1 dB of AAC encoding headroom below the requested true-peak
 target; decoded output is still checked independently.
 
+If the decoded AAC peak still exceeds the requested target, the builder
+measures the excess, copies the video stream unchanged, attenuates only the
+audio stream with an additional 1 dB margin, and measures the replacement
+again. The applied attenuation is recorded as `peak_repair_db`.
+
+Parts whose plan contains no audible events bypass loudness normalization and
+apply a -120 dB silence filter. This prevents loudness normalization from
+amplifying AAC silence-floor noise into false audible output.
+
+The complete 413-part build passed its final independent audit:
+
+- logical outputs: 826
+- unique physical media files: 478
+- expected and actual audible outputs: 610
+- expected and actual silent outputs: 216
+- expected and actual shared subtitle/no-subtitle pairs: 348
+- missing, stream, duration, audio expectation, peak, and storage failures: 0
+
+Authoritative complete audit:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  bilibili_part_output_audit_all_final_v2\
+```
+
 ## Quality gates
 
 Do not publish a part unless all conditions pass:
 
 - source path exists for every event
 - video and audio streams both decode
-- output is actually audible
+- decoded audibility matches the event plan
 - output resolution is 1920x1080
 - output average frame rate is within 0.05 fps of 30 fps
 - output audio is 48 kHz stereo

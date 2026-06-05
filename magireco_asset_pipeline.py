@@ -4370,6 +4370,7 @@ def command_build_bilibili_part(args):
                 "has_audio": "",
                 "audible_audio": "",
                 "output_size_bytes": "",
+                "peak_repair_db": "",
                 "error": "",
             }
             subtitle_event_count = (
@@ -4552,6 +4553,20 @@ def command_build_bilibili_part(args):
                     raise RuntimeError(
                         (concat_result.stderr or concat_result.stdout).strip()[-4000:]
                     )
+                expected_part_audible = (
+                    parse_optional_int(part.get("audible_event_count")) or 0
+                ) > 0
+                final_audio_filter = (
+                    (
+                        f"loudnorm=I={args.loudness_i:.3f}:"
+                        f"LRA=11:TP={args.true_peak_db:.3f},"
+                        "alimiter="
+                        f"limit={10 ** ((args.true_peak_db - 1.0) / 20):.6f}:"
+                        "level=disabled:attack=5:release=50"
+                    )
+                    if expected_part_audible
+                    else "volume=-120dB"
+                )
                 final_cmd = [
                     "ffmpeg",
                     "-y",
@@ -4568,13 +4583,7 @@ def command_build_bilibili_part(args):
                     "-c:v",
                     "copy",
                     "-af",
-                    (
-                        f"loudnorm=I={args.loudness_i:.3f}:"
-                        f"LRA=11:TP={args.true_peak_db:.3f},"
-                        "alimiter="
-                        f"limit={10 ** ((args.true_peak_db - 1.0) / 20):.6f}:"
-                        "level=disabled:attack=5:release=50"
-                    ),
+                    final_audio_filter,
                     "-c:a",
                     "aac",
                     "-b:a",
@@ -4597,9 +4606,66 @@ def command_build_bilibili_part(args):
                     raise RuntimeError(
                         (final_result.stderr or final_result.stdout).strip()[-4000:]
                     )
-                output_probe = probe_mp4(output_path)
+                peak_repair_db = 0.0
                 output_volume = probe_audio_volume(output_path)
                 max_volume = output_volume.pop("max_volume_value")
+                for attempt in range(1, 3):
+                    if max_volume is None or max_volume <= args.true_peak_db:
+                        break
+                    attenuation_db = args.true_peak_db - 1.0 - max_volume
+                    peak_repair_db += attenuation_db
+                    repaired_output = work_dir / f"peak_repair_{attempt}.mp4"
+                    peak_repair_cmd = [
+                        "ffmpeg",
+                        "-y",
+                        "-hide_banner",
+                        "-nostats",
+                        "-v",
+                        "error",
+                        "-i",
+                        str(output_path),
+                        "-map",
+                        "0:v:0",
+                        "-map",
+                        "0:a:0",
+                        "-c:v",
+                        "copy",
+                        "-af",
+                        f"volume={attenuation_db:.6f}dB",
+                        "-c:a",
+                        "aac",
+                        "-b:a",
+                        args.audio_bitrate,
+                        "-ar",
+                        "48000",
+                        "-ac",
+                        "2",
+                        "-movflags",
+                        "+faststart",
+                        str(repaired_output),
+                    ]
+                    peak_repair_result = subprocess.run(
+                        peak_repair_cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
+                    if peak_repair_result.returncode != 0:
+                        raise RuntimeError(
+                            (
+                                peak_repair_result.stderr
+                                or peak_repair_result.stdout
+                            ).strip()[-4000:]
+                        )
+                    os.replace(repaired_output, output_path)
+                    output_volume = probe_audio_volume(output_path)
+                    max_volume = output_volume.pop("max_volume_value")
+                if max_volume is not None and max_volume > args.true_peak_db:
+                    raise RuntimeError(
+                        "decoded peak remains above target after repair: "
+                        f"{max_volume:.3f} dBFS > {args.true_peak_db:.3f} dBFS"
+                    )
+                output_probe = probe_mp4(output_path)
                 row.update(
                     {
                         "status": "ok",
@@ -4617,6 +4683,9 @@ def command_build_bilibili_part(args):
                             else "no"
                         ),
                         "output_size_bytes": output_path.stat().st_size,
+                        "peak_repair_db": (
+                            f"{peak_repair_db:.6f}" if peak_repair_db else ""
+                        ),
                     }
                 )
                 if args.cleanup_work and work_dir.is_relative_to(work_root):

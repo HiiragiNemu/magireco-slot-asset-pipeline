@@ -306,3 +306,56 @@ A:\magireco_bili_fulltest_20260603\
 The part builder now accepts `--manifest-dir` so disjoint part selections can
 run concurrently without overwriting each other's build CSV and summary.
 Concurrent selections must remain non-overlapping.
+
+## Complete-part first audit
+
+The first 413-part complete build produced all 826 logical files and preserved
+all 348 expected subtitle/no-subtitle shared-file pairs. Its first independent
+audit found:
+
+- missing outputs: 0
+- stream contract failures: 0
+- duration failures: 0
+- storage relation failures: 0
+- unsafe peak parts: P037 and P189
+- false-audible silent parts: P354, P355, and P409
+
+The false-audible parts exposed a production issue: loudness normalization
+amplified the AAC silence floor to approximately -3.4 dBFS. Parts with zero
+planned audible events now bypass loudness normalization and apply a -120 dB
+silence filter.
+
+P354, P355, and P409 were rebuilt and measured at approximately -91 dBFS.
+P037 was rebuilt to a safe decoded peak of -3.4 dBFS. P189 remained at
+0.0 dBFS after the original limiter path, proving that a fixed filter-chain
+margin was not sufficient for every AAC output.
+
+The builder now performs decoded peak repair after the first AAC encode. If
+the measured peak exceeds the requested target, it copies the video stream,
+attenuates only the audio stream with an additional 1 dB margin, re-encodes
+AAC, and measures again. P189 required -7.9 dB of cumulative repair and
+finished at -4.3 dBFS.
+
+## Complete-part final audit
+
+The final independent audit decoded all 478 unique physical media files behind
+the 826 logical edition paths:
+
+- logical outputs: 826
+- unique physical media files: 478
+- missing outputs: 0
+- stream contract failures: 0
+- duration failures: 0
+- audio expectation failures: 0
+- peak safety failures: 0
+- storage relation failures: 0
+- expected and actual audible outputs: 610
+- expected and actual silent outputs: 216
+- expected and actual shared subtitle/no-subtitle pairs: 348
+
+Authoritative audit output:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  bilibili_part_output_audit_all_final_v2\
+```
