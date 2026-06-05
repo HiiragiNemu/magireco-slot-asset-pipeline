@@ -3937,6 +3937,9 @@ def command_bilibili_upload_review(args):
 
 def audit_event_output(row: dict, source_field: str, threshold_db: float) -> dict:
     source = Path(row.get(source_field, ""))
+    expected_audible = (
+        parse_optional_int(row.get("official_audio_track_count")) or 0
+    ) > 0
     result = {
         "global_part_number": row.get("global_part_number", ""),
         "part_key": row.get("part_key", ""),
@@ -3961,7 +3964,9 @@ def audit_event_output(row: dict, source_field: str, threshold_db: float) -> dic
         "audio_volume_ok": "no",
         "mean_volume_db": "",
         "max_volume_db": "",
+        "expected_audible": "yes" if expected_audible else "no",
         "audible_audio": "no",
+        "audio_expectation_ok": "no",
     }
     if not source.exists():
         result["probe_error"] = "source missing"
@@ -3989,15 +3994,15 @@ def audit_event_output(row: dict, source_field: str, threshold_db: float) -> dic
     if probe.get("has_audio"):
         volume = probe_audio_volume(source)
         max_volume = volume.pop("max_volume_value")
+        actual_audible = max_volume is not None and max_volume > threshold_db
         result.update(
             {
                 "audio_volume_ok": "yes" if volume["audio_volume_ok"] else "no",
                 "mean_volume_db": volume["mean_volume_db"],
                 "max_volume_db": volume["max_volume_db"],
-                "audible_audio": (
-                    "yes"
-                    if max_volume is not None and max_volume > threshold_db
-                    else "no"
+                "audible_audio": "yes" if actual_audible else "no",
+                "audio_expectation_ok": (
+                    "yes" if actual_audible == expected_audible else "no"
                 ),
             }
         )
@@ -4015,6 +4020,7 @@ def command_event_output_audit(args):
     )
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = out_dir / f"event_output_audit_{args.edition}.csv"
 
     rows = []
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
@@ -4030,6 +4036,18 @@ def command_event_output_audit(args):
         for completed, future in enumerate(as_completed(futures), start=1):
             rows.append(future.result())
             if completed % 250 == 0 or completed == len(futures):
+                checkpoint_rows = sorted(
+                    rows,
+                    key=lambda row: (
+                        parse_optional_int(row.get("global_part_number")) or 0,
+                        parse_optional_int(row.get("event_order_in_part")) or 0,
+                    ),
+                )
+                write_csv(
+                    manifest_path,
+                    checkpoint_rows,
+                    list(checkpoint_rows[0].keys()) if checkpoint_rows else [],
+                )
                 print(
                     f"[event-output-audit] processed {completed}/{len(futures)}"
                 )
@@ -4040,7 +4058,6 @@ def command_event_output_audit(args):
         )
     )
     fields = list(rows[0].keys()) if rows else []
-    manifest_path = out_dir / f"event_output_audit_{args.edition}.csv"
     write_csv(manifest_path, rows, fields)
 
     missing = sum(row["source_exists"] != "yes" for row in rows)
@@ -4050,7 +4067,9 @@ def command_event_output_audit(args):
         or row["has_audio"] != "yes"
         for row in rows
     )
-    silent = sum(row["audible_audio"] != "yes" for row in rows)
+    audio_expectation_mismatch = sum(
+        row["audio_expectation_ok"] != "yes" for row in rows
+    )
     duration_mismatch = sum(
         abs(parse_optional_float(row.get("duration_delta_sec")) or 0.0)
         > args.duration_tolerance_sec
@@ -4066,13 +4085,17 @@ def command_event_output_audit(args):
                 f"Rows: {len(rows)}",
                 f"Missing sources: {missing}",
                 f"Invalid video/audio streams: {invalid}",
-                f"Not actually audible above {args.threshold_db:.1f} dBFS: {silent}",
+                (
+                    "Audio expectation mismatches at "
+                    f"{args.threshold_db:.1f} dBFS: "
+                    f"{audio_expectation_mismatch}"
+                ),
                 (
                     "Duration mismatches above "
                     f"{args.duration_tolerance_sec:.3f} sec: {duration_mismatch}"
                 ),
                 "",
-                "Audio is classified from decoded samples, not merely from the presence of an audio stream.",
+                "Audio is classified from decoded samples and compared with the production plan expectation.",
             ]
         )
         + "\n",
