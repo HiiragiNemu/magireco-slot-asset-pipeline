@@ -4978,6 +4978,243 @@ def command_bilibili_part_output_audit(args):
     print(f"[bilibili-part-output-audit] wrote {summary_path}")
 
 
+SRT_CUE_RE = re.compile(
+    r"(?P<start_h>\d{2}):(?P<start_m>\d{2}):(?P<start_s>\d{2}),"
+    r"(?P<start_ms>\d{3})\s+-->\s+"
+    r"(?P<end_h>\d{2}):(?P<end_m>\d{2}):(?P<end_s>\d{2}),"
+    r"(?P<end_ms>\d{3})"
+)
+
+
+def srt_cue_midpoints(path: Path) -> list[float]:
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    midpoints = []
+    for match in SRT_CUE_RE.finditer(text):
+        start = (
+            int(match.group("start_h")) * 3600
+            + int(match.group("start_m")) * 60
+            + int(match.group("start_s"))
+            + int(match.group("start_ms")) / 1000
+        )
+        end = (
+            int(match.group("end_h")) * 3600
+            + int(match.group("end_m")) * 60
+            + int(match.group("end_s"))
+            + int(match.group("end_ms")) / 1000
+        )
+        if end > start:
+            midpoints.append((start + end) / 2)
+    return midpoints
+
+
+def evenly_sample(values: list[float], count: int) -> list[float]:
+    if count <= 0 or len(values) <= count:
+        return values
+    if count == 1:
+        return [values[len(values) // 2]]
+    indices = {
+        round(index * (len(values) - 1) / (count - 1))
+        for index in range(count)
+    }
+    return [values[index] for index in sorted(indices)]
+
+
+def subtitle_frame_difference(
+    no_subtitles: Path,
+    subtitles: Path,
+    timestamp_sec: float,
+) -> tuple[float | None, str]:
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostats",
+        "-v",
+        "error",
+        "-ss",
+        f"{timestamp_sec:.6f}",
+        "-i",
+        str(no_subtitles),
+        "-ss",
+        f"{timestamp_sec:.6f}",
+        "-i",
+        str(subtitles),
+        "-filter_complex",
+        (
+            "[0:v][1:v]blend=all_mode=difference,"
+            "format=gray,signalstats,metadata=print:file=-"
+        ),
+        "-frames:v",
+        "1",
+        "-f",
+        "null",
+        os.devnull,
+    ]
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    matches = re.findall(r"lavfi\.signalstats\.YAVG=([0-9.]+)", output)
+    if result.returncode != 0 or not matches:
+        return None, (result.stderr or result.stdout).strip()[-4000:]
+    return max(float(value) for value in matches), ""
+
+
+def audit_subtitle_burn_row(
+    row: dict,
+    max_samples: int,
+    difference_threshold: float,
+) -> dict:
+    no_subtitles = Path(row.get("no_subtitles_input", ""))
+    subtitles = Path(row.get("subtitle_edition_input", ""))
+    event_dir = subtitles.parent
+    srt_candidates = sorted(event_dir.glob("*.srt"))
+    result = {
+        "event_name": row.get("event_name", ""),
+        "canvas": row.get("canvas", ""),
+        "no_subtitles_input": str(no_subtitles),
+        "subtitle_input": str(subtitles),
+        "srt_path": str(srt_candidates[0]) if srt_candidates else "",
+        "cue_count": 0,
+        "sample_count": 0,
+        "sample_times_sec": "",
+        "sample_yavg_differences": "",
+        "max_yavg_difference": "",
+        "difference_threshold": f"{difference_threshold:.6f}",
+        "subtitle_visual_change_ok": "no",
+        "error": "",
+    }
+    if not no_subtitles.exists() or not subtitles.exists():
+        result["error"] = "video input missing"
+        return result
+    if not srt_candidates:
+        result["error"] = "SRT missing"
+        return result
+    try:
+        midpoints = srt_cue_midpoints(srt_candidates[0])
+    except OSError as exc:
+        result["error"] = str(exc)
+        return result
+    result["cue_count"] = len(midpoints)
+    samples = evenly_sample(midpoints, max_samples)
+    result["sample_count"] = len(samples)
+    result["sample_times_sec"] = ";".join(f"{value:.6f}" for value in samples)
+    if not samples:
+        result["error"] = "no valid SRT cues"
+        return result
+
+    differences = []
+    errors = []
+    for timestamp in samples:
+        difference, error = subtitle_frame_difference(
+            no_subtitles,
+            subtitles,
+            timestamp,
+        )
+        if difference is not None:
+            differences.append(difference)
+        if error:
+            errors.append(error)
+    result["sample_yavg_differences"] = ";".join(
+        f"{value:.6f}" for value in differences
+    )
+    if differences:
+        maximum = max(differences)
+        result["max_yavg_difference"] = f"{maximum:.6f}"
+        result["subtitle_visual_change_ok"] = (
+            "yes" if maximum >= difference_threshold else "no"
+        )
+    if errors:
+        result["error"] = " | ".join(errors)[-4000:]
+    return result
+
+
+def command_subtitle_burn_audit(args):
+    sequence_rows = [
+        row
+        for row in read_csv(Path(args.sequence_csv))
+        if (parse_optional_int(row.get("subtitle_count")) or 0) > 0
+    ]
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+        futures = [
+            executor.submit(
+                audit_subtitle_burn_row,
+                row,
+                args.max_samples,
+                args.difference_threshold,
+            )
+            for row in sequence_rows
+        ]
+        for completed, future in enumerate(as_completed(futures), start=1):
+            rows.append(future.result())
+            if completed % 25 == 0 or completed == len(futures):
+                print(
+                    f"[subtitle-burn-audit] processed "
+                    f"{completed}/{len(futures)}"
+                )
+    rows.sort(
+        key=lambda row: (
+            natural_key(row.get("event_name", "")),
+            natural_key(row.get("canvas", "")),
+        )
+    )
+    audit_path = out_dir / "subtitle_burn_audit.csv"
+    write_csv(
+        audit_path,
+        rows,
+        list(rows[0].keys()) if rows else [],
+    )
+    failures = sum(
+        row["subtitle_visual_change_ok"] != "yes" for row in rows
+    )
+    errors = sum(bool(row["error"]) for row in rows)
+    values = [
+        parse_optional_float(row.get("max_yavg_difference"))
+        for row in rows
+    ]
+    values = [value for value in values if value is not None]
+    summary_path = out_dir / "subtitle_burn_audit_summary.md"
+    summary_path.write_text(
+        "\n".join(
+            [
+                "# Subtitle Burn Audit",
+                "",
+                f"Subtitle event/canvas rows: {len(rows)}",
+                f"Visual-change failures: {failures}",
+                f"Probe errors: {errors}",
+                (
+                    "Minimum maximum cue-frame difference: "
+                    f"{min(values):.6f}"
+                    if values
+                    else "Minimum maximum cue-frame difference: unavailable"
+                ),
+                (
+                    "Maximum maximum cue-frame difference: "
+                    f"{max(values):.6f}"
+                    if values
+                    else "Maximum maximum cue-frame difference: unavailable"
+                ),
+                f"Acceptance threshold: {args.difference_threshold:.6f}",
+                "",
+                (
+                    "Frames are compared at evenly selected SRT cue midpoints. "
+                    "The metric is the mean luma value of the absolute "
+                    "subtitle/no-subtitle frame difference."
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"[subtitle-burn-audit] wrote {audit_path}")
+    print(f"[subtitle-burn-audit] wrote {summary_path}")
+
+
 def rebuild_official_audio_for_video(job: dict, args) -> dict:
     source = Path(job["source"])
     output = Path(job["output"])
@@ -10700,6 +10937,21 @@ def build_parser():
     bilibili_part_output_audit.set_defaults(
         func=command_bilibili_part_output_audit
     )
+
+    subtitle_burn_audit = sub.add_parser(
+        "subtitle-burn-audit",
+        help="verify that burned-subtitle frames differ at actual SRT cue times",
+    )
+    subtitle_burn_audit.add_argument("--sequence-csv", required=True)
+    subtitle_burn_audit.add_argument("--out-dir", required=True)
+    subtitle_burn_audit.add_argument("--max-samples", type=int, default=3)
+    subtitle_burn_audit.add_argument(
+        "--difference-threshold",
+        type=float,
+        default=0.5,
+    )
+    subtitle_burn_audit.add_argument("--workers", type=int, default=4)
+    subtitle_burn_audit.set_defaults(func=command_subtitle_burn_audit)
 
     rebuild_event_audio = sub.add_parser(
         "rebuild-event-audio",

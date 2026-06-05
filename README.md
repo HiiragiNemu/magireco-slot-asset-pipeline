@@ -181,6 +181,12 @@ docs/BILIBILI_PRODUCTION_WORKFLOW.md
 python magireco_asset_pipeline.py bilibili-part-output-audit --help
 ```
 
+在实际 SRT 字幕时间点比较无字幕与烧录字幕画面：
+
+```powershell
+python magireco_asset_pipeline.py subtitle-burn-audit --help
+```
+
 当模拟器已运行并且 Android 侧有匹配版本的 `frida-server` 时，可以探测 native WAV 转换入口。无 `--code` 参数时只做状态检查：
 
 ```powershell

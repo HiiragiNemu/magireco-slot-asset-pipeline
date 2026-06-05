@@ -220,3 +220,28 @@ A:\magireco_bili_fulltest_20260603\
   bilibili_part_plan_audible_v4_media_fallback
   event_output_audit_all_v5_media_fallback
 ```
+
+## Burned-subtitle visual audit
+
+Added `subtitle-burn-audit` to verify subtitle pixels against the corresponding
+no-subtitle event source. It parses each SRT, selects up to three evenly
+distributed cue midpoints, decodes both editions at those times, and measures
+their luma difference with FFmpeg.
+
+Full result:
+
+- event/canvas rows: 284
+- visual-change failures: 0
+- probe errors: 0
+- minimum per-event maximum difference: 0.846662
+- maximum per-event maximum difference: 7.465500
+- acceptance threshold: 0.500000
+
+Output:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  subtitle_burn_audit_v1\
+    subtitle_burn_audit.csv
+    subtitle_burn_audit_summary.md
+```

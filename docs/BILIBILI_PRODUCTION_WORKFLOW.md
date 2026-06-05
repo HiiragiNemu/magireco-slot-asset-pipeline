@@ -122,6 +122,21 @@ The audit verifies streams, canvas, average frame rate, 48 kHz stereo AAC,
 decoded audibility, decoded peak, planned duration, and the hard-link relation
 between editions that contain no subtitle events.
 
+Verify all burned-subtitle event sources independently with:
+
+```powershell
+python magireco_asset_pipeline.py subtitle-burn-audit `
+  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v4_media_fallback\bilibili_event_sequence.csv `
+  --out-dir A:\magireco_bili_fulltest_20260603\subtitle_burn_audit_v1 `
+  --max-samples 3 `
+  --difference-threshold 0.5 `
+  --workers 4
+```
+
+This samples actual SRT cue midpoints and compares the no-subtitle and
+burned-subtitle frames. The full 284-row audit passed with no probe errors;
+the lowest per-event maximum luma difference was 0.846662.
+
 Use `avg_frame_rate` for the effective playback rate. A concatenated file can
 report `r_frame_rate=60/1` when a few boundary packets last 50 ms even though
 its frame count and duration are approximately 30 fps. Duration tolerance is

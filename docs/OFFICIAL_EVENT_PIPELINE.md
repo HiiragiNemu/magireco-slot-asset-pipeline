@@ -124,6 +124,26 @@ Each dialogue event can produce:
 
 The current exact subtitle set contains 284 event/canvas outputs.
 
+Burned subtitles are verified at actual SRT cue times rather than inferred
+from filenames. For each event/canvas row, up to three evenly selected cue
+midpoints are decoded from both editions and compared with FFmpeg's
+`blend=difference` and `signalstats`.
+
+Full subtitle visual audit:
+
+- Event/canvas rows: 284
+- Visual-change failures: 0
+- Probe errors: 0
+- Minimum per-event maximum luma difference: 0.846662
+- Acceptance threshold: 0.500000
+
+Audit output:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  subtitle_burn_audit_v1\
+```
+
 ## Deprecated outputs
 
 The following outputs are diagnostic only and must not drive production:
