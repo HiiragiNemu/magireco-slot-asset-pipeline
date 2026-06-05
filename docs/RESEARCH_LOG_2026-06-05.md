@@ -59,6 +59,18 @@ candidate-count suffixes.
 P002 (`ac0006`, 12 events) passed video, audio, subtitle, black separator, and
 true-peak checks.
 
+## Upload metadata
+
+EventCn provides a current-title sound label candidate for 177 of 187 audible
+event roots. Ten roots remain code-only.
+
+The old smali/debug `ac_code_labels.csv` table was rejected as an upload naming
+source because it contains labels from unrelated residual game content.
+
+`bilibili-upload-review` now generates an editable 294-row review table with
+candidate title, description, event range, subtitle count, review flags, and
+blank approval fields.
+
 ## Work still running at log creation
 
 The final tree is being completed with 2,997 silent visual event/canvas rows.

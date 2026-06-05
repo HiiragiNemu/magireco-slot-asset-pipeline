@@ -3828,6 +3828,113 @@ def command_bilibili_part_plan(args):
     print(f"[bilibili-part-plan] wrote {summary_path}")
 
 
+def command_bilibili_upload_review(args):
+    part_rows = read_csv(Path(args.parts_csv))
+    root_rows = read_csv(Path(args.root_labels_csv))
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    root_meta = {
+        row.get("event_root", ""): row
+        for row in root_rows
+        if row.get("event_root")
+    }
+    review_rows = []
+    for part in part_rows:
+        root = part.get("event_root", "")
+        meta = root_meta.get(root, {})
+        primary_label = meta.get("primary_label_candidate", "")
+        label_candidates = split_semicolon(meta.get("label_candidates", ""))
+        review_reasons = []
+        if not primary_label:
+            review_reasons.append("missing_eventcn_label")
+        if len(label_candidates) > args.label_diversity_threshold:
+            review_reasons.append("high_label_diversity")
+        if re.match(r"^(?:seq_|SE_|BGM_|Voice_)", primary_label, re.IGNORECASE):
+            review_reasons.append("technical_prefix")
+        if re.search(r"(?:_001|_002|_003|【|】|CD\d)", primary_label):
+            review_reasons.append("internal_variant_marker")
+
+        root_part_index = parse_optional_int(part.get("root_part_index")) or 1
+        root_part_count = parse_optional_int(part.get("root_part_count")) or 1
+        title_label = primary_label or "演出集"
+        part_suffix = (
+            f" {root_part_index}/{root_part_count}"
+            if root_part_count > 1
+            else ""
+        )
+        title_candidate = (
+            f"スマスロ マギアレコード {root} {title_label} "
+            f"[{part.get('canvas', '')}]{part_suffix}"
+        )
+        title_candidate = title_candidate[: args.max_title_length].rstrip()
+        description_candidate = (
+            f"公式イベントコード: {root}\n"
+            f"収録範囲: {part.get('first_event', '')} - "
+            f"{part.get('last_event', '')}\n"
+            f"イベント数: {part.get('event_count', '')}\n"
+            f"字幕対象イベント数: {part.get('subtitle_event_count', '')}\n"
+            "GDB -> Z2D -> DGM -> CRI の公式参照関係に基づく再構成。"
+        )
+        review_rows.append(
+            {
+                "global_part_number": part.get("global_part_number", ""),
+                "part_key": part.get("part_key", ""),
+                "event_root": root,
+                "canvas": part.get("canvas", ""),
+                "event_count": part.get("event_count", ""),
+                "subtitle_event_count": part.get("subtitle_event_count", ""),
+                "duration_min": part.get("duration_min", ""),
+                "first_event": part.get("first_event", ""),
+                "last_event": part.get("last_event", ""),
+                "eventcn_primary_label": primary_label,
+                "eventcn_label_candidates": meta.get("label_candidates", ""),
+                "eventcn_label_candidate_count": len(label_candidates),
+                "title_candidate": title_candidate,
+                "description_candidate": description_candidate,
+                "manual_review_required": "yes",
+                "review_reasons": ";".join(review_reasons)
+                or "eventcn_label_is_still_candidate",
+                "no_subtitles_output_name": part.get(
+                    "no_subtitles_output_name", ""
+                ),
+                "subtitle_output_name": part.get("subtitle_output_name", ""),
+                "review_status": "",
+                "approved_title": "",
+                "review_notes": "",
+            }
+        )
+    fields = list(review_rows[0].keys()) if review_rows else []
+    review_path = out_dir / "bilibili_upload_review.csv"
+    write_csv(review_path, review_rows, fields)
+    reason_counts = Counter()
+    for row in review_rows:
+        for reason in split_semicolon(row["review_reasons"]):
+            reason_counts[reason] += 1
+    summary_path = out_dir / "bilibili_upload_review_summary.md"
+    summary_path.write_text(
+        "\n".join(
+            [
+                "# Bilibili Upload Review",
+                "",
+                f"Parts: {len(review_rows)}",
+                "All titles require human approval before upload.",
+                "",
+                "## Review flags",
+                *[
+                    f"- {reason}: {count}"
+                    for reason, count in sorted(reason_counts.items())
+                ],
+                "",
+                "Debug/smali ac-code labels are intentionally excluded because the table contains labels from unrelated residual game content.",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"[bilibili-upload-review] wrote {review_path}")
+    print(f"[bilibili-upload-review] wrote {summary_path}")
+
+
 def audit_event_output(row: dict, source_field: str, threshold_db: float) -> dict:
     source = Path(row.get(source_field, ""))
     result = {
@@ -9937,6 +10044,21 @@ def build_parser():
     bilibili_plan.add_argument("--spacer-sec", type=float, default=0.25)
     bilibili_plan.add_argument("--upload-canvas", default="1920x1080")
     bilibili_plan.set_defaults(func=command_bilibili_part_plan)
+
+    bilibili_upload_review = sub.add_parser(
+        "bilibili-upload-review",
+        help="build a human-review table for part titles and upload descriptions",
+    )
+    bilibili_upload_review.add_argument("--parts-csv", required=True)
+    bilibili_upload_review.add_argument("--root-labels-csv", required=True)
+    bilibili_upload_review.add_argument("--out-dir", required=True)
+    bilibili_upload_review.add_argument(
+        "--label-diversity-threshold",
+        type=int,
+        default=8,
+    )
+    bilibili_upload_review.add_argument("--max-title-length", type=int, default=80)
+    bilibili_upload_review.set_defaults(func=command_bilibili_upload_review)
 
     event_output_audit = sub.add_parser(
         "event-output-audit",

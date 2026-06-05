@@ -108,3 +108,18 @@ bilibili_root_label_candidates.csv
 
 The label candidate file is evidence for naming, not a final official title
 table.
+
+Generate the editable upload review table with:
+
+```powershell
+python magireco_asset_pipeline.py bilibili-upload-review `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --root-labels-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_root_label_candidates.csv `
+  --out-dir A:\magireco_bili_fulltest_20260603\bilibili_upload_review_v1
+```
+
+Fill `review_status`, `approved_title`, and `review_notes` before upload.
+
+The old smali/debug `ac_code_labels.csv` table is intentionally excluded from
+title generation. It contains labels from unrelated residual game content and
+is not reliable evidence for this title.
