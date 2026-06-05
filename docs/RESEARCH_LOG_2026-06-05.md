@@ -359,3 +359,25 @@ Authoritative audit output:
 A:\magireco_bili_fulltest_20260603\
   bilibili_part_output_audit_all_final_v2\
 ```
+
+## RAM-disk research archive
+
+The completed RAM-disk research tree was archived without deleting the source:
+
+```text
+D:\MagiReco_Reverse\
+  MagiaRe_RAMDISK_Research_20260606_final.7z
+```
+
+Archive contents exclude `$RECYCLE.BIN`, `System Volume Information`, and
+`TEMP`. Independent `7z t` verification completed successfully:
+
+- folders: 5,858
+- files: 47,537
+- uncompressed logical bytes: 22,473,957,735
+- archive bytes: 19,435,850,591
+- SHA-256:
+  `BB5E01BEC5794919E3506549A41696B29BF2A80894513CC22F334D6DB3B716C6`
+
+The checksum is also stored beside the archive as
+`MagiaRe_RAMDISK_Research_20260606_final.7z.sha256`.
