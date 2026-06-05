@@ -85,6 +85,28 @@ Verified P002 result:
 - Subtitle and no-subtitle frames differ at dialogue time
 - Event separator sample is pure black
 
+## Output audit
+
+Audit all completed part files with:
+
+```powershell
+python magireco_asset_pipeline.py bilibili-part-output-audit `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --output-dir D:\MagiReco_Reverse\magireco_bilibili_parts_audible_20260606 `
+  --out-dir A:\magireco_bili_fulltest_20260603\bilibili_part_output_audit_audible_final `
+  --workers 4
+```
+
+The audit verifies streams, canvas, average frame rate, 48 kHz stereo AAC,
+decoded audibility, decoded peak, planned duration, and the hard-link relation
+between editions that contain no subtitle events.
+
+Use `avg_frame_rate` for the effective playback rate. A concatenated file can
+report `r_frame_rate=60/1` when a few boundary packets last 50 ms even though
+its frame count and duration are approximately 30 fps. Duration tolerance is
+the configured base plus one frame per normalized event, which bounds the
+timestamp rounding accumulated across the part.
+
 ## Quality gates
 
 Do not publish a part unless all conditions pass:
@@ -93,7 +115,7 @@ Do not publish a part unless all conditions pass:
 - video and audio streams both decode
 - output is actually audible
 - output resolution is 1920x1080
-- output frame rate is 30 fps
+- output average frame rate is within 0.05 fps of 30 fps
 - output audio is 48 kHz stereo
 - decoded peak does not exceed -0.5 dBFS
 - subtitle and no-subtitle editions differ where dialogue exists

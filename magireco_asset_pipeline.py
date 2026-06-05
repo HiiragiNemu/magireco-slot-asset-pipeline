@@ -4520,6 +4520,357 @@ def command_build_bilibili_part(args):
     print(f"[build-bilibili-part] wrote {summary_path}")
 
 
+def parse_frame_rate(value: str) -> float | None:
+    if not value:
+        return None
+    if "/" in value:
+        numerator, denominator = value.split("/", 1)
+        denominator_value = parse_optional_float(denominator)
+        if denominator_value in (None, 0.0):
+            return None
+        numerator_value = parse_optional_float(numerator)
+        return (
+            numerator_value / denominator_value
+            if numerator_value is not None
+            else None
+        )
+    return parse_optional_float(value)
+
+
+def physical_file_key(path: Path) -> tuple:
+    stat = path.stat()
+    return (stat.st_dev, stat.st_ino, stat.st_size)
+
+
+def audit_bilibili_media(path: Path, threshold_db: float) -> dict:
+    result = {
+        "source_exists": "yes" if path.exists() else "no",
+        "probe_ok": "no",
+        "probe_error": "",
+        "actual_duration_sec": "",
+        "has_video": "no",
+        "has_audio": "no",
+        "video_codec": "",
+        "audio_codec": "",
+        "width": "",
+        "height": "",
+        "frame_rate": "",
+        "average_frame_rate": "",
+        "audio_sample_rate": "",
+        "audio_channels": "",
+        "audio_volume_ok": "no",
+        "mean_volume_db": "",
+        "max_volume_db": "",
+        "audible_audio": "no",
+        "output_size_bytes": "",
+    }
+    if not path.exists():
+        result["probe_error"] = "source missing"
+        return result
+    result["output_size_bytes"] = path.stat().st_size
+    probe = probe_mp4(path)
+    result.update(
+        {
+            "probe_ok": "yes" if probe.get("probe_ok") else "no",
+            "probe_error": probe.get("probe_error", ""),
+            "actual_duration_sec": probe.get("duration_sec", ""),
+            "has_video": "yes" if probe.get("has_video") else "no",
+            "has_audio": "yes" if probe.get("has_audio") else "no",
+            "video_codec": probe.get("video_codec", ""),
+            "audio_codec": probe.get("audio_codec", ""),
+            "width": probe.get("width", ""),
+            "height": probe.get("height", ""),
+            "frame_rate": probe.get("frame_rate", ""),
+            "average_frame_rate": probe.get("average_frame_rate", ""),
+            "audio_sample_rate": probe.get("audio_sample_rate", ""),
+            "audio_channels": probe.get("audio_channels", ""),
+        }
+    )
+    if probe.get("has_audio"):
+        volume = probe_audio_volume(path)
+        max_volume = volume.pop("max_volume_value")
+        result.update(
+            {
+                "audio_volume_ok": (
+                    "yes" if volume["audio_volume_ok"] else "no"
+                ),
+                "mean_volume_db": volume["mean_volume_db"],
+                "max_volume_db": volume["max_volume_db"],
+                "audible_audio": (
+                    "yes"
+                    if max_volume is not None and max_volume > threshold_db
+                    else "no"
+                ),
+            }
+        )
+        if volume["audio_volume_error"]:
+            result["probe_error"] = volume["audio_volume_error"][-4000:]
+    return result
+
+
+def command_bilibili_part_output_audit(args):
+    part_rows = read_csv(Path(args.parts_csv))
+    output_dir = Path(args.output_dir)
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    audit_path = out_dir / "bilibili_part_output_audit.csv"
+
+    jobs = []
+    for part in part_rows:
+        for edition, name_field in (
+            ("no-subtitles", "no_subtitles_output_name"),
+            ("subtitles", "subtitle_output_name"),
+        ):
+            jobs.append(
+                {
+                    "part": part,
+                    "edition": edition,
+                    "path": output_dir / part.get(name_field, ""),
+                }
+            )
+
+    unique_paths = {}
+    path_keys = {}
+    for job in jobs:
+        path = job["path"]
+        key = ("missing", str(path).lower())
+        if path.exists():
+            try:
+                key = physical_file_key(path)
+            except OSError:
+                key = ("path", str(path.resolve()).lower())
+        path_keys[str(path)] = key
+        unique_paths.setdefault(key, path)
+
+    media_by_key = {}
+    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+        futures = {
+            executor.submit(
+                audit_bilibili_media,
+                path,
+                args.threshold_db,
+            ): key
+            for key, path in unique_paths.items()
+        }
+        for completed, future in enumerate(as_completed(futures), start=1):
+            media_by_key[futures[future]] = future.result()
+            if completed % 25 == 0 or completed == len(futures):
+                print(
+                    "[bilibili-part-output-audit] decoded "
+                    f"{completed}/{len(futures)} physical files"
+                )
+
+    rows = []
+    for job in jobs:
+        part = job["part"]
+        path = job["path"]
+        media = media_by_key[path_keys[str(path)]]
+        planned_duration = parse_optional_float(part.get("duration_sec"))
+        actual_duration = parse_optional_float(media.get("actual_duration_sec"))
+        duration_delta = (
+            actual_duration - planned_duration
+            if actual_duration is not None and planned_duration is not None
+            else None
+        )
+        expected_canvas = parse_canvas_selector(
+            part.get("upload_canvas") or args.upload_canvas
+        )
+        width = parse_optional_int(media.get("width"))
+        height = parse_optional_int(media.get("height"))
+        actual_fps = parse_frame_rate(
+            media.get("average_frame_rate", "")
+            or media.get("frame_rate", "")
+        )
+        event_count = parse_optional_int(part.get("event_count")) or 0
+        duration_tolerance = (
+            args.duration_tolerance_sec
+            + event_count / max(args.fps, 1.0)
+        )
+        expected_audible = (
+            parse_optional_int(part.get("audible_event_count")) or 0
+        ) > 0
+        actual_audible = media.get("audible_audio") == "yes"
+        max_volume = parse_optional_float(media.get("max_volume_db"))
+        stream_contract_ok = (
+            media.get("probe_ok") == "yes"
+            and media.get("has_video") == "yes"
+            and media.get("has_audio") == "yes"
+            and media.get("video_codec") == args.video_codec
+            and media.get("audio_codec") == args.audio_codec
+            and expected_canvas == (width, height)
+            and actual_fps is not None
+            and abs(actual_fps - args.fps) <= args.fps_tolerance
+            and parse_optional_int(media.get("audio_sample_rate"))
+            == args.audio_sample_rate
+            and parse_optional_int(media.get("audio_channels"))
+            == args.audio_channels
+        )
+        duration_ok = (
+            duration_delta is not None
+            and abs(duration_delta) <= duration_tolerance
+        )
+        audio_expectation_ok = actual_audible == expected_audible
+        peak_safe = (
+            max_volume is not None and max_volume <= args.max_peak_db
+        )
+        row = {
+            "global_part_number": part.get("global_part_number", ""),
+            "part_key": part.get("part_key", ""),
+            "edition": job["edition"],
+            "output": str(path),
+            "source_exists": media["source_exists"],
+            "probe_ok": media["probe_ok"],
+            "probe_error": media["probe_error"],
+            "planned_duration_sec": part.get("duration_sec", ""),
+            "actual_duration_sec": media["actual_duration_sec"],
+            "duration_delta_sec": (
+                f"{duration_delta:.6f}" if duration_delta is not None else ""
+            ),
+            "duration_tolerance_sec": f"{duration_tolerance:.6f}",
+            "duration_ok": "yes" if duration_ok else "no",
+            "has_video": media["has_video"],
+            "has_audio": media["has_audio"],
+            "video_codec": media["video_codec"],
+            "audio_codec": media["audio_codec"],
+            "width": media["width"],
+            "height": media["height"],
+            "frame_rate": media["frame_rate"],
+            "average_frame_rate": media["average_frame_rate"],
+            "audio_sample_rate": media["audio_sample_rate"],
+            "audio_channels": media["audio_channels"],
+            "stream_contract_ok": "yes" if stream_contract_ok else "no",
+            "expected_audible": "yes" if expected_audible else "no",
+            "audible_audio": media["audible_audio"],
+            "audio_expectation_ok": (
+                "yes" if audio_expectation_ok else "no"
+            ),
+            "mean_volume_db": media["mean_volume_db"],
+            "max_volume_db": media["max_volume_db"],
+            "peak_safe": "yes" if peak_safe else "no",
+            "output_size_bytes": media["output_size_bytes"],
+            "overall_ok": (
+                "yes"
+                if stream_contract_ok
+                and duration_ok
+                and audio_expectation_ok
+                and peak_safe
+                else "no"
+            ),
+        }
+        rows.append(row)
+
+    rows.sort(
+        key=lambda row: (
+            parse_optional_int(row.get("global_part_number")) or 0,
+            row.get("edition", ""),
+        )
+    )
+    fields = list(rows[0].keys()) if rows else []
+    write_csv(audit_path, rows, fields)
+
+    part_by_number = {
+        parse_optional_int(row.get("global_part_number")): row
+        for row in part_rows
+    }
+    storage_rows = []
+    for part_number, part in sorted(
+        part_by_number.items(),
+        key=lambda item: item[0] or 0,
+    ):
+        no_subtitles = output_dir / part.get("no_subtitles_output_name", "")
+        subtitles = output_dir / part.get("subtitle_output_name", "")
+        subtitle_count = parse_optional_int(part.get("subtitle_event_count")) or 0
+        same_physical_file = False
+        outputs_exist = no_subtitles.exists() and subtitles.exists()
+        if outputs_exist:
+            try:
+                same_physical_file = os.path.samefile(no_subtitles, subtitles)
+            except OSError:
+                same_physical_file = False
+        expected_hardlink = subtitle_count == 0
+        storage_rows.append(
+            {
+                "global_part_number": part_number or "",
+                "part_key": part.get("part_key", ""),
+                "subtitle_event_count": subtitle_count,
+                "outputs_exist": "yes" if outputs_exist else "no",
+                "expected_shared_physical_file": (
+                    "yes" if expected_hardlink else "no"
+                ),
+                "same_physical_file": (
+                    "yes" if same_physical_file else "no"
+                ),
+                "storage_relation_ok": (
+                    "yes"
+                    if outputs_exist
+                    and same_physical_file == expected_hardlink
+                    else ("no" if outputs_exist else "")
+                ),
+                "no_subtitles_output": str(no_subtitles),
+                "subtitle_output": str(subtitles),
+            }
+        )
+    storage_path = out_dir / "bilibili_part_storage_audit.csv"
+    write_csv(
+        storage_path,
+        storage_rows,
+        list(storage_rows[0].keys()) if storage_rows else [],
+    )
+
+    missing = sum(row["source_exists"] != "yes" for row in rows)
+    stream_failures = sum(row["stream_contract_ok"] != "yes" for row in rows)
+    duration_failures = sum(row["duration_ok"] != "yes" for row in rows)
+    audio_failures = sum(
+        row["audio_expectation_ok"] != "yes" for row in rows
+    )
+    peak_failures = sum(row["peak_safe"] != "yes" for row in rows)
+    overall_failures = sum(row["overall_ok"] != "yes" for row in rows)
+    storage_failures = sum(
+        row["outputs_exist"] == "yes"
+        and row["storage_relation_ok"] != "yes"
+        for row in storage_rows
+    )
+    summary_path = out_dir / "bilibili_part_output_audit_summary.md"
+    summary_path.write_text(
+        "\n".join(
+            [
+                "# Bilibili Part Output Audit",
+                "",
+                f"Logical output rows: {len(rows)}",
+                f"Unique physical media files decoded: {len(unique_paths)}",
+                f"Missing outputs: {missing}",
+                f"Stream contract failures: {stream_failures}",
+                f"Duration failures: {duration_failures}",
+                f"Audio expectation failures: {audio_failures}",
+                f"Peak safety failures: {peak_failures}",
+                f"Overall failures: {overall_failures}",
+                f"Storage relation failures: {storage_failures}",
+                "",
+                (
+                    "Required stream contract: "
+                    f"{args.video_codec}/{args.audio_codec}, "
+                    f"{args.upload_canvas}, average {args.fps:g} fps, "
+                    f"{args.audio_sample_rate} Hz, "
+                    f"{args.audio_channels} channels."
+                ),
+                (
+                    "Duration tolerance is the configured base plus one "
+                    "frame per normalized event to cover timestamp rounding."
+                ),
+                (
+                    "Audio audibility is measured from decoded samples; "
+                    "subtitle aliases without dialogue are checked as hard links."
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"[bilibili-part-output-audit] wrote {audit_path}")
+    print(f"[bilibili-part-output-audit] wrote {storage_path}")
+    print(f"[bilibili-part-output-audit] wrote {summary_path}")
+
+
 def rebuild_official_audio_for_video(job: dict, args) -> dict:
     source = Path(job["source"])
     output = Path(job["output"])
@@ -5317,7 +5668,11 @@ def probe_mp4(path: Path) -> dict:
         "-v",
         "error",
         "-show_entries",
-        "format=duration:stream=index,codec_type,codec_name,width,height,duration,r_frame_rate",
+        (
+            "format=duration:"
+            "stream=index,codec_type,codec_name,width,height,duration,"
+            "r_frame_rate,avg_frame_rate,sample_rate,channels"
+        ),
         "-of",
         "json",
         str(path),
@@ -5347,6 +5702,9 @@ def probe_mp4(path: Path) -> dict:
         "width": video.get("width", ""),
         "height": video.get("height", ""),
         "frame_rate": video.get("r_frame_rate", ""),
+        "average_frame_rate": video.get("avg_frame_rate", ""),
+        "audio_sample_rate": audio.get("sample_rate", ""),
+        "audio_channels": audio.get("channels", ""),
     }
 
 
@@ -10177,6 +10535,61 @@ def build_parser():
     build_bilibili_part.add_argument("--execute", action="store_true")
     build_bilibili_part.add_argument("--overwrite", action="store_true")
     build_bilibili_part.set_defaults(func=command_build_bilibili_part)
+
+    bilibili_part_output_audit = sub.add_parser(
+        "bilibili-part-output-audit",
+        help="verify completed upload parts and subtitle storage relations",
+    )
+    bilibili_part_output_audit.add_argument("--parts-csv", required=True)
+    bilibili_part_output_audit.add_argument("--output-dir", required=True)
+    bilibili_part_output_audit.add_argument("--out-dir", required=True)
+    bilibili_part_output_audit.add_argument(
+        "--upload-canvas",
+        default="1920x1080",
+    )
+    bilibili_part_output_audit.add_argument("--fps", type=float, default=30.0)
+    bilibili_part_output_audit.add_argument(
+        "--fps-tolerance",
+        type=float,
+        default=0.05,
+    )
+    bilibili_part_output_audit.add_argument(
+        "--video-codec",
+        default="h264",
+    )
+    bilibili_part_output_audit.add_argument(
+        "--audio-codec",
+        default="aac",
+    )
+    bilibili_part_output_audit.add_argument(
+        "--audio-sample-rate",
+        type=int,
+        default=48000,
+    )
+    bilibili_part_output_audit.add_argument(
+        "--audio-channels",
+        type=int,
+        default=2,
+    )
+    bilibili_part_output_audit.add_argument(
+        "--threshold-db",
+        type=float,
+        default=-80.0,
+    )
+    bilibili_part_output_audit.add_argument(
+        "--max-peak-db",
+        type=float,
+        default=-0.5,
+    )
+    bilibili_part_output_audit.add_argument(
+        "--duration-tolerance-sec",
+        type=float,
+        default=0.20,
+    )
+    bilibili_part_output_audit.add_argument("--workers", type=int, default=4)
+    bilibili_part_output_audit.set_defaults(
+        func=command_bilibili_part_output_audit
+    )
 
     rebuild_event_audio = sub.add_parser(
         "rebuild-event-audio",

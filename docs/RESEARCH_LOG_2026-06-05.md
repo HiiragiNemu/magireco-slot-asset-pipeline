@@ -95,3 +95,36 @@ sound-request evidence.
 The final tree is being completed with 2,997 silent visual event/canvas rows.
 These rows retain a silent AAC stream so all later merge inputs have a uniform
 video-plus-audio contract.
+
+## Bilibili output audit added
+
+Added `bilibili-part-output-audit` to verify completed upload parts independently
+from the builder.
+
+It checks:
+
+- H.264 video and AAC audio streams
+- 1920x1080 upload canvas
+- average playback rate near 30 fps
+- 48 kHz stereo audio
+- decoded audibility against the plan
+- decoded peak safety
+- planned duration within timestamp-rounding bounds
+- hard-link reuse for subtitle aliases with no subtitle events
+
+An incremental audit during the full build found:
+
+- 48 completed logical outputs
+- 48 passed all media checks
+- 24 completed edition pairs
+- 24 correct storage relations
+- 0 failures among existing outputs
+
+Two files initially appeared to be 60 fps because their container
+`r_frame_rate` was inferred from a few 50 ms packets at concat boundaries.
+Their `avg_frame_rate`, frame count, and duration prove that playback is
+approximately 30 fps. The audit now uses `avg_frame_rate`.
+
+Fixed duration tolerance was also rejected. Concatenating many independently
+normalized events accumulates sub-frame timestamp rounding, so the accepted
+bound is now a small base tolerance plus one frame per event.

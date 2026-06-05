@@ -168,6 +168,19 @@ python magireco_asset_pipeline.py merge-candidate-runs --video-dir A:\magireco_b
 python magireco_asset_pipeline.py bili-metadata-audit
 ```
 
+官方 GDB -> Z2D -> DGM -> CRI 事件重建、音频、字幕和分 P 工作流见：
+
+```text
+docs/OFFICIAL_EVENT_PIPELINE.md
+docs/BILIBILI_PRODUCTION_WORKFLOW.md
+```
+
+对已生成的 B 站分 P 做独立的流、音量、时长和硬链接审计：
+
+```powershell
+python magireco_asset_pipeline.py bilibili-part-output-audit --help
+```
+
 当模拟器已运行并且 Android 侧有匹配版本的 `frida-server` 时，可以探测 native WAV 转换入口。无 `--code` 参数时只做状态检查：
 
 ```powershell
@@ -187,4 +200,5 @@ python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Downl
 
 默认命令尽量 dry-run。会移动、复制、导出或合并文件的步骤需要显式加 `--execute`。
 
-视频拼合目前只生成候选，不自动批量合并。原因是大量 `acXXXX_NNN` 名称共享同一 CRID chunk，必须先确认共享片段是否代表同一实际画面或通用片段。
+旧的候选数切片拼合只保留作研究证据。当前生产流程使用
+GDB -> Z2D -> DGM -> native CRI 的官方引用链重建事件，并按官方事件根和画布分组生成 B 站分 P。
