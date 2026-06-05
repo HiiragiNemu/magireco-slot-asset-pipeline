@@ -172,3 +172,51 @@ The repair pass completed all four events. Final event-tree counts:
 - missing planned inputs: 0
 - failed batch rows: 0
 - generated layer residues: 0
+
+## Zero-duration correction and final audit
+
+The first 8,482-row output audit found one invalid file:
+`ac7114_100` at 1280x720. The old plan assigned it zero seconds because its Z2D
+relation omitted outer `end_frame` and `relation_end_ms` values.
+
+The exact DGM/CRI mapping still contained:
+
+- interval confidence: `exact_duration_unique`
+- official media duration: 1.000 seconds
+- valid official H.264 source: 512x288, 30 fps
+
+Duration calculation now falls back to `media_duration_sec` only when every
+timed layer in the event resolves to zero. This conservative rule changed the
+visual-duration fields of four events but changed final output duration only
+for `ac7114_100`. The event was rebuilt as a valid 1.000-second 1280x720
+H.264/AAC file.
+
+The v5 production plan retains:
+
+- 8,482 event/canvas rows
+- 7,753 unique events
+- 5,201 audible events without subtitles
+- 284 audible events with subtitles
+- 2,997 silent visual events
+
+Final full-tree audit:
+
+- rows: 8,482
+- missing sources: 0
+- invalid video/audio streams: 0
+- decoded audio expectation mismatches: 0
+- duration mismatches above 0.120 seconds: 0
+- decoded audible outputs: 5,485
+- decoded silent outputs: 2,997
+- maximum decoded peak: -0.9 dBFS
+- minimum decoded peak: -91.0 dBFS
+
+Authoritative current manifests:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  event_production_plan_v5_media_fallback
+  bilibili_part_plan_all_v4_media_fallback
+  bilibili_part_plan_audible_v4_media_fallback
+  event_output_audit_all_v5_media_fallback
+```

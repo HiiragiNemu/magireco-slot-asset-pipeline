@@ -853,6 +853,24 @@ def parse_canvas_selector(value) -> tuple[int, int] | None:
     return int(match.group(1)), int(match.group(2))
 
 
+def event_rows_duration_sec(rows: list[dict], frame_rate: float) -> float:
+    timed_duration = max(
+        (
+            (parse_optional_float(row.get("end_frame")) + 1) / frame_rate
+            if parse_optional_float(row.get("end_frame")) is not None
+            else (parse_optional_float(row.get("relation_end_ms")) or 0.0)
+            / 1000
+        )
+        for row in rows
+    )
+    if timed_duration > 0:
+        return timed_duration
+    return max(
+        parse_optional_float(row.get("media_duration_sec")) or 0.0
+        for row in rows
+    )
+
+
 def build_video_manifest_rows(candidates, code_to_labels):
     rows = []
     for pack, (bin_path, add_path) in VIDEO_ARCHIVES.items():
@@ -2391,14 +2409,7 @@ def command_build_event_dgm_layers(args):
         raise ValueError(
             f"no exact DGM video rows found for event {args.event_name}"
         )
-    event_duration_sec = max(
-        (
-            (parse_optional_float(row.get("end_frame")) + 1) / args.frame_rate
-            if parse_optional_float(row.get("end_frame")) is not None
-            else (parse_optional_float(row.get("relation_end_ms")) or 0.0) / 1000
-        )
-        for row in selected
-    )
+    event_duration_sec = event_rows_duration_sec(selected, args.frame_rate)
     event_duration_sec = max(
         event_duration_sec,
         parse_optional_float(getattr(args, "target_duration_sec", 0)) or 0.0,
@@ -2769,14 +2780,7 @@ def command_build_event_dgm_composite(args):
         execute=args.execute,
         overwrite=args.overwrite,
     )
-    event_duration_sec = max(
-        (
-            (parse_optional_float(row.get("end_frame")) + 1) / args.frame_rate
-            if parse_optional_float(row.get("end_frame")) is not None
-            else (parse_optional_float(row.get("relation_end_ms")) or 0.0) / 1000
-        )
-        for row in event_rows
-    )
+    event_duration_sec = event_rows_duration_sec(event_rows, args.frame_rate)
 
     placement_by_z2d = {}
     for row in event_rows:
@@ -3331,15 +3335,7 @@ def command_event_production_plan(args):
             item[0][2],
         ),
     ):
-        event_duration_sec = max(
-            (
-                (parse_optional_float(row.get("end_frame")) + 1) / args.frame_rate
-                if parse_optional_float(row.get("end_frame")) is not None
-                else (parse_optional_float(row.get("relation_end_ms")) or 0.0)
-                / 1000
-            )
-            for row in rows
-        )
+        event_duration_sec = event_rows_duration_sec(rows, args.frame_rate)
         dialogue_rows = dialogue_by_event.get(event_name, [])
         eventcn_rows = eventcn_by_event.get(event_name, [])
         audio_keys = {

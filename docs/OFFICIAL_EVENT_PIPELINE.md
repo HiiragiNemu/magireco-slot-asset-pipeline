@@ -98,6 +98,19 @@ instead of an inline filter argument. This avoids the Windows process
 command-line limit; `ac8050` includes four valid 94-layer canvases that exceed
 the limit when represented inline.
 
+When all recovered outer timing fields are zero, event duration falls back to
+the exact official media duration. This is required for `ac7114_100`, whose
+1.000-second CRI video is valid but whose Z2D relation omits outer frame
+timing.
+
+The current authoritative production plan is:
+
+```text
+A:\magireco_bili_fulltest_20260603\
+  event_production_plan_v5_media_fallback\
+  event_canvas_production_plan.csv
+```
+
 ## Subtitle behavior
 
 Subtitles are generated only from exact `cap*` dialogue resources. Visual text

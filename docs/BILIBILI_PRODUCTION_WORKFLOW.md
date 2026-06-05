@@ -6,7 +6,7 @@ Use the verified production plan:
 
 ```text
 A:\magireco_bili_fulltest_20260603\
-  event_production_plan_v4_verified\
+  event_production_plan_v5_media_fallback\
   event_canvas_production_plan.csv
 ```
 
@@ -21,7 +21,7 @@ The audible upload plan is:
 
 ```text
 A:\magireco_bili_fulltest_20260603\
-  bilibili_part_plan_audible_v3_limited
+  bilibili_part_plan_audible_v4_media_fallback
 ```
 
 It contains 5,485 event/canvas rows in 294 planned parts.
@@ -46,8 +46,8 @@ Example for one part:
 
 ```powershell
 python magireco_asset_pipeline.py build-bilibili-part `
-  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_event_sequence.csv `
-  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_event_sequence.csv `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_parts.csv `
   --part-number 2 `
   --out-dir A:\magireco_bili_fulltest_20260603\bilibili_parts `
   --edition both `
@@ -79,12 +79,12 @@ Pass the three `--reuse-*` arguments together:
 
 ```powershell
 python magireco_asset_pipeline.py build-bilibili-part `
-  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v3_limited_complete\bilibili_event_sequence.csv `
-  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v3_limited_complete\bilibili_parts.csv `
+  --sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v4_media_fallback\bilibili_event_sequence.csv `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_all_v4_media_fallback\bilibili_parts.csv `
   --out-dir D:\MagiReco_Reverse\magireco_bilibili_parts_all_20260606 `
   --all-parts --edition both `
-  --reuse-sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_event_sequence.csv `
-  --reuse-parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --reuse-sequence-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_event_sequence.csv `
+  --reuse-parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_parts.csv `
   --reuse-output-dir D:\MagiReco_Reverse\magireco_bilibili_parts_audible_20260606 `
   --encoder h264_nvenc --cq 19 --audio-bitrate 256k `
   --loudness-i -16 --true-peak-db -3 --cleanup-work --execute
@@ -112,7 +112,7 @@ Audit all completed part files with:
 
 ```powershell
 python magireco_asset_pipeline.py bilibili-part-output-audit `
-  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_parts.csv `
   --output-dir D:\MagiReco_Reverse\magireco_bilibili_parts_audible_20260606 `
   --out-dir A:\magireco_bili_fulltest_20260603\bilibili_part_output_audit_audible_final `
   --workers 4
@@ -160,8 +160,8 @@ Generate the editable upload review table with:
 
 ```powershell
 python magireco_asset_pipeline.py bilibili-upload-review `
-  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_parts.csv `
-  --root-labels-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v3_limited\bilibili_root_label_candidates.csv `
+  --parts-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_parts.csv `
+  --root-labels-csv A:\magireco_bili_fulltest_20260603\bilibili_part_plan_audible_v4_media_fallback\bilibili_root_label_candidates.csv `
   --out-dir A:\magireco_bili_fulltest_20260603\bilibili_upload_review_v1
 ```
 
