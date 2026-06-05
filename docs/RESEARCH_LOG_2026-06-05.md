@@ -71,6 +71,25 @@ source because it contains labels from unrelated residual game content.
 candidate title, description, event range, subtitle count, review flags, and
 blank approval fields.
 
+## Installed-data completeness
+
+The emulator pull was compared with the local source archives:
+
+- `main.9.com.universal777.magireco.obb`: exact SHA-256 match
+- `patch.9.com.universal777.magireco.obb`: exact SHA-256 match
+- `split_InstallTimePack.apk`: exact SHA-256 match
+
+The installed pull adds the runtime OnDemand SMZ pack:
+
+- SMZ chunks: 9,752
+- Native SMZ names: 9,752
+- Structured request names missing from the installed runtime table: 6
+
+Therefore the OBB and install-time inputs used by the current pipeline are exact
+copies of the installed game files, not incomplete reconstructions produced by
+the downloader script. The installed SMZ pack remains useful as independent
+sound-request evidence.
+
 ## Work still running at log creation
 
 The final tree is being completed with 2,997 silent visual event/canvas rows.

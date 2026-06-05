@@ -797,10 +797,12 @@ def parse_sound_id_records() -> list[dict]:
 
 def write_csv(path: Path, rows: list[dict], fieldnames: list[str]):
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8-sig") as f:
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    with temp_path.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+    temp_path.replace(path)
 
 
 def read_csv(path: Path) -> list[dict]:
