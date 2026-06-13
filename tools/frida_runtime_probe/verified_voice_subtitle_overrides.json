@@ -1,0 +1,212 @@
+{
+  "schema": "magireco-voice-subtitle-overrides-v1",
+  "purpose": "Curated corrections and completions for truncated official sound labels",
+  "accepted": {
+    "5170": {
+      "text": "ありえないんですケド…",
+      "source": "curated_official_prefix_and_large_v3_consensus",
+      "official_prefix": "ありえないんですケ",
+      "asr_consensus": "ありえないんですけど…",
+      "evidence": [
+        "official sound request 20062",
+        "large-v3 4/4 deterministic passes"
+      ]
+    },
+    "5176": {
+      "text": "世界を狂わせるビューティフルな力！",
+      "source": "curated_official_prefix_and_large_v3_consensus",
+      "official_prefix": "世界を狂わせるビ",
+      "asr_consensus": "世界を狂わせるビューティフルな力",
+      "evidence": [
+        "official sound request 20068",
+        "large-v3 prompted beam 5 and beam 10 agree"
+      ]
+    },
+    "6865": {
+      "text": "私たちにまかせて",
+      "source": "curated_official_prefix_and_paired_event_request",
+      "official_prefix": "私たちにまか",
+      "evidence": [
+        "official sound request 24253",
+        "the next exact request 24584 supplies ください at 1033 ms"
+      ]
+    },
+    "7634": {
+      "text": "こいつで黙らせてやる！",
+      "source": "curated_official_prefix_large_v3_and_transcript",
+      "official_prefix": "こいつで黙らせて",
+      "asr_consensus": "こいつで黙らせてやる！",
+      "evidence": [
+        "official sound request 25474",
+        "large-v3 4/4 deterministic passes",
+        "https://wikiwiki.jp/magireco/%E4%BD%90%E5%80%89%E6%9D%8F%E5%AD%90"
+      ]
+    },
+    "8261": {
+      "text": "キュキュッ！",
+      "source": "curated_official_onomatopoeia_label",
+      "official_prefix": "キュキュッ",
+      "asr_consensus": "キュッキュー！",
+      "evidence": [
+        "official sound request 26461",
+        "large-v3 phonetic consensus"
+      ]
+    },
+    "2439": {
+      "text": "押して！",
+      "source": "curated_large_v3_consensus",
+      "asr_consensus": "押して！",
+      "evidence": [
+        "large-v3 beam 5 and beam 10 agree",
+        "request 15100 occurs as an exact Z2D callback"
+      ]
+    },
+    "5278": {
+      "text": "押してよネ",
+      "speaker_code": "ari",
+      "source": "curated_z2d_name_character_style_and_asr",
+      "asr_consensus": "こうしてよね",
+      "evidence": [
+        "Z2D name cap5304_ari_oshite_001 identifies ari and oshite",
+        "request 20170 exact callback",
+        "Alina official dialogue consistently writes sentence ending as ヨネ or よネ"
+      ]
+    },
+    "8355": {
+      "speaker_code": "multiple",
+      "source": "curated_large_v3_timeline_and_story_transcript",
+      "evidence": [
+        "official sound request 28003 marked CV",
+        "large-v3 beam 5 and beam 10 exact consensus",
+        "Magia Record main story chapter 5 episode 5 transcript"
+      ],
+      "cues": [
+        {
+          "start_ms": 0,
+          "end_ms": 2880,
+          "text": "さっきの魔女はどこに行ったんだよ"
+        },
+        {
+          "start_ms": 2880,
+          "end_ms": 3780,
+          "text": "魔女じゃないわ"
+        },
+        {
+          "start_ms": 3780,
+          "end_ms": 7340,
+          "text": "おそらくだけど、魔女とは違う別の敵"
+        },
+        {
+          "start_ms": 7340,
+          "end_ms": 11840,
+          "text": "本体のウワサを倒さなければ、ウワサによって起こった事象は消えない"
+        },
+        {
+          "start_ms": 11840,
+          "end_ms": 15120,
+          "text": "じゃあ、その本体を探してぶっ潰せばいいんだろ"
+        },
+        {
+          "start_ms": 15120,
+          "end_ms": 17800,
+          "text": "あなたたちの幸運がゼロになる前にね"
+        }
+      ]
+    },
+    "8357": {
+      "speaker_code": "multiple",
+      "source": "curated_large_v3_timeline_and_story_transcript",
+      "evidence": [
+        "official sound request 28006 marked CV",
+        "large-v3 beam 5 and beam 10 exact consensus",
+        "Magia Record main story chapter 3 episode 5 transcript"
+      ],
+      "cues": [
+        {
+          "start_ms": 720,
+          "end_ms": 3380,
+          "text": "ついてきてくれる？ 確かめたいことがあるの"
+        },
+        {
+          "start_ms": 3780,
+          "end_ms": 6820,
+          "text": "口寄せ神社は、やっぱり水名神社だったのよ"
+        },
+        {
+          "start_ms": 7140,
+          "end_ms": 11200,
+          "text": "大事なのは、悲恋の伝説でお姫様が神社に通った時間"
+        },
+        {
+          "start_ms": 11660,
+          "end_ms": 15140,
+          "text": "おそらく夜にしか、口寄せ神社への道は現れない"
+        }
+      ]
+    },
+    "8369": {
+      "text": "ねこ鍋チャレンジ！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label ねこ鍋チャレンジ",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8370": {
+      "text": "酪農体験！",
+      "source": "curated_official_title_label",
+      "evidence": [
+        "official request label 酪農体験",
+        "large-v3 add-Kuroe variant confirms the pronunciation"
+      ]
+    },
+    "8371": {
+      "text": "出前修行！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label 出前修行",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8372": {
+      "text": "バナナボート対決！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label バナナボート対決",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8373": {
+      "text": "ねこ鍋チャレンジ！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label ねこ鍋チャレンジ add黒江",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8374": {
+      "text": "酪農体験！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label 酪農体験 add黒江",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8375": {
+      "text": "出前修行！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label 出前修行 add黒江",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    },
+    "8376": {
+      "text": "バナナボート対決！",
+      "source": "curated_official_title_label_and_large_v3_consensus",
+      "evidence": [
+        "official request label バナナボート対決 add黒江",
+        "large-v3 beam 5 and beam 10 agree"
+      ]
+    }
+  }
+}

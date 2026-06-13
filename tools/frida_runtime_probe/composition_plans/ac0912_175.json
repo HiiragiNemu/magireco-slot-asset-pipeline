@@ -1,0 +1,34 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0912_175",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 10183,
+  "evidence": "runtime_screens_ac0912_104_and_black_matte_validation_2026-06-13",
+  "clips": [
+    {
+      "dgm_name": "ac0912_cmn_sQB_guide_3on_L_win",
+      "role": "background",
+      "start_ms": 500
+    },
+    {
+      "dgm_name": "ac0912_cmn_sQB_guide_3on_L_win_LP",
+      "role": "loop_background",
+      "start_ms": 4500
+    },
+    {
+      "dgm_name": "ac0912_cmn_sQB_guide_3on_L_ef_flash",
+      "role": "screen_overlay",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac0912_cmn_sQB_guide_3on_QB",
+      "role": "screen_overlay",
+      "start_ms": 500
+    },
+    {
+      "dgm_name": "ac0912_cmn_sQB_guide_3on_QB_LP",
+      "role": "loop_screen_overlay",
+      "start_ms": 3133
+    }
+  ]
+}

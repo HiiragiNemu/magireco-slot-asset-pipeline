@@ -70,6 +70,11 @@ Z2D_GLYPH_DGI_RE = re.compile(
 Z2D_SOUND_LABEL_RE = re.compile(
     rb"(?P<sound_id>\d{4,5})_(?P<label_id>\d+)_(?P<speaker>[A-Za-z0-9]+)_"
 )
+Z2D_REQ_SOUND_NAME = b"reqSound"
+Z2D_SOUND_CODE_RE = re.compile(r"^(?P<sound_id>\d{1,5})(?:_|$)")
+Z2D_PLACEHOLDER_TEXTS = {
+    "空白のテキストレイヤー",
+}
 Z2D_DGM_RE = re.compile(rb"([A-Za-z0-9_./-]+\.dgm)", re.IGNORECASE)
 DEBUG_SMALI_FILES = [
     ROOT / "unpacked_base" / "smali" / "debug" / "sub" / "DebugProd.smali",
@@ -170,6 +175,103 @@ def extract_japanese_text_candidates(blob: bytes) -> list[str]:
             if japanese_count >= 2 and text not in candidates:
                 candidates.append(text)
     return candidates
+
+
+def align_up(value: int, alignment: int) -> int:
+    return (value + alignment - 1) & ~(alignment - 1)
+
+
+def parse_z2d_named_callbacks(blob: bytes, function_name: bytes) -> list[dict]:
+    """Parse callbacks using the exact layout implemented by CZ2DReader::ReadCB."""
+    callbacks = []
+    marker = function_name + b"\x00"
+    search_offset = 0
+    while True:
+        name_offset = blob.find(marker, search_offset)
+        if name_offset < 0:
+            break
+        search_offset = name_offset + 1
+        if name_offset < 9 or blob[name_offset - 1] != len(function_name):
+            continue
+
+        callback_offset = name_offset - 9
+        try:
+            exec_frame = struct.unpack_from("<i", blob, callback_offset)[0]
+            function_hash = struct.unpack_from("<I", blob, name_offset - 5)[0]
+            cursor = name_offset + len(function_name) + 1
+            arg_count = blob[cursor]
+            cursor += 1
+            if arg_count > 64 or cursor + arg_count > len(blob):
+                continue
+            type_bytes = blob[cursor : cursor + arg_count]
+            cursor = align_up(cursor + arg_count, 4)
+            args = []
+            for arg_index, type_and_flag in enumerate(type_bytes):
+                arg_type = type_and_flag & 0x0F
+                arg_flag = type_and_flag >> 4
+                item = {
+                    "index": arg_index,
+                    "type": arg_type,
+                    "flag": arg_flag,
+                    "value_offset": cursor,
+                }
+                if arg_type == 1:
+                    item["value_int"] = struct.unpack_from("<i", blob, cursor)[0]
+                    cursor += 4
+                elif arg_type == 2:
+                    item["value_float"] = struct.unpack_from("<f", blob, cursor)[0]
+                    cursor += 4
+                elif arg_type == 3:
+                    string_length = blob[cursor]
+                    string_start = cursor + 1
+                    string_end = string_start + string_length
+                    if string_end >= len(blob) or blob[string_end] != 0:
+                        raise ValueError("invalid callback string boundary")
+                    item["value_string"] = blob[string_start:string_end].decode(
+                        "utf-8",
+                        errors="strict",
+                    )
+                    item["value_length"] = string_length
+                    cursor = align_up(string_end + 1, 4)
+                args.append(item)
+        except (IndexError, struct.error, UnicodeDecodeError, ValueError):
+            continue
+
+        callbacks.append(
+            {
+                "callback_offset": callback_offset,
+                "exec_frame": exec_frame,
+                "function_hash_u32": function_hash,
+                "function_name": function_name.decode("ascii"),
+                "arg_count": arg_count,
+                "args": args,
+                "end_offset": cursor,
+            }
+        )
+    return callbacks
+
+
+def parse_z2d_req_sound_callbacks(blob: bytes) -> list[dict]:
+    callbacks = parse_z2d_named_callbacks(blob, Z2D_REQ_SOUND_NAME)
+    results = []
+    for callback in callbacks:
+        args = callback["args"]
+        if not args or "value_string" not in args[0]:
+            continue
+        code_name = args[0]["value_string"]
+        sound_match = Z2D_SOUND_CODE_RE.match(code_name)
+        results.append(
+            {
+                **callback,
+                "sound_code_name": code_name,
+                "sound_resource_id": (
+                    int(sound_match.group("sound_id"))
+                    if sound_match
+                    else None
+                ),
+            }
+        )
+    return results
 
 
 def japanese_characters(text: str) -> list[str]:
@@ -1229,7 +1331,9 @@ def command_subtitle_z2d_catalog(args):
         for row in hash_rows
     }
     requests_by_sound_id: dict[int, list[dict]] = defaultdict(list)
+    requests_by_code_name: dict[str, list[dict]] = defaultdict(list)
     for row in request_rows:
+        requests_by_code_name[row["code_name"]].append(row)
         match = re.match(r"^(\d{1,5})(?:_|$)", row["code_name"])
         if match:
             requests_by_sound_id[int(match.group(1))].append(row)
@@ -1250,6 +1354,7 @@ def command_subtitle_z2d_catalog(args):
     ]
 
     rows = []
+    callback_rows = []
     source = z2d_bin.open("rb")
     try:
         for index, name in enumerate(names):
@@ -1263,17 +1368,33 @@ def command_subtitle_z2d_catalog(args):
                 chr(int(match.group(1), 16))
                 for match in glyph_matches
             }
-            text_candidates = extract_japanese_text_candidates(blob)
+            req_sound_callbacks = parse_z2d_req_sound_callbacks(blob)
+            sound_code_names = [
+                callback["sound_code_name"]
+                for callback in req_sound_callbacks
+            ]
+            text_candidates = [
+                text
+                for text in extract_japanese_text_candidates(blob)
+                if text not in Z2D_PLACEHOLDER_TEXTS
+                and (
+                    glyph_matches
+                    or not any(text in code_name for code_name in sound_code_names)
+                )
+            ]
             display_text = select_display_text(
                 text_candidates,
                 glyph_character_set,
             )
             sound_match = Z2D_SOUND_LABEL_RE.search(blob)
-            if not display_text and not glyph_matches:
+            if not display_text and not glyph_matches and not req_sound_callbacks:
                 continue
 
+            primary_callback = req_sound_callbacks[0] if req_sound_callbacks else None
             sound_resource_id = (
-                int(sound_match.group("sound_id"))
+                primary_callback["sound_resource_id"]
+                if primary_callback
+                else int(sound_match.group("sound_id"))
                 if sound_match
                 else None
             )
@@ -1287,7 +1408,16 @@ def command_subtitle_z2d_catalog(args):
                 if sound_match
                 else ""
             )
-            matching_requests = requests_by_sound_id.get(sound_resource_id, [])
+            primary_code_name = (
+                primary_callback["sound_code_name"]
+                if primary_callback
+                else ""
+            )
+            matching_requests = (
+                requests_by_code_name.get(primary_code_name, [])
+                if primary_code_name
+                else requests_by_sound_id.get(sound_resource_id, [])
+            )
             request_row = matching_requests[0] if len(matching_requests) == 1 else None
             request_id = int(request_row["request_id"]) if request_row else None
             hash_row = hash_by_request_id.get(request_id) if request_id is not None else None
@@ -1299,6 +1429,97 @@ def command_subtitle_z2d_catalog(args):
                 name.lower().startswith(prefix)
                 for prefix in focus_prefixes
             )
+
+            for callback_index, callback in enumerate(req_sound_callbacks):
+                callback_code_name = callback["sound_code_name"]
+                callback_sound_id = callback["sound_resource_id"]
+                callback_matches = requests_by_code_name.get(callback_code_name, [])
+                if not callback_matches and callback_sound_id is not None:
+                    callback_matches = requests_by_sound_id.get(callback_sound_id, [])
+                callback_request = (
+                    callback_matches[0]
+                    if len(callback_matches) == 1
+                    else None
+                )
+                callback_request_id = (
+                    int(callback_request["request_id"])
+                    if callback_request
+                    else None
+                )
+                callback_hash = (
+                    hash_by_request_id.get(callback_request_id)
+                    if callback_request_id is not None
+                    else None
+                )
+                callback_sound = (
+                    sound_by_resource_id.get(callback_sound_id)
+                    if callback_sound_id is not None
+                    else None
+                )
+                callback_ogg_name = (
+                    callback_sound["suggested_name"]
+                    if callback_sound
+                    else ""
+                )
+                callback_ogg_path = (
+                    ogg_dir / callback_ogg_name
+                    if callback_ogg_name
+                    else None
+                )
+                callback_duration_ms = (
+                    int(callback_hash["duration_ms_u32"])
+                    if callback_hash
+                    else 0
+                )
+                callback_rows.append(
+                    {
+                        "z2d_index": index,
+                        "z2d_name": name,
+                        "z2d_offset": start,
+                        "z2d_size": size,
+                        "callback_index": callback_index,
+                        "callback_offset": callback["callback_offset"],
+                        "exec_frame": callback["exec_frame"],
+                        "function_hash_u32": callback["function_hash_u32"],
+                        "function_hash_hex": f"0x{callback['function_hash_u32']:08x}",
+                        "function_name": callback["function_name"],
+                        "sound_code_name": callback_code_name,
+                        "sound_resource_id": (
+                            callback_sound_id
+                            if callback_sound_id is not None
+                            else ""
+                        ),
+                        "sound_request_match_count": len(callback_matches),
+                        "sound_request_id": (
+                            callback_request_id
+                            if callback_request_id is not None
+                            else ""
+                        ),
+                        "sound_duration_ms": callback_duration_ms,
+                        "sound_duration_sec": (
+                            f"{callback_duration_ms / 1000:.6f}"
+                            if callback_duration_ms
+                            else ""
+                        ),
+                        "smz_media": (
+                            callback_request["first_smz_media"]
+                            if callback_request
+                            else ""
+                        ),
+                        "ogg_name": callback_ogg_name,
+                        "ogg_path": (
+                            str(callback_ogg_path)
+                            if callback_ogg_path
+                            else ""
+                        ),
+                        "ogg_exists": (
+                            "yes"
+                            if callback_ogg_path and callback_ogg_path.exists()
+                            else "no"
+                        ),
+                        "focus_match": "yes" if focus_match else "no",
+                    }
+                )
 
             glyph_names = []
             glyph_characters = []
@@ -1326,6 +1547,22 @@ def command_subtitle_z2d_catalog(args):
                 "glyph_dependency_count": len(glyph_names),
                 "glyph_characters_unique": "".join(glyph_characters),
                 "glyph_dgi_names": ";".join(glyph_names),
+                "req_sound_callback_count": len(req_sound_callbacks),
+                "req_sound_exec_frames": ";".join(
+                    str(callback["exec_frame"])
+                    for callback in req_sound_callbacks
+                ),
+                "req_sound_code_names": ";".join(sound_code_names),
+                "primary_callback_offset": (
+                    primary_callback["callback_offset"]
+                    if primary_callback
+                    else ""
+                ),
+                "primary_callback_exec_frame": (
+                    primary_callback["exec_frame"]
+                    if primary_callback
+                    else ""
+                ),
                 "sound_resource_id": sound_resource_id if sound_resource_id is not None else "",
                 "sound_label_id": sound_label_id if sound_label_id is not None else "",
                 "speaker_code": speaker,
@@ -1391,6 +1628,11 @@ def command_subtitle_z2d_catalog(args):
         "glyph_dependency_count",
         "glyph_characters_unique",
         "glyph_dgi_names",
+        "req_sound_callback_count",
+        "req_sound_exec_frames",
+        "req_sound_code_names",
+        "primary_callback_offset",
+        "primary_callback_exec_frame",
         "sound_resource_id",
         "sound_label_id",
         "speaker_code",
@@ -1417,10 +1659,46 @@ def command_subtitle_z2d_catalog(args):
         fields,
     )
 
+    callback_rows.sort(
+        key=lambda row: (
+            natural_key(row["z2d_name"]),
+            int(row["exec_frame"]),
+            int(row["callback_index"]),
+        )
+    )
+    callback_fields = [
+        "z2d_index",
+        "z2d_name",
+        "z2d_offset",
+        "z2d_size",
+        "callback_index",
+        "callback_offset",
+        "exec_frame",
+        "function_hash_u32",
+        "function_hash_hex",
+        "function_name",
+        "sound_code_name",
+        "sound_resource_id",
+        "sound_request_match_count",
+        "sound_request_id",
+        "sound_duration_ms",
+        "sound_duration_sec",
+        "smz_media",
+        "ogg_name",
+        "ogg_path",
+        "ogg_exists",
+        "focus_match",
+    ]
+    callback_path = out_dir / "z2d_sound_callbacks.csv"
+    write_csv(callback_path, callback_rows, callback_fields)
+
     catalog_by_name = {
         row["z2d_name"].lower(): row
         for row in rows
     }
+    callbacks_by_name: dict[str, list[dict]] = defaultdict(list)
+    for callback_row in callback_rows:
+        callbacks_by_name[callback_row["z2d_name"].lower()].append(callback_row)
     event_timeline_rows = read_csv(Path(args.event_timeline_csv)) if args.event_timeline_csv else []
     event_rows_by_name: dict[str, list[dict]] = defaultdict(list)
     for event_row in event_timeline_rows:
@@ -1428,8 +1706,133 @@ def command_subtitle_z2d_catalog(args):
         if event_name:
             event_rows_by_name[event_name].append(event_row)
 
+    direction_relations = parse_gdb_direction_z2d_timeline(Path(args.gdb_path))
+    event_sound_rows = []
+    for relation in direction_relations:
+        relation_callbacks = callbacks_by_name.get(relation["z2d_name"].lower(), [])
+        if not relation_callbacks:
+            continue
+        child_start_frame = parse_optional_float(relation["start_frame"])
+        matching_event_rows = event_rows_by_name.get(relation["event_name"].lower()) or [{}]
+        for callback_row in relation_callbacks:
+            callback_exec_frame = int(callback_row["exec_frame"])
+            absolute_start_frame = (
+                child_start_frame + callback_exec_frame
+                if child_start_frame is not None
+                else None
+            )
+            audio_start_ms = (
+                round(absolute_start_frame * 1000 / args.frame_rate)
+                if absolute_start_frame is not None
+                else None
+            )
+            duration_ms = int(callback_row["sound_duration_ms"] or 0)
+            audio_end_ms = (
+                audio_start_ms + duration_ms
+                if audio_start_ms is not None and duration_ms
+                else None
+            )
+            for event_row in matching_event_rows:
+                event_sound_rows.append(
+                    {
+                        **relation,
+                        "frame_rate": args.frame_rate,
+                        "child_start_frame": (
+                            child_start_frame
+                            if child_start_frame is not None
+                            else ""
+                        ),
+                        "callback_index": callback_row["callback_index"],
+                        "callback_offset": callback_row["callback_offset"],
+                        "callback_exec_frame": callback_exec_frame,
+                        "absolute_start_frame": (
+                            absolute_start_frame
+                            if absolute_start_frame is not None
+                            else ""
+                        ),
+                        "audio_start_ms": (
+                            audio_start_ms
+                            if audio_start_ms is not None
+                            else ""
+                        ),
+                        "audio_end_ms": (
+                            audio_end_ms
+                            if audio_end_ms is not None
+                            else ""
+                        ),
+                        "sound_code_name": callback_row["sound_code_name"],
+                        "sound_resource_id": callback_row["sound_resource_id"],
+                        "sound_request_id": callback_row["sound_request_id"],
+                        "sound_duration_ms": callback_row["sound_duration_ms"],
+                        "smz_media": callback_row["smz_media"],
+                        "ogg_name": callback_row["ogg_name"],
+                        "ogg_path": callback_row["ogg_path"],
+                        "ogg_exists": callback_row["ogg_exists"],
+                        "event_index": event_row.get("event_index", ""),
+                        "event_root": event_row.get("root", ""),
+                        "video_package": event_row.get("video_package", ""),
+                        "video_index": event_row.get("video_index", ""),
+                        "video_source_path": event_row.get("video_source_path", ""),
+                        "video_mapping": event_row.get("video_mapping", ""),
+                        "timeline_confidence": (
+                            "exact_gdb_child_frame_callback_frame_and_official_ogg"
+                            if absolute_start_frame is not None
+                            and callback_row["ogg_exists"] == "yes"
+                            else "exact_gdb_child_frame_and_callback_frame"
+                            if absolute_start_frame is not None
+                            else "callback_without_decoded_gdb_frame"
+                        ),
+                    }
+                )
+
+    event_sound_rows.sort(
+        key=lambda row: (
+            natural_key(row["event_name"]),
+            parse_optional_int(row["audio_start_ms"]) or 0,
+            parse_optional_int(row["z2d_order"]) or 0,
+            parse_optional_int(row["callback_index"]) or 0,
+        )
+    )
+    event_sound_fields = [
+        "gdb_record_index",
+        "gdb_record_offset_hex",
+        "event_name",
+        "z2d_order",
+        "z2d_name",
+        "z2d_filename",
+        "start_frame",
+        "end_frame",
+        "key_start_frame",
+        "key_end_frame",
+        "frame_rate",
+        "child_start_frame",
+        "callback_index",
+        "callback_offset",
+        "callback_exec_frame",
+        "absolute_start_frame",
+        "audio_start_ms",
+        "audio_end_ms",
+        "sound_code_name",
+        "sound_resource_id",
+        "sound_request_id",
+        "sound_duration_ms",
+        "smz_media",
+        "ogg_name",
+        "ogg_path",
+        "ogg_exists",
+        "event_index",
+        "event_root",
+        "video_package",
+        "video_index",
+        "video_source_path",
+        "video_mapping",
+        "timeline_confidence",
+    ]
+    event_sound_path = out_dir / "event_sound_timeline.csv"
+    write_csv(event_sound_path, event_sound_rows, event_sound_fields)
+
     subtitle_event_rows = []
-    for relation in parse_gdb_direction_z2d_timeline(Path(args.gdb_path)):
+    for relation in direction_relations:
         subtitle_row = catalog_by_name.get(relation["z2d_name"].lower())
         if not subtitle_row:
             continue
@@ -1445,10 +1848,26 @@ def command_subtitle_z2d_catalog(args):
             if end_frame is not None
             else None
         )
+        subtitle_callbacks = callbacks_by_name.get(relation["z2d_name"].lower(), [])
+        subtitle_callback = subtitle_callbacks[0] if subtitle_callbacks else None
+        callback_exec_frame = (
+            int(subtitle_callback["exec_frame"])
+            if subtitle_callback
+            else 0
+        )
+        audio_start_ms = (
+            round(
+                (start_frame + callback_exec_frame)
+                * 1000
+                / args.frame_rate
+            )
+            if start_frame is not None
+            else None
+        )
         audio_duration_ms = parse_optional_int(subtitle_row["sound_duration_ms"]) or 0
         audio_end_ms = (
-            start_ms + audio_duration_ms
-            if start_ms is not None and audio_duration_ms
+            audio_start_ms + audio_duration_ms
+            if audio_start_ms is not None and audio_duration_ms
             else None
         )
         effective_end_ms = max(
@@ -1465,6 +1884,8 @@ def command_subtitle_z2d_catalog(args):
                     "frame_rate": args.frame_rate,
                     "start_ms": start_ms if start_ms is not None else "",
                     "visual_end_ms": visual_end_ms if visual_end_ms is not None else "",
+                    "callback_exec_frame": callback_exec_frame,
+                    "audio_start_ms": audio_start_ms if audio_start_ms is not None else "",
                     "audio_end_ms": audio_end_ms if audio_end_ms is not None else "",
                     "effective_end_ms": effective_end_ms if effective_end_ms is not None else "",
                     "display_text": subtitle_row["display_text"],
@@ -1513,6 +1934,8 @@ def command_subtitle_z2d_catalog(args):
         "frame_rate",
         "start_ms",
         "visual_end_ms",
+        "callback_exec_frame",
+        "audio_start_ms",
         "audio_end_ms",
         "effective_end_ms",
         "display_text",
@@ -1579,6 +2002,23 @@ def command_subtitle_z2d_catalog(args):
         for row in subtitle_event_rows
     )
     timeline_events = len({row["event_name"] for row in subtitle_event_rows})
+    callback_rows_with_audio = sum(
+        row["ogg_exists"] == "yes"
+        for row in callback_rows
+    )
+    event_sound_rows_with_audio = sum(
+        row["timeline_confidence"]
+        == "exact_gdb_child_frame_callback_frame_and_official_ogg"
+        for row in event_sound_rows
+    )
+    event_sound_events = len(
+        {
+            row["event_name"]
+            for row in event_sound_rows
+            if row["timeline_confidence"]
+            == "exact_gdb_child_frame_callback_frame_and_official_ogg"
+        }
+    )
     summary_path = out_dir / "subtitle_z2d_catalog_summary.md"
     summary_path.write_text(
         "\n".join(
@@ -1590,6 +2030,10 @@ def command_subtitle_z2d_catalog(args):
                 f"Rows with decoded Japanese display text: {with_text}",
                 f"Unique decoded display texts: {unique_text}",
                 f"Rows linked to an existing official OGG: {with_audio}",
+                f"Decoded reqSound callbacks: {len(callback_rows)}",
+                f"reqSound callbacks linked to an existing official OGG: {callback_rows_with_audio}",
+                f"Event sound timeline rows with exact official OGG: {event_sound_rows_with_audio}",
+                f"Events with at least one exact official sound: {event_sound_events}",
                 f"GDB subtitle/event timeline rows: {len(subtitle_event_rows)}",
                 f"GDB events with subtitle relations: {timeline_events}",
                 f"Timeline rows with exact frame and official OGG: {timeline_with_audio}",
@@ -1599,6 +2043,8 @@ def command_subtitle_z2d_catalog(args):
                 "",
                 "- Japanese display text is stored directly in Z2D scene data.",
                 "- `JM_<Unicode code point>_*.dgi` dependencies are per-character graphical glyphs.",
+                "- `CZ2DReader::ReadCB` stores `reqSound` callbacks with a local execution frame and the exact sound code name.",
+                "- `event_sound_timeline.csv` adds each callback local frame to the GDB child-Z2D start frame.",
                 "- Numeric Z2D sound labels map to `sound_id.dat`, which gives the official OGG chunk.",
                 "- Sound request rows provide the request ID, SMZ media name, and official duration.",
                 f"- GDB frame positions are converted at the direction engine rate of {args.frame_rate:g} fps.",
@@ -1618,9 +2064,16 @@ def command_subtitle_z2d_catalog(args):
     print(f"[subtitle-z2d-catalog] candidate rows: {len(rows)}")
     print(f"[subtitle-z2d-catalog] rows with text: {with_text}")
     print(f"[subtitle-z2d-catalog] rows with official OGG: {with_audio}")
+    print(f"[subtitle-z2d-catalog] decoded reqSound callbacks: {len(callback_rows)}")
+    print(
+        "[subtitle-z2d-catalog] exact event sound rows with official OGG: "
+        f"{event_sound_rows_with_audio}"
+    )
     print(f"[subtitle-z2d-catalog] GDB timeline rows: {len(subtitle_event_rows)}")
     print(f"[subtitle-z2d-catalog] exact frame + OGG rows: {timeline_with_audio}")
     print(f"[subtitle-z2d-catalog] wrote {catalog_path}")
+    print(f"[subtitle-z2d-catalog] wrote {callback_path}")
+    print(f"[subtitle-z2d-catalog] wrote {event_sound_path}")
     print(f"[subtitle-z2d-catalog] wrote {subtitle_event_path}")
     print(f"[subtitle-z2d-catalog] wrote {summary_path}")
 

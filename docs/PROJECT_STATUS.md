@@ -1,6 +1,34 @@
 # Project Status
 
-更新时间：2026-06-05
+更新时间：2026-06-12
+
+## 2026-06-12 纠错状态
+
+旧的“按尺寸判定完整画面后直接拼接”结论已作废。当前采用
+`production_manifests_v2`：
+
+- 146 个“全画面且语音已唯一匹配”候选中，119 个通过线性时间轴检查；
+- 27 个存在重叠分支、合成层或无循环依据的长时间轴，已拒绝自动成片；
+- 119 个事件均生成独立的有字幕版和无字幕版；
+- 两版均保持源分辨率和帧率，不创建放大画布；
+- 两版音频逐事件哈希一致，且全部实际非静音；
+- 最终两套 MP4 合计约 516 MB，QA 失败 0。
+
+当前结果：
+
+```text
+A:\magireco_corrected_research_20260612\production_outputs_v2
+```
+
+完整纠错证据见：
+
+```text
+docs/research/2026-06-12-corrective-runtime-audit.md
+```
+
+`DebugDispNameList.DIR_NAME_TBL` 中的 68 个北欧神话演出名属于共用引擎或
+旧机型残留，不能用于魔法纪录成片命名。当前权威命名来源是 native
+`EventInfo`、GDB/Z2D/DGM 映射和运行时 `fnReqScene`。
 
 ## 审计范围
 
