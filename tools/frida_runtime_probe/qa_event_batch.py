@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest-root", required=True)
     parser.add_argument("--output-root", required=True)
+    parser.add_argument("--only", nargs="*")
     parser.add_argument("--ffmpeg", default="ffmpeg")
     parser.add_argument("--ffprobe", default="ffprobe")
     return parser.parse_args()
@@ -114,23 +115,45 @@ def main() -> int:
     output_root = Path(args.output_root).resolve()
 
     rows: list[dict] = []
-    for manifest_path in sorted(manifest_dir.glob("*.json")):
+    manifest_paths = sorted(manifest_dir.glob("*.json"))
+    if args.only:
+        selected = set(args.only)
+        manifest_paths = [
+            path for path in manifest_paths if path.stem in selected
+        ]
+        missing = selected - {path.stem for path in manifest_paths}
+        if missing:
+            raise SystemExit("missing manifests: " + ", ".join(sorted(missing)))
+    for manifest_path in manifest_paths:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if not manifest.get("quality_gates", {}).get("ready"):
             continue
         event = manifest["event"]
         root = output_root / event
-        without_path = root / "without_subtitles" / f"{event}.mp4"
-        with_path = root / "with_subtitles" / f"{event}__subtitles.mp4"
-        subtitle_path = root / "subtitles" / f"{event}.srt"
+        if root.is_dir():
+            without_path = root / "without_subtitles" / f"{event}.mp4"
+            with_path = root / "with_subtitles" / f"{event}__subtitles.mp4"
+            subtitle_path = root / "subtitles" / f"{event}.srt"
+        else:
+            without_path = output_root / "without_subtitles" / f"{event}.mp4"
+            with_path = (
+                output_root
+                / "with_subtitles"
+                / f"{event}__subtitles.mp4"
+            )
+            subtitle_path = output_root / "subtitles" / f"{event}.srt"
+        expected_subtitle_count = len(manifest["subtitles"])
         errors: list[str] = []
         for label, path in (
             ("without_subtitles", without_path),
             ("with_subtitles", with_path),
-            ("subtitles", subtitle_path),
         ):
             if not path.is_file() or path.stat().st_size <= 0:
                 errors.append(f"missing_{label}")
+        if not subtitle_path.is_file():
+            errors.append("missing_subtitles")
+        elif expected_subtitle_count and subtitle_path.stat().st_size <= 0:
+            errors.append("empty_subtitle")
         if errors:
             rows.append(
                 {
@@ -175,7 +198,7 @@ def main() -> int:
             else:
                 if audio.get("sample_rate") != "48000":
                     errors.append(f"{label}_audio_rate")
-                if int(audio.get("channels", 0)) != 2:
+                if int(audio.get("channels", 0)) not in {1, 2}:
                     errors.append(f"{label}_audio_channels")
             duration_ms = round(float(item["format"]["duration"]) * 1000)
             if abs(duration_ms - expected_duration_ms) > 50:
@@ -189,8 +212,10 @@ def main() -> int:
         if max_db is None or max_db <= -90.0:
             errors.append("silent_audio")
         subtitle_text = subtitle_path.read_text(encoding="utf-8").strip()
-        if not subtitle_text:
+        if expected_subtitle_count and not subtitle_text:
             errors.append("empty_subtitle")
+        if not expected_subtitle_count and subtitle_text:
+            errors.append("unexpected_subtitle")
 
         rows.append(
             {
@@ -203,7 +228,7 @@ def main() -> int:
                 "render_duration_ms": expected_duration_ms,
                 "video_extension_policy": manifest["video_extension_policy"],
                 "voice_tracks": sum(
-                    row["source"] == "subtitle_voice" for row in manifest["audio"]
+                    row["source"] == "z2d_req_sound" for row in manifest["audio"]
                 ),
                 "base_audio_tracks": sum(
                     row["source"] == "event_audio_component"

@@ -57,6 +57,100 @@ function safeCString(pointerValue) {
   }
 }
 
+function readMemoryHex(pointerValue, relativeOffset, size) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return { address: null, hex: "", error: "null pointer" };
+  }
+  const address = pointerValue.add(relativeOffset);
+  try {
+    const bytes = new Uint8Array(address.readByteArray(size));
+    let hex = "";
+    for (let index = 0; index < bytes.length; index += 1) {
+      hex += bytes[index].toString(16).padStart(2, "0");
+    }
+    return { address: address.toString(), hex, error: "" };
+  } catch (error) {
+    return { address: address.toString(), hex: "", error: String(error) };
+  }
+}
+
+function describeAddress(pointerValue) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return null;
+  }
+  const range = Process.findRangeByAddress(pointerValue);
+  if (range === null) {
+    return { pointer: pointerValue.toString(), readable: false };
+  }
+  const result = {
+    pointer: pointerValue.toString(),
+    readable: range.protection.indexOf("r") !== -1,
+    range_base: range.base.toString(),
+    range_size: range.size,
+    protection: range.protection,
+  };
+  if (range.file) {
+    result.file = {
+      path: range.file.path,
+      offset: range.file.offset,
+      size: range.file.size,
+    };
+  }
+  return result;
+}
+
+function describeZ2DCallbackElement(element) {
+  if (element === null || element.isNull()) {
+    return { error: "null element" };
+  }
+  try {
+    const argData = element.add(0x20).readPointer();
+    const argCapacity = element.add(0x28).readU32();
+    const argCount = element.add(0x2c).readU32();
+    const rawFunctionName = element.add(0x30).readPointer();
+    const copyStrings = element.add(0x44).readU8() !== 0;
+    const functionNamePointer =
+      copyStrings && !rawFunctionName.isNull()
+        ? rawFunctionName.readPointer()
+        : rawFunctionName;
+    const args = [];
+    const safeArgCount = Math.min(argCount, 64);
+    for (let index = 0; index < safeArgCount; index += 1) {
+      const record = argData.add(index * 0x10);
+      const typeAndFlag = record.readU8();
+      const type = typeAndFlag & 0xf;
+      const flag = typeAndFlag >>> 4;
+      const valueAddress = record.add(0x8);
+      const item = { index, type, flag };
+      if (type === 1) {
+        item.value_int = valueAddress.readS32();
+      } else if (type === 2) {
+        item.value_float = valueAddress.readFloat();
+      } else if (type === 3) {
+        const rawString = valueAddress.readPointer();
+        const stringPointer =
+          copyStrings && !rawString.isNull() ? rawString.readPointer() : rawString;
+        item.value_string = safeCString(stringPointer);
+        item.string_address = describeAddress(stringPointer);
+      }
+      args.push(item);
+    }
+    return {
+      arg_data: describeAddress(argData),
+      arg_capacity: argCapacity,
+      arg_count: argCount,
+      copy_strings: copyStrings,
+      function_name: safeCString(functionNamePointer),
+      function_name_address: describeAddress(functionNamePointer),
+      function_hash_u32: element.add(0x38).readU32(),
+      exec_frame: element.add(0x3c).readS32(),
+      args,
+    };
+  } catch (error) {
+    return { error: String(error) };
+  }
+}
+
 function padHex(value) {
   return (value >>> 0).toString(16).padStart(8, "0");
 }
@@ -728,6 +822,126 @@ function installHooks() {
         player: args[0].toString(),
         element: args[1].toString(),
         user_data: args[2].toString(),
+        element_window: readMemoryHex(args[1], -0x40, 0x200),
+        player_window: readMemoryHex(args[0], 0, 0x100),
+        user_data_window: readMemoryHex(args[2], 0, 0x80),
+        callback: describeZ2DCallbackElement(args[1]),
+      });
+    },
+  });
+
+  const readZ2DAddress = findExport("_ZN2zg10CZ2DPlayer7ReadZ2DEPKc");
+  Interceptor.attach(readZ2DAddress, {
+    onEnter(args) {
+      if (activeForcedEvent === null) {
+        return;
+      }
+      this.active = true;
+      this.player = args[0].toString();
+      this.filename = safeCString(args[1]);
+      emit("forced_z2d_read_file", {
+        address: readZ2DAddress.toString(),
+        player: this.player,
+        filename: this.filename,
+        filename_address: describeAddress(args[1]),
+      });
+    },
+    onLeave(retval) {
+      if (!this.active) {
+        return;
+      }
+      emit("forced_z2d_read_file_result", {
+        address: readZ2DAddress.toString(),
+        player: this.player,
+        filename: this.filename,
+        return_u32: retval.toUInt32(),
+      });
+    },
+  });
+
+  const makeZ2DAddress = findExport("_ZN2zg10CZ2DPlayer8MakeCZ2DEPv");
+  Interceptor.attach(makeZ2DAddress, {
+    onEnter(args) {
+      if (activeForcedEvent === null) {
+        return;
+      }
+      this.active = true;
+      this.player = args[0].toString();
+      emit("forced_z2d_make", {
+        address: makeZ2DAddress.toString(),
+        player: this.player,
+        data: describeAddress(args[1]),
+        data_head: readMemoryHex(args[1], 0, 0x100),
+      });
+    },
+    onLeave(retval) {
+      if (!this.active) {
+        return;
+      }
+      emit("forced_z2d_make_result", {
+        address: makeZ2DAddress.toString(),
+        player: this.player,
+        return_u32: retval.toUInt32(),
+      });
+    },
+  });
+
+  const createZ2DFileAddress = findExport("_ZN2zg15Z2DP_CreateFileEPKc");
+  Interceptor.attach(createZ2DFileAddress, {
+    onEnter(args) {
+      if (activeForcedEvent === null) {
+        return;
+      }
+      this.active = true;
+      this.filename = safeCString(args[0]);
+    },
+    onLeave(retval) {
+      if (!this.active) {
+        return;
+      }
+      emit("forced_z2d_create_file", {
+        address: createZ2DFileAddress.toString(),
+        filename: this.filename,
+        handle: retval.toString(),
+      });
+    },
+  });
+
+  const getZ2DFileDataAddress = findExport("_ZN2zg16Z2DP_GetFileDataEPv");
+  Interceptor.attach(getZ2DFileDataAddress, {
+    onEnter(args) {
+      if (activeForcedEvent === null) {
+        return;
+      }
+      this.active = true;
+      this.handle = args[0].toString();
+    },
+    onLeave(retval) {
+      if (!this.active) {
+        return;
+      }
+      emit("forced_z2d_get_file_data", {
+        address: getZ2DFileDataAddress.toString(),
+        handle: this.handle,
+        data: describeAddress(retval),
+        data_head: readMemoryHex(retval, 0, 0x100),
+      });
+    },
+  });
+
+  const loadResourceAddress = findExport(
+    "_ZN2zg18CGFDirectionPlayer16LoadResourceFileEPKcS2_"
+  );
+  Interceptor.attach(loadResourceAddress, {
+    onEnter(args) {
+      if (activeForcedEvent === null) {
+        return;
+      }
+      emit("forced_direction_load_resource", {
+        address: loadResourceAddress.toString(),
+        player: args[0].toString(),
+        filename: safeCString(args[1]),
+        resource_root: safeCString(args[2]),
       });
     },
   });
@@ -747,6 +961,11 @@ function installHooks() {
     code_lookup_address: codeLookupAddress.toString(),
     sound_play_bytes_address: soundPlayBytesAddress.toString(),
     z2d_sound_address: z2dSoundAddress.toString(),
+    read_z2d_address: readZ2DAddress.toString(),
+    make_z2d_address: makeZ2DAddress.toString(),
+    create_z2d_file_address: createZ2DFileAddress.toString(),
+    get_z2d_file_data_address: getZ2DFileDataAddress.toString(),
+    load_resource_address: loadResourceAddress.toString(),
     calc_address: calcAddress.toString(),
     status: loaderStatus(),
   });

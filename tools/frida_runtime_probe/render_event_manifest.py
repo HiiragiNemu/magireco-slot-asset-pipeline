@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -128,89 +130,153 @@ def main() -> int:
             f"manifest={manifest['native_frame_rate']}"
         )
 
-    base_video_only = work_dir / f"{event}__base_video_only.mp4"
     video_only = work_dir / f"{event}__video_only.mp4"
-    video_inputs: list[str] = []
-    video_labels: list[str] = []
-    for index, clip in enumerate(clips):
-        video_inputs.extend(["-i", str(clip)])
-        video_labels.append(f"[{index}:v:0]")
-    run(
-        [
-            args.ffmpeg,
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            *video_inputs,
-            "-filter_complex",
-            "".join(video_labels)
-            + f"concat=n={len(clips)}:v=1:a=0[v]",
-            "-map",
-            "[v]",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "slow",
-            "-crf",
-            "14",
-            "-pix_fmt",
-            str(pixel_format),
-            "-movflags",
-            "+faststart",
-            str(base_video_only),
-        ]
-    )
-
     render_duration_ms = int(
         manifest.get("render_duration_ms", manifest["video_duration_ms"])
     )
-    extension_ms = max(0, render_duration_ms - int(manifest["video_duration_ms"]))
     extension_policy = manifest.get("video_extension_policy", "none")
-    if extension_ms == 0:
-        run(
-            [
-                args.ffmpeg,
-                "-y",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-i",
-                str(base_video_only),
-                "-map",
-                "0:v:0",
-                "-c:v",
-                "copy",
-                str(video_only),
-            ]
+    composition_model = manifest.get(
+        "video_composition_model", "linear_full_frame_sequence"
+    )
+    if composition_model == "timed_full_frame_layers":
+        plan = manifest.get("composition_plan", {})
+        if plan.get("model") != "timed_full_frame_layers":
+            raise SystemExit("timed composition has no verified composition plan")
+        clip_by_name = {
+            row["dgm_name"]: (Path(row["path"]).resolve(), clip_probes[index])
+            for index, row in enumerate(manifest["clips"])
+        }
+        plan_clips = plan.get("clips", [])
+        backgrounds = sorted(
+            [row for row in plan_clips if row.get("role") == "background"],
+            key=lambda row: int(row["start_ms"]),
         )
-    elif extension_policy == "loop_last_clip":
-        extension_path = work_dir / f"{event}__loop_extension.mp4"
-        extension_sec = extension_ms / 1000.0
-        run(
+        loop_backgrounds = [
+            row for row in plan_clips if row.get("role") == "loop_background"
+        ]
+        overlays = sorted(
+            [row for row in plan_clips if row.get("role") == "screen_overlay"],
+            key=lambda row: int(row["start_ms"]),
+        )
+        loop_overlays = sorted(
             [
-                args.ffmpeg,
-                "-y",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-stream_loop",
-                "-1",
-                "-i",
-                str(clips[-1]),
-                "-an",
-                "-t",
-                f"{extension_sec:.6f}",
-                "-c:v",
-                "libx264",
-                "-preset",
-                "slow",
-                "-crf",
-                "14",
-                "-pix_fmt",
-                str(pixel_format),
-                str(extension_path),
-            ]
+                row
+                for row in plan_clips
+                if row.get("role") == "loop_screen_overlay"
+            ],
+            key=lambda row: int(row["start_ms"]),
+        )
+        if not backgrounds or len(loop_backgrounds) > 1:
+            raise SystemExit("invalid timed composition background plan")
+        loop_background = loop_backgrounds[0] if loop_backgrounds else None
+        video_inputs: list[str] = []
+        video_filters: list[str] = []
+        background_labels: list[str] = []
+        boundaries = [
+            *(int(row["start_ms"]) for row in backgrounds[1:]),
+            *(
+                [int(loop_background["start_ms"])]
+                if loop_background
+                else [render_duration_ms]
+            ),
+        ]
+        input_index = 0
+        first_background_start_ms = int(backgrounds[0]["start_ms"])
+        if first_background_start_ms > 0:
+            video_filters.append(
+                f"color=c=black:s={width}x{height}:r={frame_rate}:"
+                f"d={first_background_start_ms / 1000:.6f}[bgpre]"
+            )
+            background_labels.append("[bgpre]")
+        for row, end_ms in zip(backgrounds, boundaries):
+            start_ms = int(row["start_ms"])
+            duration_ms = end_ms - start_ms
+            if duration_ms <= 0:
+                raise SystemExit("background start times are not increasing")
+            clip_path, _ = clip_by_name[row["dgm_name"]]
+            video_inputs.extend(["-i", str(clip_path)])
+            label = f"bg{len(background_labels)}"
+            video_filters.append(
+                f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
+                f"setpts=PTS-STARTPTS[{label}]"
+            )
+            background_labels.append(f"[{label}]")
+            input_index += 1
+        if loop_background:
+            start_ms = int(loop_background["start_ms"])
+            duration_ms = render_duration_ms - start_ms
+            if duration_ms <= 0:
+                raise SystemExit("loop background begins after render end")
+            clip_path, _ = clip_by_name[loop_background["dgm_name"]]
+            video_inputs.extend(["-stream_loop", "-1", "-i", str(clip_path)])
+            label = f"bg{len(background_labels)}"
+            video_filters.append(
+                f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
+                f"setpts=PTS-STARTPTS[{label}]"
+            )
+            background_labels.append(f"[{label}]")
+            input_index += 1
+        video_filters.append(
+            "".join(background_labels)
+            + f"concat=n={len(background_labels)}:v=1:a=0[base0]"
+        )
+        current_label = "base0"
+        for overlay_index, row in enumerate(overlays):
+            start_ms = int(row["start_ms"])
+            clip_path, clip_probe = clip_by_name[row["dgm_name"]]
+            duration_sec = float(clip_probe["format"]["duration"])
+            video_inputs.extend(["-i", str(clip_path)])
+            overlay_label = f"overlay{overlay_index}"
+            background_label = f"base_rgb{overlay_index}"
+            output_label = f"base{overlay_index + 1}"
+            video_filters.append(
+                f"[{current_label}]format=gbrp[{background_label}]"
+            )
+            video_filters.append(
+                f"[{input_index}:v:0]format=gbrp,"
+                f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
+                f"[{overlay_label}]"
+            )
+            video_filters.append(
+                f"[{background_label}][{overlay_label}]"
+                "blend=all_mode=screen:"
+                f"enable='between(t,{start_ms / 1000:.6f},"
+                f"{start_ms / 1000 + duration_sec:.6f})'"
+                f"[{output_label}]"
+            )
+            current_label = output_label
+            input_index += 1
+        for overlay_index, row in enumerate(
+            loop_overlays, start=len(overlays)
+        ):
+            start_ms = int(row["start_ms"])
+            duration_sec = (render_duration_ms - start_ms) / 1000
+            if duration_sec <= 0:
+                raise SystemExit("loop screen overlay begins after render end")
+            clip_path, _ = clip_by_name[row["dgm_name"]]
+            video_inputs.extend(["-stream_loop", "-1", "-i", str(clip_path)])
+            overlay_label = f"overlay{overlay_index}"
+            background_label = f"base_rgb{overlay_index}"
+            output_label = f"base{overlay_index + 1}"
+            video_filters.append(
+                f"[{current_label}]format=gbrp[{background_label}]"
+            )
+            video_filters.append(
+                f"[{input_index}:v:0]trim=duration={duration_sec:.6f},"
+                f"format=gbrp,setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
+                f"[{overlay_label}]"
+            )
+            video_filters.append(
+                f"[{background_label}][{overlay_label}]"
+                "blend=all_mode=screen:"
+                f"enable='gte(t,{start_ms / 1000:.6f})'"
+                f"[{output_label}]"
+            )
+            current_label = output_label
+            input_index += 1
+        video_filters.append(
+            f"[{current_label}]trim=duration={render_duration_ms / 1000:.6f},"
+            f"fps={frame_rate},format={pixel_format}[v]"
         )
         run(
             [
@@ -219,12 +285,9 @@ def main() -> int:
                 "-hide_banner",
                 "-loglevel",
                 "error",
-                "-i",
-                str(base_video_only),
-                "-i",
-                str(extension_path),
+                *video_inputs,
                 "-filter_complex",
-                "[0:v:0][1:v:0]concat=n=2:v=1:a=0[v]",
+                ";".join(video_filters),
                 "-map",
                 "[v]",
                 "-c:v",
@@ -235,11 +298,18 @@ def main() -> int:
                 "14",
                 "-pix_fmt",
                 str(pixel_format),
+                "-movflags",
+                "+faststart",
                 str(video_only),
             ]
         )
-    elif extension_policy == "hold_last_frame":
-        extension_sec = extension_ms / 1000.0
+    elif composition_model == "linear_full_frame_sequence":
+        base_video_only = work_dir / f"{event}__base_video_only.mp4"
+        video_inputs: list[str] = []
+        video_labels: list[str] = []
+        for index, clip in enumerate(clips):
+            video_inputs.extend(["-i", str(clip)])
+            video_labels.append(f"[{index}:v:0]")
         run(
             [
                 args.ffmpeg,
@@ -247,13 +317,12 @@ def main() -> int:
                 "-hide_banner",
                 "-loglevel",
                 "error",
-                "-i",
-                str(base_video_only),
-                "-vf",
-                f"tpad=stop_mode=clone:stop_duration={extension_sec:.6f}",
-                "-an",
-                "-t",
-                f"{render_duration_ms / 1000.0:.6f}",
+                *video_inputs,
+                "-filter_complex",
+                "".join(video_labels)
+                + f"concat=n={len(clips)}:v=1:a=0[v]",
+                "-map",
+                "[v]",
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -262,14 +331,119 @@ def main() -> int:
                 "14",
                 "-pix_fmt",
                 str(pixel_format),
-                str(video_only),
+                "-movflags",
+                "+faststart",
+                str(base_video_only),
             ]
         )
-    else:
-        raise SystemExit(
-            f"unsupported video extension policy: {extension_policy} "
-            f"for {extension_ms} ms"
+        extension_ms = max(
+            0, render_duration_ms - int(manifest["video_duration_ms"])
         )
+        if extension_ms == 0:
+            run(
+                [
+                    args.ffmpeg,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(base_video_only),
+                    "-map",
+                    "0:v:0",
+                    "-c:v",
+                    "copy",
+                    str(video_only),
+                ]
+            )
+        elif extension_policy == "loop_last_clip":
+            extension_path = work_dir / f"{event}__loop_extension.mp4"
+            extension_sec = extension_ms / 1000.0
+            run(
+                [
+                    args.ffmpeg,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-stream_loop",
+                    "-1",
+                    "-i",
+                    str(clips[-1]),
+                    "-an",
+                    "-t",
+                    f"{extension_sec:.6f}",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "14",
+                    "-pix_fmt",
+                    str(pixel_format),
+                    str(extension_path),
+                ]
+            )
+            run(
+                [
+                    args.ffmpeg,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(base_video_only),
+                    "-i",
+                    str(extension_path),
+                    "-filter_complex",
+                    "[0:v:0][1:v:0]concat=n=2:v=1:a=0[v]",
+                    "-map",
+                    "[v]",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "14",
+                    "-pix_fmt",
+                    str(pixel_format),
+                    str(video_only),
+                ]
+            )
+        elif extension_policy == "hold_last_frame":
+            extension_sec = extension_ms / 1000.0
+            run(
+                [
+                    args.ffmpeg,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(base_video_only),
+                    "-vf",
+                    f"tpad=stop_mode=clone:stop_duration={extension_sec:.6f}",
+                    "-an",
+                    "-t",
+                    f"{render_duration_ms / 1000.0:.6f}",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "14",
+                    "-pix_fmt",
+                    str(pixel_format),
+                    str(video_only),
+                ]
+            )
+        else:
+            raise SystemExit(
+                f"unsupported video extension policy: {extension_policy} "
+                f"for {extension_ms} ms"
+            )
+    else:
+        raise SystemExit(f"unsupported video composition model: {composition_model}")
 
     audio = manifest["audio"]
     audio_inputs: list[str] = []
@@ -334,40 +508,47 @@ def main() -> int:
             ]
         )
     subtitle_path.write_text("\n".join(subtitle_lines), encoding="utf-8")
-    relative_subtitle = subtitle_path.relative_to(out_root).as_posix()
-    subtitle_filter = (
-        f"subtitles=filename='{relative_subtitle}':"
-        "force_style='FontName=Yu Gothic,FontSize=16,"
-        "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-        "BorderStyle=1,Outline=1,Shadow=0,MarginV=12,Alignment=2'"
-    )
-    run(
-        [
-            args.ffmpeg,
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-i",
-            str(without_path),
-            "-vf",
-            subtitle_filter,
-            "-c:v",
-            "libx264",
-            "-preset",
-            "slow",
-            "-crf",
-            "14",
-            "-pix_fmt",
-            str(pixel_format),
-            "-c:a",
-            "copy",
-            "-movflags",
-            "+faststart",
-            str(with_path),
-        ],
-        cwd=out_root,
-    )
+    subtitle_media_reused = not subtitle_lines
+    if subtitle_media_reused:
+        try:
+            os.link(without_path, with_path)
+        except OSError:
+            shutil.copy2(without_path, with_path)
+    else:
+        relative_subtitle = subtitle_path.relative_to(out_root).as_posix()
+        subtitle_filter = (
+            f"subtitles=filename='{relative_subtitle}':"
+            "force_style='FontName=Yu Gothic,FontSize=16,"
+            "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+            "BorderStyle=1,Outline=1,Shadow=0,MarginV=12,Alignment=2'"
+        )
+        run(
+            [
+                args.ffmpeg,
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-i",
+                str(without_path),
+                "-vf",
+                subtitle_filter,
+                "-c:v",
+                "libx264",
+                "-preset",
+                "slow",
+                "-crf",
+                "14",
+                "-pix_fmt",
+                str(pixel_format),
+                "-c:a",
+                "copy",
+                "-movflags",
+                "+faststart",
+                str(with_path),
+            ],
+            cwd=out_root,
+        )
 
     without_probe = probe(without_path, args.ffprobe)
     with_probe = probe(with_path, args.ffprobe)
@@ -403,6 +584,7 @@ def main() -> int:
         "event": event,
         "render_duration_ms": render_duration_ms,
         "video_extension_policy": extension_policy,
+        "subtitle_media_reused": subtitle_media_reused,
         "without_subtitles": str(without_path),
         "with_subtitles": str(with_path),
         "subtitles": str(subtitle_path),

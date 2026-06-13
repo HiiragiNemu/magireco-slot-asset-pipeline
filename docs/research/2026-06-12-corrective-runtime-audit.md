@@ -1,5 +1,11 @@
 # Corrective Runtime Audit - 2026-06-12
 
+> Superseded in part by
+> `docs/research/2026-06-13-z2d-reqsound-production.md`. In particular, the
+> 146-event/119-render result below selected events through verified subtitle
+> text and therefore omitted valid character sounds whose Z2D layer had no
+> display text. Do not use that subset as the final production catalog.
+
 ## Invalidated assumptions
 
 - The previous Bilibili builder defaulted to a 1920x1080 upload canvas. This

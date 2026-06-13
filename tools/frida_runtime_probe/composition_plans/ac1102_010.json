@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1102_010",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 7000,
+  "evidence": "family_runtime_ac1101_and_static_black_matte_validation_2026-06-13",
+  "clips": [
+    {
+      "dgm_name": "ac1102_lev_c001_L",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac1102_lev_c002",
+      "role": "background",
+      "start_ms": 1667
+    },
+    {
+      "dgm_name": "ac1102_lev_c002_LP",
+      "role": "loop_background",
+      "start_ms": 5500
+    },
+    {
+      "dgm_name": "ac1102_lev_title_wht",
+      "role": "screen_overlay",
+      "start_ms": 0
+    }
+  ]
+}

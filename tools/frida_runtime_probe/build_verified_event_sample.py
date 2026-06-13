@@ -16,10 +16,40 @@ class TimedAudio:
     start_ms: int
 
 
+@dataclass(frozen=True)
+class TimedVideo:
+    path: Path
+    start_ms: int
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--event", required=True)
-    parser.add_argument("--clip", action="append", required=True)
+    parser.add_argument(
+        "--clip",
+        action="append",
+        default=[],
+        help="legacy sequential full-frame clip; may be repeated",
+    )
+    parser.add_argument(
+        "--background",
+        action="append",
+        default=[],
+        help="PATH@START_MS full-frame background; may be repeated",
+    )
+    parser.add_argument(
+        "--loop-background",
+        help="PATH@START_MS full-frame background loop used through event end",
+    )
+    parser.add_argument(
+        "--screen-overlay",
+        "--black-key-overlay",
+        dest="screen_overlay",
+        action="append",
+        default=[],
+        help="PATH@START_MS RGB screen-blend overlay; may be repeated",
+    )
+    parser.add_argument("--duration-ms", type=int, default=0)
     parser.add_argument(
         "--audio",
         action="append",
@@ -32,6 +62,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-root", required=True)
     parser.add_argument("--ffmpeg", default="ffmpeg")
     parser.add_argument("--ffprobe", default="ffprobe")
+    parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
 
@@ -67,6 +98,13 @@ def parse_audio(value: str) -> TimedAudio:
     return TimedAudio(Path(path_text).resolve(), int(start_text))
 
 
+def parse_video(value: str) -> TimedVideo:
+    path_text, separator, start_text = value.rpartition("@")
+    if not separator:
+        raise ValueError(f"video argument must use PATH@START_MS: {value}")
+    return TimedVideo(Path(path_text).resolve(), int(start_text))
+
+
 def srt_timestamp(milliseconds: int) -> str:
     hours, remainder = divmod(max(milliseconds, 0), 3_600_000)
     minutes, remainder = divmod(remainder, 60_000)
@@ -77,7 +115,50 @@ def srt_timestamp(milliseconds: int) -> str:
 def main() -> int:
     args = parse_args()
     clips = [Path(value).resolve() for value in args.clip]
+    backgrounds = sorted(
+        (parse_video(value) for value in args.background),
+        key=lambda item: item.start_ms,
+    )
+    loop_background = (
+        parse_video(args.loop_background)
+        if args.loop_background
+        else None
+    )
+    overlays = sorted(
+        (parse_video(value) for value in args.screen_overlay),
+        key=lambda item: item.start_ms,
+    )
     audios = [parse_audio(value) for value in args.audio]
+    timed_mode = bool(backgrounds or loop_background or overlays)
+    if timed_mode and clips:
+        raise SystemExit("--clip cannot be mixed with timed video arguments")
+    if timed_mode and not backgrounds:
+        raise SystemExit("timed video mode requires at least one --background")
+    if not timed_mode and not clips:
+        raise SystemExit("provide --clip or timed video arguments")
+    if timed_mode and args.duration_ms <= 0:
+        raise SystemExit("timed video mode requires positive --duration-ms")
+    if backgrounds and backgrounds[0].start_ms != 0:
+        raise SystemExit("first background must start at 0 ms")
+    if loop_background and loop_background.start_ms >= args.duration_ms:
+        raise SystemExit("loop background must start before event end")
+
+    source_videos = [
+        *(item.path for item in backgrounds),
+        *([loop_background.path] if loop_background else []),
+        *(item.path for item in overlays),
+        *clips,
+    ]
+    missing = [
+        path
+        for path in [*source_videos, *(item.path for item in audios)]
+        if not path.is_file()
+    ]
+    if missing:
+        raise SystemExit(
+            "missing source files: " + ", ".join(str(path) for path in missing)
+        )
+
     out_root = Path(args.out_root).resolve()
     without_dir = out_root / "without_subtitles"
     with_dir = out_root / "with_subtitles"
@@ -86,7 +167,22 @@ def main() -> int:
     for directory in (without_dir, with_dir, subtitle_dir, work_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
-    clip_probes = [probe(path, args.ffprobe) for path in clips]
+    without_path = without_dir / f"{args.event}.mp4"
+    with_path = with_dir / f"{args.event}__subtitles.mp4"
+    subtitle_path = subtitle_dir / f"{args.event}.srt"
+    manifest_path = out_root / "manifest.json"
+    existing = [
+        path
+        for path in (without_path, with_path, subtitle_path, manifest_path)
+        if path.exists()
+    ]
+    if existing and not args.overwrite:
+        raise SystemExit(
+            "refusing to overwrite existing outputs: "
+            + ", ".join(str(path) for path in existing)
+        )
+
+    clip_probes = [probe(path, args.ffprobe) for path in source_videos]
     video_streams = [
         next(stream for stream in item["streams"] if stream.get("codec_type") == "video")
         for item in clip_probes
@@ -103,15 +199,91 @@ def main() -> int:
     if len(signatures) != 1:
         raise RuntimeError(f"input clips do not share native video parameters: {sorted(signatures)}")
     width, height, frame_rate, pixel_format = next(iter(signatures))
-    event_duration = sum(float(item["format"]["duration"]) for item in clip_probes)
+    event_duration = (
+        args.duration_ms / 1000.0
+        if timed_mode
+        else sum(float(item["format"]["duration"]) for item in clip_probes)
+    )
 
     video_only = work_dir / f"{args.event}__video_only.mp4"
-    concat_inputs: list[str] = []
-    concat_labels: list[str] = []
-    for index, clip in enumerate(clips):
-        concat_inputs.extend(["-i", str(clip)])
-        concat_labels.append(f"[{index}:v:0]")
-    concat_filter = "".join(concat_labels) + f"concat=n={len(clips)}:v=1:a=0[v]"
+    video_inputs: list[str] = []
+    video_filters: list[str] = []
+    if timed_mode:
+        input_index = 0
+        background_labels: list[str] = []
+        boundaries = [
+            *(item.start_ms for item in backgrounds[1:]),
+            *([loop_background.start_ms] if loop_background else [args.duration_ms]),
+        ]
+        for item, end_ms in zip(backgrounds, boundaries):
+            duration_ms = end_ms - item.start_ms
+            if duration_ms <= 0:
+                raise SystemExit("background start times must be strictly increasing")
+            video_inputs.extend(["-i", str(item.path)])
+            label = f"bg{len(background_labels)}"
+            video_filters.append(
+                f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
+                f"setpts=PTS-STARTPTS[{label}]"
+            )
+            background_labels.append(f"[{label}]")
+            input_index += 1
+
+        if loop_background:
+            duration_ms = args.duration_ms - loop_background.start_ms
+            video_inputs.extend(["-stream_loop", "-1", "-i", str(loop_background.path)])
+            label = f"bg{len(background_labels)}"
+            video_filters.append(
+                f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
+                f"setpts=PTS-STARTPTS[{label}]"
+            )
+            background_labels.append(f"[{label}]")
+            input_index += 1
+
+        video_filters.append(
+            "".join(background_labels)
+            + f"concat=n={len(background_labels)}:v=1:a=0[base0]"
+        )
+        current_label = "base0"
+        for overlay_index, item in enumerate(overlays):
+            video_inputs.extend(["-i", str(item.path)])
+            overlay_duration = float(
+                clip_probes[len(backgrounds) + (1 if loop_background else 0) + overlay_index][
+                    "format"
+                ]["duration"]
+            )
+            overlay_label = f"overlay{overlay_index}"
+            background_rgb_label = f"base_rgb{overlay_index}"
+            output_label = f"base{overlay_index + 1}"
+            video_filters.append(
+                f"[{current_label}]format=gbrp[{background_rgb_label}]"
+            )
+            video_filters.append(
+                f"[{input_index}:v:0]format=gbrp,"
+                f"setpts=PTS-STARTPTS+{item.start_ms / 1000:.6f}/TB"
+                f"[{overlay_label}]"
+            )
+            video_filters.append(
+                f"[{background_rgb_label}][{overlay_label}]"
+                "blend=all_mode=screen:"
+                f"enable='between(t,{item.start_ms / 1000:.6f},"
+                f"{item.start_ms / 1000 + overlay_duration:.6f})'"
+                f"[{output_label}]"
+            )
+            current_label = output_label
+            input_index += 1
+        video_filters.append(
+            f"[{current_label}]trim=duration={event_duration:.6f},"
+            f"fps={frame_rate},format={pixel_format}[v]"
+        )
+    else:
+        concat_labels: list[str] = []
+        for index, clip in enumerate(clips):
+            video_inputs.extend(["-i", str(clip)])
+            concat_labels.append(f"[{index}:v:0]")
+        video_filters.append(
+            "".join(concat_labels) + f"concat=n={len(clips)}:v=1:a=0[v]"
+        )
+
     run(
         [
             args.ffmpeg,
@@ -119,9 +291,9 @@ def main() -> int:
             "-hide_banner",
             "-loglevel",
             "error",
-            *concat_inputs,
+            *video_inputs,
             "-filter_complex",
-            concat_filter,
+            ";".join(video_filters),
             "-map",
             "[v]",
             "-c:v",
@@ -138,7 +310,6 @@ def main() -> int:
         ]
     )
 
-    without_path = without_dir / f"{args.event}.mp4"
     audio_inputs: list[str] = []
     audio_filters: list[str] = []
     audio_labels: list[str] = []
@@ -203,8 +374,6 @@ def main() -> int:
             ]
         )
 
-    subtitle_path = subtitle_dir / f"{args.event}.srt"
-    with_path = with_dir / f"{args.event}__subtitles.mp4"
     if args.subtitle_text and args.subtitle_end_ms > args.subtitle_start_ms:
         subtitle_path.write_text(
             "1\n"
@@ -216,9 +385,9 @@ def main() -> int:
         relative_subtitle = subtitle_path.relative_to(out_root).as_posix()
         subtitle_filter = (
             f"subtitles=filename='{relative_subtitle}':"
-            "force_style='FontName=Yu Gothic,FontSize=16,"
+            "force_style='FontName=Yu Gothic,FontSize=18,"
             "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-            "BorderStyle=1,Outline=1,Shadow=0,MarginV=12,Alignment=2'"
+            "BorderStyle=1,Outline=1.2,Shadow=0,MarginV=14,Alignment=2'"
         )
         run(
             [
@@ -248,9 +417,56 @@ def main() -> int:
             cwd=out_root,
         )
 
+    without_probe = probe(without_path, args.ffprobe)
+    with_probe = probe(with_path, args.ffprobe) if with_path.exists() else {}
+    for label, item in (
+        ("without_subtitles", without_probe),
+        ("with_subtitles", with_probe),
+    ):
+        if not item:
+            continue
+        video = next(
+            stream
+            for stream in item["streams"]
+            if stream.get("codec_type") == "video"
+        )
+        if video.get("width") != width or video.get("height") != height:
+            raise SystemExit(
+                f"{label} was resized: {video.get('width')}x{video.get('height')} "
+                f"instead of {width}x{height}"
+            )
+        if video.get("r_frame_rate") != frame_rate:
+            raise SystemExit(
+                f"{label} frame rate changed: {video.get('r_frame_rate')} "
+                f"instead of {frame_rate}"
+            )
+        if not any(
+            stream.get("codec_type") == "audio"
+            for stream in item["streams"]
+        ):
+            raise SystemExit(f"{label} has no audio stream")
+
     outputs = {
         "event": args.event,
-        "source_clips": [str(path) for path in clips],
+        "source_clips": [str(path) for path in source_videos],
+        "timed_video": {
+            "backgrounds": [
+                {"path": str(item.path), "start_ms": item.start_ms}
+                for item in backgrounds
+            ],
+            "loop_background": (
+                {
+                    "path": str(loop_background.path),
+                    "start_ms": loop_background.start_ms,
+                }
+                if loop_background
+                else None
+            ),
+            "black_key_overlays": [
+                {"path": str(item.path), "start_ms": item.start_ms}
+                for item in overlays
+            ],
+        },
         "source_video_signature": {
             "width": width,
             "height": height,
@@ -266,10 +482,10 @@ def main() -> int:
         },
         "without_subtitles": str(without_path),
         "with_subtitles": str(with_path) if with_path.exists() else "",
-        "probe_without_subtitles": probe(without_path, args.ffprobe),
-        "probe_with_subtitles": probe(with_path, args.ffprobe) if with_path.exists() else {},
+        "probe_without_subtitles": without_probe,
+        "probe_with_subtitles": with_probe,
     }
-    (out_root / "manifest.json").write_text(
+    manifest_path.write_text(
         json.dumps(outputs, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
