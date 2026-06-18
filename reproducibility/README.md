@@ -50,3 +50,5 @@ powershell -ExecutionPolicy Bypass -File reproducibility/scripts/New-AnalysisEvi
 
 脚本只收集 `.csv/.json/.md/.txt/.srt` 派生证据，生成逐文件 SHA-256 清单和 ZIP，
 不会收集媒体、APK、OBB、native 库或原始二进制资源。
+
+已发布证据包及其 GitHub 返回的摘要见 `releases/analysis-evidence-v18-20260619.json`。
