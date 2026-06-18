@@ -11,6 +11,12 @@
 
 - `ac1103_013` 已通过运行时捕获证明其官方链路包含独立角色语音、
   图形字幕和多层视频合成；
+- `ac1102_006` 已按静态延长审计转为 `hold_last_frame`，现在保留
+  官方音频尾声而不再因 482 ms 超时被拒绝；
+- `ac1104_012` 已按静态延长审计转为 `hold_last_frame`，现在保留
+  官方失败音频尾声而不再因 2586 ms 超时被拒绝；
+- `ac1104_014` 已确认是 `c007/c007_LP` 底层全画面加
+  `c009/c009_LP` 黑底 cut-in 叠层，现已纳入正式分层 plan；
 - `production_manifests_v15` 已修复两个关键回归：
   `event_audio_components.csv` 的空 `ogg_path` 现在会按 `ogg_name`
   自动回填，`exact_gdb_frame_only` 图文字幕也重新纳入正式清单；
@@ -25,6 +31,9 @@
 
 ```text
 A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_013
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1102_family
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1104_family
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac0908_food_sample
 ```
 
 便于人工复核的干净集合：
@@ -53,6 +62,7 @@ A:\magireco_corrected_research_20260612\validated_ac1103_full_v15
 
 ```text
 docs/research/2026-06-18-ac1103-013-runtime-composite.md
+docs/research/2026-06-18-ac1102-ac1104-family-fixes.md
 ```
 
 ## 2026-06-12 纠错状态

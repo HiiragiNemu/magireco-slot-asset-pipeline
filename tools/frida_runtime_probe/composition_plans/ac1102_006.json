@@ -1,0 +1,7 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1102_006",
+  "model": "linear_full_frame_sequence",
+  "extension_policy": "hold_last_frame",
+  "evidence": "static extension audit 2026-06-18: ac1102_3off_c016_lose remains visually coherent when the official failure audio overruns the final frame by 482 ms"
+}

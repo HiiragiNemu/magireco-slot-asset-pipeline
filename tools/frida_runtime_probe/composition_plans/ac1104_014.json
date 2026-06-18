@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1104_014",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 6343,
+  "evidence": "static contact validation 2026-06-18: ac1104_lev_c007 and ac1104_lev_c007_LP provide the full-frame banana-boat base while ac1104_lev_c009 and ac1104_lev_c009_LP are black-matte cut-in overlays that align as simultaneous screen-layer reactions",
+  "clips": [
+    {
+      "dgm_name": "ac1104_lev_c007",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac1104_lev_c007_LP",
+      "role": "loop_background",
+      "start_ms": 1667
+    },
+    {
+      "dgm_name": "ac1104_lev_c009",
+      "role": "screen_overlay",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac1104_lev_c009_LP",
+      "role": "loop_screen_overlay",
+      "start_ms": 2500
+    }
+  ]
+}

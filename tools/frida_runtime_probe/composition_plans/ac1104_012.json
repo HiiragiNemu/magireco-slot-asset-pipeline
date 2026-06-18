@@ -1,0 +1,7 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1104_012",
+  "model": "linear_full_frame_sequence",
+  "extension_policy": "hold_last_frame",
+  "evidence": "static extension audit 2026-06-18: ac1104_3off_c018_lose ends on a stable beach reaction frame while the official failure audio continues 2586 ms beyond the final DGM frame"
+}

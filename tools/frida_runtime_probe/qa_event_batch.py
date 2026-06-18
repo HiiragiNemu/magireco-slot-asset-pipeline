@@ -113,6 +113,7 @@ def main() -> int:
     if not manifest_dir.is_dir():
         manifest_dir = manifest_root
     output_root = Path(args.output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict] = []
     manifest_paths = sorted(manifest_dir.glob("*.json"))
