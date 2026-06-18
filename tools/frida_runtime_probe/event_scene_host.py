@@ -25,6 +25,7 @@ def parse_args() -> argparse.Namespace:
             "request",
             "request-code",
             "request-official-code",
+            "request-official-sequence",
             "dump",
             "symbols",
         ),
@@ -32,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--name")
     parser.add_argument("--code")
     parser.add_argument("--label")
+    parser.add_argument("--sequence-json")
     parser.add_argument("--offset", type=lambda value: int(value, 0))
     parser.add_argument("--size", type=lambda value: int(value, 0), default=0x100)
     parser.add_argument("--pattern")
@@ -57,6 +59,8 @@ def main() -> int:
         raise SystemExit(f"--name is required for {args.action}")
     if args.action in {"inspect-code", "request-code", "request-official-code"} and not args.code:
         raise SystemExit(f"--code is required for {args.action}")
+    if args.action == "request-official-sequence" and not args.sequence_json:
+        raise SystemExit("--sequence-json is required for request-official-sequence")
     if args.action == "dump" and args.offset is None:
         raise SystemExit("--offset is required for dump")
     if args.action == "symbols" and not args.pattern:
@@ -112,7 +116,7 @@ def main() -> int:
     status = script.exports_sync.status()
     record({"event": "initial_status", "state": status})
 
-    if args.action == "request-official-code":
+    if args.action in {"request-official-code", "request-official-sequence"}:
         object_deadline = time.monotonic() + max(args.object_wait, 0.0)
         valid_sources = {"last_animation_request", "C_AnmMain+0x350"}
         while (
@@ -166,6 +170,69 @@ def main() -> int:
         time.sleep(max(args.post_wait, 0.2))
         result = {
             "queued": result,
+            "final_status": script.exports_sync.status(),
+        }
+    elif args.action == "request-official-sequence":
+        sequence_path = Path(args.sequence_json).resolve()
+        sequence = json.loads(sequence_path.read_text(encoding="utf-8"))
+        if not isinstance(sequence, list) or not sequence:
+            raise RuntimeError("sequence JSON must be a non-empty list")
+        sequence_results: list[dict] = []
+        for index, item in enumerate(sequence):
+            if not isinstance(item, dict) or not item.get("code"):
+                raise RuntimeError(
+                    f"sequence item {index} must be an object with code"
+                )
+            code = str(item["code"])
+            label = str(item.get("label") or code)
+            delay_after = max(float(item.get("delay_after", 0.0)), 0.0)
+            queued = script.exports_sync.queuecode(
+                code,
+                label,
+                bool(item.get("immediate", False)),
+                bool(item.get("with_sound", False)),
+                True,
+            )
+            record(
+                {
+                    "event": "sequence_request_queued",
+                    "sequence_index": index,
+                    "label": label,
+                    "code": code,
+                    "delay_after": delay_after,
+                    "result": queued,
+                }
+            )
+            pending_deadline = time.monotonic() + max(args.object_wait, 1.0)
+            state = script.exports_sync.status()
+            while state.get("pending_request") is not None:
+                if time.monotonic() >= pending_deadline:
+                    raise RuntimeError(
+                        f"sequence item {index} ({label}) remained pending"
+                    )
+                time.sleep(0.05)
+                state = script.exports_sync.status()
+            record(
+                {
+                    "event": "sequence_request_started",
+                    "sequence_index": index,
+                    "label": label,
+                    "state": state,
+                }
+            )
+            if delay_after:
+                time.sleep(delay_after)
+            sequence_results.append(
+                {
+                    "index": index,
+                    "label": label,
+                    "code": code,
+                    "delay_after": delay_after,
+                }
+            )
+        time.sleep(max(args.post_wait, 0.2))
+        result = {
+            "sequence": sequence_results,
             "final_status": script.exports_sync.status(),
         }
     elif args.action == "dump":

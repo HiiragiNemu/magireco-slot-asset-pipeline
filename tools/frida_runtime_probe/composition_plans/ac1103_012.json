@@ -1,0 +1,40 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1103_012",
+  "model": "timed_full_frame_layers",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "duration_ms": 8667,
+  "evidence": "static Z2D timeline plus ac1103_006 runtime-verified scaled victory sparkle behavior",
+  "clips": [
+    {
+      "dgm_name": "ac1103_lev_c015_fukkatu_win",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac1103_lev_c016_fukkatu_win",
+      "role": "background",
+      "start_ms": 1000
+    },
+    {
+      "dgm_name": "ac1103_lev_c016_fukkatu_win_LP",
+      "role": "loop_background",
+      "start_ms": 2500
+    },
+    {
+      "dgm_name": "ac8040_shouri_EF_small",
+      "role": "screen_overlay",
+      "start_ms": 0,
+      "scale_to_native": true
+    },
+    {
+      "dgm_name": "ac8040_shouri_EF_small_LP",
+      "role": "loop_screen_overlay",
+      "start_ms": 2000,
+      "scale_to_native": true
+    }
+  ]
+}

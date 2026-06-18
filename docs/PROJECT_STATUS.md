@@ -1,6 +1,46 @@
 # Project Status
 
-更新时间：2026-06-12
+更新时间：2026-06-18
+
+## 2026-06-18 运行时纠偏状态
+
+本轮停止扩散旧的错误大批量输出，改为只沿“运行时证据 -> 生产清单 ->
+单事件渲染 -> QA”链路推进。
+
+当前新增确认：
+
+- `ac1103_013` 已通过运行时捕获证明其官方链路包含独立角色语音、
+  图形字幕和多层视频合成；
+- 新的 `production_manifests_v15` 将该事件标记为
+  `verified_native_composite`，原生尺寸固定为 `416x232`；
+- 渲染结果严格分离为 `with_subtitles` / `without_subtitles` / `subtitles`
+  三个目录，不再混放；
+- 两个版本音轨哈希一致，且实际非静音；
+- 不再创建 1920x1080 画布，也不再把非证实的 UI / 图标组件混入成片。
+
+本轮有效输出：
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_013
+```
+
+便于人工复核的干净集合：
+
+```text
+A:\magireco_corrected_research_20260612\validated_ac1103_runtime_set_v1
+```
+
+其中包含 3 条当前已通过 QA 的事件样片：
+
+- `ac1103_006`
+- `ac1103_012`
+- `ac1103_013`
+
+详细证据见：
+
+```text
+docs/research/2026-06-18-ac1103-013-runtime-composite.md
+```
 
 ## 2026-06-12 纠错状态
 

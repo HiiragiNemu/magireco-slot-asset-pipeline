@@ -1,0 +1,55 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac1103_006",
+  "model": "timed_full_frame_layers",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "duration_ms": 11967,
+  "evidence": "forced runtime capture 2026-06-13: success background, scaled victory sparkle layer, then screen-blended win logo",
+  "clips": [
+    {
+      "dgm_name": "ac1103_3off_c010_win",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac1103_3off_c011_win",
+      "role": "background",
+      "start_ms": 1000
+    },
+    {
+      "dgm_name": "ac1103_3off_c012_win",
+      "role": "background",
+      "start_ms": 2500
+    },
+    {
+      "dgm_name": "ac1103_3off_c012_win_LP",
+      "role": "loop_background",
+      "start_ms": 7300
+    },
+    {
+      "dgm_name": "ac8040_shouri_EF_small",
+      "role": "screen_overlay",
+      "start_ms": 0,
+      "scale_to_native": true
+    },
+    {
+      "dgm_name": "ac8040_shouri_EF_small_LP",
+      "role": "loop_screen_overlay",
+      "start_ms": 2000,
+      "scale_to_native": true
+    },
+    {
+      "dgm_name": "ac1103_3off_c012_win_rogo",
+      "role": "screen_overlay",
+      "start_ms": 6967
+    },
+    {
+      "dgm_name": "ac1103_3off_c012_win_rogo_LP",
+      "role": "loop_screen_overlay",
+      "start_ms": 9967
+    }
+  ]
+}

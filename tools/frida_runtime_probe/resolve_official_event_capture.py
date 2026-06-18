@@ -105,6 +105,35 @@ def is_dialogue_text(text: str) -> bool:
     return bool(JAPANESE_RE.search(value))
 
 
+def merge_adjacent_subtitles(rows: list[dict]) -> list[dict]:
+    merged: list[dict] = []
+    for row in rows:
+        if (
+            merged
+            and row["text"] == merged[-1]["text"]
+            and int(row["start_ms"]) <= int(merged[-1]["end_ms"]) + 150
+        ):
+            merged[-1]["end_ms"] = max(
+                int(merged[-1]["end_ms"]),
+                int(row["end_ms"]),
+            )
+            merged[-1]["voice_code_name"] = ";".join(
+                filter(
+                    None,
+                    [
+                        merged[-1].get("voice_code_name", ""),
+                        row.get("voice_code_name", ""),
+                    ],
+                )
+            )
+            merged[-1]["mapping_basis"] = "runtime_text_merged_adjacent_voice"
+            continue
+        merged.append(dict(row))
+    for index, row in enumerate(merged):
+        row["sequence"] = index
+    return merged
+
+
 def main() -> int:
     args = parse_args()
     event_records = read_jsonl(Path(args.event_log))
@@ -270,6 +299,7 @@ def main() -> int:
                 ),
             }
         )
+    subtitles = merge_adjacent_subtitles(subtitles)
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

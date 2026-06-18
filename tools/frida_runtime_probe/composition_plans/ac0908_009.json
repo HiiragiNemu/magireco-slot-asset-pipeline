@@ -1,0 +1,7 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0908_009",
+  "model": "linear_full_frame_sequence",
+  "extension_policy": "hold_last_frame",
+  "evidence": "verified linear closing shot; official base audio continues 624 ms beyond the final DGM frame"
+}

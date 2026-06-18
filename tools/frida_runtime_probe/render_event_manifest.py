@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ffmpeg", default="ffmpeg")
     parser.add_argument("--ffprobe", default="ffprobe")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--keep-work", action="store_true")
     return parser.parse_args()
 
 
@@ -73,8 +74,11 @@ def main() -> int:
         raise SystemExit(
             f"manifest is not ready: {', '.join(gates.get('errors', []))}"
         )
-    if manifest.get("classification") != "native_full_frame_only":
-        raise SystemExit("refusing to render non-full-frame event")
+    if manifest.get("classification") not in {
+        "native_full_frame_only",
+        "verified_native_composite",
+    }:
+        raise SystemExit("refusing to render unverified event classification")
 
     out_root = Path(args.out_root).resolve() / event
     without_dir = out_root / "without_subtitles"
@@ -100,14 +104,22 @@ def main() -> int:
 
     clips = [Path(row["path"]).resolve() for row in manifest["clips"]]
     clip_probes = [probe(path, args.ffprobe) for path in clips]
-    signatures = set()
+    composition_model = manifest.get(
+        "video_composition_model", "linear_full_frame_sequence"
+    )
+    plan = manifest.get("composition_plan", {})
+    plan_rows = {
+        str(row.get("dgm_name", "")): row
+        for row in plan.get("clips", [])
+    }
+    source_signatures: list[tuple[int, int, str, str]] = []
     for item in clip_probes:
         stream = next(
             stream
             for stream in item["streams"]
             if stream.get("codec_type") == "video"
         )
-        signatures.add(
+        source_signatures.append(
             (
                 stream.get("width"),
                 stream.get("height"),
@@ -115,10 +127,57 @@ def main() -> int:
                 stream.get("pix_fmt"),
             )
         )
-    if len(signatures) != 1:
-        raise SystemExit(f"source signature mismatch: {sorted(signatures)}")
-    width, height, frame_rate, pixel_format = next(iter(signatures))
     expected = manifest["native_dimensions"]
+    width = int(expected["width"])
+    height = int(expected["height"])
+    if composition_model == "timed_full_frame_layers":
+        background_signatures = {
+            signature
+            for row, signature in zip(manifest["clips"], source_signatures)
+            if plan_rows.get(row["dgm_name"], {}).get("role")
+            in {"background", "loop_background"}
+        }
+        if len(background_signatures) != 1:
+            raise SystemExit(
+                "timed composition background signature mismatch: "
+                f"{sorted(background_signatures)}"
+            )
+        background_signature = next(iter(background_signatures))
+        _, _, frame_rate, pixel_format = background_signature
+        for row, signature in zip(manifest["clips"], source_signatures):
+            source_width, source_height, source_rate, source_pixel_format = signature
+            plan_row = plan_rows.get(row["dgm_name"], {})
+            role = plan_row.get("role")
+            if source_rate != frame_rate or source_pixel_format != pixel_format:
+                raise SystemExit(
+                    f"source rate/pixel mismatch for {row['dgm_name']}: {signature}"
+                )
+            if role in {"background", "loop_background"} and (
+                source_width != width or source_height != height
+            ):
+                raise SystemExit(
+                    f"background dimension mismatch for {row['dgm_name']}: "
+                    f"{source_width}x{source_height}"
+                )
+            if (
+                role in {"screen_overlay", "loop_screen_overlay"}
+                and (source_width != width or source_height != height)
+                and not plan_row.get("scale_to_native")
+            ):
+                raise SystemExit(
+                    f"overlay resize is not verified for {row['dgm_name']}: "
+                    f"{source_width}x{source_height}"
+                )
+    else:
+        signatures = set(source_signatures)
+        if len(signatures) != 1:
+            raise SystemExit(f"source signature mismatch: {sorted(signatures)}")
+        source_width, source_height, frame_rate, pixel_format = next(iter(signatures))
+        if source_width != width or source_height != height:
+            raise SystemExit(
+                f"native dimension mismatch: source={source_width}x{source_height}, "
+                f"manifest={width}x{height}"
+            )
     if width != expected["width"] or height != expected["height"]:
         raise SystemExit(
             f"native dimension mismatch: source={width}x{height}, "
@@ -135,11 +194,7 @@ def main() -> int:
         manifest.get("render_duration_ms", manifest["video_duration_ms"])
     )
     extension_policy = manifest.get("video_extension_policy", "none")
-    composition_model = manifest.get(
-        "video_composition_model", "linear_full_frame_sequence"
-    )
     if composition_model == "timed_full_frame_layers":
-        plan = manifest.get("composition_plan", {})
         if plan.get("model") != "timed_full_frame_layers":
             raise SystemExit("timed composition has no verified composition plan")
         clip_by_name = {
@@ -233,7 +288,13 @@ def main() -> int:
                 f"[{current_label}]format=gbrp[{background_label}]"
             )
             video_filters.append(
-                f"[{input_index}:v:0]format=gbrp,"
+                f"[{input_index}:v:0]"
+                + (
+                    f"scale={width}:{height}:flags=lanczos,"
+                    if row.get("scale_to_native")
+                    else ""
+                )
+                + "format=gbrp,"
                 f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
@@ -263,6 +324,12 @@ def main() -> int:
             )
             video_filters.append(
                 f"[{input_index}:v:0]trim=duration={duration_sec:.6f},"
+                + (
+                    f"scale={width}:{height}:flags=lanczos,"
+                    if row.get("scale_to_native")
+                    else ""
+                )
+                +
                 f"format=gbrp,setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
@@ -600,6 +667,8 @@ def main() -> int:
         json.dumps(output, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    if not args.keep_work:
+        shutil.rmtree(work_dir)
     print(json.dumps(output, ensure_ascii=False, indent=2))
     return 0
 
