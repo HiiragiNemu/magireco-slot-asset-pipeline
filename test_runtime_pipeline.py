@@ -20,6 +20,9 @@ from tools.frida_runtime_probe.resolve_subtitle_voice_catalog import (
     request_speaker,
     speaker_hint,
 )
+from tools.frida_runtime_probe.resolve_official_event_capture import (
+    is_dialogue_sound,
+)
 from tools.frida_runtime_probe.build_series_editions import (
     event_sort_key,
     shifted_srt_cues,
@@ -102,6 +105,23 @@ class CompositionPlanTests(unittest.TestCase):
 
 
 class SubtitleVoiceCatalogTests(unittest.TestCase):
+    def test_event_sound_labels_are_not_dialogue(self) -> None:
+        self.assertFalse(
+            is_dialogue_sound("42020_SPストーリー2_00_突入", "突入")
+        )
+        self.assertTrue(
+            is_dialogue_sound(
+                "30995_303_say_マミさんは、私達を",
+                "マミさんは、私達を",
+            )
+        )
+        self.assertTrue(
+            is_dialogue_sound(
+                "26427_sqb_小さいキュゥべえ_ッキュ",
+                "ッキュ",
+            )
+        )
+
     def test_numeric_tokens_do_not_hide_z2d_speaker_alias(self) -> None:
         self.assertEqual(
             speaker_hint("31209_315_mita_心の闇を背負った"),

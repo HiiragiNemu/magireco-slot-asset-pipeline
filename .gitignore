@@ -44,3 +44,7 @@ jadx-gui-*/
 # Local scratch
 *.log
 新建 文本文档.txt
+
+# Reproducibility inputs and generated release staging
+reproducibility/local_inputs/
+reproducibility/release_staging/

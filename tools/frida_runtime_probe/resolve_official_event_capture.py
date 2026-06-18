@@ -14,6 +14,13 @@ from pathlib import Path
 DGM_RE = re.compile(r"^\[(.+\.dgm)\]$", re.IGNORECASE)
 SOUND_ID_RE = re.compile(r"^(\d{4,5})(?:_|\s|$)")
 JAPANESE_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
+VOICE_SPEAKER_TOKENS = {
+    "ari", "fel", "fer", "hom", "iro", "kae", "kan", "kyo",
+    "kuro", "kuroe", "mad", "mam", "mami", "mif", "mihu",
+    "mit", "mita", "mom", "nag", "nem", "nemu", "ren", "rena",
+    "riko", "sana", "say", "sigure", "sqb", "toka", "tou", "tsu",
+    "tukasa", "tukuyo", "tur", "turk", "ui", "uwa", "yac", "yach",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -103,6 +110,16 @@ def is_dialogue_text(text: str) -> bool:
     if value in {"<空白のテキストレイヤー>", "空白のテキストレイヤー"}:
         return False
     return bool(JAPANESE_RE.search(value))
+
+
+def is_dialogue_sound(code_name: str, label_text: str) -> bool:
+    if not label_text or not JAPANESE_RE.search(label_text):
+        return False
+    parts = [part.casefold() for part in code_name.split("_")]
+    match = SOUND_ID_RE.match(code_name)
+    resource_id = int(match.group(1)) if match else 0
+    has_speaker = any(part in VOICE_SPEAKER_TOKENS for part in parts[1:-1])
+    return has_speaker or 30000 <= resource_id < 40000
 
 
 def merge_adjacent_subtitles(rows: list[dict]) -> list[dict]:
@@ -253,7 +270,7 @@ def main() -> int:
                 "ogg_path": str(ogg_path) if ogg_path else "",
                 "label_text": label_text,
                 "is_dialogue": (
-                    "yes" if label_text and JAPANESE_RE.search(label_text) else "no"
+                    "yes" if is_dialogue_sound(code_name, label_text) else "no"
                 ),
             }
         )

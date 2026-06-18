@@ -1043,6 +1043,7 @@ def main() -> int:
                         role in {"background", "loop_background"}
                         and has_plan_native_dimensions
                         and clip_dimensions != (native_width, native_height)
+                        and not plan_row.get("pad_to_native")
                     ):
                         errors.append("composition_background_dimension_mismatch")
                         composition_resolved = False

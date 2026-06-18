@@ -26,6 +26,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-root", action="append", required=True)
     parser.add_argument("--out-root", required=True)
     parser.add_argument("--series", action="append", required=True)
+    parser.add_argument(
+        "--preserve-event-separately",
+        action="append",
+        default=[],
+        help=(
+            "QA-passed event intentionally omitted from the long stream-copy edition "
+            "because its native stream signature differs; repeat as needed"
+        ),
+    )
     parser.add_argument("--production-manifest-root", default="")
     parser.add_argument("--require-complete-family", action="store_true")
     parser.add_argument("--ffmpeg", default="ffmpeg")
@@ -313,6 +322,7 @@ def family_state(series: str, manifest_root: Path | None) -> dict:
 def build_series(
     series: str,
     candidates: dict[str, dict],
+    preserve_separately: set[str],
     out_root: Path,
     manifest_root: Path | None,
     require_complete: bool,
@@ -321,7 +331,11 @@ def build_series(
     overwrite: bool,
 ) -> dict:
     selected = sorted(
-        [row for event, row in candidates.items() if event.startswith(f"{series}_")],
+        [
+            row
+            for event, row in candidates.items()
+            if event.startswith(f"{series}_") and event not in preserve_separately
+        ],
         key=lambda row: event_sort_key(row["event"]),
     )
     if len(selected) < 2:
@@ -329,7 +343,22 @@ def build_series(
 
     state = family_state(series, manifest_root)
     selected_names = {row["event"] for row in selected}
-    missing_ready = sorted(set(state.get("ready_event_names", [])) - selected_names)
+    family_preserved = sorted(
+        event
+        for event in preserve_separately
+        if event.startswith(f"{series}_")
+    )
+    unknown_preserved = sorted(set(family_preserved) - set(candidates))
+    if unknown_preserved:
+        raise ValueError(
+            f"{series} separately preserved events are not QA-passed inputs: "
+            f"{unknown_preserved}"
+        )
+    missing_ready = sorted(
+        set(state.get("ready_event_names", []))
+        - selected_names
+        - set(family_preserved)
+    )
     not_ready = state.get("not_ready_family_events", [])
     if require_complete and (missing_ready or not_ready):
         raise ValueError(
@@ -338,6 +367,7 @@ def build_series(
         )
 
     source_rows: list[dict] = []
+    preserved_rows: list[dict] = []
     expected_signature: dict | None = None
     offset_ms = 0
     combined_cues: list[dict] = []
@@ -375,6 +405,30 @@ def build_series(
             }
         )
         offset_ms += duration_ms
+
+    for event in family_preserved:
+        row = candidates[event]
+        without_probe = probe(row["without_path"], ffprobe)
+        with_probe = probe(row["with_path"], ffprobe)
+        if stream_signature(without_probe) != stream_signature(with_probe):
+            raise ValueError(f"edition stream mismatch: {event}")
+        preserved_rows.append(
+            {
+                "event": event,
+                "reason": (
+                    "native_stream_signature_differs_from_long_edition; "
+                    "preserved_as_original_event_without_scaling"
+                ),
+                "stream_signature": stream_signature(without_probe),
+                "without_subtitles": str(row["without_path"]),
+                "with_subtitles": str(row["with_path"]),
+                "subtitles": str(row["subtitle_path"]),
+                "render_manifest": row["render_manifest_path"],
+                "without_sha256": file_sha256(row["without_path"]),
+                "with_sha256": file_sha256(row["with_path"]),
+                "subtitle_sha256": file_sha256(row["subtitle_path"]),
+            }
+        )
 
     series_dir = out_root / series
     audit_dir = series_dir / "audit"
@@ -449,6 +503,7 @@ def build_series(
         "subtitle_cue_count": len(combined_cues),
         "stream_signature": expected_signature,
         "family_state": state,
+        "preserved_separately": preserved_rows,
         "outputs": {
             "without_subtitles": str(without_output.resolve()),
             "with_subtitles": str(with_output.resolve()),
@@ -476,6 +531,7 @@ def build_series(
         "series": series,
         "status": "passed",
         "event_count": len(selected),
+        "preserved_separately_count": len(preserved_rows),
         "duration_ms": without_duration_ms,
         "subtitle_cue_count": len(combined_cues),
         "width": expected_signature["video"]["width"],
@@ -503,6 +559,7 @@ def main() -> int:
         row = build_series(
             series,
             candidates,
+            set(args.preserve_event_separately),
             out_root,
             manifest_root,
             args.require_complete_family,

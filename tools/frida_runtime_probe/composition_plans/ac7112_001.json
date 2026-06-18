@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7112_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 29857,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 binds ac7112_AT_SP_story1_01 to the official event audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; the 29.667 s source needs only a 190 ms final-frame hold to cover the official audio tail",
+  "clips": [
+    {
+      "dgm_name": "ac7112_AT_SP_story1_01",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

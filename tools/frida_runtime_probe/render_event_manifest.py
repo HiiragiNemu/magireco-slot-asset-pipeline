@@ -170,14 +170,55 @@ def main() -> int:
                 )
     else:
         signatures = set(source_signatures)
-        if len(signatures) != 1:
-            raise SystemExit(f"source signature mismatch: {sorted(signatures)}")
-        source_width, source_height, frame_rate, pixel_format = next(iter(signatures))
-        if source_width != width or source_height != height:
-            raise SystemExit(
-                f"native dimension mismatch: source={source_width}x{source_height}, "
-                f"manifest={width}x{height}"
+        padded_linear_plan = plan.get("model") == "linear_full_frame_sequence" and any(
+            row.get("pad_to_native") for row in plan.get("clips", [])
+        )
+        if padded_linear_plan:
+            rates = {signature[2] for signature in signatures}
+            pixel_formats = {signature[3] for signature in signatures}
+            if len(rates) != 1 or len(pixel_formats) != 1:
+                raise SystemExit(
+                    f"padded sequence rate/pixel mismatch: {sorted(signatures)}"
+                )
+            frame_rate = next(iter(rates))
+            pixel_format = next(iter(pixel_formats))
+            for row, signature in zip(manifest["clips"], source_signatures):
+                source_width, source_height, _, _ = signature
+                plan_row = plan_rows.get(row["dgm_name"], {})
+                if source_width == width and source_height == height:
+                    continue
+                if (
+                    not plan_row.get("pad_to_native")
+                    or source_width > width
+                    or source_height > height
+                ):
+                    raise SystemExit(
+                        f"unverified padded source for {row['dgm_name']}: "
+                        f"{source_width}x{source_height} -> {width}x{height}"
+                    )
+                pad_x = int(plan_row.get("pad_x", 0))
+                pad_y = int(plan_row.get("pad_y", 0))
+                if (
+                    pad_x < 0
+                    or pad_y < 0
+                    or pad_x + source_width > width
+                    or pad_y + source_height > height
+                ):
+                    raise SystemExit(
+                        f"invalid pad placement for {row['dgm_name']}: "
+                        f"{pad_x},{pad_y}"
+                    )
+        else:
+            if len(signatures) != 1:
+                raise SystemExit(f"source signature mismatch: {sorted(signatures)}")
+            source_width, source_height, frame_rate, pixel_format = next(
+                iter(signatures)
             )
+            if source_width != width or source_height != height:
+                raise SystemExit(
+                    f"native dimension mismatch: source={source_width}x{source_height}, "
+                    f"manifest={width}x{height}"
+                )
     if width != expected["width"] or height != expected["height"]:
         raise SystemExit(
             f"native dimension mismatch: source={width}x{height}, "
@@ -429,9 +470,33 @@ def main() -> int:
         base_video_only = work_dir / f"{event}__base_video_only.mp4"
         video_inputs: list[str] = []
         video_labels: list[str] = []
-        for index, clip in enumerate(clips):
+        video_filters: list[str] = []
+        for index, (clip, signature, clip_row) in enumerate(
+            zip(clips, source_signatures, manifest["clips"])
+        ):
             video_inputs.extend(["-i", str(clip)])
-            video_labels.append(f"[{index}:v:0]")
+            source_width, source_height, _, _ = signature
+            plan_row = plan_rows.get(clip_row["dgm_name"], {})
+            label = f"linear{index}"
+            transforms = ["setpts=PTS-STARTPTS"]
+            if source_width != width or source_height != height:
+                if not plan_row.get("pad_to_native"):
+                    raise SystemExit(
+                        f"linear source needs an explicit pad plan: {clip_row['dgm_name']}"
+                    )
+                transforms.append(
+                    f"pad={width}:{height}:"
+                    f"{int(plan_row.get('pad_x', 0))}:"
+                    f"{int(plan_row.get('pad_y', 0))}:black"
+                )
+            transforms.extend([f"fps={frame_rate}", f"format={pixel_format}"])
+            video_filters.append(
+                f"[{index}:v:0]" + ",".join(transforms) + f"[{label}]"
+            )
+            video_labels.append(f"[{label}]")
+        video_filters.append(
+            "".join(video_labels) + f"concat=n={len(clips)}:v=1:a=0[v]"
+        )
         run(
             [
                 args.ffmpeg,
@@ -441,8 +506,7 @@ def main() -> int:
                 "error",
                 *video_inputs,
                 "-filter_complex",
-                "".join(video_labels)
-                + f"concat=n={len(clips)}:v=1:a=0[v]",
+                ";".join(video_filters),
                 "-map",
                 "[v]",
                 "-c:v",

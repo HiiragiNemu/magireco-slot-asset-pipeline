@@ -1,0 +1,27 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7113_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 11374,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "evidence": "clean animation edition: official runtime capture and screen audit 2026-06-19 show the native 512x416 ac7113_AT_SP_story2_00 opening followed at 2.843 s by the native 512x288 ac7113_AT_SP_story2_01 story image at the top of the same 512x416 viewport; the second clip is padded at the bottom without scaling or cropping; gold-frame, particle, reels, and slot UI are excluded from the audience upload and retained only as separate material assets",
+  "clips": [
+    {
+      "dgm_name": "ac7113_AT_SP_story2_00",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac7113_AT_SP_story2_01",
+      "role": "background",
+      "start_ms": 2833,
+      "pad_to_native": true,
+      "pad_x": 0,
+      "pad_y": 0
+    }
+  ]
+}

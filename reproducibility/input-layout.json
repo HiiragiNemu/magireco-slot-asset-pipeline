@@ -1,0 +1,41 @@
+{
+  "schema": "magireco-reproducible-input-layout-v1",
+  "reference_game_version_code": 9,
+  "roots": {
+    "installed_pull": {
+      "purpose": "files exported from the collaborator's own installed Android application",
+      "example": "A:\\magireco_installed_pull_20260603"
+    },
+    "unpacked_project": {
+      "purpose": "local working copy containing OBB/APK extraction results",
+      "example": "C:\\path\\to\\magireco-slot-asset-pipeline-working-copy"
+    }
+  },
+  "required_groups": {
+    "android_package": [
+      "data_app_package/base.apk",
+      "data_app_package/split_config.arm64_v8a.apk",
+      "data_app_package/split_InstallTimePack.apk"
+    ],
+    "downloadable_obb": [
+      "sdcard_Android_data/files/main.9.com.universal777.magireco.obb",
+      "sdcard_Android_data/files/patch.9.com.universal777.magireco.obb"
+    ],
+    "installed_audio_pack": [
+      "data_user_0/files/assetpacks/OnDemandPack01/31/31/assets/smz.bin",
+      "data_user_0/files/assetpacks/OnDemandPack01/31/31/assets/smz_add.bin"
+    ],
+    "native_analysis": [
+      "unpacked_lib/lib/arm64-v8a/libGameProc.so"
+    ],
+    "core_binary_tables": [
+      "unpacked_assets/assets/gdb.bin",
+      "unpacked_assets/assets/z2d.bin",
+      "unpacked_assets/assets/m_info.dat",
+      "unpacked_assets/assets/sound_id.dat",
+      "unpacked_assets/assets/zg_snd_request_tbl.bin",
+      "unpacked_assets/assets/zg_snd_hashreq_tbl.bin"
+    ]
+  },
+  "redistribution_policy": "fingerprints and derived evidence only; no proprietary payloads"
+}

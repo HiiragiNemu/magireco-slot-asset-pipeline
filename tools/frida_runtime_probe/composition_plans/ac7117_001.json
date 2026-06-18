@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7117_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 9600,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 binds ac7117_AT_SP_story6_01 to the official event audio and two vocalization subtitles; the Japanese-labelled 42100 base event sound is not dialogue; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; the source needs only a two-frame final hold for the official audio tail",
+  "clips": [
+    {
+      "dgm_name": "ac7117_AT_SP_story6_01",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}
