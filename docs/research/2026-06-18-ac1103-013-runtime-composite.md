@@ -155,3 +155,78 @@ directories remain unchanged.
    any broader batch render.
 3. Keep subtitle/no-subtitle editions separate and preserve native dimensions
    for every future validated event.
+
+## Follow-up on 2026-06-18
+
+After the initial `ac1103_013` correction, the production-manifest builder was
+audited again. Two regressions were found and fixed:
+
+1. `asset_manifests/event_audio_components.csv` currently preserves
+   `ogg_name` but leaves `ogg_path` blank. The builder now backfills the path
+   from known official OGG roots instead of marking the event silent or
+   incomplete.
+2. Accepted graphical subtitle rows for several `ac1103` events use
+   `timeline_confidence = exact_gdb_frame_only`. The builder now accepts these
+   rows again and reads their `subtitle_start_ms` / `subtitle_end_ms` fields
+   correctly.
+
+The fallback `official_voice_label` subtitle path was also tightened so it no
+longer duplicates a graphical subtitle that already covers the same
+`voice_request_id`.
+
+## ac1103 family v15 validation
+
+With those regressions fixed, the following four `ac1103` events were rendered
+again from `production_manifests_v15` and passed QA together:
+
+- `ac1103_005`
+- `ac1103_006`
+- `ac1103_012`
+- `ac1103_013`
+
+Validation root:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_family
+```
+
+QA summary:
+
+```text
+audited_events = 4
+passed = 4
+subtitle_and_no_subtitle_audio_identical = 4
+non_silent_audio = 4
+```
+
+Clean review set:
+
+```text
+A:\magireco_corrected_research_20260612\validated_ac1103_runtime_set_v2
+```
+
+## Full ac1103 render set
+
+Once the builder regressions were fixed, every `ac1103_*` event in
+`production_manifests_v15` became render-ready.
+
+Full render root:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_all
+```
+
+Full QA summary:
+
+```text
+audited_events = 13
+passed = 13
+subtitle_and_no_subtitle_audio_identical = 13
+non_silent_audio = 13
+```
+
+Full review set:
+
+```text
+A:\magireco_corrected_research_20260612\validated_ac1103_full_v15
+```

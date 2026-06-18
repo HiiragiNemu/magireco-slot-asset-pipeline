@@ -11,6 +11,9 @@
 
 - `ac1103_013` 已通过运行时捕获证明其官方链路包含独立角色语音、
   图形字幕和多层视频合成；
+- `production_manifests_v15` 已修复两个关键回归：
+  `event_audio_components.csv` 的空 `ogg_path` 现在会按 `ogg_name`
+  自动回填，`exact_gdb_frame_only` 图文字幕也重新纳入正式清单；
 - 新的 `production_manifests_v15` 将该事件标记为
   `verified_native_composite`，原生尺寸固定为 `416x232`；
 - 渲染结果严格分离为 `with_subtitles` / `without_subtitles` / `subtitles`
@@ -28,13 +31,23 @@ A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_013
 
 ```text
 A:\magireco_corrected_research_20260612\validated_ac1103_runtime_set_v1
+A:\magireco_corrected_research_20260612\validated_ac1103_runtime_set_v2
 ```
 
-其中包含 3 条当前已通过 QA 的事件样片：
+其中 `validated_ac1103_runtime_set_v2` 为当前主集合，包含 4 条同一版
+`v15` 清单下通过 QA 的事件样片：
 
+- `ac1103_005`
 - `ac1103_006`
 - `ac1103_012`
 - `ac1103_013`
+
+`ac1103` 全 family 的 13 条事件也已经在同一版 `v15` 清单下完成渲染和 QA：
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v15_ac1103_all
+A:\magireco_corrected_research_20260612\validated_ac1103_full_v15
+```
 
 详细证据见：
 

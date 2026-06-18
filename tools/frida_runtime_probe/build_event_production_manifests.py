@@ -62,6 +62,10 @@ VOICE_SPEAKER_TOKENS = {
     "yac",
     "yach",
 }
+GRAPHICAL_SUBTITLE_CONFIDENCE = {
+    "exact_gdb_frame_and_official_ogg",
+    "exact_gdb_frame_only",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -100,6 +104,12 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         help="directories or event_manifest.json files resolved from official runtime captures",
+    )
+    parser.add_argument(
+        "--ogg-search-root",
+        action="append",
+        default=[],
+        help="optional directory containing official decoded OGG files",
     )
     parser.add_argument("--ffprobe", default="ffprobe")
     parser.add_argument("--out-dir", required=True)
@@ -232,6 +242,69 @@ def probe_runtime_video(path: Path, ffprobe: str, cache: dict[str, dict]) -> dic
     }
     cache[resolved] = probed
     return probed
+
+
+def infer_ogg_search_roots(
+    event_sounds: list[dict[str, str]],
+    subtitle_timeline: list[dict[str, str]],
+    runtime_event_manifests: dict[str, dict],
+    explicit_roots: list[Path],
+) -> list[Path]:
+    candidates: list[Path] = []
+    for path in explicit_roots:
+        if path.is_dir():
+            candidates.append(path.resolve())
+    for row in event_sounds:
+        ogg_path = str(row.get("ogg_path", "")).strip()
+        if ogg_path:
+            path = Path(ogg_path)
+            if path.is_file():
+                candidates.append(path.parent.resolve())
+    for row in subtitle_timeline:
+        ogg_path = str(row.get("ogg_path", "")).strip()
+        if ogg_path:
+            path = Path(ogg_path)
+            if path.is_file():
+                candidates.append(path.parent.resolve())
+    for manifest in runtime_event_manifests.values():
+        for row in manifest.get("sound_assets", []):
+            ogg_path = str(row.get("ogg_path", "")).strip()
+            if ogg_path:
+                path = Path(ogg_path)
+                if path.is_file():
+                    candidates.append(path.parent.resolve())
+    roots: list[Path] = []
+    seen: set[str] = set()
+    for path in candidates:
+        key = str(path).casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        roots.append(path)
+    return roots
+
+
+def resolve_ogg_path(
+    ogg_name: str,
+    raw_path: str,
+    search_roots: list[Path],
+    cache: dict[str, str],
+) -> str:
+    path = str(raw_path or "").strip()
+    if path and Path(path).is_file():
+        return str(Path(path).resolve())
+    name = str(ogg_name or "").strip()
+    if not name:
+        return ""
+    if name in cache:
+        return cache[name]
+    for root in search_roots:
+        candidate = root / name
+        if candidate.is_file():
+            cache[name] = str(candidate.resolve())
+            return cache[name]
+    cache[name] = ""
+    return ""
 
 
 def normalize_runtime_subtitles(rows: list[dict]) -> list[dict]:
@@ -475,6 +548,13 @@ def main() -> int:
         [Path(path) for path in args.runtime_event_manifests]
     )
     runtime_media_cache: dict[str, dict] = {}
+    ogg_search_roots = infer_ogg_search_roots(
+        event_sounds,
+        subtitle_timeline,
+        runtime_event_manifests,
+        [Path(path) for path in args.ogg_search_root],
+    )
+    ogg_path_cache: dict[str, str] = {}
     out_dir = Path(args.out_dir)
     event_dir = out_dir / "events"
     event_dir.mkdir(parents=True, exist_ok=True)
@@ -531,8 +611,7 @@ def main() -> int:
         if (
             event in selected
             and row.get("display_text", "").strip()
-            and row.get("timeline_confidence")
-            == "exact_gdb_frame_and_official_ogg"
+            and row.get("timeline_confidence") in GRAPHICAL_SUBTITLE_CONFIDENCE
         ):
             subtitles_by_event[event].append(row)
 
@@ -632,7 +711,12 @@ def main() -> int:
                 if key in seen_audio:
                     continue
                 seen_audio.add(key)
-                path = row.get("ogg_path", "")
+                path = resolve_ogg_path(
+                    row.get("ogg_name", ""),
+                    row.get("ogg_path", ""),
+                    ogg_search_roots,
+                    ogg_path_cache,
+                )
                 if not path or not Path(path).exists():
                     errors.append(f"missing_base_audio:{request_id}")
                 audio_rows.append(
@@ -663,7 +747,12 @@ def main() -> int:
                 if key in seen_audio:
                     continue
                 seen_audio.add(key)
-                path = row.get("ogg_path", "")
+                path = resolve_ogg_path(
+                    row.get("ogg_name", ""),
+                    row.get("ogg_path", ""),
+                    ogg_search_roots,
+                    ogg_path_cache,
+                )
                 if not path or not Path(path).exists():
                     errors.append(f"missing_z2d_audio:{request_id}")
                 audio_rows.append(
@@ -690,18 +779,26 @@ def main() -> int:
             for row in sorted(
                 subtitles_by_event.get(event, []),
                 key=lambda item: (
-                    number(item.get("start_ms", "")),
+                    number(item.get("start_ms") or item.get("subtitle_start_ms", "")),
                     number(item.get("z2d_order", "")),
                 ),
             ):
                 request_id = row.get("sound_request_id", "")
-                voice_start_ms = number(row.get("audio_start_ms", ""))
+                voice_start_ms = number(
+                    row.get("audio_start_ms") or row.get("voice_start_ms", "")
+                )
                 text = row.get("srt_text") or row.get("display_text", "")
+                subtitle_start_ms = number(
+                    row.get("start_ms") or row.get("subtitle_start_ms", "")
+                )
+                subtitle_end_ms = number(
+                    row.get("effective_end_ms") or row.get("subtitle_end_ms", "")
+                )
                 subtitle_rows.append(
                     {
                         "text": text.replace("\\n", "\n"),
-                        "start_ms": number(row.get("start_ms", "")),
-                        "end_ms": number(row.get("effective_end_ms", "")),
+                        "start_ms": subtitle_start_ms,
+                        "end_ms": subtitle_end_ms,
                         "voice_request_id": request_id,
                         "voice_start_ms": voice_start_ms,
                         "z2d_name": row.get("z2d_name", ""),
@@ -717,11 +814,6 @@ def main() -> int:
                     continue
                 already_subtitled = any(
                     subtitle.get("voice_request_id") == audio_row["request_id"]
-                    and abs(
-                        number(subtitle.get("voice_start_ms", ""))
-                        - audio_row["start_ms"]
-                    )
-                    <= 50
                     for subtitle in subtitle_rows
                 )
                 if already_subtitled:
