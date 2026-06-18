@@ -20,6 +20,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", default="large-v3")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--compute-type", default="float16")
+    parser.add_argument(
+        "--include-not-ready",
+        action="store_true",
+        help="Include unresolved manifests for focused evidence gathering.",
+    )
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=[],
+        help="Restrict transcription to the named events.",
+    )
+    parser.add_argument(
+        "--include-subtitled",
+        action="store_true",
+        help="Also transcribe reqSound tracks that already have a subtitle row.",
+    )
     return parser.parse_args()
 
 
@@ -57,9 +73,16 @@ def main() -> int:
 
     candidates: dict[tuple[str, str], dict[str, object]] = {}
     occurrences: dict[tuple[str, str], list[dict[str, object]]] = defaultdict(list)
+    only_events = set(args.only)
     for manifest_path in sorted(manifest_dir.glob("*.json")):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if not manifest.get("quality_gates", {}).get("ready"):
+        event = str(manifest.get("event", ""))
+        if only_events and event not in only_events:
+            continue
+        if (
+            not args.include_not_ready
+            and not manifest.get("quality_gates", {}).get("ready")
+        ):
             continue
         subtitle_keys = {
             (str(row.get("voice_request_id", "")), int(row.get("voice_start_ms", 0)))
@@ -70,7 +93,10 @@ def main() -> int:
                 continue
             request_id = str(audio["request_id"])
             start_ms = int(audio["start_ms"])
-            if (request_id, start_ms) in subtitle_keys:
+            if (
+                not args.include_subtitled
+                and (request_id, start_ms) in subtitle_keys
+            ):
                 continue
             path = str(audio["path"])
             key = (request_id, path)
@@ -85,7 +111,7 @@ def main() -> int:
             )
             occurrences[key].append(
                 {
-                    "event": str(manifest["event"]),
+                    "event": event,
                     "start_ms": start_ms,
                 }
             )

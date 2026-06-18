@@ -20,13 +20,44 @@ PLACEHOLDER_RE = re.compile(
 )
 JAPANESE_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
 SOUND_ID_RE = re.compile(r"^(\d{4,5})(?:_|$)")
-SPEAKER_TOKEN_RE = re.compile(
-    r"(?:^|_)(mad|iro|hom|say|kyk|mam|nag|nem|tou|toka|ari|"
-    r"fel|ui|mif|yach|tur|mit|kan|ren|riko|mom|kae|tsu|kuro)(?:_|$)",
-    re.IGNORECASE,
-)
 SPEAKER_ALIASES = {
+    "ari": "ari",
+    "fel": "fel",
+    "fer": "fel",
+    "hom": "hom",
+    "iro": "iro",
+    "kae": "kae",
+    "kan": "kan",
+    "kyo": "kyo",
+    "kuro": "kuro",
+    "kuroe": "kuro",
+    "mad": "mad",
+    "mam": "mam",
+    "mami": "mam",
+    "mif": "mif",
+    "mihu": "mif",
+    "mit": "mit",
+    "mita": "mit",
+    "mom": "mom",
+    "nag": "nag",
+    "nem": "nem",
+    "nemu": "nem",
+    "ren": "ren",
+    "rena": "ren",
+    "riko": "riko",
+    "sana": "sana",
+    "say": "say",
+    "sqb": "sqb",
+    "toka": "toka",
     "tou": "toka",
+    "tsu": "tsu",
+    "tukasa": "tukasa",
+    "tukuyo": "tukuyo",
+    "tur": "tur",
+    "ui": "ui",
+    "uwa": "uwa",
+    "yac": "yac",
+    "yach": "yac",
 }
 
 
@@ -65,14 +96,17 @@ def request_label(code_name: str) -> str:
 
 
 def speaker_hint(z2d_name: str) -> str:
-    match = SPEAKER_TOKEN_RE.search(z2d_name)
-    value = match.group(1).lower() if match else ""
-    return SPEAKER_ALIASES.get(value, value)
+    for token in z2d_name.lower().split("_"):
+        if token in SPEAKER_ALIASES:
+            return SPEAKER_ALIASES[token]
+    return ""
 
 
 def request_speaker(code_name: str) -> str:
-    parts = code_name.split("_", 2)
-    return parts[1].lower() if len(parts) > 1 else ""
+    for token in code_name.lower().split("_")[1:4]:
+        if token in SPEAKER_ALIASES:
+            return SPEAKER_ALIASES[token]
+    return ""
 
 
 def main() -> int:
@@ -130,8 +164,13 @@ def main() -> int:
             speaker_matches = (
                 not hint or previous_request.get("speaker", "") == hint
             )
+            exact_callback = str(
+                timeline.get("timeline_confidence", "")
+            ).startswith("exact_gdb_frame")
             previous_valid = speaker_matches and (
-                normalized in previous_label or previous_label in normalized
+                exact_callback
+                or normalized in previous_label
+                or previous_label in normalized
             )
         if previous_valid:
             candidates = [previous_request]

@@ -21,6 +21,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--download-root", required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--compute-type", default="float16")
+    parser.add_argument(
+        "--include-not-ready",
+        action="store_true",
+        help="Include unresolved manifests for focused evidence gathering.",
+    )
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=[],
+        help="Restrict transcription to the named events.",
+    )
+    parser.add_argument(
+        "--include-all-official-labels",
+        action="store_true",
+        help="Audit every official voice label in --only events, including silent truncation.",
+    )
     return parser.parse_args()
 
 
@@ -49,9 +65,18 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     candidates: dict[str, dict[str, str | int]] = {}
+    only_events = set(args.only)
+    if args.include_all_official_labels and not only_events:
+        raise SystemExit("--include-all-official-labels requires --only")
     for manifest_path in sorted(manifest_dir.glob("*.json")):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if not manifest.get("quality_gates", {}).get("ready"):
+        event = str(manifest.get("event", ""))
+        if only_events and event not in only_events:
+            continue
+        if (
+            not args.include_not_ready
+            and not manifest.get("quality_gates", {}).get("ready")
+        ):
             continue
         audio_by_key = {
             (str(row["request_id"]), int(row["start_ms"])): row
@@ -66,7 +91,12 @@ def main() -> int:
                 int(subtitle["voice_start_ms"]),
             )
             audio = audio_by_key.get(key)
-            if not audio or not str(audio["code_name"]).endswith("-"):
+            if not audio:
+                continue
+            if (
+                not args.include_all_official_labels
+                and not str(audio["code_name"]).endswith("-")
+            ):
                 continue
             request_id = str(audio["request_id"])
             candidate = candidates.setdefault(
@@ -80,7 +110,7 @@ def main() -> int:
                     "events": [],
                 },
             )
-            candidate["events"].append(str(manifest["event"]))
+            candidate["events"].append(event)
 
     model = WhisperModel(
         args.model,

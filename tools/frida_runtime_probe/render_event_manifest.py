@@ -193,7 +193,10 @@ def main() -> int:
     render_duration_ms = int(
         manifest.get("render_duration_ms", manifest["video_duration_ms"])
     )
-    extension_policy = manifest.get("video_extension_policy", "none")
+    extension_policy = str(
+        plan.get("extension_policy")
+        or manifest.get("video_extension_policy", "none")
+    )
     if composition_model == "timed_full_frame_layers":
         if plan.get("model") != "timed_full_frame_layers":
             raise SystemExit("timed composition has no verified composition plan")
@@ -248,13 +251,28 @@ def main() -> int:
             duration_ms = end_ms - start_ms
             if duration_ms <= 0:
                 raise SystemExit("background start times are not increasing")
-            clip_path, _ = clip_by_name[row["dgm_name"]]
+            clip_path, clip_probe = clip_by_name[row["dgm_name"]]
             video_inputs.extend(["-i", str(clip_path)])
             label = f"bg{len(background_labels)}"
-            video_filters.append(
-                f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
-                f"setpts=PTS-STARTPTS[{label}]"
-            )
+            source_duration_ms = round(float(clip_probe["format"]["duration"]) * 1000)
+            if duration_ms > source_duration_ms + 34:
+                if extension_policy != "hold_last_frame":
+                    raise SystemExit(
+                        "timed composition background ends before its planned "
+                        f"interval: {row['dgm_name']}"
+                    )
+                hold_duration_sec = (duration_ms - source_duration_ms) / 1000
+                video_filters.append(
+                    f"[{input_index}:v:0]"
+                    f"tpad=stop_mode=clone:stop_duration={hold_duration_sec:.6f},"
+                    f"trim=duration={duration_ms / 1000:.6f},"
+                    f"setpts=PTS-STARTPTS[{label}]"
+                )
+            else:
+                video_filters.append(
+                    f"[{input_index}:v:0]trim=duration={duration_ms / 1000:.6f},"
+                    f"setpts=PTS-STARTPTS[{label}]"
+                )
             background_labels.append(f"[{label}]")
             input_index += 1
         if loop_background:
@@ -280,12 +298,14 @@ def main() -> int:
             start_ms = int(row["start_ms"])
             clip_path, clip_probe = clip_by_name[row["dgm_name"]]
             duration_sec = float(clip_probe["format"]["duration"])
+            blend_mode = str(row.get("blend_mode", "screen"))
             video_inputs.extend(["-i", str(clip_path)])
             overlay_label = f"overlay{overlay_index}"
             background_label = f"base_rgb{overlay_index}"
             output_label = f"base{overlay_index + 1}"
+            base_pixel_format = "rgba" if blend_mode == "black_key" else "gbrp"
             video_filters.append(
-                f"[{current_label}]format=gbrp[{background_label}]"
+                f"[{current_label}]format={base_pixel_format}[{background_label}]"
             )
             video_filters.append(
                 f"[{input_index}:v:0]"
@@ -294,17 +314,34 @@ def main() -> int:
                     if row.get("scale_to_native")
                     else ""
                 )
-                + "format=gbrp,"
-                f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
+                + (
+                    "format=rgba,colorkey=0x000000:"
+                    f"{float(row.get('black_similarity', 0.08)):.4f}:"
+                    f"{float(row.get('black_blend', 0.12)):.4f},"
+                    if blend_mode == "black_key"
+                    else "format=gbrp,"
+                )
+                + f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
-            video_filters.append(
-                f"[{background_label}][{overlay_label}]"
-                "blend=all_mode=screen:"
-                f"enable='between(t,{start_ms / 1000:.6f},"
-                f"{start_ms / 1000 + duration_sec:.6f})'"
-                f"[{output_label}]"
-            )
+            if blend_mode == "black_key":
+                video_filters.append(
+                    f"[{background_label}][{overlay_label}]"
+                    "overlay=0:0:eof_action=pass:repeatlast=0:shortest=0:format=auto:"
+                    f"enable='between(t,{start_ms / 1000:.6f},"
+                    f"{start_ms / 1000 + duration_sec:.6f})'"
+                    f"[{output_label}]"
+                )
+            elif blend_mode == "screen":
+                video_filters.append(
+                    f"[{background_label}][{overlay_label}]"
+                    "blend=all_mode=screen:"
+                    f"enable='between(t,{start_ms / 1000:.6f},"
+                    f"{start_ms / 1000 + duration_sec:.6f})'"
+                    f"[{output_label}]"
+                )
+            else:
+                raise SystemExit(f"unsupported overlay blend mode: {blend_mode}")
             current_label = output_label
             input_index += 1
         for overlay_index, row in enumerate(
@@ -315,12 +352,14 @@ def main() -> int:
             if duration_sec <= 0:
                 raise SystemExit("loop screen overlay begins after render end")
             clip_path, _ = clip_by_name[row["dgm_name"]]
+            blend_mode = str(row.get("blend_mode", "screen"))
             video_inputs.extend(["-stream_loop", "-1", "-i", str(clip_path)])
             overlay_label = f"overlay{overlay_index}"
             background_label = f"base_rgb{overlay_index}"
             output_label = f"base{overlay_index + 1}"
+            base_pixel_format = "rgba" if blend_mode == "black_key" else "gbrp"
             video_filters.append(
-                f"[{current_label}]format=gbrp[{background_label}]"
+                f"[{current_label}]format={base_pixel_format}[{background_label}]"
             )
             video_filters.append(
                 f"[{input_index}:v:0]trim=duration={duration_sec:.6f},"
@@ -329,16 +368,32 @@ def main() -> int:
                     if row.get("scale_to_native")
                     else ""
                 )
-                +
-                f"format=gbrp,setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
+                + (
+                    "format=rgba,colorkey=0x000000:"
+                    f"{float(row.get('black_similarity', 0.08)):.4f}:"
+                    f"{float(row.get('black_blend', 0.12)):.4f},"
+                    if blend_mode == "black_key"
+                    else "format=gbrp,"
+                )
+                + f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
-            video_filters.append(
-                f"[{background_label}][{overlay_label}]"
-                "blend=all_mode=screen:"
-                f"enable='gte(t,{start_ms / 1000:.6f})'"
-                f"[{output_label}]"
-            )
+            if blend_mode == "black_key":
+                video_filters.append(
+                    f"[{background_label}][{overlay_label}]"
+                    "overlay=0:0:eof_action=pass:repeatlast=0:shortest=0:format=auto:"
+                    f"enable='gte(t,{start_ms / 1000:.6f})'"
+                    f"[{output_label}]"
+                )
+            elif blend_mode == "screen":
+                video_filters.append(
+                    f"[{background_label}][{overlay_label}]"
+                    "blend=all_mode=screen:"
+                    f"enable='gte(t,{start_ms / 1000:.6f})'"
+                    f"[{output_label}]"
+                )
+            else:
+                raise SystemExit(f"unsupported overlay blend mode: {blend_mode}")
             current_label = output_label
             input_index += 1
         video_filters.append(

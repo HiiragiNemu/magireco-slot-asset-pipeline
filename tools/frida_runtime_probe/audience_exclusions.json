@@ -1,6 +1,12 @@
 {
   "schema": "magireco-audience-exclusions-v1",
   "events": {
+    "ac0906_001": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
+    "ac0906_002": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
+    "ac0906_003": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
+    "ac0906_004": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
+    "ac0906_005": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
+    "ac0906_006": "Reviewed black-matte Kyubey character overlay; requires official runtime background composition.",
     "ac0909_009": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac0909_021": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac0909_033": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
@@ -26,6 +32,7 @@
     "ac0909_273": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac0909_285": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac0909_297": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
+    "ac0914_002": "Reviewed black-matte character transition layer; requires official runtime background composition.",
     "ac0914_003": "Reviewed black-matte character layer; requires official runtime background composition.",
     "ac0914_004": "Reviewed black-matte character layer; requires official runtime background composition.",
     "ac0914_005": "Reviewed black-matte character layer; requires official runtime background composition.",
@@ -37,6 +44,7 @@
     "ac0914_011": "Reviewed black-matte character layer; requires official runtime background composition.",
     "ac0914_012": "Reviewed black-matte character layer; requires official runtime background composition.",
     "ac0914_013": "Reviewed black-matte character layer; requires official runtime background composition.",
+    "ac0914_019": "Reviewed black-matte character transition layer; requires official runtime background composition.",
     "ac8000_002": "Reviewed black-matte NEXT UI component; not a standalone animation.",
     "ac8000_003": "Reviewed black-matte NEXT UI component; not a standalone animation.",
     "ac8000_004": "Reviewed black-matte NEXT UI component with a digital-silence control track; not a standalone animation.",

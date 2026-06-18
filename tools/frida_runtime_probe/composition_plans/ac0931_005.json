@@ -1,0 +1,7 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0931_005",
+  "model": "linear_full_frame_sequence",
+  "extension_policy": "hold_last_frame",
+  "evidence": "static extension audit 2026-06-18: the final Memory Museum frame is already held for several seconds and remains coherent while official CV request 28005 finishes 3066 ms after the encoded video"
+}

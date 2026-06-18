@@ -1,0 +1,25 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "AT_SPstory_gold_frame",
+  "classification": "slot_gold_frame_and_particle_foreground_material",
+  "evidence": "official runtime captures for ac7114_001, ac7115_001, and ac7116_001 create these DGM assets as slot foreground layers; the clean animation editions explicitly exclude them and retain them only as a separate material collection",
+  "expected_audio_state": "digital_silence",
+  "clips": [
+    {
+      "official_name": "AT_SPstory_gold_frame",
+      "label": "gold frame intro"
+    },
+    {
+      "official_name": "AT_SPstory_gold_frame_LP",
+      "label": "gold frame loop"
+    },
+    {
+      "official_name": "AT_SPstory_gold_frame_add",
+      "label": "gold particle intro"
+    },
+    {
+      "official_name": "AT_SPstory_gold_frame_add_LP",
+      "label": "gold particle loop"
+    }
+  ]
+}

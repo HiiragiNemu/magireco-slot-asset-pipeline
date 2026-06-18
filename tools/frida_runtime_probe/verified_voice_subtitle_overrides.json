@@ -113,6 +113,57 @@
         }
       ]
     },
+    "8356": {
+      "speaker_code": "multiple",
+      "source": "curated_large_v3_exact_consensus_and_canonical_names",
+      "evidence": [
+        "official sound request 28005 marked CV",
+        "large-v3 beam 5 and beam 10 exact consensus",
+        "canonical game character names 鶴乃 and 環"
+      ],
+      "cues": [
+        {
+          "start_ms": 0,
+          "end_ms": 2700,
+          "text": "これでわかったでしょ"
+        },
+        {
+          "start_ms": 2700,
+          "end_ms": 4840,
+          "text": "こんなところに来るべきじゃなかった"
+        },
+        {
+          "start_ms": 4840,
+          "end_ms": 7780,
+          "text": "来た時には鶴乃ちゃんたちと一緒だったんです"
+        },
+        {
+          "start_ms": 7780,
+          "end_ms": 10200,
+          "text": "鶴乃ちゃんたち、無事なんでしょうか"
+        },
+        {
+          "start_ms": 10200,
+          "end_ms": 11620,
+          "text": "そう願うしかないわ"
+        },
+        {
+          "start_ms": 11620,
+          "end_ms": 12820,
+          "text": "それから環さん"
+        },
+        {
+          "start_ms": 12820,
+          "end_ms": 14760,
+          "text": "チームは解散よ"
+        },
+        {
+          "start_ms": 14760,
+          "end_ms": 15760,
+          "text": "え？"
+        }
+      ]
+    },
     "8357": {
       "speaker_code": "multiple",
       "source": "curated_large_v3_timeline_and_story_transcript",
@@ -141,6 +192,37 @@
           "start_ms": 11660,
           "end_ms": 15140,
           "text": "おそらく夜にしか、口寄せ神社への道は現れない"
+        }
+      ]
+    },
+    "8359": {
+      "speaker_code": "narration",
+      "source": "curated_large_v3_exact_consensus_and_official_label",
+      "evidence": [
+        "official sound request 28008 marked CV",
+        "large-v3 beam 5 and beam 10 exact consensus",
+        "official request label identifies 万年桜"
+      ],
+      "cues": [
+        {
+          "start_ms": 0,
+          "end_ms": 5360,
+          "text": "いつか退院した三人の女の子たちは"
+        },
+        {
+          "start_ms": 5360,
+          "end_ms": 8540,
+          "text": "大きな桜の枯れ木の下で"
+        },
+        {
+          "start_ms": 8540,
+          "end_ms": 13060,
+          "text": "いつもお見舞いに来てくれたお姉さんと再会する"
+        },
+        {
+          "start_ms": 13060,
+          "end_ms": 18360,
+          "text": "そのウワサの名前は、万年桜"
         }
       ]
     },

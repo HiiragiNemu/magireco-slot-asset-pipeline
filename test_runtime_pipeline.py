@@ -14,6 +14,15 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
 )
 from tools.frida_runtime_probe.build_event_production_manifests import (
     load_voice_subtitle_overrides,
+    merge_runtime_graphical_subtitle_rows,
+)
+from tools.frida_runtime_probe.resolve_subtitle_voice_catalog import (
+    request_speaker,
+    speaker_hint,
+)
+from tools.frida_runtime_probe.build_series_editions import (
+    event_sort_key,
+    shifted_srt_cues,
 )
 
 
@@ -92,7 +101,76 @@ class CompositionPlanTests(unittest.TestCase):
         )
 
 
+class SubtitleVoiceCatalogTests(unittest.TestCase):
+    def test_numeric_tokens_do_not_hide_z2d_speaker_alias(self) -> None:
+        self.assertEqual(
+            speaker_hint("31209_315_mita_心の闇を背負った"),
+            "mit",
+        )
+
+    def test_long_request_speaker_aliases_are_normalized(self) -> None:
+        self.assertEqual(
+            request_speaker("31209_315_mita_心の闇を背負った"),
+            "mit",
+        )
+        self.assertEqual(
+            request_speaker("30757_343_kuroe_このままじゃ"),
+            "kuro",
+        )
+
+
+class SeriesEditionTests(unittest.TestCase):
+    def test_event_order_is_natural(self) -> None:
+        events = ["ac1102_010", "ac1102_002", "ac1102_001"]
+        self.assertEqual(
+            sorted(events, key=event_sort_key),
+            ["ac1102_001", "ac1102_002", "ac1102_010"],
+        )
+
+    def test_srt_cues_are_shifted_by_event_offset(self) -> None:
+        cues = shifted_srt_cues(
+            "1\n00:00:00,100 --> 00:00:00,900\n台詞\n",
+            2000,
+        )
+        self.assertEqual(
+            cues,
+            [{"start_ms": 2100, "end_ms": 2900, "text": "台詞"}],
+        )
+
+
 class ManifestBuilderTests(unittest.TestCase):
+    def test_runtime_subtitles_keep_unmatched_graphical_text(self) -> None:
+        merged = merge_runtime_graphical_subtitle_rows(
+            [
+                {
+                    "text": "かえで！ しっかりして！",
+                    "start_ms": 100,
+                    "end_ms": 900,
+                }
+            ],
+            [
+                {
+                    "display_text": "かえで！\\nしっかりして！",
+                    "subtitle_start_ms": "90",
+                    "subtitle_end_ms": "910",
+                    "timeline_confidence": "exact_gdb_frame_and_official_ogg",
+                },
+                {
+                    "display_text": "ごめんね…",
+                    "subtitle_start_ms": "1000",
+                    "subtitle_end_ms": "1800",
+                    "timeline_confidence": "exact_gdb_frame_only",
+                },
+                {
+                    "display_text": "かえで！",
+                    "subtitle_start_ms": "120",
+                    "subtitle_end_ms": "500",
+                    "timeline_confidence": "exact_gdb_frame_only",
+                },
+            ],
+        )
+        self.assertEqual([row["text"] for row in merged], ["かえで！ しっかりして！", "ごめんね…"])
+
     def test_req_sound_is_kept_when_event_has_no_subtitle(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

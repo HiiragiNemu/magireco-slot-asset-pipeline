@@ -274,17 +274,35 @@ def main() -> int:
     dialogue_sounds = [row for row in sounds if row["is_dialogue"] == "yes"]
     for index, sound in enumerate(dialogue_sounds):
         sound_time = int(sound["relative_ms"])
+        duration_ms = int(sound.get("duration_ms") or 2000)
+        next_sound_time = (
+            int(dialogue_sounds[index + 1]["relative_ms"])
+            if index + 1 < len(dialogue_sounds)
+            else sound_time + duration_ms + 100
+        )
         preceding = [
             row for row in texts if int(row["relative_ms"]) <= sound_time + 100
         ]
         text_row = preceding[-1] if preceding else None
-        subtitle_text = (
-            text_row["text"] if text_row else sound.get("label_text", "").strip()
-        )
+        spanning_rows = [
+            row
+            for row in texts
+            if sound_time + 100 < int(row["relative_ms"])
+            <= min(sound_time + duration_ms, next_sound_time - 101)
+        ]
+        subtitle_parts = []
+        if text_row:
+            subtitle_parts.append(str(text_row["text"]))
+        for spanning_row in spanning_rows:
+            text = str(spanning_row["text"])
+            if text not in subtitle_parts:
+                subtitle_parts.append(text)
+        subtitle_text = "\n".join(subtitle_parts) or sound.get(
+            "label_text", ""
+        ).strip()
         subtitle_start = (
             int(text_row["relative_ms"]) if text_row else max(sound_time - 100, 0)
         )
-        duration_ms = int(sound.get("duration_ms") or 2000)
         subtitles.append(
             {
                 "sequence": index,
@@ -295,7 +313,11 @@ def main() -> int:
                 "voice_code_name": sound["code_name"],
                 "ogg_path": sound["ogg_path"],
                 "mapping_basis": (
-                    "runtime_text_before_voice" if text_row else "voice_code_label"
+                    "runtime_text_spanning_voice"
+                    if spanning_rows
+                    else (
+                        "runtime_text_before_voice" if text_row else "voice_code_label"
+                    )
                 ),
             }
         )

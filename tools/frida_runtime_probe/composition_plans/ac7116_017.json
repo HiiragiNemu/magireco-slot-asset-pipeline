@@ -1,0 +1,7 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7116_017",
+  "model": "linear_full_frame_sequence",
+  "extension_policy": "hold_last_frame",
+  "evidence": "static tail audit 2026-06-18: the final ten encoded frames are a stable, coherent hooded-character close-up; holding that decoded final frame preserves the official CV through its 246 ms tail"
+}

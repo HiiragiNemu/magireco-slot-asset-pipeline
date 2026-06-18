@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7114_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 9629,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-18 binds the main story DGM to all official audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; stable-tail contact audit verifies holding the main story frame through the runtime subtitle and audio tail",
+  "clips": [
+    {
+      "dgm_name": "ac7114_AT_SP_story3_01",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

@@ -375,7 +375,15 @@ def synthesize_runtime_event_clips(
     plan_rows = composition_plan.get("clips", [])
     if not plan_rows:
         return []
+    linear_clean_plan = (
+        composition_plan.get("model") == "linear_full_frame_sequence"
+    )
     video_duration_ms = number(composition_plan.get("duration_ms", ""))
+    plan_native_dimensions = composition_plan.get("native_dimensions", {})
+    plan_native_size = (
+        number(plan_native_dimensions.get("width", "")),
+        number(plan_native_dimensions.get("height", "")),
+    )
     backgrounds = sorted(
         [row for row in plan_rows if row.get("role") == "background"],
         key=lambda row: number(row.get("start_ms", "")),
@@ -416,7 +424,9 @@ def synthesize_runtime_event_clips(
         )
         role = str(row.get("role", ""))
         start_ms = number(row.get("start_ms", ""))
-        if role in {"background", "loop_background"}:
+        if linear_clean_plan and role == "background":
+            end_ms = start_ms + probe["duration_ms"]
+        elif role in {"background", "loop_background"}:
             end_ms = next_background_start.get(dgm_name, start_ms + probe["duration_ms"])
         elif role == "screen_overlay":
             end_ms = start_ms + probe["duration_ms"]
@@ -437,7 +447,8 @@ def synthesize_runtime_event_clips(
                 "interval_confidence": "runtime_verified_composition_plan",
                 "media_class": (
                     "full_frame_landscape"
-                    if probe["width"] == 416 and probe["height"] == 232
+                    if (probe["width"], probe["height"])
+                    in {(416, 232), plan_native_size}
                     else "other_component"
                 ),
                 "source_mp4": str(asset.get("source_mp4", "")),
@@ -510,6 +521,66 @@ def synthesize_runtime_subtitle_rows(runtime_manifest: dict) -> list[dict]:
             }
         )
     return subtitle_rows
+
+
+def graphical_subtitle_row(row: dict) -> dict:
+    text = str(row.get("srt_text") or row.get("display_text", ""))
+    return {
+        "text": text.replace("\\n", "\n"),
+        "start_ms": number(row.get("start_ms") or row.get("subtitle_start_ms", "")),
+        "end_ms": number(
+            row.get("effective_end_ms") or row.get("subtitle_end_ms", "")
+        ),
+        "voice_request_id": str(row.get("sound_request_id", "")),
+        "voice_start_ms": number(
+            row.get("audio_start_ms") or row.get("voice_start_ms", "")
+        ),
+        "z2d_name": str(row.get("z2d_name", "")),
+        "speaker_code": "",
+        "subtitle_source": "graphical_display_text",
+        "evidence": str(row.get("timeline_confidence", "")),
+    }
+
+
+def merge_runtime_graphical_subtitle_rows(
+    runtime_rows: list[dict],
+    static_rows: list[dict],
+) -> list[dict]:
+    merged = list(runtime_rows)
+    represented = [
+        (
+            "".join(str(row.get("text", "")).split()),
+            number(row.get("start_ms", "")),
+            number(row.get("end_ms", "")),
+        )
+        for row in runtime_rows
+    ]
+    for source_row in sorted(
+        static_rows,
+        key=lambda row: (
+            number(row.get("start_ms") or row.get("subtitle_start_ms", "")),
+            number(row.get("z2d_order", "")),
+        ),
+        ):
+        candidate = graphical_subtitle_row(source_row)
+        text_key = "".join(candidate["text"].split())
+        candidate_start = number(candidate.get("start_ms", ""))
+        candidate_end = number(candidate.get("end_ms", ""))
+        if not text_key or any(
+            candidate_start <= represented_end
+            and candidate_end >= represented_start
+            and (
+                text_key == represented_key
+                or text_key in represented_key
+                or represented_key in text_key
+            )
+            for represented_key, represented_start, represented_end in represented
+            if represented_key
+        ):
+            continue
+        merged.append(candidate)
+        represented.append((text_key, candidate_start, candidate_end))
+    return merged
 
 
 def official_voice_label(code_name: str) -> tuple[str, str]:
@@ -693,7 +764,10 @@ def main() -> int:
                 runtime_manifest,
                 audio_by_event.get(event, []),
             )
-            subtitle_rows = synthesize_runtime_subtitle_rows(runtime_manifest)
+            subtitle_rows = merge_runtime_graphical_subtitle_rows(
+                synthesize_runtime_subtitle_rows(runtime_manifest),
+                subtitles_by_event.get(event, []),
+            )
         else:
             audio_rows = []
             seen_audio: set[tuple[str, int]] = set()
@@ -783,30 +857,7 @@ def main() -> int:
                     number(item.get("z2d_order", "")),
                 ),
             ):
-                request_id = row.get("sound_request_id", "")
-                voice_start_ms = number(
-                    row.get("audio_start_ms") or row.get("voice_start_ms", "")
-                )
-                text = row.get("srt_text") or row.get("display_text", "")
-                subtitle_start_ms = number(
-                    row.get("start_ms") or row.get("subtitle_start_ms", "")
-                )
-                subtitle_end_ms = number(
-                    row.get("effective_end_ms") or row.get("subtitle_end_ms", "")
-                )
-                subtitle_rows.append(
-                    {
-                        "text": text.replace("\\n", "\n"),
-                        "start_ms": subtitle_start_ms,
-                        "end_ms": subtitle_end_ms,
-                        "voice_request_id": request_id,
-                        "voice_start_ms": voice_start_ms,
-                        "z2d_name": row.get("z2d_name", ""),
-                        "speaker_code": "",
-                        "subtitle_source": "graphical_display_text",
-                        "evidence": row.get("timeline_confidence", ""),
-                    }
-                )
+                subtitle_rows.append(graphical_subtitle_row(row))
 
             audio_rows.sort(key=lambda row: (row["start_ms"], row["request_id"]))
             for audio_row in audio_rows:
@@ -953,6 +1004,7 @@ def main() -> int:
                 "screen_overlay",
                 "loop_screen_overlay",
             }
+            valid_blend_modes = {"screen", "black_key"}
             planned_names = {
                 str(row.get("dgm_name", ""))
                 for row in composition_plan.get("clips", [])
@@ -966,6 +1018,13 @@ def main() -> int:
                 for row in composition_plan.get("clips", [])
             ):
                 errors.append("composition_plan_role_invalid")
+                composition_resolved = False
+            elif any(
+                row.get("role") in {"screen_overlay", "loop_screen_overlay"}
+                and row.get("blend_mode", "screen") not in valid_blend_modes
+                for row in composition_plan.get("clips", [])
+            ):
+                errors.append("composition_plan_blend_mode_invalid")
                 composition_resolved = False
             else:
                 composition_resolved = True
@@ -1024,17 +1083,17 @@ def main() -> int:
         )
         if verified_extension_policy not in {"", "hold_last_frame"}:
             errors.append("composition_plan_extension_policy_invalid")
-        if extension_ms <= 0:
-            video_extension_policy = "none"
-        elif "_lp" in last_dgm_name.lower():
-            video_extension_policy = "loop_last_clip"
-        elif verified_extension_policy == "hold_last_frame":
+        if verified_extension_policy == "hold_last_frame":
             video_extension_policy = "hold_last_frame"
             errors = [
                 error
                 for error in errors
                 if error != "timeline_exceeds_video_without_loop"
             ]
+        elif extension_ms <= 0:
+            video_extension_policy = "none"
+        elif "_lp" in last_dgm_name.lower():
+            video_extension_policy = "loop_last_clip"
         elif extension_ms <= short_hold_limit_ms:
             video_extension_policy = "hold_last_frame"
         elif plan_has_loops:
@@ -1044,7 +1103,8 @@ def main() -> int:
             errors.append("timeline_exceeds_video_without_loop")
 
         verified_native_composite = bool(composition_plan) and (
-            len(dimensions) != 1
+            composition_plan.get("model") == "timed_full_frame_layers"
+            or len(dimensions) != 1
             or any(
                 row.get("media_class") != "full_frame_landscape"
                 for row in event_clips
