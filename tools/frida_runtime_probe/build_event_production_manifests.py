@@ -523,6 +523,73 @@ def synthesize_runtime_subtitle_rows(runtime_manifest: dict) -> list[dict]:
     return subtitle_rows
 
 
+def apply_runtime_voice_subtitle_overrides(
+    rows: list[dict],
+    overrides: dict[str, dict],
+) -> list[dict]:
+    resolved: list[dict] = []
+    for row in rows:
+        override = overrides.get(str(row.get("voice_request_id", "")))
+        if not override:
+            resolved.append(row)
+            continue
+        source = str(
+            override.get("source", "accepted_voice_subtitle_override")
+        )
+        cues = override.get("cues", [])
+        if isinstance(cues, list) and cues:
+            voice_start_ms = number(row.get("voice_start_ms", ""))
+            for cue in cues:
+                if not isinstance(cue, dict):
+                    continue
+                text = str(cue.get("text", "")).strip()
+                if not text:
+                    continue
+                start_ms = voice_start_ms + max(0, number(cue.get("start_ms", 0)))
+                end_ms = voice_start_ms + max(
+                    number(cue.get("end_ms", 0)),
+                    number(cue.get("start_ms", 0)) + 500,
+                )
+                resolved.append(
+                    {
+                        **row,
+                        "text": text,
+                        "start_ms": start_ms,
+                        "end_ms": end_ms,
+                        "speaker_code": str(
+                            override.get("speaker_code", row.get("speaker_code", ""))
+                        ),
+                        "subtitle_source": "official_voice_asr_verified",
+                        "evidence": source,
+                    }
+                )
+            continue
+        text = str(override.get("text", "")).strip()
+        if text:
+            resolved.append(
+                {
+                    **row,
+                    "text": text,
+                    "speaker_code": str(
+                        override.get("speaker_code", row.get("speaker_code", ""))
+                    ),
+                    "subtitle_source": "official_voice_asr_verified",
+                    "evidence": source,
+                }
+            )
+        else:
+            resolved.append(row)
+    return resolved
+
+
+def is_meaningful_subtitle_text(text: str) -> bool:
+    return text.strip() not in {
+        "",
+        "<空白のテキストレイヤー>",
+        "空白のテキストレイヤー",
+    }
+
+
 def graphical_subtitle_row(row: dict) -> dict:
     text = str(row.get("srt_text") or row.get("display_text", ""))
     return {
@@ -563,6 +630,8 @@ def merge_runtime_graphical_subtitle_rows(
         ),
         ):
         candidate = graphical_subtitle_row(source_row)
+        if not is_meaningful_subtitle_text(candidate["text"]):
+            continue
         text_key = "".join(candidate["text"].split())
         candidate_start = number(candidate.get("start_ms", ""))
         candidate_end = number(candidate.get("end_ms", ""))
@@ -765,7 +834,10 @@ def main() -> int:
                 audio_by_event.get(event, []),
             )
             subtitle_rows = merge_runtime_graphical_subtitle_rows(
-                synthesize_runtime_subtitle_rows(runtime_manifest),
+                apply_runtime_voice_subtitle_overrides(
+                    synthesize_runtime_subtitle_rows(runtime_manifest),
+                    voice_subtitle_overrides,
+                ),
                 subtitles_by_event.get(event, []),
             )
         else:
@@ -857,7 +929,9 @@ def main() -> int:
                     number(item.get("z2d_order", "")),
                 ),
             ):
-                subtitle_rows.append(graphical_subtitle_row(row))
+                candidate = graphical_subtitle_row(row)
+                if is_meaningful_subtitle_text(candidate["text"]):
+                    subtitle_rows.append(candidate)
 
             audio_rows.sort(key=lambda row: (row["start_ms"], row["request_id"]))
             for audio_row in audio_rows:

@@ -130,3 +130,21 @@ token also recovers the two official runtime subtitles without treating the even
 dialogue. The complete `ac7205` family passes 5/5 event QA. Its direct-stream-copy long
 edition is 416x232, 30 fps, 48 kHz stereo, 33891 ms, and contains six subtitle cues. The v18
 catalog now has 531 render-ready events and 636 composition-resolved events out of 926.
+
+The complete `ac5203` family was then resolved from four additional official captures.
+`ac5203_005`, `_015`, and `_017` keep only the native 512x288 c09/c10/c11/LP attack
+sequence. The separately created `ac8002_chance_btn` layers are excluded, as is the unrelated
+`ac9901_op` slot opening launched during `_017`. `ac5203_2_001` contains one native 2-second
+attack animation, a 6.687-second effect sound, and request 7856 beginning at 898 ms. An
+official screen recording confirms that the cabinet returns to its slot background after the
+animation; the clean edition therefore uses native-size black frames through the exact
+7118 ms voice end. The truncated official prefix and three large-v3-turbo passes recover the
+line as `負けるもんか！`. Labels explicitly ending in `SE` or `BGM` are now rejected as
+dialogue even when their resource id lies in the broad voice range.
+
+The manifest builder now also applies verified voice overrides to official runtime subtitles
+and rejects `空白のテキストレイヤー` as a graphical subtitle placeholder. This removes more
+than two thousand false cues from the full catalog without dropping runtime-confirmed speech.
+The seven `ac5203` events pass 7/7 QA; their direct-stream-copy long edition is 512x288,
+30 fps, 48 kHz stereo, 40455 ms, and has seven subtitle cues. The v18 catalog now has 535
+render-ready events and 639 composition-resolved events out of 926.

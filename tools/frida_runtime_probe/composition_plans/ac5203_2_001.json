@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5203_2_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 7118,
+  "extension_policy": "black_tail",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "official runtime capture and screen recording 2026-06-19 confirm the sole native 512x288 attack animation, the 6687 ms effect sound, and the 6220 ms voice beginning at 898 ms; the animation ends after 2000 ms and the cabinet returns to its slot background, so the clean edition excludes that background and uses native-size black frames through the exact voice end at 7118 ms; request 7856 is completed by official prefix plus large-v3-turbo consensus as 負けるもんか！",
+  "clips": [
+    {
+      "dgm_name": "ac5203_2_1kaku_MR",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

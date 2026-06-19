@@ -13,6 +13,7 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
     lev_plan,
 )
 from tools.frida_runtime_probe.build_event_production_manifests import (
+    apply_runtime_voice_subtitle_overrides,
     load_voice_subtitle_overrides,
     merge_runtime_graphical_subtitle_rows,
 )
@@ -111,6 +112,12 @@ class SubtitleVoiceCatalogTests(unittest.TestCase):
         self.assertFalse(
             is_dialogue_sound("42020_SPストーリー2_00_突入", "突入")
         )
+        self.assertFalse(
+            is_dialogue_sound(
+                "35615_ac5203_2_特化ﾏﾐ_ﾏﾐ攻撃_1確SE",
+                "特化ﾏﾐ_ﾏﾐ攻撃_1確SE",
+            )
+        )
         self.assertTrue(
             is_dialogue_sound(
                 "30995_303_say_マミさんは、私達を",
@@ -179,6 +186,31 @@ class SeriesEditionTests(unittest.TestCase):
 
 
 class ManifestBuilderTests(unittest.TestCase):
+    def test_runtime_voice_override_replaces_truncated_label(self) -> None:
+        rows = apply_runtime_voice_subtitle_overrides(
+            [
+                {
+                    "text": "負けるもんか-",
+                    "start_ms": 798,
+                    "end_ms": 7118,
+                    "voice_request_id": "7856",
+                    "voice_start_ms": 898,
+                    "speaker_code": "say",
+                    "subtitle_source": "official_runtime_capture",
+                }
+            ],
+            {
+                "7856": {
+                    "text": "負けるもんか！",
+                    "source": "curated_official_prefix_and_large_v3_consensus",
+                }
+            },
+        )
+        self.assertEqual(rows[0]["text"], "負けるもんか！")
+        self.assertEqual(
+            rows[0]["subtitle_source"], "official_voice_asr_verified"
+        )
+
     def test_runtime_subtitles_keep_unmatched_graphical_text(self) -> None:
         merged = merge_runtime_graphical_subtitle_rows(
             [
@@ -205,6 +237,12 @@ class ManifestBuilderTests(unittest.TestCase):
                     "display_text": "かえで！",
                     "subtitle_start_ms": "120",
                     "subtitle_end_ms": "500",
+                    "timeline_confidence": "exact_gdb_frame_only",
+                },
+                {
+                    "display_text": "空白のテキストレイヤー",
+                    "subtitle_start_ms": "1900",
+                    "subtitle_end_ms": "2200",
                     "timeline_confidence": "exact_gdb_frame_only",
                 },
             ],

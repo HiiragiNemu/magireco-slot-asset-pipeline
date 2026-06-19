@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5203_015",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 5933,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "official runtime capture 2026-06-19 confirms the clean c09_M, c10_MR, c11_MR and c11_MR_LP sequence plus separate ac8002 chance-button UI layers; the clean animation edition follows verified static boundaries 0, 1500, 2433 and 4933 ms and excludes the button layers",
+  "clips": [
+    {
+      "dgm_name": "ac5203_005_c09_M",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5203_005_c10_MR",
+      "role": "background",
+      "start_ms": 1500
+    },
+    {
+      "dgm_name": "ac5203_006_c11_MR",
+      "role": "background",
+      "start_ms": 2433
+    },
+    {
+      "dgm_name": "ac5203_006_c11_MR_LP",
+      "role": "loop_background",
+      "start_ms": 4933
+    }
+  ]
+}

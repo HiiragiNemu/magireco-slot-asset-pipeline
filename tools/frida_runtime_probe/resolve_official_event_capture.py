@@ -115,6 +115,11 @@ def is_dialogue_text(text: str) -> bool:
 def is_dialogue_sound(code_name: str, label_text: str) -> bool:
     if not label_text or not JAPANESE_RE.search(label_text):
         return False
+    # Runtime effect labels sometimes occupy the broad 30k voice-id range.
+    # A label explicitly ending in SE/BGM is an effect track even when it
+    # contains a character name or Japanese scene description.
+    if label_text.strip().casefold().endswith(("se", "bgm")):
+        return False
     parts = [part.casefold() for part in code_name.split("_")]
     match = SOUND_ID_RE.match(code_name)
     resource_id = int(match.group(1)) if match else 0

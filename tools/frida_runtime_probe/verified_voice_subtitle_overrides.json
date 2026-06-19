@@ -61,6 +61,17 @@
         "request 15100 occurs as an exact Z2D callback"
       ]
     },
+    "7856": {
+      "text": "負けるもんか！",
+      "source": "curated_official_prefix_and_large_v3_consensus",
+      "official_prefix": "負けるもんか",
+      "asr_consensus": "負けるもんか",
+      "evidence": [
+        "official sound request 25774",
+        "large-v3-turbo prompted and VAD passes agree",
+        "unprompted large-v3-turbo confirms the emphatic sentence ending"
+      ]
+    },
     "5278": {
       "text": "押してよネ",
       "speaker_code": "ari",
