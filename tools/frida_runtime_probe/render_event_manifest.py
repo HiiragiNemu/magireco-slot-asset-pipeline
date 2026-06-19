@@ -635,6 +635,33 @@ def main() -> int:
                     str(video_only),
                 ]
             )
+        elif extension_policy == "black_tail":
+            extension_sec = extension_ms / 1000.0
+            run(
+                [
+                    args.ffmpeg,
+                    "-y",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(base_video_only),
+                    "-vf",
+                    f"tpad=stop_mode=add:stop_duration={extension_sec:.6f}:color=black",
+                    "-an",
+                    "-t",
+                    f"{render_duration_ms / 1000.0:.6f}",
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "14",
+                    "-pix_fmt",
+                    str(pixel_format),
+                    str(video_only),
+                ]
+            )
         else:
             raise SystemExit(
                 f"unsupported video extension policy: {extension_policy} "

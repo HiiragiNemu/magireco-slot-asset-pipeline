@@ -22,6 +22,7 @@ from tools.frida_runtime_probe.resolve_subtitle_voice_catalog import (
 )
 from tools.frida_runtime_probe.resolve_official_event_capture import (
     is_dialogue_sound,
+    voice_label_text,
 )
 from tools.frida_runtime_probe.build_series_editions import (
     event_sort_key,
@@ -120,6 +121,16 @@ class SubtitleVoiceCatalogTests(unittest.TestCase):
                 "26427_sqb_小さいキュゥべえ_ッキュ",
                 "ッキュ",
             )
+        )
+
+    def test_voice_label_strips_scene_context(self) -> None:
+        self.assertEqual(
+            voice_label_text("17797_fer_AT_女王グマ_あああああ"),
+            "あああああ",
+        )
+        self.assertEqual(
+            voice_label_text("20050_ari_AT_AMセリフ_それならアリナがパーフ-"),
+            "それならアリナがパーフ-",
         )
 
     def test_numeric_tokens_do_not_hide_z2d_speaker_alias(self) -> None:

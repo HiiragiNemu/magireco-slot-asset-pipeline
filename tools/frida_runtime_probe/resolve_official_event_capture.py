@@ -122,6 +122,16 @@ def is_dialogue_sound(code_name: str, label_text: str) -> bool:
     return has_speaker or 30000 <= resource_id < 40000
 
 
+def voice_label_text(code_name: str) -> str:
+    parts = code_name.split("_")
+    folded = [part.casefold() for part in parts]
+    if len(parts) >= 5 and any(
+        part in VOICE_SPEAKER_TOKENS for part in folded[1:-1]
+    ):
+        return parts[-1]
+    return code_name.split("_", 3)[-1] if code_name.count("_") >= 3 else ""
+
+
 def merge_adjacent_subtitles(rows: list[dict]) -> list[dict]:
     merged: list[dict] = []
     for row in rows:
@@ -255,7 +265,7 @@ def main() -> int:
         sound_row = sound_candidates[0] if sound_candidates else {}
         ogg_name = sound_row.get("suggested_name", "")
         ogg_path = ogg_by_name.get(ogg_name.lower()) if ogg_name else None
-        label_text = code_name.split("_", 3)[-1] if code_name.count("_") >= 3 else ""
+        label_text = voice_label_text(code_name)
         sounds.append(
             {
                 "sequence": len(sounds),

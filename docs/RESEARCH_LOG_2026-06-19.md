@@ -66,3 +66,10 @@ After the initial v18 release, official runtime captures closed three near-compl
 The renderer now supports an explicitly declared `opaque` screen-overlay mode for native
 full-frame cut-ins. This is a replacement operation, not a screen blend, and remains behind
 the composition-plan blend-mode whitelist.
+
+`ac6007_004` required a different clean policy. Runtime evidence confirmed two native
+416x232 defeat clips, two vocalizations, an 8-second official sound, and a 208x120 generic
+slot dark-transition clip. The transition is not upscaled. The clean edition shows the
+3-second native animation followed by native-size black frames while preserving the complete
+official audio. Resource-context prefixes were removed from the two vocalization subtitles.
+The complete `ac6007` family passes 5/5 QA; its long edition is 39387 ms with 7 cues.

@@ -1,0 +1,24 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac6007_004",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 8060,
+  "extension_policy": "black_tail",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms the two native 416x232 defeat-animation clips, an 8.000 s official base sound beginning at 60 ms, two vocalizations, and a generic 208x120 slot dark-transition asset beginning at 2502 ms; the low-resolution slot transition is excluded rather than upscaled, while the clean animation is followed by native-size black frames so the complete official audio remains intact; audio audit finds non-silent content through 6.235 s and an official silent tail to 8.000 s",
+  "clips": [
+    {
+      "dgm_name": "ac6007_3off_c014_lose",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac6007_3off_c015_lose_MR",
+      "role": "background",
+      "start_ms": 1000
+    }
+  ]
+}

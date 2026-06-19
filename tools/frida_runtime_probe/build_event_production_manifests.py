@@ -1082,10 +1082,12 @@ def main() -> int:
             if composition_plan
             else ""
         )
-        if verified_extension_policy not in {"", "hold_last_frame"}:
+        if verified_extension_policy not in {"", "hold_last_frame", "black_tail"}:
             errors.append("composition_plan_extension_policy_invalid")
         if verified_extension_policy == "hold_last_frame":
             video_extension_policy = "hold_last_frame"
+        elif verified_extension_policy == "black_tail":
+            video_extension_policy = "black_tail"
             errors = [
                 error
                 for error in errors
