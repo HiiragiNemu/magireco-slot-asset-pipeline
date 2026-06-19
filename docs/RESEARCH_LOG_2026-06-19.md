@@ -102,3 +102,11 @@ passes QA with three raw visual components and two audible event segments. Multi
 events are now assembled to one event visual before official audio is mixed, preventing the
 same sound from being duplicated for every component. The audible collection remains native
 416x232 at 30/1 fps with 48 kHz stereo audio; its duration is 5381 ms and peak is -0.5 dB.
+
+Official captures closed both remaining `ac0911` gaps. `ac0911_001` keeps the native c01/c02
+story sequence and excludes the unrelated 512x416, 175.9-second `ac9901_op` slot opening that
+the runtime starts separately. Its stable crowd tail is held for 891 ms. `ac0911_005` holds
+its stable character close-up for 633 ms. The complete family passes 12/12 QA; its 416x232
+long edition is 123655 ms with 11 cues. The evidence bundle script now accepts additional
+research roots so independent runtime-capture batches are included without moving their source
+files.

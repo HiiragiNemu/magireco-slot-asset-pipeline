@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0911_005",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 5133,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms ac0911_005_c06_MR as the sole story video with the complete official audio and Kuroe subtitle; contact inspection verifies the final character close-up is stable for the required 633 ms audio tail",
+  "clips": [
+    {
+      "dgm_name": "ac0911_005_c06_MR",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

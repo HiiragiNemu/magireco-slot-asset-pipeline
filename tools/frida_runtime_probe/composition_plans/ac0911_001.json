@@ -1,0 +1,24 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0911_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 10524,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms the native c01 then c02 story sequence, the complete official audio and Kuroe subtitle, and separately starts the unrelated 512x416 175.9 s ac9901_op slot opening at 6612 ms; ac9901_op is deliberately excluded from the audience story event; contact inspection verifies the c02 final crowd shot is stable for the required 891 ms audio tail",
+  "clips": [
+    {
+      "dgm_name": "ac0911_001_c01_MR",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac0911_001_c02_MR",
+      "role": "background",
+      "start_ms": 1667
+    }
+  ]
+}

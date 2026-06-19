@@ -6,7 +6,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$BiliRoot,
     [Parameter(Mandatory = $true)]
-    [string]$OutDir
+    [string]$OutDir,
+    [string[]]$AdditionalEvidenceRoot = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,6 +37,12 @@ foreach ($capture in Get-ChildItem -LiteralPath $ResearchRoot -Directory -Filter
     $resolved = Join-Path $capture.FullName 'resolved'
     Copy-EvidenceTree $resolved (Join-Path $staging "$($capture.Name)\resolved")
 }
+foreach ($additional in $AdditionalEvidenceRoot) {
+    if (-not (Test-Path -LiteralPath $additional -PathType Container)) { continue }
+    $resolvedAdditional = (Resolve-Path -LiteralPath $additional).Path
+    $leaf = Split-Path -Leaf $resolvedAdditional
+    Copy-EvidenceTree $resolvedAdditional (Join-Path $staging "additional_evidence\$leaf")
+}
 Copy-EvidenceTree (Join-Path $BiliRoot 'event_timeline_official') (Join-Path $staging 'event_timeline_official')
 Copy-EvidenceTree (Join-Path $BiliRoot 'cri_official_video_map') (Join-Path $staging 'cri_official_video_map')
 
@@ -48,6 +55,14 @@ $pathReplacements = [ordered]@{
     $repoRoot = '${REPOSITORY_ROOT}'
     'A:\magireco_installed_pull_20260603' = '${INSTALLED_PULL_ROOT}'
     'A:\magireco_final_mp4_videos' = '${LEGACY_MEDIA_ROOT}'
+}
+$additionalIndex = 0
+foreach ($additional in $AdditionalEvidenceRoot) {
+    if (-not (Test-Path -LiteralPath $additional -PathType Container)) { continue }
+    $additionalIndex++
+    $pathReplacements[(Resolve-Path -LiteralPath $additional).Path] = (
+        '${ADDITIONAL_EVIDENCE_ROOT_' + $additionalIndex + '}'
+    )
 }
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 foreach ($file in Get-ChildItem -LiteralPath $staging -Recurse -File) {

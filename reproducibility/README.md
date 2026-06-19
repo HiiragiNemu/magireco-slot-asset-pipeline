@@ -45,6 +45,7 @@ powershell -ExecutionPolicy Bypass -File reproducibility/scripts/New-AnalysisEvi
   -AssetManifestRoot C:\path\to\working-copy\asset_manifests `
   -ResearchRoot A:\magireco_corrected_research_20260612 `
   -BiliRoot A:\magireco_bili_fulltest_20260603 `
+  -AdditionalEvidenceRoot A:\another_runtime_capture_root `
   -OutDir D:\MagiReco_Reverse\release_assets
 ```
 
