@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac4903_013",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 11610,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime capture 2026-06-20 resolves the native c015/c015_lp animation, all three sounds and the complete Touka subtitle; the clean animation edition excludes the separate black-matte AT sparkle overlay and the unrelated ac9901 slot opening launched at 9070 ms, switches to the verified LP at 8000 ms, and ends with the runtime jingle at 4641+6969=11610 ms",
+  "clips": [
+    {
+      "dgm_name": "ac4903_3on_c015",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac4903_3on_c015_lp",
+      "role": "loop_background",
+      "start_ms": 8000
+    }
+  ]
+}

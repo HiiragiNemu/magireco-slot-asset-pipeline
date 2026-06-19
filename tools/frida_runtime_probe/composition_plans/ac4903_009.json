@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac4903_009",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 8654,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime capture 2026-06-20 resolves all three sounds, the complete Touka subtitle, the native c012/c012_lp animation, and a separate black-matte AT sparkle overlay; the clean animation edition excludes that slot presentation layer, switches to the verified LP at 8000 ms, and ends with runtime sound 551 at 2460+6194=8654 ms",
+  "clips": [
+    {
+      "dgm_name": "ac4903_3on_c012",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac4903_3on_c012_lp",
+      "role": "loop_background",
+      "start_ms": 8000
+    }
+  ]
+}
