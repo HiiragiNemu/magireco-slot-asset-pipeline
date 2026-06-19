@@ -32,8 +32,9 @@ function Copy-EvidenceTree {
 Copy-EvidenceTree $AssetManifestRoot (Join-Path $staging 'asset_manifests')
 Copy-EvidenceTree (Join-Path $ResearchRoot 'manifests') (Join-Path $staging 'research_manifests')
 Copy-EvidenceTree (Join-Path $ResearchRoot 'production_manifests_v18') (Join-Path $staging 'production_manifests_v18')
-foreach ($capture in @('runtime_sequence_20260613', 'runtime_sequence_20260618', 'runtime_sequence_20260619')) {
-    Copy-EvidenceTree (Join-Path $ResearchRoot "$capture\resolved") (Join-Path $staging "$capture\resolved")
+foreach ($capture in Get-ChildItem -LiteralPath $ResearchRoot -Directory -Filter 'runtime_sequence_*') {
+    $resolved = Join-Path $capture.FullName 'resolved'
+    Copy-EvidenceTree $resolved (Join-Path $staging "$($capture.Name)\resolved")
 }
 Copy-EvidenceTree (Join-Path $BiliRoot 'event_timeline_official') (Join-Path $staging 'event_timeline_official')
 Copy-EvidenceTree (Join-Path $BiliRoot 'cri_official_video_map') (Join-Path $staging 'cri_official_video_map')

@@ -1,0 +1,40 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac6005_013",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 5395,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 loads the four ac6005_011 battle backgrounds, the opaque ac6005_013_CU character close-up, two 192x320 slot title layers, and the ac6005_013_CU_add decorative border; static GDB timing places the CU at 33 ms for 3000 ms; source-frame inspection verifies CU is the native full-frame character animation while title_sub and CU_add are slot presentation layers and are excluded; the final 695 ms hold covers the official base sound tail",
+  "clips": [
+    {
+      "dgm_name": "ac6005_011_c01",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac6005_011_c02_MR",
+      "role": "background",
+      "start_ms": 967
+    },
+    {
+      "dgm_name": "ac6005_011_c03",
+      "role": "background",
+      "start_ms": 1933
+    },
+    {
+      "dgm_name": "ac6005_011_c03_LP",
+      "role": "background",
+      "start_ms": 3933
+    },
+    {
+      "dgm_name": "ac6005_013_CU",
+      "role": "screen_overlay",
+      "blend_mode": "opaque",
+      "start_ms": 33
+    }
+  ]
+}

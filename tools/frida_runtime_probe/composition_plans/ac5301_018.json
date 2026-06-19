@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5301_018",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 6067,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "official runtime capture and screen contact audit 2026-06-19 confirm that ac5301_027_c04_L and its LP continuation are preloaded together and displayed as the character animation; the verified sibling ac5301_020 uses the same 3333 ms main segment followed by the 2733 ms LP segment; the slot cabinet and UI visible in the emulator are not part of either clean source video",
+  "clips": [
+    {
+      "dgm_name": "ac5301_027_c04_L",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5301_027_c04_L_LP",
+      "role": "background",
+      "start_ms": 3333
+    }
+  ]
+}

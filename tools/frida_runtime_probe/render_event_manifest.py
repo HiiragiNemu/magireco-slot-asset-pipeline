@@ -344,7 +344,9 @@ def main() -> int:
             overlay_label = f"overlay{overlay_index}"
             background_label = f"base_rgb{overlay_index}"
             output_label = f"base{overlay_index + 1}"
-            base_pixel_format = "rgba" if blend_mode == "black_key" else "gbrp"
+            base_pixel_format = (
+                "rgba" if blend_mode in {"black_key", "opaque"} else "gbrp"
+            )
             video_filters.append(
                 f"[{current_label}]format={base_pixel_format}[{background_label}]"
             )
@@ -360,12 +362,16 @@ def main() -> int:
                     f"{float(row.get('black_similarity', 0.08)):.4f}:"
                     f"{float(row.get('black_blend', 0.12)):.4f},"
                     if blend_mode == "black_key"
-                    else "format=gbrp,"
+                    else (
+                        "format=rgba,"
+                        if blend_mode == "opaque"
+                        else "format=gbrp,"
+                    )
                 )
                 + f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
-            if blend_mode == "black_key":
+            if blend_mode in {"black_key", "opaque"}:
                 video_filters.append(
                     f"[{background_label}][{overlay_label}]"
                     "overlay=0:0:eof_action=pass:repeatlast=0:shortest=0:format=auto:"
@@ -398,7 +404,9 @@ def main() -> int:
             overlay_label = f"overlay{overlay_index}"
             background_label = f"base_rgb{overlay_index}"
             output_label = f"base{overlay_index + 1}"
-            base_pixel_format = "rgba" if blend_mode == "black_key" else "gbrp"
+            base_pixel_format = (
+                "rgba" if blend_mode in {"black_key", "opaque"} else "gbrp"
+            )
             video_filters.append(
                 f"[{current_label}]format={base_pixel_format}[{background_label}]"
             )
@@ -414,12 +422,16 @@ def main() -> int:
                     f"{float(row.get('black_similarity', 0.08)):.4f}:"
                     f"{float(row.get('black_blend', 0.12)):.4f},"
                     if blend_mode == "black_key"
-                    else "format=gbrp,"
+                    else (
+                        "format=rgba,"
+                        if blend_mode == "opaque"
+                        else "format=gbrp,"
+                    )
                 )
                 + f"setpts=PTS-STARTPTS+{start_ms / 1000:.6f}/TB"
                 f"[{overlay_label}]"
             )
-            if blend_mode == "black_key":
+            if blend_mode in {"black_key", "opaque"}:
                 video_filters.append(
                     f"[{background_label}][{overlay_label}]"
                     "overlay=0:0:eof_action=pass:repeatlast=0:shortest=0:format=auto:"

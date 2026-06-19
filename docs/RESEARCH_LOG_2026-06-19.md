@@ -47,3 +47,22 @@ packaging.
 The public evidence bundle contains only CSV/JSON/Markdown/TXT/SRT analysis artifacts.
 It excludes APK, OBB, native libraries, raw binary tables, media, screenshots, and decoded
 game data. Absolute local paths are replaced by portable placeholders before packaging.
+
+## Additional completed families
+
+After the initial v18 release, official runtime captures closed three near-complete families:
+
+- `ac5301_018`: the main and LP clips follow the same 3333+2733 ms sequence as its
+  verified sibling. The complete `ac5301` family passes 21/21 event QA; its 512x288 long
+  edition is 149024 ms with 21 subtitle cues.
+- `ac6003_005`: runtime evidence replaced an overlong static audio timeline. The clean
+  edition uses only `c01+c02`; the separate slot title layers are excluded. The complete
+  `ac6003` family passes 7/7 QA; its 416x232 long edition is 74621 ms with 9 cues.
+- `ac6005_013`: the clean timed composition keeps the four battle backgrounds and the
+  opaque Iroha character close-up. The 192x320 battle-title layers and decorative
+  `CU_add` border are excluded. The complete `ac6005` family passes 8/8 QA; its 416x232
+  long edition is 67188 ms with 16 cues.
+
+The renderer now supports an explicitly declared `opaque` screen-overlay mode for native
+full-frame cut-ins. This is a replacement operation, not a screen blend, and remains behind
+the composition-plan blend-mode whitelist.

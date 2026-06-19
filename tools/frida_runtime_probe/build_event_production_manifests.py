@@ -1004,7 +1004,7 @@ def main() -> int:
                 "screen_overlay",
                 "loop_screen_overlay",
             }
-            valid_blend_modes = {"screen", "black_key"}
+            valid_blend_modes = {"screen", "black_key", "opaque"}
             planned_names = {
                 str(row.get("dgm_name", ""))
                 for row in composition_plan.get("clips", [])
