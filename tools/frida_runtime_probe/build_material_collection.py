@@ -321,10 +321,17 @@ def build_collection(
                 for row in source_probe.get("streams", [])
                 if row.get("codec_type") == "audio"
             ]
+            embedded_audio_peak_db = None
             if audio_streams:
-                raise ValueError(
-                    f"raw material source unexpectedly has audio: {source_path}"
-                )
+                embedded_audio_peak_db = audio_peak_db(source_path, ffmpeg)
+                if (
+                    embedded_audio_peak_db is not None
+                    and embedded_audio_peak_db > -90.0
+                ):
+                    raise ValueError(
+                        "raw material source has audible embedded audio: "
+                        f"{source_path} ({embedded_audio_peak_db} dB)"
+                    )
             duration_ms = round(float(source_probe["format"]["duration"]) * 1000)
             sources.append(
                 {
@@ -338,6 +345,8 @@ def build_collection(
                     "source_sha256": file_sha256(source_path),
                     "source_video_packet_sha256": video_packet_hash(source_path, ffmpeg),
                     "source_probe": source_probe,
+                    "embedded_audio_dropped": bool(audio_streams),
+                    "embedded_audio_peak_db": embedded_audio_peak_db,
                     "audience_exclusion_reason": str(
                         payload.get("audience_exclusion_reason", "")
                     ),
@@ -519,17 +528,33 @@ def build_collection(
     ):
         errors.append("audible_duration_mismatch")
 
+    hybrid_slot_story = any(
+        "hybrid" in str(row.get("audience_exclusion_reason", "")).casefold()
+        for row in sources
+    )
+    transcript_required = any(
+        "transcript remains required"
+        in str(row.get("audience_exclusion_reason", "")).casefold()
+        for row in sources
+    )
     manifest = {
         "schema": "magireco-material-component-collection-v2",
         "series": series,
         "status": "passed" if not errors else "failed",
         "errors": errors,
-        "classification": "reviewed_audience_components_not_standalone_animation",
+        "classification": (
+            "hybrid_slot_story_material_not_clean_animation"
+            if hybrid_slot_story
+            else "reviewed_audience_components_not_standalone_animation"
+        ),
+        "transcript_status": (
+            "required_not_verified" if transcript_required else "not_applicable"
+        ),
         "direct_video_stream_copy": True,
         "audio_policy": (
             "the original visual-only collection remains a direct H.264 stream copy; "
             "the audible review edition mixes only official manifest audio at verified "
-            "event offsets and holds each stable black tail until its audio ends"
+            "event offsets and holds each final source frame until its audio ends"
         ),
         "clip_count": len(sources),
         "duration_ms": output_duration_ms,

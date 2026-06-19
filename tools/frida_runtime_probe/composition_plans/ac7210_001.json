@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7210_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 8500,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms the native ac7210_001_MR and LP_MR story sequence, one official 6.441 s base sound, one verified Yachiyo subtitle, and four separate ac7210_AT_ibu_cap_title/add slot title layers; the title layers are deliberately excluded from the audience animation and retained as separate material candidates",
+  "clips": [
+    {
+      "dgm_name": "ac7210_001_MR",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac7210_001_LP_MR",
+      "role": "background",
+      "start_ms": 2667
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5303_004",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 6420,
+  "extension_policy": "black_tail",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms the native ac5303_004_c04 character punch animation, a 6.197 s base sound, a 6.149 s Arina vocalization beginning at 271 ms, and nine ac8050/ac8052 slot count and impact layers beginning after 1068 ms; source-frame inspection verifies c04 is the clean character animation and all ac805x assets are slot presentation layers; they are excluded and native-size black frames preserve the complete official vocalization without displaying slot effects",
+  "clips": [
+    {
+      "dgm_name": "ac5303_004_c04",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

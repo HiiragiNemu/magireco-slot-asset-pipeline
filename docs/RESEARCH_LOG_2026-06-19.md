@@ -78,3 +78,20 @@ The complete `ac6007` family passes 5/5 QA; its long edition is 39387 ms with 7 
 frames instead of upscaling the 208x120 slot transition, with its complete official sound.
 The four separate battle-title layers are excluded. The complete `ac6004` family passes
 5/5 QA; its long edition is 46888 ms with 7 cues.
+
+Further runtime captures completed two clean families:
+
+- `ac5303_004` keeps only the native 512x288 Arina punch animation. Nine ac8050/ac8052
+  slot count and impact layers are excluded; native-size black frames preserve the complete
+  6.149-second vocalization. The `ac5303` family passes 4/4 QA and its long edition is
+  30454 ms with 3 cues.
+- `ac7210_001` uses the native MR then LP_MR sequence and excludes four separate capture-title
+  layers. The `ac7210` family passes 3/3 QA and its long edition is 29988 ms with 4 cues.
+
+The five `ac0931` rumor-introduction videos were reclassified as
+`hybrid_slot_story_material_not_clean_animation`: their NEXT/stage-title graphics are burned
+into the sole video stream and cannot be removed without destructive editing. A separate
+416x232 material collection passes QA with five clips, a 105000 ms direct-video edition and
+a 114235 ms official-audio edition. `ac0931_005` contains a -91 dB ALAC control track; the
+material builder now permits dropping an embedded track only after proving it is digital
+silence. The five CV narration transcripts remain explicitly `required_not_verified`.
