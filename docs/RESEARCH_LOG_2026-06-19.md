@@ -117,3 +117,16 @@ before the 1333 ms LP segment; full-source concatenation incorrectly produces 83
 manifest builder now preserves an explicit `timed_full_frame_layers` model even when its
 synthesized clip boundaries are contiguous. Both events render at exactly 8000 ms, and the
 complete `ac0915` family passes 12/12 QA; its 416x232 long edition is 86823 ms with 12 cues.
+
+Official runtime captures also closed `ac7205_008` and `ac7205_016`. Both start with the
+native 416x232 introduction, switch to their main animation at 667 ms, and then repeat the
+explicit `_lp` clip from the static verified boundary (4433 ms and 4667 ms respectively).
+Their render durations are the exact ends of the final runtime-observed sounds: 6160 ms and
+9565 ms. The resolver now accepts a numeric-only runtime sound code as an exact resource id;
+for `ac7205_016`, code `551` maps through `sound_id_records.csv` to
+`snd_00551_bank50_ogg_00172.ogg`, whose 6194 ms duration exactly matches the runtime call.
+This is table-backed resource resolution, not CRI index inference. Adding the `qb` speaker
+token also recovers the two official runtime subtitles without treating the event effects as
+dialogue. The complete `ac7205` family passes 5/5 event QA. Its direct-stream-copy long
+edition is 416x232, 30 fps, 48 kHz stereo, 33891 ms, and contains six subtitle cues. The v18
+catalog now has 531 render-ready events and 636 composition-resolved events out of 926.

@@ -1,0 +1,28 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7205_008",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 6160,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime capture 2026-06-19 resolves all three native videos, all three official sounds, and the QB subtitle; verified static event intervals place dounyuu at 0-667 ms, the 02 intro at 667-4433 ms, and the explicitly named 02_lp loop from 4433 ms; duration is the exact end of the runtime-observed QB voice at 916+5244=6160 ms",
+  "clips": [
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_dounyuu",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_02",
+      "role": "background",
+      "start_ms": 667
+    },
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_02_lp",
+      "role": "loop_background",
+      "start_ms": 4433
+    }
+  ]
+}

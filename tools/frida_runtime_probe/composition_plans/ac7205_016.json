@@ -1,0 +1,28 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7205_016",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 9565,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime capture 2026-06-19 resolves all three native videos, all five official sounds, and the QB subtitle; verified static event intervals place dounyuu at 0-667 ms, the hat intro at 667-4667 ms, and the explicitly named hat_lp loop from 4667 ms; numeric-only runtime sound code 551 maps through sound_id_records to snd_00551_bank50_ogg_00172.ogg and its exact 6194 ms duration sets the event end at 3371+6194=9565 ms",
+  "clips": [
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_dounyuu",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_hat",
+      "role": "background",
+      "start_ms": 667
+    },
+    {
+      "dgm_name": "ac7205_news_3on_kok_L_hat_lp",
+      "role": "loop_background",
+      "start_ms": 4667
+    }
+  ]
+}

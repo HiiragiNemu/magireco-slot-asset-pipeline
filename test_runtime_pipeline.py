@@ -22,6 +22,7 @@ from tools.frida_runtime_probe.resolve_subtitle_voice_catalog import (
 )
 from tools.frida_runtime_probe.resolve_official_event_capture import (
     is_dialogue_sound,
+    sound_resource_id,
     voice_label_text,
 )
 from tools.frida_runtime_probe.build_series_editions import (
@@ -132,6 +133,14 @@ class SubtitleVoiceCatalogTests(unittest.TestCase):
             voice_label_text("20050_ari_AT_AMセリフ_それならアリナがパーフ-"),
             "それならアリナがパーフ-",
         )
+
+    def test_numeric_only_sound_code_resolves_short_resource_id(self) -> None:
+        self.assertEqual(sound_resource_id("551"), "551")
+        self.assertEqual(
+            sound_resource_id("26032_kuroe_宝崎線_環さんはこんな話聞いたこ-"),
+            "26032",
+        )
+        self.assertEqual(sound_resource_id("not_a_sound_code"), "")
 
     def test_numeric_tokens_do_not_hide_z2d_speaker_alias(self) -> None:
         self.assertEqual(

@@ -18,7 +18,7 @@ VOICE_SPEAKER_TOKENS = {
     "ari", "fel", "fer", "hom", "iro", "kae", "kan", "kyo",
     "kuro", "kuroe", "mad", "mam", "mami", "mif", "mihu",
     "mit", "mita", "mom", "nag", "nem", "nemu", "ren", "rena",
-    "riko", "sana", "say", "sigure", "sqb", "toka", "tou", "tsu",
+    "qb", "riko", "sana", "say", "sigure", "sqb", "toka", "tou", "tsu",
     "tukasa", "tukuyo", "tur", "turk", "ui", "uwa", "yac", "yach",
 }
 
@@ -120,6 +120,13 @@ def is_dialogue_sound(code_name: str, label_text: str) -> bool:
     resource_id = int(match.group(1)) if match else 0
     has_speaker = any(part in VOICE_SPEAKER_TOKENS for part in parts[1:-1])
     return has_speaker or 30000 <= resource_id < 40000
+
+
+def sound_resource_id(code_name: str) -> str:
+    if re.fullmatch(r"\d{1,5}", code_name):
+        return str(int(code_name))
+    match = SOUND_ID_RE.match(code_name)
+    return str(int(match.group(1))) if match else ""
 
 
 def voice_label_text(code_name: str) -> str:
@@ -259,8 +266,7 @@ def main() -> int:
         if not request_id:
             request_id = request_row.get("request_id", "")
         hash_row = hash_by_request.get(request_id, {})
-        match = SOUND_ID_RE.match(code_name)
-        resource_id = str(int(match.group(1))) if match else ""
+        resource_id = sound_resource_id(code_name)
         sound_candidates = sound_by_id.get(resource_id, [])
         sound_row = sound_candidates[0] if sound_candidates else {}
         ogg_name = sound_row.get("suggested_name", "")
