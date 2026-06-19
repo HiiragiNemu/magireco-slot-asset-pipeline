@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac6004_011",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 10056,
+  "extension_policy": "black_tail",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 confirms three native 416x232 defeat-animation clips, a 9.987 s official base sound beginning at 69 ms, one spoken line, four slot battle-title layers, and the generic 208x120 slot dark-transition asset beginning at 3025 ms; title and low-resolution transition layers are excluded rather than upscaled, and native-size black frames preserve the complete official audio; audio audit finds non-silent base-sound content through 5.849 s followed by the official silent tail",
+  "clips": [
+    {
+      "dgm_name": "ac6004_3off_c028_lose_MR",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac6004_3off_c029_lose_MR",
+      "role": "background",
+      "start_ms": 2000
+    },
+    {
+      "dgm_name": "ac6004_3off_c030_lose_MR",
+      "role": "background",
+      "start_ms": 3000
+    }
+  ]
+}

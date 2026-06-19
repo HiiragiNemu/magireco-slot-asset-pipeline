@@ -73,3 +73,8 @@ slot dark-transition clip. The transition is not upscaled. The clean edition sho
 3-second native animation followed by native-size black frames while preserving the complete
 official audio. Resource-context prefixes were removed from the two vocalization subtitles.
 The complete `ac6007` family passes 5/5 QA; its long edition is 39387 ms with 7 cues.
+
+`ac6004_011` follows the same verified policy: three native 416x232 clips, then black
+frames instead of upscaling the 208x120 slot transition, with its complete official sound.
+The four separate battle-title layers are excluded. The complete `ac6004` family passes
+5/5 QA; its long edition is 46888 ms with 7 cues.
