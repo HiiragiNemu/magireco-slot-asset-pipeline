@@ -65,6 +65,8 @@
     "ac8002_011": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac8002_018": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
     "ac8002_021": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
-    "ac8002_023": "Reviewed black-matte CHANCE button overlay; requires official runtime composition."
+    "ac8002_023": "Reviewed black-matte CHANCE button overlay; requires official runtime composition.",
+    "ac8004_005": "Officially verified shutter-close transition component with external slot sound; retain only in the material collection, not as audience animation.",
+    "ac8004_006": "Officially verified shutter-open/failure transition component with external slot sound; retain only in the material collection, not as audience animation."
   }
 }

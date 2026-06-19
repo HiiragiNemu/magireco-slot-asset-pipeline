@@ -418,10 +418,97 @@ def build_collection(
     ):
         errors.append("unexpected_audio_stream")
 
+    audible_event_sources = []
+    event_order = []
+    sources_by_event: dict[str, list[dict]] = {}
+    for source in sources:
+        event = str(source["event"])
+        if event not in sources_by_event:
+            event_order.append(event)
+            sources_by_event[event] = []
+        sources_by_event[event].append(source)
+    event_visuals_dir = audit_dir / "audible_event_visuals"
+    event_visuals_dir.mkdir(parents=True, exist_ok=True)
+    for event in event_order:
+        event_sources = sources_by_event[event]
+        if len(event_sources) == 1:
+            event_source = dict(event_sources[0])
+        else:
+            event_list = event_visuals_dir / f"{event}.ffconcat"
+            event_list.write_text(
+                "ffconcat version 1.0\n"
+                + "\n".join(
+                    ffconcat_line(Path(row["path"])) for row in event_sources
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            event_video = event_visuals_dir / f"{event}.mp4"
+            subprocess.run(
+                [
+                    ffmpeg,
+                    "-y" if overwrite else "-n",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-f",
+                    "concat",
+                    "-safe",
+                    "0",
+                    "-i",
+                    str(event_list),
+                    "-map",
+                    "0:v:0",
+                    "-an",
+                    "-c:v",
+                    "copy",
+                    "-movflags",
+                    "+faststart",
+                    str(event_video),
+                ],
+                check=True,
+            )
+            event_probe = probe(event_video, ffprobe)
+            event_duration_ms = round(
+                float(event_probe["format"]["duration"]) * 1000
+            )
+            expected_event_duration_ms = sum(
+                int(row["duration_ms"]) for row in event_sources
+            )
+            if abs(event_duration_ms - expected_event_duration_ms) > max(
+                100, len(event_sources) * 35
+            ):
+                raise RuntimeError(
+                    f"{event} material event visual duration mismatch: "
+                    f"{event_duration_ms} != {expected_event_duration_ms}"
+                )
+            event_source = dict(event_sources[0])
+            event_source.update(
+                {
+                    "dgm_name": "+".join(
+                        str(row["dgm_name"]) for row in event_sources
+                    ),
+                    "path": str(event_video.resolve()),
+                    "start_ms": 0,
+                    "end_ms": event_duration_ms,
+                    "duration_ms": event_duration_ms,
+                    "source_sha256": file_sha256(event_video),
+                    "source_video_packet_sha256": video_packet_hash(
+                        event_video, ffmpeg
+                    ),
+                    "source_probe": event_probe,
+                }
+            )
+        event_source["component_count"] = len(event_sources)
+        event_source["component_names"] = [
+            str(row["dgm_name"]) for row in event_sources
+        ]
+        audible_event_sources.append(event_source)
+
     audible_segments_dir = audit_dir / "audible_segments"
     audible_rows = []
     audible_offset_ms = 0
-    for source in sources:
+    for source in audible_event_sources:
         segment_path = audible_segments_dir / f"{source['event']}__audible.mp4"
         audible_segment = render_audible_segment(
             source,
@@ -450,7 +537,7 @@ def build_collection(
         "ffconcat version 1.0\n"
         + "\n".join(
             ffconcat_line(Path(row["audible_segment"]["path"]))
-            for row in sources
+            for row in audible_event_sources
         )
         + "\n",
         encoding="utf-8",
@@ -481,7 +568,19 @@ def build_collection(
             "0:v:0",
             "-map",
             "0:a:0",
-            "-c",
+            "-vf",
+            f"fps={signature['r_frame_rate']},format={signature['pix_fmt']}",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "slow",
+            "-crf",
+            "14",
+            "-pix_fmt",
+            str(signature["pix_fmt"]),
+            "-video_track_timescale",
+            "15360",
+            "-c:a",
             "copy",
             "-movflags",
             "+faststart",
@@ -524,7 +623,7 @@ def build_collection(
         float(audible_output_probe["format"]["duration"]) * 1000
     )
     if abs(audible_output_duration_ms - audible_offset_ms) > max(
-        200, len(sources) * 35
+        200, len(audible_event_sources) * 35
     ):
         errors.append("audible_duration_mismatch")
 
@@ -551,6 +650,7 @@ def build_collection(
             "required_not_verified" if transcript_required else "not_applicable"
         ),
         "direct_video_stream_copy": True,
+        "audible_video_reencoded_at_native_signature": True,
         "audio_policy": (
             "the original visual-only collection remains a direct H.264 stream copy; "
             "the audible review edition mixes only official manifest audio at verified "
@@ -575,6 +675,7 @@ def build_collection(
             audible_output_path, ffmpeg
         ),
         "audible_output_probe": audible_output_probe,
+        "audible_event_sources": audible_event_sources,
         "sources": sources,
     }
     manifest_path = collection_dir / "material_collection_manifest.json"

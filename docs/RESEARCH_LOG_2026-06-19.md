@@ -95,3 +95,10 @@ into the sole video stream and cannot be removed without destructive editing. A 
 a 114235 ms official-audio edition. `ac0931_005` contains a -91 dB ALAC control track; the
 material builder now permits dropping an embedded track only after proving it is digital
 silence. The five CV narration transcripts remain explicitly `required_not_verified`.
+
+`ac8004_005` and `ac8004_006` were runtime-verified as shutter-close/open slot transition
+components with external official sound, not audience animation. Their material collection
+passes QA with three raw visual components and two audible event segments. Multi-clip material
+events are now assembled to one event visual before official audio is mixed, preventing the
+same sound from being duplicated for every component. The audible collection remains native
+416x232 at 30/1 fps with 48 kHz stereo audio; its duration is 5381 ms and peak is -0.5 dB.
