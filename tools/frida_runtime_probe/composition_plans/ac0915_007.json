@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0915_007",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 8000,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime capture 2026-06-19 confirms c10 and c10_LP with the complete official audio and Arina subtitle; verified static event timing switches to LP at 6667 ms inside the 8000 ms event, so c10 is trimmed at that official boundary instead of naively concatenating its full 7033 ms source",
+  "clips": [
+    {
+      "dgm_name": "ac0915_007_c10",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac0915_007_c10_LP",
+      "role": "background",
+      "start_ms": 6667
+    }
+  ]
+}

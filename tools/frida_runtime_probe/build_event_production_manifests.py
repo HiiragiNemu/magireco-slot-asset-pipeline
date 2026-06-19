@@ -987,7 +987,10 @@ def main() -> int:
             elif delta_ms > timeline_tolerance_ms:
                 gap_count += 1
 
-        if overlap_count:
+        planned_model = str((composition_plan or {}).get("model", ""))
+        if planned_model == "timed_full_frame_layers":
+            video_composition_model = "timed_full_frame_layers"
+        elif overlap_count:
             video_composition_model = "timed_full_frame_layers"
         elif gap_count:
             video_composition_model = "timed_full_frame_with_gaps"

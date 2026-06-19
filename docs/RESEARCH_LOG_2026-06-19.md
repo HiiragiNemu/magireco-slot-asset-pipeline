@@ -110,3 +110,10 @@ its stable character close-up for 633 ms. The complete family passes 12/12 QA; i
 long edition is 123655 ms with 11 cues. The evidence bundle script now accepts additional
 research roots so independent runtime-capture batches are included without moving their source
 files.
+
+`ac0915_007` and `ac0915_021` independently load the same native c10/c10_LP animation and
+official Arina line. The 7033 ms c10 source must be cut at the verified 6667 ms event boundary
+before the 1333 ms LP segment; full-source concatenation incorrectly produces 8366 ms. The
+manifest builder now preserves an explicit `timed_full_frame_layers` model even when its
+synthesized clip boundaries are contiguous. Both events render at exactly 8000 ms, and the
+complete `ac0915` family passes 12/12 QA; its 416x232 long edition is 86823 ms with 12 cues.
