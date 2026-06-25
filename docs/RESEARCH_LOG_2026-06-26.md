@@ -121,3 +121,21 @@ material collection policy is defined. The 57 non-ready `ac3102` events were add
 `audience_exclusions.json` with a shared RB gameplay-UI reason. Rebuilding
 `production_manifests_v18` keeps 553 render-ready events and 373 failed events while raising
 `audience_excluded_events` from 70 to 127. No ac3102 render or long edition is produced.
+
+## ac3103 RB roulette gameplay UI exclusion batch
+
+`ac3103` was the next unresolved RB prefix. Sample `ac3103_001` contains a roulette/high-speed
+RB background plus adjustment-shop text/icon overlays, character silhouettes, and effect
+loops. It has a valid official subtitle (`いくわよぉ`, request 6447), but the visual content is
+still gameplay UI rather than a clean story/dialogue animation.
+
+Contact-sheet evidence for the sample is stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac3103_001
+```
+
+The 24 non-ready `ac3103` events were added to `audience_exclusions.json` as RB
+roulette/slot gameplay material. Rebuilding `production_manifests_v18` keeps 553 render-ready
+events and 373 failed events while raising `audience_excluded_events` from 127 to 151.
+No ac3103 render or long edition is produced.
