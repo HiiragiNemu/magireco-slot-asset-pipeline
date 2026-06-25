@@ -1,0 +1,28 @@
+{
+  "schema": "magireco-analysis-evidence-release-v1",
+  "tag": "analysis-evidence-v18.10-20260625",
+  "target_branch": "codex/corrected-runtime-pipeline",
+  "source_commit": "8f428649f2d62620c4697bcf53185eadc091c7a6",
+  "release_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.10-20260625",
+  "asset": {
+    "name": "magireco-analysis-evidence-v18-20260625-200651.zip",
+    "content_type": "application/zip",
+    "size_bytes": 11958494,
+    "sha256": "F02041CA2AB7D43F211C004F78B20A942129589FE8354250E3E6B91CC043DB06",
+    "download_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/download/analysis-evidence-v18.10-20260625/magireco-analysis-evidence-v18-20260625-200651.zip"
+  },
+  "evidence_file_count_before_bundle_index": 1323,
+  "additional_evidence_file_count": 167,
+  "production_catalog": {
+    "events": 926,
+    "ready": 551,
+    "failed_including_excluded": 375,
+    "audience_excluded": 69
+  },
+  "content_policy": "derived text evidence only; no proprietary payloads or media",
+  "audit": {
+    "disallowed_extensions": 0,
+    "absolute_local_paths": 0,
+    "credential_pattern_matches": 0
+  }
+}
