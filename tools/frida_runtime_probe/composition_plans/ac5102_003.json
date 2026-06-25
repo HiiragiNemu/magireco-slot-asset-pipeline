@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5102_003",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 1300,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation candidate: static production evidence resolves native 416x232 Iroha magiatack cut-in ac5102_3on_01_S_c002b_MR from 0 ms, its LP at 400 ms, and the matching pink impact/effect background ac5102_3on_01_uwa_ef_bg_lp from 467 ms to the official 1300 ms visual end; contact-sheet audit verifies these are character attack/effect animation layers rather than slot UI text/buttons; subtitle is official request 15526 iro_AT_マギアタ_やっ",
+  "clips": [
+    {
+      "dgm_name": "ac5102_3on_01_S_c002b_MR",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5102_3on_01_S_c002b_MR_lp",
+      "role": "loop_background",
+      "start_ms": 400
+    },
+    {
+      "dgm_name": "ac5102_3on_01_uwa_ef_bg_lp",
+      "role": "screen_overlay",
+      "blend_mode": "screen",
+      "start_ms": 467
+    }
+  ]
+}

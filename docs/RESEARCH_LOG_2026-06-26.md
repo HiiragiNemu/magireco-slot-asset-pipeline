@@ -139,3 +139,46 @@ The 24 non-ready `ac3103` events were added to `audience_exclusions.json` as RB
 roulette/slot gameplay material. Rebuilding `production_manifests_v18` keeps 553 render-ready
 events and 373 failed events while raising `audience_excluded_events` from 127 to 151.
 No ac3103 render or long edition is produced.
+
+## ac5102_003 clean attack animation recovery
+
+`ac5102_003` was reviewed after the RB gameplay batches. The static production manifest
+already provided a coherent native 416x232 attack-animation timeline:
+
+- `ac5102_3on_01_S_c002b_MR` starts at 0 ms;
+- `ac5102_3on_01_S_c002b_MR_lp` starts at 400 ms;
+- `ac5102_3on_01_uwa_ef_bg_lp` starts at 467 ms and runs to the 1300 ms visual end.
+
+Contact-sheet and rendered-output audits show Iroha's magiatack character animation with a
+pink impact/effect background. No button, `押し順`, `狙え`, or slot UI text layer is present,
+so this event is not treated like the ac2201/ac3102/ac3103 gameplay material exclusions.
+
+New composition plan:
+
+```text
+tools/frida_runtime_probe/composition_plans/ac5102_003.json
+```
+
+Rebuilding `production_manifests_v18` after the plan gives 926 events, 554 render-ready
+events, 372 failed events, 647 composition-resolved events, 151 audience-excluded events,
+and 1612 subtitles.
+
+Single-event render and QA output:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5102_003_candidate
+```
+
+QA passed 1/1. Both subtitle and no-subtitle editions are 416x232, 30/1 fps, yuv420p,
+48 kHz stereo, non-silent, and have identical audio essence. The official subtitle cue is
+`やっ` from 33 to 533 ms. Rendered contact sheets are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_003_render
+```
+
+The source-layer audit summary is:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_003\ac5102_003_frame_audit_summary.csv
+```
