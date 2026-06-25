@@ -33,6 +33,7 @@ VOICE_SPEAKER_TOKENS = {
     "mad",
     "mam",
     "mami",
+    "mamik",
     "mif",
     "mihu",
     "mit",

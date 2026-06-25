@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5209_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 4192,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: static production evidence resolves the native 512x288 ac5209_end_bg01 Mami result animation, the 4192 ms official result-screen sound, and request 25177_mamik_UT_汎用告知_導きのままに; source contact-sheet inspection verifies the clip is a normal character result frame rather than a slot button/effect layer; the stable tail is held through the official result-screen sound end at 4192 ms",
+  "clips": [
+    {
+      "dgm_name": "ac5209_end_bg01",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

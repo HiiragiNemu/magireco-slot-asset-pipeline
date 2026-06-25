@@ -81,3 +81,26 @@ composition.` They are therefore correctly archived as material/effect component
 mixed into the audience story/review families. A visual contact sheet at
 `A:\magireco_corrected_research_20260612\frame_audits_v18_ac0906_material` confirms the
 collection is the expected black-background small-Kyubey material, not story animation.
+
+## ac5209 single clean result animation
+
+The next non-excluded one-event failure was `ac5209_001`. Source-frame inspection of
+`ac5209_end_bg01` confirms it is a native 512x288 Mami result/character animation rather
+than a chance-button or slot UI component. The clean plan therefore keeps the single
+`ac5209_end_bg01` clip and holds its stable tail through the 4192 ms official result-screen
+sound.
+
+The event also exposed a subtitle coverage bug: the official voice label
+`25177_mamik_UT_汎用告知_導きのままに` was not recognized because `mamik` was missing from
+the speaker-token set. Adding `mamik` recovers the subtitle from the official code name;
+no ASR is used for this line. Existing truncated `mamik` labels that end in `-` remain
+filtered by the established incomplete-label rule.
+
+After rebuilding production manifests v18, the catalog has 551 render-ready events and
+1612 subtitles. `ac5209_001` passes 1/1 QA in
+`A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5209_full`.
+Both subtitle and no-subtitle editions are 512x288 at 30/1 fps with 48 kHz stereo audio,
+and their audio streams share MD5 `07d40198a36ef7e730bbf75f2e6e7e1b`. The single cue is
+`導きのままに` from 0 to 1496 ms. A same-scene long edition is not generated because the
+series builder intentionally requires at least two QA-passed events; the single-event files
+are the uploadable outputs for this one-event family.
