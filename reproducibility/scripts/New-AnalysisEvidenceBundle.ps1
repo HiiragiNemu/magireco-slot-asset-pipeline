@@ -55,6 +55,9 @@ $pathReplacements = [ordered]@{
     $repoRoot = '${REPOSITORY_ROOT}'
     'A:\magireco_installed_pull_20260603' = '${INSTALLED_PULL_ROOT}'
     'A:\magireco_final_mp4_videos' = '${LEGACY_MEDIA_ROOT}'
+    'D:\MagiaRe_RAMDISK_Backup_20260603_032042\magireco_final_mp4_videos' = '${LEGACY_MEDIA_ROOT}'
+    'D:\MagiaRe_RAMDISK_Backup_20260603_032042' = '${LEGACY_RAMDISK_BACKUP_ROOT}'
+    'D:\ID401' = '${UPSTREAM_BUILD_ROOT}'
 }
 $additionalIndex = 0
 foreach ($additional in $AdditionalEvidenceRoot) {

@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7206_012",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 4382,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 round2 resolves ac7206_arina_kaiga_3on_kok_L plus the official 42355 base sound and request 5324 voice line; request 5324 uses the curated official-runtime-prefix ASR subtitle override; source contact-sheet audit verifies the 416x232 clip is a normal event animation frame and its stable tail is held through the 42355 sound end at 62+4320=4382 ms",
+  "clips": [
+    {
+      "dgm_name": "ac7206_arina_kaiga_3on_kok_L",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

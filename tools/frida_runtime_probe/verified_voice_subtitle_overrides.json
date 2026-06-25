@@ -83,6 +83,18 @@
         "Alina official dialogue consistently writes sentence ending as ヨネ or よネ"
       ]
     },
+    "5324": {
+      "text": "アリナが代わりにマスタリングしてあげる",
+      "speaker_code": "ari",
+      "source": "curated_official_runtime_prefix_and_large_v3_turbo_prefix_asr",
+      "official_prefix": "アリナが代わりにマ",
+      "asr_consensus": "アリナが代わりにマスタリングしてあげる",
+      "evidence": [
+        "official runtime sound request 20218 / request id 5324 supplies the prefix アリナが代わりにマ",
+        "large-v3-turbo prefix parameter completes the line as アリナが代わりにマスタリングしてあげる",
+        "0.75x and 0.5x atempo checks preserve the official prefix and the マスタリング/マストリング phonetic suffix"
+      ]
+    },
     "8355": {
       "speaker_code": "multiple",
       "source": "curated_large_v3_timeline_and_story_transcript",

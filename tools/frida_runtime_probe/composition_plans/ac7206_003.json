@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7206_003",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 3589,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 round2 resolves ac7206_arina_kaiga_3on_kok_S1 plus the official 42352 base sound and request 5322 voice line; source contact-sheet audit verifies the 416x232 clip is a normal event animation frame, not slot UI, and its stable tail is held through the official subtitle/audio end at 3589 ms",
+  "clips": [
+    {
+      "dgm_name": "ac7206_arina_kaiga_3on_kok_S1",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}

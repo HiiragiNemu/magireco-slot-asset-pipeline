@@ -1,0 +1,19 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac7206_014",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 9493,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "clean animation edition: official runtime capture 2026-06-19 round2 resolves ac7206_arina_kaiga_3on_kok_hat plus result-display sound 1005, request 5324, and numeric runtime sound code 551 resolved through the sound request mapping to snd_00551_bank50_ogg_00172.ogg; request 5324 uses the curated official-runtime-prefix ASR subtitle override; source contact-sheet audit verifies the 416x232 clip is a normal event animation frame and its stable tail is held through the mapped 551 sound end at 3299+6194=9493 ms",
+  "clips": [
+    {
+      "dgm_name": "ac7206_arina_kaiga_3on_kok_hat",
+      "role": "background",
+      "start_ms": 0
+    }
+  ]
+}
