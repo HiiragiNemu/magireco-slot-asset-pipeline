@@ -100,3 +100,24 @@ is accepted until ASR/runtime evidence verifies the full line.
 Rebuilding `production_manifests_v18` keeps 553 render-ready events and 373 failed events,
 while increasing `audience_excluded_events` from 69 to 70. No new story render or material
 edition is produced in this pass.
+
+## ac3102 RB gameplay UI exclusion batch
+
+The next major failed prefix was `ac3102` with 57 non-excluded unresolved compositions. A
+sample audit of `ac3102_007` shows the pattern clearly: a full RB space/background layer,
+overlaid character cut-in/LP layers, and visible button/icon/text gameplay UI. The sample
+event has a valid official voice subtitle (`あら？` from request 6440), so the blocker is
+visual classification/composition rather than subtitle recovery.
+
+Contact-sheet evidence for the sample is stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac3102_007
+```
+
+These events are not clean story/dialogue animations. They are RB slot battle/gameplay
+presentations and should be retained as material/gameplay candidates until a separate
+material collection policy is defined. The 57 non-ready `ac3102` events were added to
+`audience_exclusions.json` with a shared RB gameplay-UI reason. Rebuilding
+`production_manifests_v18` keeps 553 render-ready events and 373 failed events while raising
+`audience_excluded_events` from 70 to 127. No ac3102 render or long edition is produced.
