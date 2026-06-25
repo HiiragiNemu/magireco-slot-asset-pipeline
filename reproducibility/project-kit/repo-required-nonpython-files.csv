@@ -1,0 +1,26 @@
+category,path,reason,git_action,release_action
+runtime_probe,tools/frida_runtime_probe/event_scene_probe.js,Primary Frida scene/event runtime probe used to bind official runtime evidence,track_in_git,include_in_source_not_release_payload
+runtime_probe,tools/frida_runtime_probe/runtime_probe.js,General runtime probe used for app-side runtime inspection,track_in_git,include_in_source_not_release_payload
+runtime_probe,tools/frida_runtime_probe/force_selector_probe.js,Selector forcing/runtime navigation probe for controlled captures,track_in_git,include_in_source_not_release_payload
+runtime_probe,tools/frida_runtime_probe/title_scene_probe.js,Title scene probe used to orient runtime state,track_in_git,include_in_source_not_release_payload
+runtime_probe,tools/frida_runtime_probe/inject_gadget.js,Frida Gadget injection helper,track_in_git,include_in_source_not_release_payload
+runtime_probe,tools/frida_runtime_probe/gadget.config.json,Frida Gadget listen configuration,track_in_git,include_in_source_not_release_payload
+composition_rules,tools/frida_runtime_probe/composition_plans,Explicit per-event composition decisions for clean story/material separation,track_directory_in_git,include_in_source_not_release_payload
+composition_rules,tools/frida_runtime_probe/audience_exclusions.json,Events excluded from audience story renders as slot/material-only components,track_in_git,include_in_source_not_release_payload
+composition_rules,tools/frida_runtime_probe/verified_voice_subtitle_overrides.json,Accepted voice/subtitle corrections that affect rendered SRTs,track_in_git,include_in_source_not_release_payload
+reproducibility,reproducibility/input-layout.json,Canonical local input root layout and required source groups,track_in_git,include_in_release_metadata
+reproducibility,reproducibility/reference-inputs.sha256.csv,Fingerprints for APK/asset/native/binary inputs without redistributing payloads,track_in_git,include_in_release_metadata
+reproducibility,reproducibility/toolchain.lock.json,Pinned external toolchain versions and acquisition URLs,track_in_git,include_in_release_metadata
+reproducibility,reproducibility/scripts/New-AnalysisEvidenceBundle.ps1,Builds text-only analysis evidence release bundles,track_in_git,include_in_source_not_release_payload
+reproducibility,reproducibility/scripts/Test-ReferenceInputs.ps1,Validates collaborator local inputs against recorded SHA-256 fingerprints,track_in_git,include_in_source_not_release_payload
+release_metadata,reproducibility/releases,Per-release asset SHA/size/count metadata,track_directory_in_git,include_in_release_metadata
+docs,docs/OFFICIAL_EVENT_PIPELINE.md,Current official-event manifest/render/QA pipeline documentation,track_in_git,include_in_source_not_release_payload
+docs,docs/BILIBILI_PRODUCTION_WORKFLOW.md,Audience upload and collection workflow documentation,track_in_git,include_in_source_not_release_payload
+docs,docs/PROJECT_STATUS.md,Current status and known gaps,track_in_git,include_in_source_not_release_payload
+docs,docs/RESEARCH_LOG.md,Chronological research log,track_in_git,include_in_source_not_release_payload
+docs,docs/RESEARCH_LOG_2026-06-19.md,v18 runtime/composition evidence log,track_in_git,include_in_source_not_release_payload
+docs,docs/RESEARCH_LOG_2026-06-20.md,v18 follow-up evidence log,track_in_git,include_in_source_not_release_payload
+docs,docs/RESEARCH_LOG_2026-06-25.md,v18.8-v18.10 evidence log,track_in_git,include_in_source_not_release_payload
+project_metadata,.gitattributes,Repository text/binary handling rules,track_in_git,include_in_source_not_release_payload
+project_metadata,.gitignore,Prevents accidental commits of large generated/proprietary payloads,track_in_git,include_in_source_not_release_payload
+project_metadata,requirements.txt,Python package dependency pinning for pipeline scripts,track_in_git,include_in_source_not_release_payload

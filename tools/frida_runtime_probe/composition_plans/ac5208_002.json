@@ -1,0 +1,23 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5208_002",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 6312,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: static production evidence resolves native 512x288 ac5208_lev_kyo from 0 ms with ac5208_lev_kyo_LP from 4167 ms; ac8002 chance-button layers are black-matte slot UI and are deliberately excluded from the audience story render; source contact-sheet audit verifies ac5208_lev_kyo is the normal Kyoko attack animation; duration follows official attack audio end 40004 at 3371+2941=6312 ms while preserving request 7646 subtitle せりゃー",
+  "clips": [
+    {
+      "dgm_name": "ac5208_lev_kyo",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5208_lev_kyo_LP",
+      "role": "loop_background",
+      "start_ms": 4167
+    }
+  ]
+}

@@ -38,6 +38,13 @@ powershell -ExecutionPolicy Bypass -File reproducibility/scripts/Test-ReferenceI
 OBB 可由仓库根目录的 `magireco_slot_auto_downloader.py` 从游戏资源端点下载并通过
 `jobb.jar` 解包。该脚本不获取 APK；APK 和 split APK 必须从协作者自己的合法安装导出。
 
+## 项目交接目录
+
+`project-kit/` 是当前分支的交接索引：它列出需要 Git 跟踪的非 Python 探针/配置/清单、
+巨大输入文件的 fingerprint-only 处理策略，以及公开 Release 允许携带的派生证据边界。
+新增破解分析或资源合并依赖时，先判断它是否是小型可审计文本资产；若是，提交到 Git，
+若是第三方 payload 或巨大媒体/二进制，只记录哈希、来源和重建方式。
+
 ## 派生证据包
 
 ```powershell

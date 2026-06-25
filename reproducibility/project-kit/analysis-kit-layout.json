@@ -1,0 +1,41 @@
+{
+  "schema": "magireco-project-handoff-kit-v1",
+  "branch": "codex/corrected-runtime-pipeline",
+  "purpose": "Index the repository files, derived release evidence, and local proprietary inputs needed to continue the corrected runtime animation pipeline without guessing layout or reusing deprecated motion/static classifications.",
+  "repo_tracked_inputs": {
+    "non_python_inventory": "repo-required-nonpython-files.csv",
+    "large_input_policy": "large-input-release-plan.csv",
+    "full_reference_fingerprints": "../reference-inputs.sha256.csv",
+    "toolchain_lock": "../toolchain.lock.json",
+    "input_layout": "../input-layout.json"
+  },
+  "public_release_assets": {
+    "allowed": [
+      ".csv",
+      ".json",
+      ".md",
+      ".txt",
+      ".srt",
+      ".zip containing only those file types"
+    ],
+    "builder": "../scripts/New-AnalysisEvidenceBundle.ps1",
+    "metadata_directory": "../releases"
+  },
+  "public_release_exclusions": [
+    "APK and split APK payloads",
+    "OBB payloads",
+    "native libraries such as libGameProc.so",
+    "raw binary game tables",
+    "SMZ, OGG, PCM, DGM, CRI, MP4, screenshots, and extracted game media",
+    "large rendered videos before final publishing review"
+  ],
+  "pipeline_constraints": [
+    "keep native resolution and frame rate",
+    "do not upscale",
+    "do not regenerate the deprecated 124GB 1080p output",
+    "do not use deprecated motion/static classification",
+    "do not infer CRI index directly from ac suffix numbers",
+    "do not mix subtitle and no-subtitle editions",
+    "separate slot/material effects from clean audience story animations"
+  ]
+}

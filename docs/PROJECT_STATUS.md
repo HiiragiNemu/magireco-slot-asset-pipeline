@@ -1,6 +1,37 @@
 # Project Status
 
-更新时间：2026-06-18
+更新时间：2026-06-26
+
+## 2026-06-26 v18 当前状态
+
+当前生产分支是 `codex/corrected-runtime-pipeline`。下载目录中的旧 `main`
+检出不是权威工作树。
+
+`production_manifests_v18` 当前覆盖 926 个事件，其中 553 个 render-ready、
+373 个 failed、646 个 composition-resolved、69 个 audience-excluded、1612 条字幕。
+所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
+不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
+老虎机/按钮/粒子素材与正常动画分离。
+
+最新新增：
+
+- `ac5208_001` 和 `ac5208_002` 已转为 clean story composition plans，剥离
+  黑幕 `ac8002_chance_btn` 按钮层，渲染双版本并通过 2/2 QA；
+- 输出目录：
+  `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_partial`；
+- `ac5208_003` 因静态时间轴主动画从 3267 ms 才开始，且当前 Frida Gadget
+  连接仍返回 `connection closed`，暂不平移或纳入同场景长片；
+- `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
+  大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
+
+当前已审计可观看集合仍以 v18 输出为准：
+
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac1102_04_full`
+  与 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619`；
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7206_full`
+  与 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7206_20260625`；
+- `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
+  作为素材合集，不混入 clean story。
 
 ## 2026-06-18 运行时纠偏状态
 
