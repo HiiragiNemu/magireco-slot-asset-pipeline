@@ -104,3 +104,12 @@ and their audio streams share MD5 `07d40198a36ef7e730bbf75f2e6e7e1b`. The single
 `導きのままに` from 0 to 1496 ms. A same-scene long edition is not generated because the
 series builder intentionally requires at least two QA-passed events; the single-event files
 are the uploadable outputs for this one-event family.
+
+## ac8002 CHANCE button event shells
+
+Two remaining non-excluded failures, `ac6101_2_01` and `ac7221_005`, were reviewed against
+their manifests and contact sheet. Both contain only the black-matte `ac8002_chance_btn`
+intro plus `ac8002_chance_btn_LP` loop, with button/push audio and no story imagery. They
+are now explicitly audience-excluded as slot/button material rather than clean story
+animation. Rebuilding production manifests keeps the render-ready count at 551 and raises
+the audience-excluded count from 67 to 69; both events now carry `audience_component_only`.
