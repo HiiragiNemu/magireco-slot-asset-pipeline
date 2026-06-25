@@ -37,3 +37,47 @@ both subtitled and non-subtitled outputs at 416x232, 30/1 fps, 48 kHz stereo. Th
 contains 13 events, 13 subtitle cues, and a 63184 ms manifest duration; ffprobe reports a
 63.16-second video stream and 63.18-second audio stream. The two long-edition audio streams
 share MD5 `a39cc612c6b1ffe11a455e01216e98c3`.
+
+## ac1102/ac1103/ac1104 and ac0906 collection audit
+
+The current authoritative clean-story review output for the cooking/restaurant families is
+`A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac1102_04_full`
+plus the same-scene long-edition root
+`D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619`.
+Legacy 1024x576 render directories under older Bilibili batch roots are not authoritative
+for the corrected native pipeline.
+
+`full_qa_audit.csv` in the v18 validation root contains 37 rows and all pass: `ac1102`
+11/11, `ac1103` 13/13, and `ac1104` 13/13. The production manifest prefix sets exactly
+match those rows: `ac1102` has 11 render-ready events (`_001`, `_002`, `_003`, `_004`,
+`_005`, `_006`, `_008`, `_009`, `_010`, `_011`, `_012`), `ac1103` has 13 render-ready
+events (`_001` through `_013`), and `ac1104` has 13 render-ready events (`_001`, `_003`,
+`_004`, `_005`, `_006`, `_007`, `_008`, `_009`, `_010`, `_011`, `_012`, `_014`, `_015`).
+No additional v18 production manifests for these prefixes are omitted from the long-edition
+review sets.
+
+The three long-edition `series_index.csv` files provide continuous cumulative timelines and
+SHA-256 for every single-event subtitled file, no-subtitle file, subtitle file, and render
+manifest. Recomputing the hashes found no mismatch. The resulting direct-stream-copy
+long editions are all native 416x232 at 30/1 fps with 48 kHz stereo audio. The paired
+subtitle/no-subtitle long editions have identical audio packet MD5 values:
+`ac1102` = `f626fe7da7e563a02d4a5fc4f9a56cf4`, `ac1103` =
+`4a492ae23a2a3774dcb1de2c91b7353b`, and `ac1104` =
+`06837e74e65dff5f7f62248b28926806`.
+
+The current authoritative `ac0906` material collection is
+`D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`, not the
+older v17 output. Its `material_collection_manifest.json` is schema
+`magireco-material-component-collection-v2` and status `passed`. It contains six
+black-matte small-Kyubey components (`ac0906_001` through `_006`) with source SHA-256,
+video-packet SHA-256, official audio evidence, production manifest paths, and per-event
+audible segment hashes. The material timeline is continuous for 15333 ms; the official-audio
+edition is 18908 ms. Recomputing the six source hashes, six audible segment hashes, final
+output hashes, and timeline durations found no mismatch.
+
+All six `ac0906` production manifests remain excluded from clean story output with the reason
+`Reviewed black-matte Kyubey character overlay; requires official runtime background
+composition.` They are therefore correctly archived as material/effect components rather than
+mixed into the audience story/review families. A visual contact sheet at
+`A:\magireco_corrected_research_20260612\frame_audits_v18_ac0906_material` confirms the
+collection is the expected black-background small-Kyubey material, not story animation.
