@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5201_002",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 5000,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean Decisive Battle Kamihama character-dialogue animation candidate: static production evidence resolves native 512x288 Sayaka main layer from 0 ms, LP hold/loop from 4000 ms, and ac5201_anten_in opening overlay from 0 to 333 ms; source contact-sheet audit shows full-frame character animation, not slot/button UI; graphical subtitle is official cap5201_ch_serif_say_001",
+  "clips": [
+    {
+      "dgm_name": "ac5201_1on_sayaka_c001_S",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5201_rst_sayaka_c001_LP",
+      "role": "loop_background",
+      "start_ms": 4000
+    },
+    {
+      "dgm_name": "ac5201_anten_in",
+      "role": "screen_overlay",
+      "blend_mode": "opaque",
+      "start_ms": 0
+    }
+  ]
+}

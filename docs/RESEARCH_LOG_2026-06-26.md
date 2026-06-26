@@ -338,3 +338,42 @@ These events are retained as material/gameplay candidates, not clean story/Bilib
 animation. Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353
 failed events, while increasing `audience_excluded_events` from 301 to 316. No render is
 produced for this exclusion pass.
+
+## ac5201 Decisive Battle Kamihama character-dialogue recovery
+
+The 16 unresolved `ac5201` events were reviewed separately from the UI/material exclusions.
+They are native 512x288 black-background full-frame character dialogue/attack animations for
+Decisive Battle Kamihama, with official graphical subtitles. They use:
+
+- `ac5201_anten_in` as the 0-333 ms opening overlay;
+- one full-frame character animation layer from 0 ms;
+- the matching LP layer at the official static interval.
+
+The recovered events are:
+
+```text
+ac5201_002 ac5201_007 ac5201_008 ac5201_009 ac5201_014 ac5201_016
+ac5201_021 ac5201_026 ac5201_028 ac5201_037 ac5201_039 ac5201_040
+ac5201_041 ac5201_042 ac5201_043 ac5201_044
+```
+
+Single-event render and QA output:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5201_ch_serif_batch
+```
+
+Source/render contact-sheet audits and the recovery CSV are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5201_ch_serif
+```
+
+QA passed 16/16. All outputs keep native 512x288, 30/1 fps, yuv420p, 48 kHz stereo, have
+non-silent audio, and have identical audio essence between subtitle and no-subtitle editions.
+Rebuilding `production_manifests_v18` after the plans gives 926 events, 589 render-ready
+events, 337 failed events, 682 composition-resolved events, 316 audience-excluded events,
+and 1612 subtitles.
+
+This is still a single-event recovery set. It should not be promoted to a Bilibili long
+edition until the ac5201 family ordering and duplicate intro/non-intro variants are reviewed.

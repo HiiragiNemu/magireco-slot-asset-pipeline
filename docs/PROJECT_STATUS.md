@@ -7,8 +7,8 @@
 当前生产分支是 `codex/corrected-runtime-pipeline`。下载目录中的旧 `main`
 检出不是权威工作树。
 
-`production_manifests_v18` 当前覆盖 926 个事件，其中 573 个 render-ready、
-353 个 failed、666 个 composition-resolved、316 个 audience-excluded、1612 条字幕。
+`production_manifests_v18` 当前覆盖 926 个事件，其中 589 个 render-ready、
+337 个 failed、682 个 composition-resolved、316 个 audience-excluded、1612 条字幕。
 所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
 不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
 老虎机/按钮/粒子素材与正常动画分离。
@@ -43,6 +43,9 @@
   它们是 `ac3403_mekure_3on_*` 卡牌翻转和 `押して！` gameplay prompt；
 - 15 个 `ac4904` SU/window framed character presentation 事件已从 clean story
   队列排除；角色内容位于小窗/卡框 UI 中，保留为 material/gameplay 候选；
+- 16 个 `ac5201` 决战神浜黑底角色台词/动作事件已恢复为 clean animation，
+  渲染字幕/无字幕双版本并通过 16/16 QA；输出目录为
+  `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5201_ch_serif_batch`；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
 
