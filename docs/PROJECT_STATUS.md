@@ -84,6 +84,20 @@
   6 个事件全部带 audience exclusion reason；material manifest 分类为
   `reviewed_audience_components_not_standalone_animation`，没有混入 clean story。
 
+全量覆盖缺口审计已生成：
+
+```text
+A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_coverage_v18.csv
+A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_coverage_v18_summary.json
+```
+
+当前覆盖状态：
+
+- 590 个 ready events 中，258 个已有 v18 单事件 QA，332 个仍需渲染/QA；
+- 590 个 ready events 中，221 个已有同场景 series/preserved 覆盖，369 个仍需长片策略；
+- 336 个 audience-excluded events 中，13 个已有 material collection 覆盖，323 个仍需素材归档或
+  明确仅文档排除。
+
 ## 2026-06-18 运行时纠偏状态
 
 本轮停止扩散旧的错误大批量输出，改为只沿“运行时证据 -> 生产清单 ->

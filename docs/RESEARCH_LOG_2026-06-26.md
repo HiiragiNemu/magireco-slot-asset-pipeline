@@ -618,3 +618,66 @@ D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906\au
 
 confirms black-background small-Kyubey component material, so it remains correctly separated
 from clean story/Bilibili animation outputs.
+
+## v18 event coverage gap audit
+
+A full v18 coverage audit was generated from current production manifests plus discovered
+v18 single-event QA roots, v18 series manifests, and v18 material manifests:
+
+```text
+A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_coverage_v18.csv
+A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_coverage_v18_summary.json
+```
+
+The audit covers all 926 v18 production events and records, per event:
+
+- ready/audience-excluded state and current manifest errors;
+- native dimensions, frame rate, render duration, subtitle count;
+- v18 single-event QA roots and render manifest count;
+- v18 series membership;
+- v18 material collection membership;
+- next action classification.
+
+Current totals:
+
+```json
+{
+  "events": 926,
+  "ready_events": 590,
+  "audience_excluded_events": 336,
+  "ready_with_single_event_QA": 258,
+  "ready_missing_single_event_QA": 332,
+  "ready_with_series_or_preserved": 221,
+  "ready_without_series": 369,
+  "excluded_with_material_collection": 13,
+  "excluded_without_material_collection": 323
+}
+```
+
+Largest ready families still missing v18 single-event QA:
+
+```text
+ac4902 46
+ac0912 42
+ac4901 36
+ac7204 34
+ac4908 23
+ac5102 20
+ac0921 16
+ac5202 15
+```
+
+Largest excluded/material families still not covered by a material collection:
+
+```text
+ac5102 120
+ac3102 57
+ac0909 25
+ac3103 24
+ac9051 20
+ac4904 15
+```
+
+This audit becomes the next work queue: render/QA ready events in controlled batches, then
+build same-scene long editions; separately group excluded slot/UI/material events only into
+material collections, without mixing them into clean story uploads.
