@@ -1,0 +1,81 @@
+{
+  "schema": "magireco-analysis-evidence-release-v1",
+  "tag": "analysis-evidence-v18.25-20260626",
+  "target_branch": "codex/corrected-runtime-pipeline",
+  "source_commit": "4b4c933389a2ab482aebeaf44529df28e8614ec1",
+  "release_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.25-20260626",
+  "asset": {
+    "name": "magireco-analysis-evidence-v18-20260626-215400.zip",
+    "content_type": "application/zip",
+    "size_bytes": 12097320,
+    "sha256": "D62689AD3538600138EAA3EDE617D1844277447AB179D7D964B40D247A85F6FF",
+    "download_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/download/analysis-evidence-v18.25-20260626/magireco-analysis-evidence-v18-20260626-215400.zip"
+  },
+  "evidence_file_count_before_bundle_index": 1344,
+  "production_catalog": {
+    "events": 926,
+    "ready": 521,
+    "failed_including_excluded": 405,
+    "audience_excluded": 405,
+    "composition_resolved": 683,
+    "subtitles": 1615,
+    "non_excluded_failed": 0
+  },
+  "coverage_audit": {
+    "ready_with_single_event_QA": 355,
+    "ready_missing_single_event_QA": 166,
+    "ready_with_series_or_preserved": 310,
+    "ready_without_series": 211,
+    "excluded_with_material_collection": 82,
+    "excluded_without_material_collection": 323,
+    "material_prefix_coverage": true
+  },
+  "pipeline_strategy": {
+    "ready_missing_single_event_QA": 166,
+    "ready_missing_linear_full_frame_batch_candidates": 162,
+    "ready_missing_resolved_layered_candidates": 4,
+    "ready_series_review_or_keep_single": 45,
+    "material_candidates_without_collection": 323
+  },
+  "semantic_gate_evidence": {
+    "ac7204_full_review": {
+      "technical_QA": "34/34 passed",
+      "result_material_events_excluded": 27,
+      "clean_character_subset_events": 7,
+      "reason": "contact sheet and official labels showed map/result cards, CHANCE, WIN, rainbow, and hanabi gameplay/result presentations"
+    }
+  },
+  "series_evidence": {
+    "ac7204_character_subset": {
+      "events": 7,
+      "duration_ms": 54755,
+      "subtitle_cues": 7,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2,
+      "direct_stream_copy": true
+    }
+  },
+  "material_evidence": {
+    "ac7204": {
+      "status": "passed",
+      "clip_count": 28,
+      "duration_ms": 28000,
+      "audible_duration_ms": 46900,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    }
+  },
+  "content_policy": "derived text evidence only; no proprietary payloads, media, APKs, OBBs, native libraries, rendered videos, screenshots, or contact-sheet images",
+  "audit": {
+    "disallowed_extensions": 0,
+    "absolute_local_paths": 0,
+    "credential_pattern_matches": 0,
+    "credential_false_positive_resource_name_matches": 10
+  }
+}
