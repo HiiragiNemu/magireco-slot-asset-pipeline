@@ -320,3 +320,21 @@ A:\magireco_corrected_research_20260612\frame_audits_v18_ac3407_ac3409_card_flip
 Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353 failed events,
 while increasing `audience_excluded_events` from 277 to 301. No render is produced for this
 exclusion pass.
+
+## ac4904 SU/window framed character UI exclusion
+
+The remaining 15 unresolved `ac4904` events were reviewed as SU/window framed character
+presentations. They contain character dialogue and official voice-label subtitles, but the
+visual content is not normal full-frame animation: character shots are presented inside
+small SU/window card frames with `SU*_BB` / `SUキマリ` audio and window effects.
+
+Source contact-sheet and CSV audit are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac4904_su_window
+```
+
+These events are retained as material/gameplay candidates, not clean story/Bilibili normal
+animation. Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353
+failed events, while increasing `audience_excluded_events` from 301 to 316. No render is
+produced for this exclusion pass.
