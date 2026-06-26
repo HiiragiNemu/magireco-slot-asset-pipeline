@@ -7,8 +7,8 @@
 当前生产分支是 `codex/corrected-runtime-pipeline`。下载目录中的旧 `main`
 检出不是权威工作树。
 
-`production_manifests_v18` 当前覆盖 926 个事件，其中 590 个 render-ready、
-336 个 failed、683 个 composition-resolved、336 个 audience-excluded、1615 条字幕。
+`production_manifests_v18` 当前覆盖 926 个事件，其中 548 个 render-ready、
+378 个 failed、683 个 composition-resolved、378 个 audience-excluded、1615 条字幕。
 当前 failed 全部有 audience exclusion reason；非排除 failed 队列为 0。
 所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
 不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
@@ -56,6 +56,12 @@
 - 20 个 `ac9051` 連撃 button-prompt UI 事件已从 clean story 队列排除；
   它们是纯 `ac8002_chance_btn_rengeki` / LP 按钮提示、PUSH 显示音和押して声，
   应保留为 gameplay/material collection 候选；
+- 42 个 `ac0912` small-Kyubey guide / CHANCE / 激アツ / WIN / 上乗せ presentation
+  事件已从 clean story 队列排除；抽样渲染 4/4 通过仅作为分类证据，视觉审计确认其为
+  slot/gameplay guide 素材，不纳入投稿用正常动画长片；
+- `ac0912` material collection 已生成并通过 manifest QA，保留 24 个去重组件、
+  416x232、30/1 原生素材视频；另有官方音频可听审阅版，音频只来自当前 manifest 的
+  官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
 
@@ -75,6 +81,8 @@
   作为 ac4902 同场景 Bilibili 长片候选，46 段、约 11分30秒、59 条字幕。
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
   作为素材合集，不混入 clean story。
+- `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912`
+  作为 small-Kyubey / CHANCE / WIN / 上乗せ 等玩法素材合集，不混入 clean story。
 
 本轮复核结果：
 
@@ -97,9 +105,9 @@ A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_cover
 
 当前覆盖状态：
 
-- 590 个 ready events 中，304 个已有 v18 单事件 QA，286 个仍需渲染/QA；
-- 590 个 ready events 中，267 个已有同场景 series/preserved 覆盖，323 个仍需长片策略；
-- 336 个 audience-excluded events 中，13 个已有 material collection 覆盖，323 个仍需素材归档或
+- 548 个 ready events 中，304 个已有 v18 单事件 QA，244 个仍需渲染/QA；
+- 548 个 ready events 中，267 个已有同场景 series/preserved 覆盖，281 个仍需长片策略；
+- 378 个 audience-excluded events 中，55 个已有 material collection 覆盖，323 个仍需素材归档或
   明确仅文档排除。
 
 ## 2026-06-18 运行时纠偏状态

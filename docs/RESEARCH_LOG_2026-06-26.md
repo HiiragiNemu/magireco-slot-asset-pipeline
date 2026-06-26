@@ -643,28 +643,33 @@ Current totals:
 ```json
 {
   "events": 926,
-  "ready_events": 590,
-  "audience_excluded_events": 336,
+  "ready_events": 548,
+  "audience_excluded_events": 378,
   "ready_with_single_event_QA": 304,
-  "ready_missing_single_event_QA": 286,
+  "ready_missing_single_event_QA": 244,
   "ready_with_series_or_preserved": 267,
-  "ready_without_series": 323,
-  "excluded_with_material_collection": 13,
-  "excluded_without_material_collection": 323
+  "ready_without_series": 281,
+  "excluded_with_material_collection": 55,
+  "excluded_without_material_collection": 323,
+  "material_prefix_coverage": true
 }
 ```
 
 Largest ready families still missing v18 single-event QA:
 
 ```text
-ac4902 46
-ac0912 42
 ac4901 36
 ac7204 34
 ac4908 23
 ac5102 20
 ac0921 16
 ac5202 15
+ac5201 9
+ac1101 9
+ac4911 8
+ac0907 8
+ac0917 8
+ac0908 8
 ```
 
 Largest excluded/material families still not covered by a material collection:
@@ -676,6 +681,12 @@ ac0909 25
 ac3103 24
 ac9051 20
 ac4904 15
+ac0914 13
+ac3407 12
+ac3409 12
+ac8002 12
+ac5004 6
+ac8000 4
 ```
 
 This audit becomes the next work queue: render/QA ready events in controlled batches, then
@@ -751,3 +762,74 @@ normal story/character animation and no excluded button/reel UI.
 After regenerating `coverage_audits_v18_20260626`, ready events with v18 single-event QA
 increased from 258 to 304, and ready events with series/preserved coverage increased from
 221 to 267.
+
+## ac0912 gameplay/material reclassification and material collection
+
+`ac0912` was the next largest family still marked ready but missing v18 render/QA coverage
+after `ac4902`. A dry-run over the 42 `ac0912` manifests found native 416x232, 30/1 fps
+events with 42 subtitle cues and 188 official audio tracks. The component names are the
+`ac0912_cmn_sQB_guide_3on_*` guide set: hat, chance, geki, win, uwa, small-Kyubey, LP,
+and flash layers. This shape is slot/gameplay presentation material, not normal story
+animation for the Bilibili clean-story queue.
+
+Four sample events were rendered only as classification evidence:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac0912_sample_review
+```
+
+QA passed 4/4 for the samples (`ac0912_104`, `_106`, `_111`, `_120`), but contact-sheet
+inspection shows large `チャンス`, `激アツ`, `WIN`, `上乗せ`, and guide/small-Kyubey
+presentation layers. The visual audit is stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac0912_sample_review
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac0912_guide_ui_exclusions
+```
+
+All 42 `ac0912_*` production events were therefore added to `audience_exclusions.json`.
+Rebuilding `production_manifests_v18` now gives 926 events, 548 render-ready events,
+378 failed events, 683 composition-resolved events, 378 audience-excluded events, and
+1615 subtitles. There are still zero non-excluded failed events.
+
+The slot/gameplay material was grouped separately, without mixing it into clean-story
+outputs:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912
+```
+
+`build_material_collection.py` reports:
+
+```json
+{
+  "series": "ac0912",
+  "status": "passed",
+  "classification": "reviewed_audience_components_not_standalone_animation",
+  "clip_count": 24,
+  "duration_ms": 91266,
+  "audible_duration_ms": 95666,
+  "width": 416,
+  "height": 232,
+  "frame_rate": "30/1",
+  "output_sha256": "34FBC32D1B6DFE1364E5AE5ADDE8B478E7B1E2695C7FB2BE82E26665699ACCCA",
+  "audible_output_sha256": "609BA512C303D37FF51517BFE46BA97BE7E72A665F8A835BE708297B50481F4D",
+  "audible_audio_packet_sha256": "B2FF52D23C2446F8423E2426289BCAAFEA3BCEA32B66DEABAF62B713205D8C20"
+}
+```
+
+The collection keeps a visual-only direct H.264 stream-copy material video and a separate
+native-size audible review edition that mixes only official manifest audio. The material
+contact sheet:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912\audit\ac0912_material_review_contact_sheet.jpg
+```
+
+confirms this is small-Kyubey/CHANCE/WIN/上乗せ gameplay material. It is not a normal
+animation upload candidate.
+
+After regenerating `coverage_audits_v18_20260626`, `ac0912` is no longer in the clean-story
+render queue. The current coverage totals are 548 ready events, 304 ready events with v18
+single-event QA, 244 ready events still missing single-event QA, 267 ready events with
+series/preserved coverage, and 55 audience-excluded events covered by material collections.
