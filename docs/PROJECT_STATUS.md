@@ -64,6 +64,9 @@
   官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
+- 通用化 pipeline 策略报告已生成，当前结论是：244 个 ready 但缺单事件 QA 的事件中，
+  240 个已经是 linear full-frame 批处理候选；后续应按 manifest 队列小批量渲染、
+  QA 和 contact-sheet 复核，而不是逐个 family 依赖对话判断。
 
 当前已审计可观看集合仍以 v18 输出为准：
 
@@ -83,6 +86,10 @@
   作为素材合集，不混入 clean story。
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912`
   作为 small-Kyubey / CHANCE / WIN / 上乗せ 等玩法素材合集，不混入 clean story。
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_generic_strategy_sample_20260626`
+  作为通用 ready 队列跨 family 样片，12/12 QA 通过；
+  `A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg`
+  用于人工验证该批处理方向。
 
 本轮复核结果：
 
