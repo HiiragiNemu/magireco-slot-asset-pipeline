@@ -21,6 +21,22 @@ VOICE_SPEAKER_TOKENS = {
     "qb", "riko", "sana", "say", "sigure", "sqb", "toka", "tou", "tsu",
     "tukasa", "tukuyo", "tur", "turk", "ui", "uwa", "yac", "yach",
 }
+STRING_SOUND_KINDS = {"sound_code_lookup", "sound_mng_play_bytes"}
+INT_SOUND_KINDS = {
+    "sound_mng_play",
+    "sound_mng_play_request",
+    "sound_mng_wrap_request",
+    "sound_mng_wrap_request_channel",
+    "request_get",
+    "sound_system_get_request",
+}
+ACTUAL_PLAY_KINDS = {
+    "sound_mng_play_bytes",
+    "sound_mng_play",
+    "sound_mng_play_request",
+    "sound_mng_wrap_request",
+    "sound_mng_wrap_request_channel",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,6 +78,12 @@ def decode_text(record: dict) -> str:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as source:
         return list(csv.DictReader(source))
+
+
+def read_csv_if_exists(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    return read_csv(path)
 
 
 def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
@@ -144,6 +166,143 @@ def voice_label_text(code_name: str) -> str:
     return code_name.split("_", 3)[-1] if code_name.count("_") >= 3 else ""
 
 
+def resolve_request_media(
+    *,
+    code_name: str,
+    request_id: str,
+    request_by_id: dict[str, dict[str, str]],
+    request_by_code: dict[str, dict[str, str]],
+    sound_by_id: dict[str, list[dict[str, str]]],
+    sound_by_ogg_chunk: dict[str, list[dict[str, str]]],
+    hash_by_request: dict[str, dict[str, str]],
+    ogg_by_name: dict[str, Path],
+) -> dict[str, str]:
+    request_row = request_by_id.get(request_id, {}) or request_by_code.get(
+        code_name, {}
+    )
+    if not request_id:
+        request_id = request_row.get("request_id", "")
+    if not code_name:
+        code_name = request_row.get("code_name", "")
+    hash_row = hash_by_request.get(request_id, {})
+    resource_id = sound_resource_id(code_name)
+    sound_candidates = sound_by_id.get(resource_id, [])
+    mapping_basis_suffix = "sound_resource_id"
+    if not sound_candidates and resource_id:
+        sound_candidates = sound_by_ogg_chunk.get(resource_id, [])
+        mapping_basis_suffix = "ogg_chunk_index"
+    sound_row = sound_candidates[0] if sound_candidates else {}
+    ogg_name = sound_row.get("suggested_name", "")
+    ogg_path = ogg_by_name.get(ogg_name.lower()) if ogg_name else None
+    label_text = voice_label_text(code_name)
+    return {
+        "code_name": code_name,
+        "request_id": request_id,
+        "sound_resource_id": resource_id,
+        "duration_ms": hash_row.get("duration_ms_u32", ""),
+        "ogg_name": ogg_name,
+        "ogg_path": str(ogg_path) if ogg_path else "",
+        "label_text": label_text,
+        "is_dialogue": "yes" if is_dialogue_sound(code_name, label_text) else "no",
+        "media_mapping_basis": mapping_basis_suffix if sound_row else "",
+    }
+
+
+def resolve_int_sound_candidates(
+    item: dict,
+    *,
+    kind: str,
+    request_by_id: dict[str, dict[str, str]],
+    request_by_code: dict[str, dict[str, str]],
+    sound_by_id: dict[str, list[dict[str, str]]],
+    sound_by_ogg_chunk: dict[str, list[dict[str, str]]],
+    hash_by_request: dict[str, dict[str, str]],
+    ogg_by_name: dict[str, Path],
+) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    if kind in {
+        "sound_mng_play",
+        "sound_mng_play_request",
+        "sound_mng_wrap_request",
+        "sound_mng_wrap_request_channel",
+    }:
+        candidate_keys = [("arg0_i32", "sound_resource_or_numeric_code")]
+    elif kind in {"request_get", "sound_system_get_request"}:
+        candidate_keys = [("arg0_i32", "request_id")]
+    else:
+        candidate_keys = []
+    for key, basis_kind in candidate_keys:
+        if key not in item:
+            continue
+        value = item[key]
+        candidate = str(value)
+        if basis_kind == "request_id" and candidate in request_by_id:
+            request = request_by_id[candidate]
+            media = resolve_request_media(
+                code_name=request.get("code_name", ""),
+                request_id=candidate,
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+            media["mapping_basis"] = f"{key}:request_id"
+        elif candidate in request_by_code:
+            request = request_by_code[candidate]
+            media = resolve_request_media(
+                code_name=candidate,
+                request_id=request.get("request_id", ""),
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+            media["mapping_basis"] = f"{key}:numeric_code_name"
+        elif candidate in sound_by_id:
+            request = request_by_code.get(candidate, {})
+            media = resolve_request_media(
+                code_name=request.get("code_name", candidate),
+                request_id=request.get("request_id", ""),
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+            media["mapping_basis"] = f"{key}:sound_resource_id"
+        elif candidate in sound_by_ogg_chunk:
+            request = request_by_code.get(candidate, {})
+            media = resolve_request_media(
+                code_name=request.get("code_name", candidate),
+                request_id=request.get("request_id", ""),
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+            media["mapping_basis"] = f"{key}:ogg_chunk_index"
+        else:
+            continue
+        row_key = (
+            media.get("request_id", ""),
+            media.get("code_name", ""),
+            media.get("mapping_basis", ""),
+        )
+        if row_key in seen:
+            continue
+        seen.add(row_key)
+        rows.append(media)
+    return rows
+
+
 def merge_adjacent_subtitles(rows: list[dict]) -> list[dict]:
     merged: list[dict] = []
     for row in rows:
@@ -185,6 +344,9 @@ def main() -> int:
     manifest_dir = Path(args.manifest_dir)
     request_rows = read_csv(manifest_dir / "sound_request_struct_requests.csv")
     sound_rows_static = read_csv(manifest_dir / "sound_id_records.csv")
+    sound_rows_static.extend(
+        read_csv_if_exists(manifest_dir / "internal_audit" / "sound_id_records.csv")
+    )
     hash_rows = read_csv(manifest_dir / "sound_hashreq_records.csv")
     request_by_id = {row["request_id"]: row for row in request_rows}
     request_by_code = {
@@ -193,6 +355,9 @@ def main() -> int:
     sound_by_id: dict[str, list[dict[str, str]]] = {}
     for row in sound_rows_static:
         sound_by_id.setdefault(row.get("sound_resource_id", ""), []).append(row)
+    sound_by_ogg_chunk: dict[str, list[dict[str, str]]] = {}
+    for row in sound_rows_static:
+        sound_by_ogg_chunk.setdefault(row.get("ogg_chunk_index", ""), []).append(row)
     hash_by_request = {row["request_id"]: row for row in hash_rows}
 
     ogg_dir = Path(args.ogg_dir)
@@ -254,55 +419,109 @@ def main() -> int:
                 )
             continue
 
-        if kind not in {"sound_code_lookup", "sound_mng_play_bytes"}:
+        if kind not in STRING_SOUND_KINDS | INT_SOUND_KINDS:
             continue
-        code_name = text
-        if not code_name:
-            continue
-        if kind == "sound_code_lookup":
-            request_id = str(item.get("return_u32", ""))
-            if request_id:
-                request_id_by_code[code_name] = request_id
+
+        resolved_media: list[dict[str, str]]
+        if kind in STRING_SOUND_KINDS:
+            code_name = text
+            if not code_name:
+                continue
+            if kind == "sound_code_lookup":
+                request_id = str(item.get("return_u32", ""))
+                if request_id:
+                    request_id_by_code[code_name] = request_id
+                mapping_basis = "code_name_lookup"
+            else:
+                request_id = request_id_by_code.get(code_name, "")
+                mapping_basis = "actual_play_code_name"
+            media = resolve_request_media(
+                code_name=code_name,
+                request_id=request_id,
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+            media["mapping_basis"] = mapping_basis
+            resolved_media = [media]
         else:
-            request_id = request_id_by_code.get(code_name, "")
-        request_row = request_by_id.get(request_id, {}) or request_by_code.get(
-            code_name, {}
+            resolved_media = resolve_int_sound_candidates(
+                item,
+                kind=kind,
+                request_by_id=request_by_id,
+                request_by_code=request_by_code,
+                sound_by_id=sound_by_id,
+                sound_by_ogg_chunk=sound_by_ogg_chunk,
+                hash_by_request=hash_by_request,
+                ogg_by_name=ogg_by_name,
+            )
+
+        raw_int_args = ";".join(
+            f"{key}={value}"
+            for key, value in sorted(item.items())
+            if key.endswith("_i32")
         )
-        if not request_id:
-            request_id = request_row.get("request_id", "")
-        hash_row = hash_by_request.get(request_id, {})
-        resource_id = sound_resource_id(code_name)
-        sound_candidates = sound_by_id.get(resource_id, [])
-        sound_row = sound_candidates[0] if sound_candidates else {}
-        ogg_name = sound_row.get("suggested_name", "")
-        ogg_path = ogg_by_name.get(ogg_name.lower()) if ogg_name else None
-        label_text = voice_label_text(code_name)
-        sounds.append(
-            {
-                "sequence": len(sounds),
-                "line_number": line_number,
-                "relative_ms": relative_ms,
-                "kind": kind,
-                "code_name": code_name,
-                "request_id": request_id,
-                "sound_resource_id": resource_id,
-                "duration_ms": hash_row.get("duration_ms_u32", ""),
-                "ogg_name": ogg_name,
-                "ogg_path": str(ogg_path) if ogg_path else "",
-                "label_text": label_text,
-                "is_dialogue": (
-                    "yes" if is_dialogue_sound(code_name, label_text) else "no"
-                ),
-            }
-        )
+        for media in resolved_media:
+            sounds.append(
+                {
+                    "sequence": len(sounds),
+                    "line_number": line_number,
+                    "relative_ms": relative_ms,
+                    "kind": kind,
+                    "code_name": media.get("code_name", ""),
+                    "request_id": media.get("request_id", ""),
+                    "sound_resource_id": media.get("sound_resource_id", ""),
+                    "duration_ms": media.get("duration_ms", ""),
+                    "ogg_name": media.get("ogg_name", ""),
+                    "ogg_path": media.get("ogg_path", ""),
+                    "label_text": media.get("label_text", ""),
+                    "is_dialogue": media.get("is_dialogue", "no"),
+                    "mapping_basis": media.get("mapping_basis", ""),
+                    "media_mapping_basis": media.get("media_mapping_basis", ""),
+                    "raw_int_args": raw_int_args,
+                }
+            )
 
     actual_play_codes = {
-        row["code_name"] for row in sounds if row["kind"] == "sound_mng_play_bytes"
+        row["code_name"] for row in sounds if row["kind"] in ACTUAL_PLAY_KINDS
     }
+    actual_play_resource_times = [
+        (row["sound_resource_id"], row["relative_ms"])
+        for row in sounds
+        if row["kind"] == "sound_mng_play_bytes" and row.get("sound_resource_id")
+    ]
+
+    def duplicates_string_play(row: dict) -> bool:
+        if row["kind"] == "sound_mng_play_bytes":
+            return False
+        resource_id = row.get("sound_resource_id")
+        if not resource_id:
+            return False
+        try:
+            row_time = int(row.get("relative_ms", 0))
+        except ValueError:
+            return False
+        for known_resource_id, known_time_value in actual_play_resource_times:
+            if known_resource_id != resource_id:
+                continue
+            try:
+                known_time = int(known_time_value)
+            except ValueError:
+                continue
+            if abs(row_time - known_time) <= 5:
+                return True
+        return False
+
     sounds = [
         row
         for row in sounds
-        if row["kind"] == "sound_mng_play_bytes"
+        if (
+            row["kind"] in ACTUAL_PLAY_KINDS
+            and not duplicates_string_play(row)
+        )
         or row["code_name"] not in actual_play_codes
     ]
     for sequence, row in enumerate(sounds):
@@ -387,6 +606,9 @@ def main() -> int:
         "ogg_path",
         "label_text",
         "is_dialogue",
+        "mapping_basis",
+        "media_mapping_basis",
+        "raw_int_args",
     ]
     subtitle_fields = [
         "sequence",

@@ -1018,3 +1018,26 @@ After regenerating coverage and strategy audits, current totals are 521 ready ev
 310 ready events with series/preserved coverage, 211 ready events without series coverage,
 82 audience-excluded events covered by material collections, and 162 of the 166 remaining
 missing-QA items are still linear full-frame batch candidates.
+
+## 2026-06-27 correction: technical QA was not delivery QA
+
+User review invalidated the 2026-06-26 generic sample, `ac4901` batch, and
+`ac7204` clean subset as final delivery candidates:
+
+- `ac0921_001` lacks expected BGM.
+- `ac4901_025/026` contain voice/subtitle cues without visible speaking
+  animation and are short near-duplicate variants.
+- `ac7204` result/material outputs contain role voice audio and must not be
+  described as pure material.
+
+The affected roots are now listed in
+`tools/frida_runtime_probe/invalidated_output_roots.json`, and
+`build_coverage_audit.py` excludes them from coverage. The recomputed coverage is
+304 ready events with valid single-event QA and 217 ready events still missing
+single-event QA. The recomputed strategy report also includes the runtime AV
+trust gate and `av_blocked_queue.csv`.
+
+The corrected engineering rule is: H.264/AAC stream validity, non-silent audio,
+audio equality between subtitle/no-subtitle editions, and contact sheets are not
+sufficient for final animation. Future promotion requires runtime-complete
+BGM/SE/voice evidence, subtitle evidence, and visual/speech consistency.

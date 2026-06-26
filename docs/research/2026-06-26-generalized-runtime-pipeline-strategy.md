@@ -13,6 +13,45 @@ manifests; batch-render safe events; and reserve human review for policy choices
 that the game itself does not know, such as whether a slot/gameplay presentation
 belongs in a Bilibili story upload or only in a material collection.
 
+## 2026-06-27 correction
+
+The 2026-06-26 batch strategy was incomplete. User review found that technical
+render QA and contact sheets did not prove final audiovisual correctness:
+
+- `ac0921_001` lacked expected BGM.
+- `ac4901_025/026` had voice/subtitle cues without visible speaking animation
+  and the family consisted of short near-duplicate variants.
+- `ac7204` result/material outputs contained role voice audio and therefore
+  were not pure material clips.
+
+The following v18 roots are now invalidated for delivery and coverage:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_generic_strategy_sample_20260626
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4901_full
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4901_20260626
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7204_full
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7204_character_subset
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626
+```
+
+Updated coverage after invalidation:
+
+```json
+{
+  "ready_with_single_event_QA": 304,
+  "ready_missing_single_event_QA": 217,
+  "ready_with_series_or_preserved": 267,
+  "ready_without_series": 254
+}
+```
+
+Therefore the scalable workflow is still useful for video-composition batching,
+but promotion to final Bilibili output now requires a stricter runtime AV trust
+gate: complete BGM/SE/voice evidence, subtitle evidence, and visual/speech
+consistency. The next mechanism work should focus on the missing runtime sound
+chain before more broad rendering.
+
 ## What the game does
 
 The game does not hand-edit one `ac` family at a time. It schedules an event by

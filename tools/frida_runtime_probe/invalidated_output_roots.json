@@ -1,0 +1,36 @@
+{
+  "schema": "magireco-invalidated-output-roots-v1",
+  "updated": "2026-06-26",
+  "invalidated_roots": [
+    {
+      "path": "A:\\magireco_corrected_research_20260612\\validation_outputs_v18_generic_strategy_sample_20260626",
+      "scope": "coverage_and_delivery",
+      "reason": "User verification found audiovisual defects: ac0921_001 lacks expected BGM and subtitle/voice trust is not proven; ac4901_025 has voice/subtitle while the visible character mouth is not animated. The batch only passed technical stream checks and contact-sheet review, not runtime-complete audio/subtitle validation."
+    },
+    {
+      "path": "A:\\magireco_corrected_research_20260612\\validation_outputs_v18_clean_story_ac4901_full",
+      "scope": "coverage_and_delivery",
+      "reason": "User verification found ac4901 clean-story promotion invalid: repeated short 2-3 second variants, near-identical visuals, and voice/subtitle cues without visible speaking animation. Treat as technical render artifacts pending runtime audiovisual mechanism verification, not Bilibili-ready animation."
+    },
+    {
+      "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac4901_20260626",
+      "scope": "coverage_and_delivery",
+      "reason": "Built from the invalidated ac4901 single-event batch. Do not count as a verified same-scene Bilibili long edition."
+    },
+    {
+      "path": "A:\\magireco_corrected_research_20260612\\validation_outputs_v18_clean_story_ac7204_character_subset",
+      "scope": "coverage_and_delivery",
+      "reason": "Generated before the v18 audiovisual trust correction. ac7204 contains gameplay/result presentations with role voice audio; clean subset and material split must be revalidated with runtime-complete audio/subtitle gates before delivery."
+    },
+    {
+      "path": "A:\\magireco_corrected_research_20260612\\validation_outputs_v18_clean_story_ac7204_full",
+      "scope": "coverage_and_delivery",
+      "reason": "Generated before the v18 audiovisual trust correction. The full ac7204 batch mixed gameplay/result presentations and role voice audio while only passing technical stream QA, so it must not count as verified single-event coverage."
+    },
+    {
+      "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626",
+      "scope": "coverage_and_delivery",
+      "reason": "Built from the pre-correction ac7204 subset. Do not count as a verified same-scene Bilibili long edition until runtime-complete audio/subtitle gates are satisfied."
+    }
+  ]
+}

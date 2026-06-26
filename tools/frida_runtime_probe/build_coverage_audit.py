@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -21,6 +22,15 @@ def parse_args() -> argparse.Namespace:
         "--material-prefix-coverage",
         action="store_true",
         help="treat a passed material collection as covering excluded events with the same prefix",
+    )
+    parser.add_argument(
+        "--invalidated-output-roots",
+        action="append",
+        default=[],
+        help=(
+            "JSON file listing output roots that must not count as coverage. "
+            "Entries use {'invalidated_roots': [{'path': '...', 'reason': '...'}]}."
+        ),
     )
     return parser.parse_args()
 
@@ -50,14 +60,61 @@ def event_sort_key(event: str) -> tuple:
     )
 
 
-def discover_single_event_qa(paths: list[Path]) -> dict[str, set[str]]:
+def normalize_path(path: Path | str) -> str:
+    return os.path.normcase(os.path.abspath(str(path)))
+
+
+def is_under_any(path: Path | str, roots: set[str]) -> bool:
+    if not roots:
+        return False
+    normalized = normalize_path(path)
+    for root in roots:
+        try:
+            if os.path.commonpath([normalized, root]) == root:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def load_invalidated_roots(paths: list[Path]) -> tuple[set[str], list[dict]]:
+    roots: set[str] = set()
+    entries: list[dict] = []
+    for path in paths:
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        for row in payload.get("invalidated_roots", []):
+            raw_path = str(row.get("path", "")).strip()
+            if not raw_path:
+                continue
+            normalized = normalize_path(raw_path)
+            roots.add(normalized)
+            entries.append(
+                {
+                    "path": raw_path,
+                    "reason": str(row.get("reason", "")).strip(),
+                    "source": str(path),
+                }
+            )
+    return roots, entries
+
+
+def discover_single_event_qa(
+    paths: list[Path],
+    invalidated_roots: set[str],
+) -> dict[str, set[str]]:
     events: dict[str, set[str]] = defaultdict(set)
     for root in paths:
         if not root.exists():
             continue
+        if is_under_any(root, invalidated_roots):
+            continue
         audit_paths = [root] if root.name == "full_qa_audit.csv" else root.rglob("full_qa_audit.csv")
         for audit_path in audit_paths:
             if not audit_path.is_file():
+                continue
+            if is_under_any(audit_path, invalidated_roots):
                 continue
             for row in read_csv(audit_path):
                 if row.get("status") == "passed" and row.get("event"):
@@ -65,14 +122,21 @@ def discover_single_event_qa(paths: list[Path]) -> dict[str, set[str]]:
     return events
 
 
-def discover_render_manifests(paths: list[Path]) -> dict[str, set[str]]:
+def discover_render_manifests(
+    paths: list[Path],
+    invalidated_roots: set[str],
+) -> dict[str, set[str]]:
     events: dict[str, set[str]] = defaultdict(set)
     for root in paths:
         if not root.exists():
             continue
+        if is_under_any(root, invalidated_roots):
+            continue
         manifest_paths = [root] if root.name == "render_manifest.json" else root.rglob("render_manifest.json")
         for manifest_path in manifest_paths:
             if not manifest_path.is_file():
+                continue
+            if is_under_any(manifest_path, invalidated_roots):
                 continue
             try:
                 payload = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -84,14 +148,21 @@ def discover_render_manifests(paths: list[Path]) -> dict[str, set[str]]:
     return events
 
 
-def discover_series(paths: list[Path]) -> dict[str, set[str]]:
+def discover_series(
+    paths: list[Path],
+    invalidated_roots: set[str],
+) -> dict[str, set[str]]:
     events: dict[str, set[str]] = defaultdict(set)
     for root in paths:
         if not root.exists():
             continue
+        if is_under_any(root, invalidated_roots):
+            continue
         manifest_paths = [root] if root.name == "series_manifest.json" else root.rglob("series_manifest.json")
         for manifest_path in manifest_paths:
             if not manifest_path.is_file():
+                continue
+            if is_under_any(manifest_path, invalidated_roots):
                 continue
             payload = json.loads(manifest_path.read_text(encoding="utf-8"))
             if payload.get("status") != "passed":
@@ -115,15 +186,18 @@ def discover_series(paths: list[Path]) -> dict[str, set[str]]:
 
 def discover_material(
     paths: list[Path],
-    production_events: list[str],
+    production_events_for_prefix_coverage: list[str],
     prefix_coverage: bool,
+    invalidated_roots: set[str],
 ) -> dict[str, set[str]]:
     events: dict[str, set[str]] = defaultdict(set)
     events_by_prefix: dict[str, list[str]] = defaultdict(list)
-    for event in production_events:
+    for event in production_events_for_prefix_coverage:
         events_by_prefix[event_prefix(event)].append(event)
     for root in paths:
         if not root.exists():
+            continue
+        if is_under_any(root, invalidated_roots):
             continue
         manifest_paths = (
             [root]
@@ -132,6 +206,8 @@ def discover_material(
         )
         for manifest_path in manifest_paths:
             if not manifest_path.is_file():
+                continue
+            if is_under_any(manifest_path, invalidated_roots):
                 continue
             payload = json.loads(manifest_path.read_text(encoding="utf-8"))
             if payload.get("status") != "passed":
@@ -171,13 +247,22 @@ def main() -> int:
     single_roots = [Path(path) for path in args.single_event_root]
     series_roots = [Path(path) for path in args.series_root]
     material_roots = [Path(path) for path in args.material_root]
-    single_qa = discover_single_event_qa(single_roots)
-    render_manifests = discover_render_manifests(single_roots)
-    series = discover_series(series_roots)
+    invalidated_roots, invalidated_entries = load_invalidated_roots(
+        [Path(path) for path in args.invalidated_output_roots]
+    )
+    single_qa = discover_single_event_qa(single_roots, invalidated_roots)
+    render_manifests = discover_render_manifests(single_roots, invalidated_roots)
+    series = discover_series(series_roots, invalidated_roots)
+    excluded_production_events = [
+        event
+        for event, manifest in manifests.items()
+        if manifest.get("audience_exclusion_reason")
+    ]
     material = discover_material(
         material_roots,
-        list(manifests),
+        excluded_production_events,
         args.material_prefix_coverage,
+        invalidated_roots,
     )
 
     rows: list[dict] = []
@@ -293,6 +378,8 @@ def main() -> int:
             )
         ),
         "material_prefix_coverage": bool(args.material_prefix_coverage),
+        "invalidated_output_root_count": len(invalidated_entries),
+        "invalidated_output_roots": invalidated_entries,
         "audit_csv": str(csv_path),
     }
     (out_dir / "event_coverage_v18_summary.json").write_text(

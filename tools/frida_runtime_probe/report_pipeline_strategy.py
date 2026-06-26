@@ -23,6 +23,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--audience-catalog", required=True)
     parser.add_argument("--composition-plans", required=True)
     parser.add_argument("--audience-exclusions", required=True)
+    parser.add_argument(
+        "--runtime-av-trust-csv",
+        default="",
+        help="optional output from audit_runtime_av_trust.py",
+    )
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--top", type=int, default=12)
     return parser.parse_args()
@@ -72,10 +77,16 @@ def main() -> int:
     production_rows = read_csv(Path(args.production_catalog))
     coverage_rows = read_csv(Path(args.coverage_csv))
     audience_rows = read_csv(Path(args.audience_catalog))
+    av_rows = (
+        read_csv(Path(args.runtime_av_trust_csv))
+        if args.runtime_av_trust_csv and Path(args.runtime_av_trust_csv).exists()
+        else []
+    )
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     production_by_event = {row["event_name"]: row for row in production_rows}
+    av_by_event = {row["event"]: row for row in av_rows if row.get("event")}
     ready_missing = [
         row
         for row in coverage_rows
@@ -107,6 +118,7 @@ def main() -> int:
     for row in ready_missing:
         event = row["event"]
         production = production_by_event.get(event, {})
+        av = av_by_event.get(event, {})
         ready_missing_rows.append(
             {
                 "event": event,
@@ -122,6 +134,8 @@ def main() -> int:
                 "video_extension_policy": production.get(
                     "video_extension_policy", ""
                 ),
+                "av_delivery_status": av.get("delivery_status", ""),
+                "av_risk_flags": av.get("risk_flags", ""),
                 "production_manifest": row.get("production_manifest", ""),
             }
         )
@@ -130,6 +144,7 @@ def main() -> int:
     for row in material_candidates:
         event = row["event"]
         production = production_by_event.get(event, {})
+        av = av_by_event.get(event, {})
         material_rows.append(
             {
                 "event": event,
@@ -145,9 +160,26 @@ def main() -> int:
                 "audience_exclusion_reason": row.get(
                     "audience_exclusion_reason", ""
                 ),
+                "av_delivery_status": av.get("delivery_status", ""),
+                "av_risk_flags": av.get("risk_flags", ""),
                 "production_manifest": row.get("production_manifest", ""),
             }
         )
+
+    av_blocked_rows = [
+        {
+            "event": row["event"],
+            "series": event_prefix(row["event"]),
+            "delivery_status": row.get("delivery_status", ""),
+            "risk_flags": row.get("risk_flags", ""),
+            "audio_names": row.get("audio_names", ""),
+            "subtitle_texts": row.get("subtitle_texts", ""),
+            "production_manifest": row.get("production_manifest", ""),
+        }
+        for row in av_rows
+        if row.get("delivery_status")
+        in {"invalidated_do_not_use", "blocked_pending_runtime_av_verification"}
+    ]
 
     write_csv(
         out_dir / "ready_missing_queue.csv",
@@ -162,6 +194,8 @@ def main() -> int:
             "render_duration_ms",
             "subtitle_count",
             "video_extension_policy",
+            "av_delivery_status",
+            "av_risk_flags",
             "production_manifest",
         ],
     )
@@ -178,6 +212,21 @@ def main() -> int:
             "height",
             "subtitle_count",
             "audience_exclusion_reason",
+            "av_delivery_status",
+            "av_risk_flags",
+            "production_manifest",
+        ],
+    )
+    write_csv(
+        out_dir / "av_blocked_queue.csv",
+        av_blocked_rows,
+        [
+            "event",
+            "series",
+            "delivery_status",
+            "risk_flags",
+            "audio_names",
+            "subtitle_texts",
             "production_manifest",
         ],
     )
@@ -198,13 +247,23 @@ def main() -> int:
                         if lane == "batch_render_ready_missing"
                         else "excluded from clean story and needs material decision"
                     ),
+                    "av_delivery_status": row.get("av_delivery_status", ""),
+                    "av_risk_flags": row.get("av_risk_flags", ""),
                     "production_manifest": row.get("production_manifest", ""),
                 }
             )
     write_csv(
         out_dir / "verification_sample_queue.csv",
         verification_rows,
-        ["lane", "event", "series", "why", "production_manifest"],
+        [
+            "lane",
+            "event",
+            "series",
+            "why",
+            "av_delivery_status",
+            "av_risk_flags",
+            "production_manifest",
+        ],
     )
 
     model_counts = Counter(
@@ -222,6 +281,12 @@ def main() -> int:
     exclusions_payload = json.loads(Path(args.audience_exclusions).read_text(encoding="utf-8"))
     exclusions_count = len(exclusions_payload.get("events", {}))
     composition_plan_count = len(list(Path(args.composition_plans).glob("*.json")))
+    av_status_counts = Counter(row.get("delivery_status", "") for row in av_rows)
+    av_risk_counts: Counter[str] = Counter()
+    for row in av_rows:
+        for flag in row.get("risk_flags", "").split(";"):
+            if flag:
+                av_risk_counts[flag] += 1
 
     summary = {
         "production_events": len(production_rows),
@@ -255,6 +320,8 @@ def main() -> int:
         "audience_catalog_automatic_candidate_counts": dict(
             automatic_counts.most_common()
         ),
+        "runtime_av_trust_status_counts": dict(av_status_counts.most_common()),
+        "runtime_av_trust_risk_counts": dict(av_risk_counts.most_common()),
         "ready_missing_top_series": group_prefix(ready_missing, "event")[: args.top],
         "material_candidate_top_series": group_prefix(
             material_candidates, "event"
@@ -262,6 +329,7 @@ def main() -> int:
         "outputs": {
             "ready_missing_queue_csv": str(out_dir / "ready_missing_queue.csv"),
             "material_candidate_queue_csv": str(out_dir / "material_candidate_queue.csv"),
+            "av_blocked_queue_csv": str(out_dir / "av_blocked_queue.csv"),
             "verification_sample_queue_csv": str(
                 out_dir / "verification_sample_queue.csv"
             ),
@@ -288,9 +356,30 @@ def main() -> int:
         f"- Ready events that have single-event QA but still need series/keep-single decision: {summary['ready_series_review_or_keep_single']}",
         f"- Material/gameplay candidates still without collection coverage: {summary['material_candidates_without_collection']}",
         "",
-        "## Top ready families still missing render/QA",
+        "## Runtime audiovisual trust gates",
         "",
     ]
+    if av_rows:
+        report_lines.extend(
+            f"- {key or '<blank>'}: {value}"
+            for key, value in summary["runtime_av_trust_status_counts"].items()
+        )
+        report_lines.extend(["", "Top AV risk flags:", ""])
+        report_lines.extend(
+            f"- {key}: {value}"
+            for key, value in list(
+                summary["runtime_av_trust_risk_counts"].items()
+            )[: args.top]
+        )
+    else:
+        report_lines.append("- No runtime AV trust audit CSV was provided.")
+    report_lines.extend(
+        [
+            "",
+            "## Top ready families still missing render/QA",
+            "",
+        ]
+    )
     report_lines.extend(
         f"- {row['series']}: {row['count']}"
         for row in summary["ready_missing_top_series"]
@@ -305,12 +394,15 @@ def main() -> int:
             "",
             "## Automation conclusion",
             "",
-            "The immediate clean-story queue is mostly not a research problem: "
+            "The remaining video-composition queue can still be processed in batches: "
             f"{summary['ready_missing_linear']} of "
             f"{summary['ready_missing_single_event_QA']} missing single-event QA items "
-            "are linear full-frame sequences that can be rendered and QAed in batches. "
-            "The expensive research work should be reserved for unresolved compositions, "
-            "mixed dimensions, and material/gameplay classification.",
+            "are linear full-frame sequences. However, technical render/QA is no longer "
+            "sufficient for delivery. Promotion to Bilibili-ready single-event or series "
+            "outputs must require runtime-complete audio evidence, BGM/SE/voice coverage, "
+            "subtitle evidence, and a visual/speech consistency gate. The expensive "
+            "research work should now prioritize the missing runtime audio mechanism and "
+            "unresolved compositions before more broad rendering.",
             "",
         ]
     )

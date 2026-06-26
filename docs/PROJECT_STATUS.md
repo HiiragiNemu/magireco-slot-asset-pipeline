@@ -64,10 +64,15 @@
   官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
-- 通用化 pipeline 策略报告已生成并在 `ac4901/ac7204` 批处理后重算，当前结论是：
-  166 个 ready 但缺单事件 QA 的事件中，162 个已经是 linear full-frame 批处理候选；
-  后续应按 manifest 队列小批量渲染、
-  QA 和 contact-sheet 复核，而不是逐个 family 依赖对话判断。
+- 2026-06-27 纠偏：用户复核确认 `ac0921_001` 缺预期 BGM，`ac4901_025/026`
+  存在角色未张嘴但有语音/字幕的问题，`ac7204` material/result 输出含角色语音、
+  不能称为纯素材；因此 technical QA/contact-sheet 不能再作为交付充分条件。
+- 已新增 `tools/frida_runtime_probe/invalidated_output_roots.json`、
+  `audit_runtime_av_trust.py`，并让 coverage/strategy 脚本读取作废根和 AV 信任审计；
+  作废根保留在磁盘上用于审计，但不再计入完成覆盖。
+- 通用化 pipeline 策略报告已重算，当前结论是：217 个 ready 但缺单事件 QA 的事件中，
+  213 个仍是 linear full-frame 视频组合候选；但后续只能作为机制验证/批处理输入，
+  不能在缺少运行时完整 BGM/SE/voice、字幕和视觉语音一致性证据时晋升为投稿成片。
 
 当前已审计可观看集合仍以 v18 输出为准：
 
@@ -87,19 +92,16 @@
   作为素材合集，不混入 clean story。
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912`
   作为 small-Kyubey / CHANCE / WIN / 上乗せ 等玩法素材合集，不混入 clean story。
-- `A:\magireco_corrected_research_20260612\validation_outputs_v18_generic_strategy_sample_20260626`
-  作为通用 ready 队列跨 family 样片，12/12 QA 通过；
-  `A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg`
-  用于人工验证该批处理方向。
-- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4901_full`
-  作为 `ac4901` clean story 单事件双版本，36/36 QA 通过；
-- `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4901_20260626`
-  作为 `ac4901` 同场景 Bilibili 长片候选，36 段、约 96 秒、36 条字幕、
-  416x232、30/1、48 kHz 双声道，direct stream-copy。
-- `ac7204` 的自动批处理暴露了 ready-linear 队列仍需视觉/语义闸门：
-  27 个 `地図` / `結果表示_チャンス` / `結果表示_WIN` / 彩色牌面玩法事件已从
-  clean story 队列排除并生成 material collection；
-  7 个角色/台词切片保留为 clean 子集，单事件 7/7 QA 通过并生成同场景子集长片。
+- 以下 v18 输出已作废为“不可交付，只保留审计”：generic strategy sample、
+  `validation_outputs_v18_clean_story_ac4901_full`、
+  `magireco_verified_series_v18_clean_story_ac4901_20260626`、
+  `validation_outputs_v18_clean_story_ac7204_full`、
+  `validation_outputs_v18_clean_story_ac7204_character_subset`、
+  `magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626`。
+  这些输出曾通过技术 QA，但未证明运行时完整 BGM/SE/voice、字幕可靠性和视觉语音一致性。
+- `ac7204` material collection 仍作为玩法/结果组件审计材料保留；但其 audible review
+  edition 含角色语音，应归为“gameplay/result with role voice”，不是纯素材，不得混入
+  clean story 或普通动画长片。
 
 本轮复核结果：
 
@@ -122,10 +124,13 @@ A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_cover
 
 当前覆盖状态：
 
-- 521 个 ready events 中，355 个已有 v18 单事件 QA，166 个仍需渲染/QA；
-- 521 个 ready events 中，310 个已有同场景 series/preserved 覆盖，211 个仍需长片策略；
+- 521 个 ready events 中，304 个已有未作废的 v18 单事件 QA，217 个仍需渲染/QA；
+- 521 个 ready events 中，267 个已有未作废的同场景 series/preserved 覆盖，254 个仍需长片策略；
 - 405 个 audience-excluded events 中，82 个已有 material collection 覆盖，323 个仍需素材归档或
   明确仅文档排除。
+- AV 信任审计当前标记 78 个事件为 `invalidated_do_not_use`，10 个事件为
+  `blocked_pending_runtime_av_verification`；详见
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_20260626\av_blocked_queue.csv`。
 
 ## 2026-06-18 运行时纠偏状态
 
