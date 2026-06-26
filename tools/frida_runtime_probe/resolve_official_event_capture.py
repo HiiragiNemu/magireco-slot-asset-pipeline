@@ -22,6 +22,20 @@ VOICE_SPEAKER_TOKENS = {
     "tukasa", "tukuyo", "tur", "turk", "ui", "uwa", "yac", "yach",
 }
 STRING_SOUND_KINDS = {"sound_code_lookup", "sound_mng_play_bytes"}
+HIGH_LEVEL_STRING_SOUND_KINDS = {
+    "sound_mng_play_by_sound_cd",
+    "snd_req_by_sound_cd",
+    "ctrl_snd_req_sound_code",
+    "ctrl_snd_req_sound_code_timed",
+    "ctrl_snd_req_sequence_sc",
+    "ctrl_snd_req_sound_code_callback",
+    "ctrl_snd_req_now",
+    "ctrl_snd_call_code_callback",
+    "snd_proc_code_callback",
+}
+HIGH_LEVEL_EVENT_SOUND_KINDS = {
+    "ctrl_snd_req_event_code",
+}
 INT_SOUND_KINDS = {
     "sound_mng_play",
     "sound_mng_play_request",
@@ -32,6 +46,8 @@ INT_SOUND_KINDS = {
 }
 ACTUAL_PLAY_KINDS = {
     "sound_mng_play_bytes",
+    "sound_mng_play_by_sound_cd",
+    "snd_req_by_sound_cd",
     "sound_mng_play",
     "sound_mng_play_request",
     "sound_mng_wrap_request",
@@ -303,6 +319,15 @@ def resolve_int_sound_candidates(
     return rows
 
 
+def high_level_unresolved_reason(media: dict[str, str]) -> str:
+    reasons: list[str] = []
+    if not media.get("request_id"):
+        reasons.append("no_request_id")
+    if not media.get("ogg_path"):
+        reasons.append("no_resolved_ogg")
+    return ";".join(reasons)
+
+
 def merge_adjacent_subtitles(rows: list[dict]) -> list[dict]:
     merged: list[dict] = []
     for row in rows:
@@ -372,6 +397,7 @@ def main() -> int:
     dgms: list[dict] = []
     texts: list[dict] = []
     sounds: list[dict] = []
+    unresolved_sound_events: list[dict] = []
     request_id_by_code: dict[str, str] = {}
 
     for line_number, record in enumerate(runtime_records, 1):
@@ -419,22 +445,77 @@ def main() -> int:
                 )
             continue
 
-        if kind not in STRING_SOUND_KINDS | INT_SOUND_KINDS:
+        if kind not in (
+            STRING_SOUND_KINDS
+            | HIGH_LEVEL_STRING_SOUND_KINDS
+            | HIGH_LEVEL_EVENT_SOUND_KINDS
+            | INT_SOUND_KINDS
+        ):
+            continue
+
+        raw_int_args = ";".join(
+            f"{key}={value}"
+            for key, value in sorted(item.items())
+            if key.endswith("_i32")
+        )
+        raw_u64_args = ";".join(
+            f"{key}={value}"
+            for key, value in sorted(item.items())
+            if key.endswith("_u64_hex") or key.endswith("_u64_pointer")
+        )
+
+        if kind in HIGH_LEVEL_EVENT_SOUND_KINDS:
+            unresolved_sound_events.append(
+                {
+                    "sequence": len(unresolved_sound_events),
+                    "line_number": line_number,
+                    "relative_ms": relative_ms,
+                    "kind": kind,
+                    "code_name": "",
+                    "event_code_hex": str(item.get("arg1_u64_hex", "")),
+                    "mapping_basis": "high_level_event_code_request",
+                    "unresolved_reason": (
+                        "event_code_request_requires_runtime_followup_sound_calls"
+                    ),
+                    "raw_int_args": raw_int_args,
+                    "raw_u64_args": raw_u64_args,
+                }
+            )
             continue
 
         resolved_media: list[dict[str, str]]
-        if kind in STRING_SOUND_KINDS:
+        if kind in STRING_SOUND_KINDS | HIGH_LEVEL_STRING_SOUND_KINDS:
             code_name = text
             if not code_name:
+                unresolved_sound_events.append(
+                    {
+                        "sequence": len(unresolved_sound_events),
+                        "line_number": line_number,
+                        "relative_ms": relative_ms,
+                        "kind": kind,
+                        "code_name": "",
+                        "event_code_hex": "",
+                        "mapping_basis": "empty_string_sound_request",
+                        "unresolved_reason": "empty_sound_code_string",
+                        "raw_int_args": raw_int_args,
+                        "raw_u64_args": raw_u64_args,
+                    }
+                )
                 continue
             if kind == "sound_code_lookup":
                 request_id = str(item.get("return_u32", ""))
                 if request_id:
                     request_id_by_code[code_name] = request_id
                 mapping_basis = "code_name_lookup"
-            else:
+            elif kind == "sound_mng_play_bytes":
                 request_id = request_id_by_code.get(code_name, "")
                 mapping_basis = "actual_play_code_name"
+            elif kind in {"sound_mng_play_by_sound_cd", "snd_req_by_sound_cd"}:
+                request_id = request_id_by_code.get(code_name, "")
+                mapping_basis = "actual_play_sound_cd"
+            else:
+                request_id = request_id_by_code.get(code_name, "")
+                mapping_basis = f"high_level_request:{kind}"
             media = resolve_request_media(
                 code_name=code_name,
                 request_id=request_id,
@@ -446,6 +527,8 @@ def main() -> int:
                 ogg_by_name=ogg_by_name,
             )
             media["mapping_basis"] = mapping_basis
+            if kind in HIGH_LEVEL_STRING_SOUND_KINDS:
+                media["unresolved_reason"] = high_level_unresolved_reason(media)
             resolved_media = [media]
         else:
             resolved_media = resolve_int_sound_candidates(
@@ -459,12 +542,23 @@ def main() -> int:
                 ogg_by_name=ogg_by_name,
             )
 
-        raw_int_args = ";".join(
-            f"{key}={value}"
-            for key, value in sorted(item.items())
-            if key.endswith("_i32")
-        )
         for media in resolved_media:
+            unresolved_reason = media.get("unresolved_reason", "")
+            if unresolved_reason:
+                unresolved_sound_events.append(
+                    {
+                        "sequence": len(unresolved_sound_events),
+                        "line_number": line_number,
+                        "relative_ms": relative_ms,
+                        "kind": kind,
+                        "code_name": media.get("code_name", ""),
+                        "event_code_hex": "",
+                        "mapping_basis": media.get("mapping_basis", ""),
+                        "unresolved_reason": unresolved_reason,
+                        "raw_int_args": raw_int_args,
+                        "raw_u64_args": raw_u64_args,
+                    }
+                )
             sounds.append(
                 {
                     "sequence": len(sounds),
@@ -481,7 +575,15 @@ def main() -> int:
                     "is_dialogue": media.get("is_dialogue", "no"),
                     "mapping_basis": media.get("mapping_basis", ""),
                     "media_mapping_basis": media.get("media_mapping_basis", ""),
+                    "is_actual_play": (
+                        "yes" if kind in ACTUAL_PLAY_KINDS else "no"
+                    ),
+                    "is_high_level_request": (
+                        "yes" if kind in HIGH_LEVEL_STRING_SOUND_KINDS else "no"
+                    ),
+                    "unresolved_reason": unresolved_reason,
                     "raw_int_args": raw_int_args,
+                    "raw_u64_args": raw_u64_args,
                 }
             )
 
@@ -608,7 +710,23 @@ def main() -> int:
         "is_dialogue",
         "mapping_basis",
         "media_mapping_basis",
+        "is_actual_play",
+        "is_high_level_request",
+        "unresolved_reason",
         "raw_int_args",
+        "raw_u64_args",
+    ]
+    unresolved_sound_event_fields = [
+        "sequence",
+        "line_number",
+        "relative_ms",
+        "kind",
+        "code_name",
+        "event_code_hex",
+        "mapping_basis",
+        "unresolved_reason",
+        "raw_int_args",
+        "raw_u64_args",
     ]
     subtitle_fields = [
         "sequence",
@@ -622,6 +740,11 @@ def main() -> int:
     ]
     write_csv(out_dir / "video_assets.csv", dgms, video_fields)
     write_csv(out_dir / "sound_assets.csv", sounds, sound_fields)
+    write_csv(
+        out_dir / "unresolved_sound_events.csv",
+        unresolved_sound_events,
+        unresolved_sound_event_fields,
+    )
     write_csv(out_dir / "subtitle_timeline.csv", subtitles, subtitle_fields)
     with (out_dir / "subtitles.srt").open("w", encoding="utf-8") as output:
         for index, row in enumerate(subtitles, 1):
@@ -644,10 +767,18 @@ def main() -> int:
         ),
         "sound_asset_count": len(sounds),
         "resolved_ogg_count": sum(1 for row in sounds if row.get("ogg_path")),
+        "actual_play_sound_count": sum(
+            1 for row in sounds if row.get("is_actual_play") == "yes"
+        ),
+        "high_level_sound_request_count": sum(
+            1 for row in sounds if row.get("is_high_level_request") == "yes"
+        ),
+        "unresolved_sound_event_count": len(unresolved_sound_events),
         "runtime_text_count": len(texts),
         "subtitle_count": len(subtitles),
         "video_assets": dgms,
         "sound_assets": sounds,
+        "unresolved_sound_events": unresolved_sound_events,
         "subtitles": subtitles,
     }
     with (out_dir / "event_manifest.json").open("w", encoding="utf-8") as output:
@@ -660,6 +791,9 @@ def main() -> int:
             "resolved_videos": manifest["resolved_video_count"],
             "sounds": len(sounds),
             "resolved_ogg": manifest["resolved_ogg_count"],
+            "actual_play_sounds": manifest["actual_play_sound_count"],
+            "high_level_sound_requests": manifest["high_level_sound_request_count"],
+            "unresolved_sound_events": manifest["unresolved_sound_event_count"],
             "subtitles": len(subtitles),
             "out_dir": str(out_dir),
         },

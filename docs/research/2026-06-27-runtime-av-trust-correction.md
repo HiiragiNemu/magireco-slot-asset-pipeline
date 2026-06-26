@@ -118,3 +118,70 @@ technical QA alone.  Promotion now requires:
 The next engineering work should prioritize capturing and resolving the missing
 runtime sound mechanism for known bad samples (`ac0921_001`, `ac4901_025/026`,
 and representative `ac7204` events) before more broad rendering.
+
+## 2026-06-27 follow-up: high-level sound request coverage
+
+Static inspection of `libGameProc.so` showed that the earlier runtime probe only
+covered the lower `SoundMng`/Z2D playback surface.  It did not hook the
+higher-level slot sound scheduler, including:
+
+- `C_CtrlSndLib::fnReqSndEventCode(uint64_t)`;
+- `C_CtrlSndLib::fnReqSndSoundCode(...)`;
+- `C_CtrlSndLib::fnReqSndSeqenceSC(...)`;
+- `C_CtrlSndLib::fnReqSndSoundCodeCallBack(...)`;
+- `SoundMng_play_bySoundCd` / `SndReqBySoundCd`.
+
+This matters for `ac0921_001`: the static event timeline contains only
+`259_ボタン音ボイス消音`, `2990_次回予告_レバー`, and the Z2D voice
+callbacks.  If the game plays a longer BGM/sequence for the preview scene, it
+must be observed at this higher scheduler layer rather than inferred from the
+old static event timeline.
+
+`runtime_probe.js` now records these high-level requests.  The resolver now:
+
+- maps high-level sound-code requests to official OGG when the code is present
+  in the sound request tables;
+- keeps unresolved high-level sound evidence in
+  `unresolved_sound_events.csv` and `event_manifest.json`;
+- reports `actual_play_sound_count`, `high_level_sound_request_count`, and
+  `unresolved_sound_event_count` so incomplete captures cannot masquerade as
+  complete AV manifests.
+
+The resolver smoke test on the existing `ac7114_001` capture still resolves the
+same five videos, five OGG tracks, and three subtitles, with zero unresolved
+new high-level events.
+
+## 2026-06-27 current MuMu capture diagnosis
+
+`diagnose_runtime_capture_state.py` records the current capture surface before
+any new runtime event is requested:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_20260627
+```
+
+Current result:
+
+```json
+{
+  "verdict": "blocked_x86_frida_cannot_see_arm64_game_code",
+  "gadget_127_0_0_1_27043_ok": false,
+  "x86_127_0_0_1_27042_ok": true,
+  "x86_arch": "x64",
+  "x86_sees_libGameProc": false,
+  "native_bridge": "libnb.so"
+}
+```
+
+The app is visible in MuMu, and the x86_64 frida-server can attach to the
+process shell, but it only sees the x64/native-bridge surface.  It does not see
+the ARM64 game code needed by `event_scene_probe.js` or `runtime_probe.js`.
+The ARM64 frida-server still closes the connection under native bridge.  The
+existing Java-layer Gadget injector also fails from the x86 attach surface
+because Frida reports `Java is not defined`.
+
+Therefore no new `ac0921`, `ac4901`, or `ac7204` runtime capture should be
+claimed until the ARM64 Gadget endpoint at `127.0.0.1:27043` is actually
+reachable again.  Broad rendering remains paused; the correct next runtime step
+is to restore Gadget loading, then re-capture the bad samples with the expanded
+high-level sound hooks.

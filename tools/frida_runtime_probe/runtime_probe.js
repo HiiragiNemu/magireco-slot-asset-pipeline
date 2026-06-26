@@ -309,6 +309,31 @@ function hookCStringAndInts(moduleValue, symbol, kind, stringArgIndex, intArgInd
   emit("hook_installed", { symbol, address: address.toString() });
 }
 
+function hookU64Call(moduleValue, symbol, kind, u64ArgIndex, intArgIndexes) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+
+  Interceptor.attach(address, {
+    onEnter(args) {
+      const fields = {
+        symbol,
+        address: address.toString(),
+        receiver: args[0].toString(),
+      };
+      fields["arg" + u64ArgIndex + "_u64_hex"] =
+        "0x" + args[u64ArgIndex].toString(16).padStart(16, "0");
+      fields["arg" + u64ArgIndex + "_u64_pointer"] = args[u64ArgIndex].toString();
+      intArgIndexes.forEach((argIndex) => {
+        fields["arg" + argIndex + "_i32"] = args[argIndex].toInt32();
+      });
+      emit(kind, fields);
+    },
+  });
+  emit("hook_installed", { symbol, address: address.toString() });
+}
+
 function hookPointerEvent(moduleValue, symbol, kind) {
   const address = findExport(moduleValue, symbol);
   if (address === null) {
@@ -432,9 +457,80 @@ setImmediate(function () {
     1,
     [2, 3]
   );
+  hookCStringAndInts(
+    moduleValue,
+    "SoundMng_play_bySoundCd",
+    "sound_mng_play_by_sound_cd",
+    0,
+    [1, 2]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "SndReqBySoundCd",
+    "snd_req_by_sound_cd",
+    0,
+    [1, 2]
+  );
   hookIntCall(moduleValue, "_ZN8SoundMng10sndPlayReqEiii", "sound_mng_play_request", 3);
   hookIntCall(moduleValue, "_ZN8SoundMng10wrapSndReqEi", "sound_mng_wrap_request", 1);
   hookIntCall(moduleValue, "_ZN8SoundMng12wrapSndReqChEii", "sound_mng_wrap_request_channel", 2);
+  hookU64Call(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndEventCodeEy",
+    "ctrl_snd_req_event_code",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKch",
+    "ctrl_snd_req_sound_code",
+    1,
+    [2]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKchm",
+    "ctrl_snd_req_sound_code_timed",
+    1,
+    [2, 3]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSeqenceSCEPKch",
+    "ctrl_snd_req_sequence_sc",
+    1,
+    [2]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib25fnReqSndSoundCodeCallBackEPKc",
+    "ctrl_snd_req_sound_code_callback",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib11fnReqSndNowEPKc",
+    "ctrl_snd_req_now",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib16fnCallSndCodeCbkEPKc",
+    "ctrl_snd_call_code_callback",
+    1,
+    []
+  );
+  hookCString(
+    moduleValue,
+    "_Z16fnProcSndCodeCbkPKc",
+    0,
+    "snd_proc_code_callback",
+    false,
+    false
+  );
   hookIntCall(
     moduleValue,
     "_ZN2zg3snd11RequestCtrl10getRequestEjRNS0_7RequestE",

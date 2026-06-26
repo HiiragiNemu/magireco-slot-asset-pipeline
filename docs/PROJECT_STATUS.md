@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-06-26
+更新时间：2026-06-27
 
 ## 2026-06-26 v18 当前状态
 
@@ -73,6 +73,21 @@
 - 通用化 pipeline 策略报告已重算，当前结论是：217 个 ready 但缺单事件 QA 的事件中，
   213 个仍是 linear full-frame 视频组合候选；但后续只能作为机制验证/批处理输入，
   不能在缺少运行时完整 BGM/SE/voice、字幕和视觉语音一致性证据时晋升为投稿成片。
+- 2026-06-27 继续修正：`runtime_probe.js` 已补入高层声请求 hook，包括
+  `C_CtrlSndLib::fnReqSndEventCode`、`fnReqSndSoundCode`、
+  `fnReqSndSeqenceSC`、`fnReqSndSoundCodeCallBack`、
+  `SoundMng_play_bySoundCd` 和 `SndReqBySoundCd`。这用于验证 `ac0921_001`
+  这类静态 event timeline 缺 BGM 的样本是否由游戏全局/序列声调度层播放音频。
+- `resolve_official_event_capture.py` 现在会输出 `actual_play_sound_count`、
+  `high_level_sound_request_count`、`unresolved_sound_event_count` 和
+  `unresolved_sound_events.csv`。高层声请求无法映射到 request/OGG 时必须显式保留为
+  unresolved evidence，不能被当作完整音频轨。
+- 新增 `diagnose_runtime_capture_state.py`。当前 MuMu 诊断输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_20260627`，
+  结论为 `blocked_x86_frida_cannot_see_arm64_game_code`：x86 Frida 可 attach 进程壳，
+  但看不到 arm64 `libGameProc`；27043 ARM64 Gadget 仍不可达；arm64 frida-server 在
+  native bridge 下仍连接即关闭；旧 Java-layer Gadget injector 在 x86 attach 表面报
+  `Java is not defined`。因此在 Gadget 恢复前不生成新的投稿样片或批量成片。
 
 当前已审计可观看集合仍以 v18 输出为准：
 
