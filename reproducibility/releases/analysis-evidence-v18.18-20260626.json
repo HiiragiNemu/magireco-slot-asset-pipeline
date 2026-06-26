@@ -1,0 +1,31 @@
+{
+  "schema": "magireco-analysis-evidence-release-v1",
+  "tag": "analysis-evidence-v18.18-20260626",
+  "target_branch": "codex/corrected-runtime-pipeline",
+  "source_commit": "b6bdaf787b5abca1dd3eee47ffbe0f23aabb2cc0",
+  "release_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.18-20260626",
+  "asset": {
+    "name": "magireco-analysis-evidence-v18-20260626-090451.zip",
+    "content_type": "application/zip",
+    "size_bytes": 12124943,
+    "sha256": "03CF73FDD09192EB1D2FB3038A7ACFF3773C08F85B9824CDE92F3DAA81896BE9",
+    "download_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/download/analysis-evidence-v18.18-20260626/magireco-analysis-evidence-v18-20260626-090451.zip"
+  },
+  "evidence_file_count_before_bundle_index": 1382,
+  "additional_evidence_file_count": 226,
+  "production_catalog": {
+    "events": 926,
+    "ready": 573,
+    "failed_including_excluded": 353,
+    "audience_excluded": 301,
+    "composition_resolved": 666,
+    "subtitles": 1612
+  },
+  "content_policy": "derived text evidence only; no proprietary payloads, media, APKs, OBBs, native libraries, or rendered videos",
+  "audit": {
+    "disallowed_extensions": 0,
+    "absolute_local_paths": 0,
+    "credential_pattern_matches": 0,
+    "credential_false_positive_resource_name_matches": 13
+  }
+}
