@@ -276,3 +276,26 @@ A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_button_prompt_ex
 
 No renders are produced for this exclusion pass, because the purpose is to prevent button UI
 from contaminating the clean normal-animation output set.
+
+## ac5004 Connect Chance title UI exclusion
+
+The six unresolved `ac5004` events were reviewed after the `ac5102` button-prompt batch:
+
+```text
+ac5004_001 ac5004_002 ac5004_003 ac5004_004 ac5004_005 ac5004_006
+```
+
+Each event combines `ac5004_at_CC_taiki_LP` with a `コネクトチャンス` title alpha/color
+variant (`wht`, `blu`, `yel`, `gre`, `red`, or `rbw`) and title/color audio. This is a
+Connect Chance title/selection UI presentation, not a clean story/dialogue animation.
+
+Source contact-sheet and CSV audit are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5004_connect_chance_title
+```
+
+The six events were added to `audience_exclusions.json` as gameplay/material candidates.
+Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353 failed events,
+while increasing `audience_excluded_events` from 271 to 277. No render is produced for this
+exclusion pass.

@@ -8,7 +8,7 @@
 检出不是权威工作树。
 
 `production_manifests_v18` 当前覆盖 926 个事件，其中 573 个 render-ready、
-353 个 failed、666 个 composition-resolved、271 个 audience-excluded、1612 条字幕。
+353 个 failed、666 个 composition-resolved、277 个 audience-excluded、1612 条字幕。
 所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
 不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
 老虎机/按钮/粒子素材与正常动画分离。
@@ -37,6 +37,8 @@
 - 剩余 120 个 `ac5102` mixed-dimension button-prompt 事件已从 clean story 队列排除，
   它们全部含 512x288 `ac8002_chance_btn_*` PUSH/連撃/長押し/連打玩法按钮层；
   保留为 gameplay/material collection 候选，不纳入正常动画长片；
+- 6 个 `ac5004` Connect Chance title/selection UI 事件已从 clean story 队列排除，
+  它们是 `コネクトチャンス` 标题和颜色抽选 UI，不属于正常剧情/动画成片；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
 
