@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac5208_003",
+  "model": "timed_full_frame_layers",
+  "use_plan_timing": true,
+  "duration_ms": 6740,
+  "excluded_audio_request_ids": [
+    "451",
+    "8352"
+  ],
+  "excluded_audio_z2d_names": [
+    "ac8002_chance_btn",
+    "cap5202_madhom_oshite_001"
+  ],
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "evidence": "clean animation edition: static production evidence resolves native 512x288 ac5208_lev_madhom from event 3267 ms through 7433 ms with ac5208_lev_madhom_LP from 7433 ms; matching ac5208_001/ac5208_002 recovery pattern shifts the normal attack animation to 0 ms while deliberately excluding duplicate ac8002 chance-button layers and cap5202_madhom_oshite_001 button-prompt voice from the audience story render; source contact-sheet audit verifies ac5208_lev_madhom is the normal Madoka/Homura attack animation and ac8002_chance_btn is black-matte slot UI; duration follows official attack audio 40006 ending at 3371+3369=6740 ms while preserving simultaneous official voice-label subtitles 6870 いくよっ and 7073 行きます at 3300 ms.",
+  "clips": [
+    {
+      "dgm_name": "ac5208_lev_madhom",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac5208_lev_madhom_LP",
+      "role": "loop_background",
+      "start_ms": 4167
+    }
+  ]
+}

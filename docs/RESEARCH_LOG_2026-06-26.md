@@ -377,3 +377,114 @@ and 1612 subtitles.
 
 This is still a single-event recovery set. It should not be promoted to a Bilibili long
 edition until the ac5201 family ordering and duplicate intro/non-intro variants are reviewed.
+
+## ac9051 rengeki button-prompt UI exclusion
+
+The 20 unresolved `ac9051` events were reviewed as pure `ac8002_chance_btn_rengeki`
+button-prompt UI:
+
+```text
+ac9051_001 ac9051_002 ac9051_003 ac9051_004 ac9051_005
+ac9051_006 ac9051_007 ac9051_008 ac9051_009 ac9051_010
+ac9051_011 ac9051_012 ac9051_013 ac9051_014 ac9051_015
+ac9051_016 ac9051_017 ac9051_018 ac9051_019 ac9051_020
+```
+
+They contain the black-matte chance-button/rengeki layer, PUSH display sound, and `押して`
+voice/prompt content. They are retained as gameplay/material candidates and are excluded
+from the clean story/Bilibili normal-animation queue.
+
+The audit CSV is stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac9051_button_prompt_exclusions\ac9051_button_prompt_exclusion_audit_summary.csv
+```
+
+Rebuilding `production_manifests_v18` after this exclusion produced 926 events, 589
+render-ready events, 337 failed events, 682 composition-resolved events, and 336
+audience-excluded events. The only remaining non-excluded failed event at that moment was
+`ac5208_003`.
+
+## ac5208 full clean-story recovery
+
+`ac5208_003` has now been resolved with the same clean-story policy as `ac5208_001` and
+`ac5208_002`: keep the normal native 512x288 character attack animation, and exclude
+separate black-matte chance-button UI layers and their button-prompt audio from the audience
+story render.
+
+Source frame audits confirm:
+
+- `ac5208_lev_madhom` is the normal Madoka/Homura follow-up attack animation, with the
+  animation-owned `もう一撃！` presentation text.
+- `ac8002_chance_btn` and `ac8002_chance_btn_LP` are black-matte CHANCE/PUSH button
+  presentation layers and are not part of the clean animation edition.
+
+The composition plan for `ac5208_003` uses:
+
+- `ac5208_lev_madhom` as the background from 0 ms;
+- `ac5208_lev_madhom_LP` as the loop background from 4167 ms;
+- render duration 6740 ms, matching official attack audio
+  `40006_特化ﾏﾐ_追撃_まどほむ攻撃` at 3371+3369 ms;
+- explicit exclusion of audio request IDs `451` and `8352`, and Z2D audio sources
+  `ac8002_chance_btn` and `cap5202_madhom_oshite_001`.
+
+The manifest builder now supports two plan-scoped controls required for this clean edition:
+
+- `use_plan_timing: true` lets a static composition plan intentionally replace the raw
+  catalog clip offsets with the verified clean composition timeline.
+- `excluded_audio_request_ids` / `excluded_audio_z2d_names` remove plan-excluded UI audio
+  and matching subtitles from a clean story render.
+
+The subtitle override table also adds request `8367` from the official request label
+`28016_CV_見滝原まだまだだよ`; this fixes the same missing opening CV subtitle in
+`ac5208_001`, `ac5208_002`, and `ac5208_003`.
+
+Rebuilding `production_manifests_v18` now gives:
+
+```json
+{
+  "events": 926,
+  "ready_events": 590,
+  "failed_events": 336,
+  "audio_timeline_ready_events": 926,
+  "composition_resolved_events": 683,
+  "audience_excluded_events": 336,
+  "clips": 2672,
+  "base_audio_tracks": 1267,
+  "z2d_sound_tracks": 1719,
+  "subtitles": 1615,
+  "graphical_subtitles": 588,
+  "voice_label_subtitles": 825,
+  "asr_verified_subtitles": 153
+}
+```
+
+There are now zero non-excluded failed events in the v18 production catalog; the 336 failed
+events are all explicitly retained as gameplay/material candidates.
+
+Single-event render and QA output:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2
+```
+
+Source and render audit evidence:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5208_003_source
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5208_full_v2_render
+```
+
+QA passed 3/3 for `ac5208_001`, `ac5208_002`, and `ac5208_003`. All outputs keep native
+512x288, 30/1 fps, yuv420p, 48 kHz stereo, have non-silent audio, and have identical audio
+essence between subtitle and no-subtitle editions. The final `ac5208_003` SRT contains only
+normal dialogue:
+
+```text
+見滝原まだまだだよ
+いくよっ
+行きます
+```
+
+No same-scene Bilibili long edition is generated in this pass; `ac5208` should be promoted
+only after the family-level ordering policy for short follow-up attack variants is reviewed.

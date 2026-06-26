@@ -7,20 +7,23 @@
 当前生产分支是 `codex/corrected-runtime-pipeline`。下载目录中的旧 `main`
 检出不是权威工作树。
 
-`production_manifests_v18` 当前覆盖 926 个事件，其中 589 个 render-ready、
-337 个 failed、682 个 composition-resolved、316 个 audience-excluded、1612 条字幕。
+`production_manifests_v18` 当前覆盖 926 个事件，其中 590 个 render-ready、
+336 个 failed、683 个 composition-resolved、336 个 audience-excluded、1615 条字幕。
+当前 failed 全部有 audience exclusion reason；非排除 failed 队列为 0。
 所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
 不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
 老虎机/按钮/粒子素材与正常动画分离。
 
 最新新增：
 
-- `ac5208_001` 和 `ac5208_002` 已转为 clean story composition plans，剥离
-  黑幕 `ac8002_chance_btn` 按钮层，渲染双版本并通过 2/2 QA；
+- `ac5208_001`、`ac5208_002` 和 `ac5208_003` 已转为 clean story composition plans，
+  剥离黑幕 `ac8002_chance_btn*` 按钮层和对应按钮提示音/押して声；`ac5208_003`
+  采用主攻击层 `ac5208_lev_madhom` 归零、`ac5208_lev_madhom_LP` 从 4167 ms
+  接续，并按官方 `40006_特化ﾏﾐ_追撃_まどほむ攻撃` 音频结束点渲染到 6740 ms；
+  同时补入官方 request `8367 / 28016_CV_見滝原まだまだだよ` 字幕；
+- `ac5208` 三个追击 clean story 单事件双版本已通过 3/3 QA；
 - 输出目录：
-  `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_partial`；
-- `ac5208_003` 因静态时间轴主动画从 3267 ms 才开始，且当前 Frida Gadget
-  连接仍返回 `connection closed`，暂不平移或纳入同场景长片；
+  `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2`；
 - `ac2201_001` 已审计为 `黒江狙え` slot/gameplay cut-in，含押し順/狙え文字层和
   ADD/MUL 特效层，现从 clean story 队列排除并保留为素材/玩法候选；
 - 57 个非 ready 的 `ac3102` RB slot battle/gameplay UI 事件已批量从 clean story
@@ -46,6 +49,9 @@
 - 16 个 `ac5201` 决战神浜黑底角色台词/动作事件已恢复为 clean animation，
   渲染字幕/无字幕双版本并通过 16/16 QA；输出目录为
   `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5201_ch_serif_batch`；
+- 20 个 `ac9051` 連撃 button-prompt UI 事件已从 clean story 队列排除；
+  它们是纯 `ac8002_chance_btn_rengeki` / LP 按钮提示、PUSH 显示音和押して声，
+  应保留为 gameplay/material collection 候选；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
 
@@ -55,6 +61,8 @@
   与 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619`；
 - `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7206_full`
   与 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7206_20260625`；
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2`
+  作为 ac5208 追击单事件 clean story 双版本，尚未提升为同场景长片；
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
   作为素材合集，不混入 clean story。
 

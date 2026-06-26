@@ -312,6 +312,15 @@
         "official request label バナナボート対決 add黒江",
         "large-v3 beam 5 and beam 10 agree"
       ]
+    },
+    "8367": {
+      "text": "見滝原まだまだだよ",
+      "speaker_code": "multiple",
+      "source": "curated_official_sound_request_code_name",
+      "evidence": [
+        "official sound request 28016",
+        "event_sound_timeline exact callback for cap5202_ch_attack_all_022 at 167 ms"
+      ]
     }
   }
 }

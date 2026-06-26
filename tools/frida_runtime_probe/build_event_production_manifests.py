@@ -461,6 +461,88 @@ def synthesize_runtime_event_clips(
     return synthesized
 
 
+def source_clip_duration_ms(row: dict[str, str]) -> int:
+    duration_sec = row.get("media_duration_sec", "")
+    if duration_sec:
+        return round(float(duration_sec) * 1000)
+    return max(
+        0,
+        number(row.get("event_end_ms", "")) - number(row.get("event_start_ms", "")),
+    )
+
+
+def synthesize_static_event_clips_from_plan(
+    all_event_clips: list[dict[str, str]],
+    composition_plan: dict,
+) -> list[dict[str, str]]:
+    source_by_name: dict[str, dict[str, str]] = {}
+    for row in all_event_clips:
+        source_by_name.setdefault(str(row.get("dgm_name", "")), row)
+
+    plan_rows = composition_plan.get("clips", [])
+    if not plan_rows:
+        return []
+
+    linear_clean_plan = (
+        composition_plan.get("model") == "linear_full_frame_sequence"
+    )
+    video_duration_ms = number(composition_plan.get("duration_ms", ""))
+    backgrounds = sorted(
+        [row for row in plan_rows if row.get("role") == "background"],
+        key=lambda row: number(row.get("start_ms", "")),
+    )
+    loop_backgrounds = [
+        row for row in plan_rows if row.get("role") == "loop_background"
+    ]
+    next_background_start: dict[str, int] = {}
+    boundaries = [
+        *(number(row.get("start_ms", "")) for row in backgrounds[1:]),
+        *(
+            [number(loop_backgrounds[0].get("start_ms", ""))]
+            if loop_backgrounds
+            else [video_duration_ms]
+        ),
+    ]
+    for row, end_ms in zip(backgrounds, boundaries):
+        next_background_start[str(row.get("dgm_name", ""))] = end_ms
+    if loop_backgrounds:
+        next_background_start[
+            str(loop_backgrounds[0].get("dgm_name", ""))
+        ] = video_duration_ms
+
+    synthesized: list[dict[str, str]] = []
+    for index, plan_row in enumerate(plan_rows):
+        dgm_name = str(plan_row.get("dgm_name", ""))
+        source = source_by_name.get(dgm_name, {})
+        role = str(plan_row.get("role", ""))
+        start_ms = number(plan_row.get("start_ms", ""))
+        source_duration = source_clip_duration_ms(source)
+        if linear_clean_plan and role == "background":
+            end_ms = start_ms + source_duration
+        elif role in {"background", "loop_background"}:
+            end_ms = next_background_start.get(dgm_name, start_ms + source_duration)
+        elif role == "screen_overlay":
+            end_ms = start_ms + source_duration
+        elif role == "loop_screen_overlay":
+            end_ms = video_duration_ms
+        else:
+            end_ms = start_ms + source_duration
+
+        row = dict(source)
+        row.update(
+            {
+                "dgm_role": role,
+                "event_start_ms": str(start_ms),
+                "event_end_ms": str(end_ms),
+                "interval_confidence": "static_verified_composition_plan",
+                "z2d_order": str(index),
+                "dgm_order": str(index),
+            }
+        )
+        synthesized.append(row)
+    return synthesized
+
+
 def synthesize_runtime_audio_rows(
     runtime_manifest: dict,
     static_audio_rows: list[dict[str, str]],
@@ -671,6 +753,70 @@ def official_voice_label(code_name: str) -> tuple[str, str]:
     return speaker, text
 
 
+def plan_exclusion_values(composition_plan: dict | None, key: str) -> set[str]:
+    if not composition_plan:
+        return set()
+    values = composition_plan.get(key, [])
+    if not isinstance(values, list):
+        return set()
+    return {str(value).strip() for value in values if str(value).strip()}
+
+
+def filter_audio_rows_for_plan(
+    audio_rows: list[dict],
+    composition_plan: dict | None,
+) -> list[dict]:
+    request_ids = plan_exclusion_values(
+        composition_plan,
+        "excluded_audio_request_ids",
+    )
+    z2d_names = plan_exclusion_values(
+        composition_plan,
+        "excluded_audio_z2d_names",
+    )
+    code_names = plan_exclusion_values(
+        composition_plan,
+        "excluded_audio_code_names",
+    )
+    if not request_ids and not z2d_names and not code_names:
+        return audio_rows
+    return [
+        row
+        for row in audio_rows
+        if str(row.get("request_id", "")).strip() not in request_ids
+        and str(row.get("z2d_name", "")).strip() not in z2d_names
+        and str(row.get("code_name", "")).strip() not in code_names
+    ]
+
+
+def filter_subtitle_rows_for_plan(
+    subtitle_rows: list[dict],
+    composition_plan: dict | None,
+) -> list[dict]:
+    request_ids = plan_exclusion_values(
+        composition_plan,
+        "excluded_audio_request_ids",
+    ) | plan_exclusion_values(
+        composition_plan,
+        "excluded_subtitle_voice_request_ids",
+    )
+    z2d_names = plan_exclusion_values(
+        composition_plan,
+        "excluded_audio_z2d_names",
+    ) | plan_exclusion_values(
+        composition_plan,
+        "excluded_subtitle_z2d_names",
+    )
+    if not request_ids and not z2d_names:
+        return subtitle_rows
+    return [
+        row
+        for row in subtitle_rows
+        if str(row.get("voice_request_id", "")).strip() not in request_ids
+        and str(row.get("z2d_name", "")).strip() not in z2d_names
+    ]
+
+
 def main() -> int:
     args = parse_args()
     catalog = read_csv(Path(args.event_catalog))
@@ -782,11 +928,21 @@ def main() -> int:
                     str(row.get("dgm_name", ""))
                     for row in composition_plan.get("clips", [])
                 }
-                event_clips = [
-                    row
-                    for row in all_event_clips
-                    if row.get("dgm_name", "") in planned_names
-                ]
+                if composition_plan.get("use_plan_timing"):
+                    event_clips = synthesize_static_event_clips_from_plan(
+                        [
+                            row
+                            for row in all_event_clips
+                            if row.get("dgm_name", "") in planned_names
+                        ],
+                        composition_plan,
+                    )
+                else:
+                    event_clips = [
+                        row
+                        for row in all_event_clips
+                        if row.get("dgm_name", "") in planned_names
+                    ]
             else:
                 event_clips = all_event_clips
         dimensions = {
@@ -1026,6 +1182,12 @@ def main() -> int:
                         "evidence": subtitle_evidence,
                     }
                 )
+
+        audio_rows = filter_audio_rows_for_plan(audio_rows, composition_plan)
+        subtitle_rows = filter_subtitle_rows_for_plan(
+            subtitle_rows,
+            composition_plan,
+        )
         subtitle_rows.sort(
             key=lambda row: (
                 row["start_ms"],
