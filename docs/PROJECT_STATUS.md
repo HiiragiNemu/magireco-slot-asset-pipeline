@@ -64,8 +64,9 @@
   官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
-- 通用化 pipeline 策略报告已生成，当前结论是：244 个 ready 但缺单事件 QA 的事件中，
-  240 个已经是 linear full-frame 批处理候选；后续应按 manifest 队列小批量渲染、
+- 通用化 pipeline 策略报告已生成并在 `ac4901` 批处理后重算，当前结论是：
+  198 个 ready 但缺单事件 QA 的事件中，194 个已经是 linear full-frame 批处理候选；
+  后续应按 manifest 队列小批量渲染、
   QA 和 contact-sheet 复核，而不是逐个 family 依赖对话判断。
 
 当前已审计可观看集合仍以 v18 输出为准：
@@ -90,6 +91,11 @@
   作为通用 ready 队列跨 family 样片，12/12 QA 通过；
   `A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg`
   用于人工验证该批处理方向。
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4901_full`
+  作为 `ac4901` clean story 单事件双版本，36/36 QA 通过；
+- `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4901_20260626`
+  作为 `ac4901` 同场景 Bilibili 长片候选，36 段、约 96 秒、36 条字幕、
+  416x232、30/1、48 kHz 双声道，direct stream-copy。
 
 本轮复核结果：
 
@@ -112,8 +118,8 @@ A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_cover
 
 当前覆盖状态：
 
-- 548 个 ready events 中，304 个已有 v18 单事件 QA，244 个仍需渲染/QA；
-- 548 个 ready events 中，267 个已有同场景 series/preserved 覆盖，281 个仍需长片策略；
+- 548 个 ready events 中，350 个已有 v18 单事件 QA，198 个仍需渲染/QA；
+- 548 个 ready events 中，303 个已有同场景 series/preserved 覆盖，245 个仍需长片策略；
 - 378 个 audience-excluded events 中，55 个已有 material collection 覆盖，323 个仍需素材归档或
   明确仅文档排除。
 

@@ -833,3 +833,99 @@ After regenerating `coverage_audits_v18_20260626`, `ac0912` is no longer in the 
 render queue. The current coverage totals are 548 ready events, 304 ready events with v18
 single-event QA, 244 ready events still missing single-event QA, 267 ready events with
 series/preserved coverage, and 55 audience-excluded events covered by material collections.
+
+## Generalized ready-queue sample and ac4901 batch recovery
+
+To avoid continuing as a manual family-by-family process, a machine-readable strategy
+reporter was added:
+
+```text
+tools/frida_runtime_probe/report_pipeline_strategy.py
+```
+
+It derives the clean-story render queue, material queue, and verification sample queue
+from production manifests and coverage audits instead of relying on conversation state.
+The generated audit root is:
+
+```text
+A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_20260626
+```
+
+Before the next full family render, a cross-family generic ready-queue sample was rendered
+from `verification_sample_queue.csv`:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_generic_strategy_sample_20260626
+A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg
+```
+
+QA passed 12/12. The frame audit accepted 12/12 and flagged 0 for review. This proves the
+ready-linear queue can be processed as batches with QA/contact-sheet review, rather than
+requiring one-off family discussion before every render.
+
+The first full batch under that policy was `ac4901`, the largest ready family still missing
+single-event QA after `ac0912` was reclassified as material. All 36 `ac4901` events are
+native 416x232, 30/1 fps, `linear_full_frame_sequence`, 2667 ms, and one subtitle cue each.
+They were rendered here:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4901_full
+```
+
+QA passed 36/36:
+
+```json
+{
+  "audited_events": 36,
+  "passed": 36,
+  "failed": 0,
+  "subtitle_and_no_subtitle_audio_identical": 36,
+  "non_silent_audio": 36,
+  "total_output_bytes": 29121632
+}
+```
+
+The visual audit accepted 36/36 and the contact sheet:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac4901_full_render\ac4901_full_contact_sheet.jpg
+```
+
+shows normal character attack/action cuts, with no slot cabinet, PUSH, CHANCE/WIN, or reel
+UI. The same 36 QA-passed events were then built into a same-scene Bilibili candidate:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4901_20260626
+```
+
+`build_series_editions.py` reports:
+
+```json
+{
+  "series": "ac4901",
+  "status": "passed",
+  "event_count": 36,
+  "expected_duration_ms": 96012,
+  "actual_duration_ms": 96033,
+  "subtitle_cue_count": 36,
+  "width": 416,
+  "height": 232,
+  "frame_rate": "30/1",
+  "audio_sample_rate": "48000",
+  "audio_channels": 2,
+  "direct_stream_copy": true
+}
+```
+
+A reusable coverage audit builder was also added:
+
+```text
+tools/frida_runtime_probe/build_coverage_audit.py
+```
+
+After regenerating `coverage_audits_v18_20260626`, current totals are 548 ready events,
+350 ready events with v18 single-event QA, 198 ready events still missing single-event QA,
+303 ready events with series/preserved coverage, 245 ready events without series coverage,
+and 55 audience-excluded events covered by material collections. The regenerated strategy
+queue shows 194 of the remaining 198 missing-QA items are still linear full-frame batch
+candidates.
