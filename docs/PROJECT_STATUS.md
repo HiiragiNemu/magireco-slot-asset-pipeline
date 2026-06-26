@@ -88,6 +88,11 @@
   但看不到 arm64 `libGameProc`；27043 ARM64 Gadget 仍不可达；arm64 frida-server 在
   native bridge 下仍连接即关闭；旧 Java-layer Gadget injector 在 x86 attach 表面报
   `Java is not defined`。因此在 Gadget 恢复前不生成新的投稿样片或批量成片。
+- `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
+  `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
+  `verification_sample_queue.csv` 剥离，写入
+  `av_blocked_ready_missing_queue.csv`。重算后 217 个 ready-missing 中只有 166 个仍在
+  可行动渲染候选队列，51 个被 AV gate 拦截；验证抽样队列中 AV-blocked 事件数为 0。
 
 当前已审计可观看集合仍以 v18 输出为准：
 

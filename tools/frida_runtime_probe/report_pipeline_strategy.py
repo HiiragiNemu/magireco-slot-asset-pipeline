@@ -16,6 +16,12 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 
+AV_BLOCKING_STATUSES = {
+    "invalidated_do_not_use",
+    "blocked_pending_runtime_av_verification",
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--production-catalog", required=True)
@@ -47,6 +53,10 @@ def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
 
 def event_prefix(event: str) -> str:
     return event.split("_", 1)[0]
+
+
+def is_av_blocked(row: dict) -> bool:
+    return row.get("av_delivery_status", "") in AV_BLOCKING_STATUSES
 
 
 def group_prefix(rows: list[dict], event_key: str = "event") -> list[dict]:
@@ -180,10 +190,34 @@ def main() -> int:
         if row.get("delivery_status")
         in {"invalidated_do_not_use", "blocked_pending_runtime_av_verification"}
     ]
+    ready_missing_actionable_rows = [
+        row for row in ready_missing_rows if not is_av_blocked(row)
+    ]
+    ready_missing_av_blocked_rows = [
+        row for row in ready_missing_rows if is_av_blocked(row)
+    ]
 
     write_csv(
         out_dir / "ready_missing_queue.csv",
-        ready_missing_rows,
+        ready_missing_actionable_rows,
+        [
+            "event",
+            "series",
+            "video_composition_model",
+            "width",
+            "height",
+            "frame_rate",
+            "render_duration_ms",
+            "subtitle_count",
+            "video_extension_policy",
+            "av_delivery_status",
+            "av_risk_flags",
+            "production_manifest",
+        ],
+    )
+    write_csv(
+        out_dir / "av_blocked_ready_missing_queue.csv",
+        ready_missing_av_blocked_rows,
         [
             "event",
             "series",
@@ -233,7 +267,7 @@ def main() -> int:
 
     verification_rows: list[dict] = []
     for lane, rows, event_key in (
-        ("batch_render_ready_missing", ready_missing_rows, "event"),
+        ("batch_render_ready_missing", ready_missing_actionable_rows, "event"),
         ("material_review_candidate", material_rows, "event"),
     ):
         for row in first_rows_by_prefix(rows, args.top, event_key):
@@ -296,6 +330,12 @@ def main() -> int:
             bool(row.get("audience_exclusion_reason")) for row in production_rows
         ),
         "ready_missing_single_event_QA": len(ready_missing),
+        "ready_missing_single_event_QA_delivery_actionable": len(
+            ready_missing_actionable_rows
+        ),
+        "ready_missing_single_event_QA_av_blocked": len(
+            ready_missing_av_blocked_rows
+        ),
         "ready_missing_linear": sum(
             production_by_event.get(row["event"], {}).get("video_composition_model")
             == "linear_full_frame_sequence"
@@ -323,11 +363,20 @@ def main() -> int:
         "runtime_av_trust_status_counts": dict(av_status_counts.most_common()),
         "runtime_av_trust_risk_counts": dict(av_risk_counts.most_common()),
         "ready_missing_top_series": group_prefix(ready_missing, "event")[: args.top],
+        "delivery_actionable_ready_missing_top_series": group_prefix(
+            ready_missing_actionable_rows, "event"
+        )[: args.top],
+        "av_blocked_ready_missing_top_series": group_prefix(
+            ready_missing_av_blocked_rows, "event"
+        )[: args.top],
         "material_candidate_top_series": group_prefix(
             material_candidates, "event"
         )[: args.top],
         "outputs": {
             "ready_missing_queue_csv": str(out_dir / "ready_missing_queue.csv"),
+            "av_blocked_ready_missing_queue_csv": str(
+                out_dir / "av_blocked_ready_missing_queue.csv"
+            ),
             "material_candidate_queue_csv": str(out_dir / "material_candidate_queue.csv"),
             "av_blocked_queue_csv": str(out_dir / "av_blocked_queue.csv"),
             "verification_sample_queue_csv": str(
@@ -351,6 +400,8 @@ def main() -> int:
         f"- Clean-story ready events: {summary['production_ready_events']}",
         f"- Audience-excluded material/gameplay events: {summary['production_audience_excluded_events']}",
         f"- Ready events still missing single-event render/QA: {summary['ready_missing_single_event_QA']}",
+        f"- Ready missing render/QA and not AV-blocked: {summary['ready_missing_single_event_QA_delivery_actionable']}",
+        f"- Ready missing render/QA but AV-blocked: {summary['ready_missing_single_event_QA_av_blocked']}",
         f"- Of those, linear full-frame batch candidates: {summary['ready_missing_linear']}",
         f"- Of those, already-resolved layered candidates: {summary['ready_missing_layered']}",
         f"- Ready events that have single-event QA but still need series/keep-single decision: {summary['ready_series_review_or_keep_single']}",
@@ -376,13 +427,18 @@ def main() -> int:
     report_lines.extend(
         [
             "",
-            "## Top ready families still missing render/QA",
+            "## Top delivery-actionable ready families still missing render/QA",
             "",
         ]
     )
     report_lines.extend(
         f"- {row['series']}: {row['count']}"
-        for row in summary["ready_missing_top_series"]
+        for row in summary["delivery_actionable_ready_missing_top_series"]
+    )
+    report_lines.extend(["", "## Top AV-blocked ready families", ""])
+    report_lines.extend(
+        f"- {row['series']}: {row['count']}"
+        for row in summary["av_blocked_ready_missing_top_series"]
     )
     report_lines.extend(["", "## Top material/gameplay families without collection", ""])
     report_lines.extend(

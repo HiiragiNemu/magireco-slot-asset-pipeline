@@ -185,3 +185,29 @@ claimed until the ARM64 Gadget endpoint at `127.0.0.1:27043` is actually
 reachable again.  Broad rendering remains paused; the correct next runtime step
 is to restore Gadget loading, then re-capture the bad samples with the expanded
 high-level sound hooks.
+
+## 2026-06-27 strategy queue protection
+
+`report_pipeline_strategy.py` no longer leaves AV-blocked events in the
+actionable render queue.  When a runtime AV trust CSV is supplied:
+
+- `ready_missing_queue.csv` contains only ready-missing events that are not
+  `invalidated_do_not_use` or `blocked_pending_runtime_av_verification`;
+- `av_blocked_ready_missing_queue.csv` contains the ready-missing events that
+  must be repaired or re-captured before any render/series work;
+- `verification_sample_queue.csv` samples from the actionable queue, so it does
+  not suggest invalidated events for batch rendering.
+
+The recomputed v18 strategy state is:
+
+```json
+{
+  "ready_missing_single_event_QA": 217,
+  "ready_missing_single_event_QA_delivery_actionable": 166,
+  "ready_missing_single_event_QA_av_blocked": 51,
+  "verification_sample_queue_av_blocked": 0
+}
+```
+
+The largest AV-blocked ready-missing family is `ac4901` with 36 events; these
+are no longer offered as Bilibili/clean-story render candidates.
