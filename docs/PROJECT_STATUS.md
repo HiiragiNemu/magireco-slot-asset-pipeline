@@ -7,8 +7,8 @@
 当前生产分支是 `codex/corrected-runtime-pipeline`。下载目录中的旧 `main`
 检出不是权威工作树。
 
-`production_manifests_v18` 当前覆盖 926 个事件，其中 548 个 render-ready、
-378 个 failed、683 个 composition-resolved、378 个 audience-excluded、1615 条字幕。
+`production_manifests_v18` 当前覆盖 926 个事件，其中 521 个 render-ready、
+405 个 failed、683 个 composition-resolved、405 个 audience-excluded、1615 条字幕。
 当前 failed 全部有 audience exclusion reason；非排除 failed 队列为 0。
 所有新增正式输出继续遵守：原生分辨率/帧率、不 upscale、不生成旧 124GB 1080p 输出、
 不使用旧 motion/static 分类、不按 `ac` 后缀数字推 CRI index、不混合字幕版/无字幕版、
@@ -64,8 +64,8 @@
   官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
-- 通用化 pipeline 策略报告已生成并在 `ac4901` 批处理后重算，当前结论是：
-  198 个 ready 但缺单事件 QA 的事件中，194 个已经是 linear full-frame 批处理候选；
+- 通用化 pipeline 策略报告已生成并在 `ac4901/ac7204` 批处理后重算，当前结论是：
+  166 个 ready 但缺单事件 QA 的事件中，162 个已经是 linear full-frame 批处理候选；
   后续应按 manifest 队列小批量渲染、
   QA 和 contact-sheet 复核，而不是逐个 family 依赖对话判断。
 
@@ -96,6 +96,10 @@
 - `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4901_20260626`
   作为 `ac4901` 同场景 Bilibili 长片候选，36 段、约 96 秒、36 条字幕、
   416x232、30/1、48 kHz 双声道，direct stream-copy。
+- `ac7204` 的自动批处理暴露了 ready-linear 队列仍需视觉/语义闸门：
+  27 个 `地図` / `結果表示_チャンス` / `結果表示_WIN` / 彩色牌面玩法事件已从
+  clean story 队列排除并生成 material collection；
+  7 个角色/台词切片保留为 clean 子集，单事件 7/7 QA 通过并生成同场景子集长片。
 
 本轮复核结果：
 
@@ -118,9 +122,9 @@ A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_cover
 
 当前覆盖状态：
 
-- 548 个 ready events 中，350 个已有 v18 单事件 QA，198 个仍需渲染/QA；
-- 548 个 ready events 中，303 个已有同场景 series/preserved 覆盖，245 个仍需长片策略；
-- 378 个 audience-excluded events 中，55 个已有 material collection 覆盖，323 个仍需素材归档或
+- 521 个 ready events 中，355 个已有 v18 单事件 QA，166 个仍需渲染/QA；
+- 521 个 ready events 中，310 个已有同场景 series/preserved 覆盖，211 个仍需长片策略；
+- 405 个 audience-excluded events 中，82 个已有 material collection 覆盖，323 个仍需素材归档或
   明确仅文档排除。
 
 ## 2026-06-18 运行时纠偏状态

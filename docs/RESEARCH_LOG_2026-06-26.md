@@ -929,3 +929,92 @@ After regenerating `coverage_audits_v18_20260626`, current totals are 548 ready 
 and 55 audience-excluded events covered by material collections. The regenerated strategy
 queue shows 194 of the remaining 198 missing-QA items are still linear full-frame batch
 candidates.
+
+## ac7204 ready-linear semantic-gate correction
+
+`ac7204` was processed next because the regenerated strategy queue listed it as a large
+ready-linear family. The technical render/QA pass succeeded for all 34 ready events:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7204_full
+```
+
+QA passed 34/34, but the contact sheet exposed a semantic classification problem:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac7204_full_render\ac7204_full_contact_sheet.jpg
+```
+
+Most events are not clean story animation. They are map/result presentation variants with
+official labels such as `地図`, `告弱/告強`, `結果表示_チャンス`, `結果表示_WIN`, and visible
+colored result cards, `CHANCE`, `WIN`, rainbow, or hanabi result effects. This proves that
+`ready + linear_full_frame_sequence` is a necessary technical gate, but not sufficient for
+Bilibili clean-story inclusion.
+
+The following 27 events were added to `audience_exclusions.json` as gameplay/result material:
+
+```text
+ac7204_003 ac7204_004 ac7204_005 ac7204_006 ac7204_007 ac7204_008
+ac7204_009 ac7204_010 ac7204_011 ac7204_012 ac7204_013 ac7204_014
+ac7204_015 ac7204_016
+ac7204_029 ac7204_030 ac7204_031 ac7204_032 ac7204_033 ac7204_034
+ac7204_035 ac7204_036 ac7204_037 ac7204_038 ac7204_039 ac7204_040
+ac7204_041
+```
+
+Rebuilding `production_manifests_v18` now gives 926 events, 521 render-ready events,
+405 failed events, 683 composition-resolved events, 405 audience-excluded events, and
+1615 subtitles. `ac7204` now has 7 remaining clean-story candidates:
+
+```text
+ac7204_017 ac7204_021 ac7204_022 ac7204_023 ac7204_042 ac7204_043 ac7204_044
+```
+
+The excluded result/card material was grouped separately:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac7204
+```
+
+`build_material_collection.py` reports a passed collection with 28 material clips, 416x232,
+30/1 fps, direct visual stream-copy, and a native-size audible review edition.
+
+The seven clean character/serif candidates were re-rendered into a clean subset directory,
+separate from the initial full review output:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7204_character_subset
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac7204_character_subset\ac7204_character_subset_contact_sheet.jpg
+```
+
+QA passed 7/7:
+
+```json
+{
+  "audited_events": 7,
+  "passed": 7,
+  "failed": 0,
+  "subtitle_and_no_subtitle_audio_identical": 7,
+  "non_silent_audio": 7,
+  "total_output_bytes": 6782639
+}
+```
+
+The character subset was then stream-copy combined as an explicitly named subset, not a
+complete `ac7204` family:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626
+```
+
+`build_series_editions.py` reports 7 events, 54,755 ms, 7 subtitle cues, 416x232, 30/1,
+48 kHz stereo, and direct stream-copy. The earlier `--require-complete-family` run correctly
+failed because 27 sibling events are now intentionally material-excluded; this confirms the
+long-edition builder should not silently mix excluded gameplay material into clean-story
+uploads.
+
+After regenerating coverage and strategy audits, current totals are 521 ready events,
+355 ready events with v18 single-event QA, 166 ready events still missing single-event QA,
+310 ready events with series/preserved coverage, 211 ready events without series coverage,
+82 audience-excluded events covered by material collections, and 162 of the 166 remaining
+missing-QA items are still linear full-frame batch candidates.

@@ -68,23 +68,24 @@ Current counts:
 | Audience event catalog rows | 7753 |
 | Catalog rows marked automatic candidate | 2245 |
 | v18 production events | 926 |
-| Clean-story render-ready events | 548 |
-| Already covered by single-event QA and series/preserved output | 303 |
-| Ready events with single-event QA but still needing series/keep-single decision | 47 |
-| Ready events still missing single-event render/QA | 198 |
-| Missing-QA events that are linear full-frame batch candidates | 194 |
+| Clean-story render-ready events | 521 |
+| Already covered by single-event QA and series/preserved output | 310 |
+| Ready events with single-event QA but still needing series/keep-single decision | 45 |
+| Ready events still missing single-event render/QA | 166 |
+| Missing-QA events that are linear full-frame batch candidates | 162 |
 | Missing-QA events that are already-resolved layered candidates | 4 |
-| Audience-excluded gameplay/material events | 378 |
-| Audience-excluded events already covered by material collection | 55 |
+| Audience-excluded gameplay/material events | 405 |
+| Audience-excluded events already covered by material collection | 82 |
 | Material/gameplay events still needing material collection or documented exclusion | 323 |
 | Explicit composition plans | 154 |
-| Explicit audience exclusions | 378 |
+| Explicit audience exclusions | 405 |
 
 Important conclusion: the immediate clean-story backlog is mostly not a research
-problem. After the generic sample and `ac4901` full batch, `194 / 198`
-ready-but-unrendered events are still linear full-frame batch candidates. They
-should be rendered and QAed in controlled chunks, not discussed one family at a
-time.
+problem, but `ac7204` proves that a visual/semantic gate is still required after
+technical QA. After the generic sample, `ac4901`, and corrected `ac7204`
+processing, `162 / 166` ready-but-unrendered events are still linear full-frame
+batch candidates. They should be rendered and QAed in controlled chunks, then
+checked by contact sheet before any long Bilibili edition is promoted.
 
 ## Why manual family passes still happened
 
@@ -165,10 +166,12 @@ Human verification contact sheet:
 A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg
 ```
 
-This sample confirms that the ready-linear queue can produce valid native
-audience videos in batch mode. It does not prove that every remaining ready event
-is semantically perfect; it proves the next step should be batch QA plus contact
-sheet review, not family-by-family conversation.
+This sample confirms that the ready-linear queue can produce technically valid
+native renders in batch mode. It does not prove that every remaining ready event
+is semantically appropriate for the clean-story lane; `ac7204_003` and
+`ac7204_004` were later reclassified as material after a fuller family contact
+sheet review. The sample still proves the scalable workflow: batch render, QA,
+contact-sheet review, then promote or reclassify.
 
 ## First full batch after the strategy report
 
@@ -203,6 +206,36 @@ Results:
 This reduced the ready events still missing single-event QA from 244 to 198.
 The regenerated coverage audit now reports 350 ready events with single-event QA
 and 303 ready events with series/preserved coverage.
+
+## Semantic-gate correction from ac7204
+
+The next batch, `ac7204`, showed why the pipeline cannot treat technical readiness
+as the final audience decision. A full 34-event render passed technical QA, but
+the contact sheet showed many `地図`, `CHANCE`, `WIN`, colored result-card,
+rainbow, and hanabi result presentations. These are gameplay/result materials,
+not normal clean-story upload content.
+
+The corrected split is:
+
+```text
+Material/result presentation:
+ac7204_003..016 and ac7204_029..041
+
+Clean character/serif subset:
+ac7204_017 ac7204_021 ac7204_022 ac7204_023 ac7204_042 ac7204_043 ac7204_044
+```
+
+Outputs:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac7204
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7204_character_subset
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626
+```
+
+This reduced the ready events still missing single-event QA from 198 to 166, but
+more importantly it added a hard process rule: a batch can be technically valid
+and still be semantically wrong for the clean-story/Bilibili lane.
 
 ## Scalable execution policy
 
@@ -268,8 +301,8 @@ batch reports.
 If work follows the lane policy above, the immediate clean-story backlog is
 tractable:
 
-- `198` events still need single-event render/QA;
-- `194` of those are already linear full-frame candidates;
+- `166` events still need single-event render/QA;
+- `162` of those are already linear full-frame candidates;
 - rendering/QA cost is compute and disk space, not large model token cost;
 - model attention should be spent on failed chunks, visual anomalies, series
   grouping, and missing generic rules.
@@ -288,7 +321,8 @@ A:\magireco_corrected_research_20260612\validation_outputs_v18_generic_strategy_
 A:\magireco_corrected_research_20260612\frame_audits_v18_generic_strategy_sample_20260626\generic_strategy_sample_contact_sheet.jpg
 ```
 
-If this sample and the completed `ac4901` batch are acceptable, the next safe
-action is to batch-render the top ready families from `ready_missing_queue.csv`,
-starting with `ac7204` and `ac4908`, while retaining all single-event files and
-producing QA/contact-sheet evidence before any long Bilibili edition is promoted.
+If this sample plus the corrected `ac4901/ac7204` batches are acceptable, the
+next safe action is to batch-render the top ready families from
+`ready_missing_queue.csv`, starting with `ac4908`, while retaining all
+single-event files and producing QA/contact-sheet evidence before any long
+Bilibili edition is promoted.
