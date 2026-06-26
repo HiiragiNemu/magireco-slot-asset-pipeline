@@ -299,3 +299,24 @@ The six events were added to `audience_exclusions.json` as gameplay/material can
 Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353 failed events,
 while increasing `audience_excluded_events` from 271 to 277. No render is produced for this
 exclusion pass.
+
+## ac3407/ac3409 card-flip add-result UI exclusion
+
+The unresolved `ac3407` and `ac3409` groups contain 24 native 512x288 card-flip/add-result
+UI events. The source layers use `ac3403_mekure_3on_*` character card components plus
+`ac3403_mekure_3on_uwanose(_add)(_lp)` add-result layers. The audio/subtitle side also
+identifies them as gameplay prompts: `共通カードめくれ`, PUSH display sound, result add sound,
+and `押して！`.
+
+These are not normal story/dialogue animations. They are retained as gameplay/material
+collection candidates and excluded from the clean story queue.
+
+Source contact-sheet and CSV audit are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac3407_ac3409_card_flip_ui
+```
+
+Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353 failed events,
+while increasing `audience_excluded_events` from 277 to 301. No render is produced for this
+exclusion pass.
