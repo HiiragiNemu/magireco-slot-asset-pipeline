@@ -1,0 +1,66 @@
+{
+  "schema": "magireco-analysis-evidence-release-v1",
+  "tag": "analysis-evidence-v18.26-20260627",
+  "target_branch": "codex/corrected-runtime-pipeline",
+  "source_commit": "0018353f94764688db51afb77e420727666e3335",
+  "release_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.26-20260627",
+  "asset": {
+    "name": "magireco-analysis-evidence-v18-20260627-043411.zip",
+    "content_type": "application/zip",
+    "size_bytes": 11862510,
+    "sha256": "E20F71F81201800D98F3116A4A5DB434A746F6D1753204B626EDD3BA68095BFB",
+    "download_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/download/analysis-evidence-v18.26-20260627/magireco-analysis-evidence-v18-20260627-043411.zip"
+  },
+  "evidence_file_count_before_bundle_index": 1156,
+  "production_catalog": {
+    "events": 926,
+    "ready": 521,
+    "failed_including_excluded": 405,
+    "audience_excluded": 405
+  },
+  "coverage_audit_after_invalidation": {
+    "ready_with_single_event_QA": 304,
+    "ready_missing_single_event_QA": 217,
+    "ready_with_series_or_preserved": 267,
+    "ready_without_series": 254,
+    "excluded_with_material_collection": 82,
+    "excluded_without_material_collection": 323,
+    "invalidated_output_root_count": 6,
+    "material_prefix_coverage": true
+  },
+  "runtime_av_trust": {
+    "invalidated_do_not_use": 78,
+    "blocked_pending_runtime_av_verification": 10,
+    "top_risk_flags": {
+      "no_bgm_request_in_manifest": 88,
+      "voice_timing_without_full_av_capture": 88,
+      "visual_lip_sync_unverified": 88,
+      "invalidated_output_root": 78,
+      "subtitle_from_voice_label_only": 57,
+      "technical_ready_not_delivery_ready": 51,
+      "short_variant_with_voice": 48,
+      "gameplay_or_result_with_role_voice": 41
+    }
+  },
+  "resolver_smoke_test": {
+    "event": "ac7114_001",
+    "video_assets": 5,
+    "resolved_videos": 5,
+    "sounds": 5,
+    "resolved_ogg": 5,
+    "subtitles": 3,
+    "numeric_sound_9078": {
+      "request_id": "2074",
+      "ogg": "snd_04718_bank03_ogg_09078.ogg",
+      "media_mapping_basis": "ogg_chunk_index"
+    }
+  },
+  "content_policy": "derived text evidence only; no proprietary payloads, media, APKs, OBBs, native libraries, rendered videos, screenshots, or contact-sheet images",
+  "audit": {
+    "zip_entry_count": 1157,
+    "disallowed_extensions": 0,
+    "absolute_local_paths": 0,
+    "credential_pattern_matches": 20,
+    "credential_false_positive_resource_name_matches": 20
+  }
+}
