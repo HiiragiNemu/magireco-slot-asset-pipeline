@@ -246,3 +246,33 @@ not truncated.
 This batch remains a single-event recovery set. It is not promoted into a Bilibili-oriented
 long edition until the surrounding `ac5102` family boundaries, ordering, and duplicate-event
 policy are reviewed.
+
+## ac5102 mixed-dimension button-prompt exclusion batch
+
+After the safe-shape attack recovery, all remaining unresolved `ac5102` events were reviewed
+as a group. There are 120 such events, and every one contains `ac8002_chance_btn_*` button
+prompt layers:
+
+- `ac8002_chance_btn_osite` / `ac8002_chance_btn_osoteLP`;
+- `ac8002_chance_btn_rengeki` / `ac8002_chance_btn_rengeki_LP`;
+- `ac8002_chance_btn_nagaosi` / `ac8002_chance_btn_nagaosi_LP`;
+- `ac8002_chance_btn_renda` / `ac8002_chance_btn_rendaLP`.
+
+The mixed dimensions are not an incidental render bug: the events combine 416x232 character
+attack layers with 512x288 gameplay button-prompt overlays and button/system audio such as
+`押して！`, `連撃`, `長押し`, and `連打`. These are not normal clean story/Bilibili animation
+clips. They should be kept for a separate gameplay/material collection policy.
+
+The 120 events were added to `tools/frida_runtime_probe/audience_exclusions.json` with a
+shared reason. Rebuilding `production_manifests_v18` keeps 573 render-ready events and 353
+failed events, while increasing `audience_excluded_events` from 151 to 271. The non-excluded
+failed queue drops accordingly.
+
+Audit CSV:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_button_prompt_exclusions\ac5102_button_prompt_exclusion_audit_summary.csv
+```
+
+No renders are produced for this exclusion pass, because the purpose is to prevent button UI
+from contaminating the clean normal-animation output set.
