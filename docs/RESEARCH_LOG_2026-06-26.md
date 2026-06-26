@@ -182,3 +182,67 @@ The source-layer audit summary is:
 ```text
 A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_003\ac5102_003_frame_audit_summary.csv
 ```
+
+## ac5102 safe-shape short attack batch
+
+After `ac5102_003`, the next safe subset of unresolved `ac5102` events was restricted to
+native 416x232, three-layer short attack compositions with this exact shape:
+
+- a character attack intro clip starting at 0 ms;
+- the matching character LP clip at the official static interval;
+- the same-number `ac5102_3on_##_uwa_ef_bg_lp` attack background/effect layer at the
+  official static interval.
+
+This pass deliberately excludes all longer or `mixed_dimensions` `ac5102` events. Those
+still need separate evidence before any story/material decision.
+
+Source contact-sheet audits are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_safe_shape_source
+```
+
+The source audit shows character attack cut-ins and matching colored attack backgrounds,
+with no button, `押し順`, `狙え`, gold-frame, or slot UI text layer. The 19 recovered events
+are:
+
+```text
+ac5102_026 ac5102_029 ac5102_052 ac5102_055 ac5102_078
+ac5102_081 ac5102_104 ac5102_107 ac5102_130 ac5102_133
+ac5102_156 ac5102_159 ac5102_182 ac5102_185 ac5102_208
+ac5102_211 ac5102_234 ac5102_237 ac5102_260
+```
+
+Each event now has a `timed_full_frame_layers` composition plan in:
+
+```text
+tools/frida_runtime_probe/composition_plans/
+```
+
+Rebuilding `production_manifests_v18` after the batch gives 926 events, 573 render-ready
+events, 353 failed events, 666 composition-resolved events, 151 audience-excluded events,
+and 1612 subtitles.
+
+Single-event render and QA output:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5102_safe_shape_batch
+```
+
+QA passed 19/19. All outputs keep native 416x232, 30/1 fps, yuv420p, 48 kHz stereo, have
+non-silent audio, and have identical audio essence between subtitle and no-subtitle editions.
+Rendered contact sheets are stored at:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac5102_safe_shape_render
+```
+
+Subtitle cues were read from the generated UTF-8 SRT files and match the official voice
+labels: `やっ`, `はぁっ`, `はっ`, and `いっくぜぇー` depending on the event. `ac5102_211`
+and `ac5102_234` extend render duration to 3333 ms via the existing `loop_last_clip` policy
+because their official base action audio is 3333 ms; the subtitle cue ends at 1673 ms and is
+not truncated.
+
+This batch remains a single-event recovery set. It is not promoted into a Bilibili-oriented
+long edition until the surrounding `ac5102` family boundaries, ordering, and duplicate-event
+policy are reviewed.
