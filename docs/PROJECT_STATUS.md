@@ -69,6 +69,10 @@
   作为 ac5208 追击单事件 clean story 双版本；
 - `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626`
   作为 ac5208 追击同场景 Bilibili 长片候选；
+- `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4902_full`
+  作为 ac4902 clean story 单事件双版本，46/46 QA 通过；
+- `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4902_20260626`
+  作为 ac4902 同场景 Bilibili 长片候选，46 段、约 11分30秒、59 条字幕。
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
   作为素材合集，不混入 clean story。
 
@@ -93,8 +97,8 @@ A:\magireco_corrected_research_20260612\coverage_audits_v18_20260626\event_cover
 
 当前覆盖状态：
 
-- 590 个 ready events 中，258 个已有 v18 单事件 QA，332 个仍需渲染/QA；
-- 590 个 ready events 中，221 个已有同场景 series/preserved 覆盖，369 个仍需长片策略；
+- 590 个 ready events 中，304 个已有 v18 单事件 QA，286 个仍需渲染/QA；
+- 590 个 ready events 中，267 个已有同场景 series/preserved 覆盖，323 个仍需长片策略；
 - 336 个 audience-excluded events 中，13 个已有 material collection 覆盖，323 个仍需素材归档或
   明确仅文档排除。
 

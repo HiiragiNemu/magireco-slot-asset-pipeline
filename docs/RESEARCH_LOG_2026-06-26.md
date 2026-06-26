@@ -645,10 +645,10 @@ Current totals:
   "events": 926,
   "ready_events": 590,
   "audience_excluded_events": 336,
-  "ready_with_single_event_QA": 258,
-  "ready_missing_single_event_QA": 332,
-  "ready_with_series_or_preserved": 221,
-  "ready_without_series": 369,
+  "ready_with_single_event_QA": 304,
+  "ready_missing_single_event_QA": 286,
+  "ready_with_series_or_preserved": 267,
+  "ready_without_series": 323,
   "excluded_with_material_collection": 13,
   "excluded_without_material_collection": 323
 }
@@ -681,3 +681,73 @@ ac4904 15
 This audit becomes the next work queue: render/QA ready events in controlled batches, then
 build same-scene long editions; separately group excluded slot/UI/material events only into
 material collections, without mixing them into clean story uploads.
+
+## ac4902 full single-event and series recovery
+
+`ac4902` was the largest ready family missing v18 render/QA coverage in the coverage audit.
+A dry-run over the 46 ready `ac4902` manifests found:
+
+- all 46 are native 416x232 at 30/1 fps;
+- all are `native_full_frame_only`;
+- all have `linear_full_frame_sequence` composition;
+- 40 use no extension policy and 6 use `loop_last_clip`;
+- total manifest duration is about 690 seconds with 59 subtitle cues.
+
+A five-event sample (`ac4902_001`, `_002`, `_003`, `_004`, `_006`) was rendered first and
+passed QA 5/5. Contact sheets confirmed normal story/character animation with no slot
+button or gameplay UI. The full family was then rendered:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac4902_full
+```
+
+Full QA passed 46/46:
+
+```json
+{
+  "audited_events": 46,
+  "passed": 46,
+  "failed": 0,
+  "subtitle_and_no_subtitle_audio_identical": 46,
+  "non_silent_audio": 46,
+  "total_output_bytes": 118010117
+}
+```
+
+Full render visual audit:
+
+```text
+A:\magireco_corrected_research_20260612\frame_audits_v18_ac4902_full_render
+```
+
+The same 46 QA-passed events were then combined into a direct stream-copy same-scene
+Bilibili candidate:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac4902_20260626
+```
+
+`build_series_editions.py` reports:
+
+```json
+{
+  "series": "ac4902",
+  "status": "passed",
+  "event_count": 46,
+  "duration_ms": 690131,
+  "subtitle_cue_count": 59,
+  "width": 416,
+  "height": 232,
+  "frame_rate": "30/1",
+  "audio_sample_rate": "48000",
+  "audio_channels": 2
+}
+```
+
+The series manifest records per-event SHA-256, cumulative timeline, shifted combined SRT,
+and identical subtitle/no-subtitle edition audio hashes. The series contact sheet confirms
+normal story/character animation and no excluded button/reel UI.
+
+After regenerating `coverage_audits_v18_20260626`, ready events with v18 single-event QA
+increased from 258 to 304, and ready events with series/preserved coverage increased from
+221 to 267.
