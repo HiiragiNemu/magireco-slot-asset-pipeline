@@ -72,6 +72,18 @@
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
   作为素材合集，不混入 clean story。
 
+本轮复核结果：
+
+- `ac1102`、`ac1103`、`ac1104` 的 v18 单事件 QA 列表、production manifest ready 列表、
+  以及 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619`
+  中三个 series manifest 的 sources 完全一致；没有漏 ready 事件或额外混入事件；
+- `ac1102/ac1103/ac1104` 三个同场景长片均为 direct stream-copy，保留 416x232、
+  30/1、48 kHz 双声道，series manifest 记录 cumulative timeline、每段 SHA-256、
+  合并字幕和双版本音频哈希；
+- `ac0906` material collection 复核为黑幕小 Kyubey 素材层，production manifest 中
+  6 个事件全部带 audience exclusion reason；material manifest 分类为
+  `reviewed_audience_components_not_standalone_animation`，没有混入 clean story。
+
 ## 2026-06-18 运行时纠偏状态
 
 本轮停止扩散旧的错误大批量输出，改为只沿“运行时证据 -> 生产清单 ->

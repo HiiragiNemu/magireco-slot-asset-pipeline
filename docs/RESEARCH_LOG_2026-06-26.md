@@ -543,3 +543,78 @@ D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626\ac5
 
 The contact sheet confirms the long edition contains normal follow-up/attack animations and
 does not display the excluded CHANCE/PUSH button layers.
+
+## ac1102/ac1103/ac1104 review collections and ac0906 material audit
+
+The existing v15/v18 review collections were rechecked against the current v18 production
+manifests rather than assumed from older QA notes.
+
+Single-event QA status:
+
+- `validation_outputs_v15_ac1102_family`: 11/11 passed.
+- `validation_outputs_v15_ac1104_family`: 13/13 passed.
+- `validated_ac1103_full_v15`: 13/13 passed.
+- `validation_outputs_v18_clean_story_ac1102_04_full`: 37/37 passed.
+
+The v18 `ac1102/ac1103/ac1104` production manifests contain exactly 37 ready events:
+
+- `ac1102`: 11 ready events.
+- `ac1103`: 13 ready events.
+- `ac1104`: 13 ready events.
+
+The QA rows in
+`A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac1102_04_full\full_qa_audit.csv`
+match those 37 ready manifests exactly. The same set also matches the sources recorded in:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1102\series_manifest.json
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1103\series_manifest.json
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1104\series_manifest.json
+```
+
+No ready event is missing from the long editions and no extra event is mixed in. The three
+long editions are direct stream-copy, keep native 416x232 at 30/1 fps with 48 kHz stereo
+audio, and record per-event SHA-256, combined SRT cues, cumulative start/end timeline, and
+edition audio hashes.
+
+Visual review contact sheets were generated for the three long editions:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1102\audit\ac1102_series_review_contact_sheet.jpg
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1103\audit\ac1103_series_review_contact_sheet.jpg
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac1102_04_20260619\ac1104\audit\ac1104_series_review_contact_sheet.jpg
+```
+
+Manual review of those sheets confirms:
+
+- `ac1102` is the dairy/farm/cow animation family.
+- `ac1103` is the Tsuruno delivery-training animation family.
+- `ac1104` is the beach/banana-boat animation family.
+
+No slot buttons, reels, unrelated material layers, or wrong story family frames were observed
+in the sampled long-edition frames.
+
+The `ac0906` material collection was rechecked separately. In the current v18 production
+manifests, all six `ac0906` events are not ready for clean story and carry the same audience
+exclusion reason: reviewed black-matte Kyubey character overlay requiring official runtime
+background composition. This matches the existing material collection:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906\material_collection_manifest.json
+```
+
+That manifest is `passed`, classifies the set as
+`reviewed_audience_components_not_standalone_animation`, contains six sources
+`ac0906_001` through `ac0906_006`, preserves native 416x232/30/1 video, and writes both a
+visual-only direct-stream-copy collection and an audible review edition with official audio
+evidence and packet SHA-256. Its labels are component labels such as
+`ac0906_cmn_sQB_act_LtoR_run`, not story subtitles.
+
+The generated review contact sheet:
+
+```text
+D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906\audit\ac0906_material_review_contact_sheet.jpg
+```
+
+confirms black-background small-Kyubey component material, so it remains correctly separated
+from clean story/Bilibili animation outputs.
