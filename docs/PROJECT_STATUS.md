@@ -21,9 +21,13 @@
   采用主攻击层 `ac5208_lev_madhom` 归零、`ac5208_lev_madhom_LP` 从 4167 ms
   接续，并按官方 `40006_特化ﾏﾐ_追撃_まどほむ攻撃` 音频结束点渲染到 6740 ms；
   同时补入官方 request `8367 / 28016_CV_見滝原まだまだだよ` 字幕；
-- `ac5208` 三个追击 clean story 单事件双版本已通过 3/3 QA；
+- `ac5208` 三个追击 clean story 单事件双版本已通过 3/3 QA；同场景长片候选也已
+  stream-copy 生成并通过脚本 QA/视觉抽查，保持 512x288、30/1、48 kHz 双声道和
+  双版本音频一致；
 - 输出目录：
   `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2`；
+  长片目录：
+  `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626`；
 - `ac2201_001` 已审计为 `黒江狙え` slot/gameplay cut-in，含押し順/狙え文字层和
   ADD/MUL 特效层，现从 clean story 队列排除并保留为素材/玩法候选；
 - 57 个非 ready 的 `ac3102` RB slot battle/gameplay UI 事件已批量从 clean story
@@ -62,7 +66,9 @@
 - `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac7206_full`
   与 `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac7206_20260625`；
 - `A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2`
-  作为 ac5208 追击单事件 clean story 双版本，尚未提升为同场景长片；
+  作为 ac5208 追击单事件 clean story 双版本；
+- `D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626`
+  作为 ac5208 追击同场景 Bilibili 长片候选；
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260619\ac0906`
   作为素材合集，不混入 clean story。
 

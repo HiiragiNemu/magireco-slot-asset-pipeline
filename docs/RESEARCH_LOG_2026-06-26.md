@@ -486,5 +486,60 @@ normal dialogue:
 行きます
 ```
 
-No same-scene Bilibili long edition is generated in this pass; `ac5208` should be promoted
-only after the family-level ordering policy for short follow-up attack variants is reviewed.
+## ac5208 same-scene Bilibili long-edition candidate
+
+After the full `ac5208` single-event QA passed, the family was reviewed for long-edition
+eligibility. The v18 production manifest contains exactly three `ac5208` events and all are
+ready:
+
+```text
+ac5208_001  512x288  6288 ms  2 subtitle cues
+ac5208_002  512x288  6312 ms  2 subtitle cues
+ac5208_003  512x288  6740 ms  3 subtitle cues
+```
+
+Because all three events share the same native stream signature and represent the same
+follow-up attack scene family, a stream-copy same-scene candidate was generated in natural
+event order. The original single-event renders remain preserved in:
+
+```text
+A:\magireco_corrected_research_20260612\validation_outputs_v18_clean_story_ac5208_full_v2
+```
+
+Series output:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626
+```
+
+`build_series_editions.py` reports:
+
+```json
+{
+  "series": "ac5208",
+  "status": "passed",
+  "event_count": 3,
+  "duration_ms": 19421,
+  "subtitle_cue_count": 7,
+  "width": 512,
+  "height": 288,
+  "frame_rate": "30/1",
+  "audio_sample_rate": "48000",
+  "audio_channels": 2
+}
+```
+
+The combined SRT contains seven shifted cues: the shared opening CV line for each segment
+plus Sayaka, Kyoko, and Madoka/Homura attack lines. The long edition is direct stream-copy
+from QA-passed single-event editions; the series manifest records per-event SHA-256, source
+paths, cumulative timeline, output SHA-256, and identical audio hashes for subtitle and
+no-subtitle editions.
+
+Visual audit contact sheet:
+
+```text
+D:\MagiReco_Reverse\magireco_verified_series_v18_clean_story_ac5208_20260626\ac5208\audit\ac5208_series_contact_sheet.jpg
+```
+
+The contact sheet confirms the long edition contains normal follow-up/attack animations and
+does not display the excluded CHANCE/PUSH button layers.
