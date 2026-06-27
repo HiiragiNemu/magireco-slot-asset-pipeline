@@ -285,6 +285,38 @@ export such as `_ZN8CScnSlot4CalcEv` and then calling
 `reinject_gadget.py` now use that export-based check before declaring the
 Gadget capture path ready.
 
+### Official-code bad sample re-capture
+
+The bad samples were re-captured through the recovered ARM64 Gadget using
+official event codes from the event catalog, not suffix-derived hashes.  The
+resolved long-window evidence is:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\bad_sample_recapture_resolved_official_codes_v3_long_window
+```
+
+Detailed report:
+
+```text
+docs/research/2026-06-27-runtime-av-recapture-report.md
+```
+
+Key corrections:
+
+- `ac0921_001` is a long event, not a 15 second unit.  It has three resolved
+  DGM assets, five actual audible OGG plays, and four subtitle entries.  The BGM
+  / lever sound `2990_次回予告_レバー` starts at about 74 ms, and the later
+  `3on` / `3on_lp` visuals are loaded at about 27.46 seconds.  Any old render
+  without this audio/timeline is invalid.
+- `ac4901_025` and `ac4901_026` have official runtime voice
+  `15498_iro_AT_働きグマ_よし`.  Because the user observed no visible mouth
+  motion, these events are blocked from clean-story promotion until visual
+  speech validation is solved.
+- `ac7204_003` and `ac7204_017` have official role voice and are therefore not
+  pure material/effect components.
+- Empty string sound callbacks are now written to `ignored_sound_events.csv`.
+  Real incomplete audio requests remain in `unresolved_sound_events.csv`.
+
 ## 2026-06-27 strategy queue protection
 
 `report_pipeline_strategy.py` no longer leaves AV-blocked events in the

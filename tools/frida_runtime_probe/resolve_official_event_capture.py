@@ -64,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--video-map", required=True)
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--window-before-ms", type=int, default=100)
-    parser.add_argument("--window-after-ms", type=int, default=15000)
+    parser.add_argument("--window-after-ms", type=int, default=60000)
     return parser.parse_args()
 
 
@@ -398,6 +398,7 @@ def main() -> int:
     texts: list[dict] = []
     sounds: list[dict] = []
     unresolved_sound_events: list[dict] = []
+    ignored_sound_events: list[dict] = []
     request_id_by_code: dict[str, str] = {}
 
     for line_number, record in enumerate(runtime_records, 1):
@@ -487,16 +488,16 @@ def main() -> int:
         if kind in STRING_SOUND_KINDS | HIGH_LEVEL_STRING_SOUND_KINDS:
             code_name = text
             if not code_name:
-                unresolved_sound_events.append(
+                ignored_sound_events.append(
                     {
-                        "sequence": len(unresolved_sound_events),
+                        "sequence": len(ignored_sound_events),
                         "line_number": line_number,
                         "relative_ms": relative_ms,
                         "kind": kind,
                         "code_name": "",
                         "event_code_hex": "",
                         "mapping_basis": "empty_string_sound_request",
-                        "unresolved_reason": "empty_sound_code_string",
+                        "ignored_reason": "empty_sound_code_string",
                         "raw_int_args": raw_int_args,
                         "raw_u64_args": raw_u64_args,
                     }
@@ -728,6 +729,18 @@ def main() -> int:
         "raw_int_args",
         "raw_u64_args",
     ]
+    ignored_sound_event_fields = [
+        "sequence",
+        "line_number",
+        "relative_ms",
+        "kind",
+        "code_name",
+        "event_code_hex",
+        "mapping_basis",
+        "ignored_reason",
+        "raw_int_args",
+        "raw_u64_args",
+    ]
     subtitle_fields = [
         "sequence",
         "start_ms",
@@ -744,6 +757,11 @@ def main() -> int:
         out_dir / "unresolved_sound_events.csv",
         unresolved_sound_events,
         unresolved_sound_event_fields,
+    )
+    write_csv(
+        out_dir / "ignored_sound_events.csv",
+        ignored_sound_events,
+        ignored_sound_event_fields,
     )
     write_csv(out_dir / "subtitle_timeline.csv", subtitles, subtitle_fields)
     with (out_dir / "subtitles.srt").open("w", encoding="utf-8") as output:
@@ -774,11 +792,13 @@ def main() -> int:
             1 for row in sounds if row.get("is_high_level_request") == "yes"
         ),
         "unresolved_sound_event_count": len(unresolved_sound_events),
+        "ignored_sound_event_count": len(ignored_sound_events),
         "runtime_text_count": len(texts),
         "subtitle_count": len(subtitles),
         "video_assets": dgms,
         "sound_assets": sounds,
         "unresolved_sound_events": unresolved_sound_events,
+        "ignored_sound_events": ignored_sound_events,
         "subtitles": subtitles,
     }
     with (out_dir / "event_manifest.json").open("w", encoding="utf-8") as output:
@@ -794,6 +814,7 @@ def main() -> int:
             "actual_play_sounds": manifest["actual_play_sound_count"],
             "high_level_sound_requests": manifest["high_level_sound_request_count"],
             "unresolved_sound_events": manifest["unresolved_sound_event_count"],
+            "ignored_sound_events": manifest["ignored_sound_event_count"],
             "subtitles": len(subtitles),
             "out_dir": str(out_dir),
         },

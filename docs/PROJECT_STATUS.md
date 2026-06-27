@@ -103,6 +103,16 @@
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_after_gadget_reinject_v3_20260627`
   结论为 `runtime_capture_ready_via_arm64_gadget`。这只恢复了官方运行时取证能力；
   `ac0921/ac4901/ac7204` 等被作废样本仍需重新捕获、解析和人工验证后才可重新渲染。
+- 2026-06-27 官方 code 重新捕获报告已写入
+  `docs/research/2026-06-27-runtime-av-recapture-report.md`。关键结论：
+  `ac0921_001` 必须用长窗口解析，官方运行时在约 74 ms 播放
+  `2990_次回予告_レバー`，后续有 4 条 Iroha 语音/字幕，并在约 27.46 秒才加载
+  `ac0921_jikai_yokoku_3on_01(.lp)`；旧 15 秒 resolver 窗口会漏掉后段画面。
+  `ac4901_025/026` 和 `ac7204_003/017` 均有官方角色语音，不得归入纯素材；
+  其中 `ac4901` 视觉说话校验不通过时也不得归入 clean-story 投稿候选。
+- `resolve_official_event_capture.py` 已把空字符串声回调改写到
+  `ignored_sound_events.csv`，并把默认解析窗口改为 60 秒。真实未解析音频仍保留在
+  `unresolved_sound_events.csv` 和 `unresolved_sound_event_count`，不能被忽略。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入
