@@ -145,6 +145,7 @@ def main() -> int:
                     "video_extension_policy", ""
                 ),
                 "av_delivery_status": av.get("delivery_status", ""),
+                "av_semantic_lane": av.get("semantic_lane", ""),
                 "av_risk_flags": av.get("risk_flags", ""),
                 "production_manifest": row.get("production_manifest", ""),
             }
@@ -171,6 +172,7 @@ def main() -> int:
                     "audience_exclusion_reason", ""
                 ),
                 "av_delivery_status": av.get("delivery_status", ""),
+                "av_semantic_lane": av.get("semantic_lane", ""),
                 "av_risk_flags": av.get("risk_flags", ""),
                 "production_manifest": row.get("production_manifest", ""),
             }
@@ -181,6 +183,7 @@ def main() -> int:
             "event": row["event"],
             "series": event_prefix(row["event"]),
             "delivery_status": row.get("delivery_status", ""),
+            "semantic_lane": row.get("semantic_lane", ""),
             "risk_flags": row.get("risk_flags", ""),
             "audio_names": row.get("audio_names", ""),
             "subtitle_texts": row.get("subtitle_texts", ""),
@@ -211,6 +214,7 @@ def main() -> int:
             "subtitle_count",
             "video_extension_policy",
             "av_delivery_status",
+            "av_semantic_lane",
             "av_risk_flags",
             "production_manifest",
         ],
@@ -229,6 +233,7 @@ def main() -> int:
             "subtitle_count",
             "video_extension_policy",
             "av_delivery_status",
+            "av_semantic_lane",
             "av_risk_flags",
             "production_manifest",
         ],
@@ -247,6 +252,7 @@ def main() -> int:
             "subtitle_count",
             "audience_exclusion_reason",
             "av_delivery_status",
+            "av_semantic_lane",
             "av_risk_flags",
             "production_manifest",
         ],
@@ -258,6 +264,7 @@ def main() -> int:
             "event",
             "series",
             "delivery_status",
+            "semantic_lane",
             "risk_flags",
             "audio_names",
             "subtitle_texts",
@@ -282,6 +289,7 @@ def main() -> int:
                         else "excluded from clean story and needs material decision"
                     ),
                     "av_delivery_status": row.get("av_delivery_status", ""),
+                    "av_semantic_lane": row.get("av_semantic_lane", ""),
                     "av_risk_flags": row.get("av_risk_flags", ""),
                     "production_manifest": row.get("production_manifest", ""),
                 }
@@ -295,6 +303,7 @@ def main() -> int:
             "series",
             "why",
             "av_delivery_status",
+            "av_semantic_lane",
             "av_risk_flags",
             "production_manifest",
         ],

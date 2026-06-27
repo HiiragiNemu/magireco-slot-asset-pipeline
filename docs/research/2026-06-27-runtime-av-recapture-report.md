@@ -156,3 +156,62 @@ QA summary:
 This is a review sample, not a blanket approval of the old v18 batch.  The
 remaining bad-sample families still require the same runtime-timeline and
 classification gates before rendering.
+
+## Role-voice lane gate
+
+`audit_runtime_av_trust.py` now separates role voice from BGM/SE/effect audio.
+It no longer treats every `z2d_req_sound` as voice.  The lane gate uses subtitle
+voice request IDs plus speaker tokens such as `iro`, `nemu`, and `yac` to count
+only role voice, then writes `semantic_lane` and `role_voice_count` to the audit
+CSV.
+
+Bad-sample lane audit:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_lane_audit_bad_samples_v1\runtime_av_trust_audit.csv
+```
+
+Summary:
+
+```json
+{
+  "audited_events": 5,
+  "status_counts": {
+    "blocked_pending_runtime_av_verification": 5
+  },
+  "semantic_lane_counts": {
+    "normal_animation_candidate_needs_visual_speech_review": 2,
+    "blocked_short_role_voice_variant": 2,
+    "audible_gameplay_result_with_role_voice": 1
+  }
+}
+```
+
+This is the machine-checkable form of the user correction:
+
+- `ac4901_025` and `ac4901_026` are short role-voice variants and remain blocked
+  from Bilibili/clean-story promotion.
+- `ac7204_003` is gameplay/result with role voice and must not be pure material.
+- `ac7204_017` has role voice and remains blocked pending visual/speech review,
+  not pure material.
+- `ac0921_001` remains a user-review sample until the repaired render is
+  visually accepted.
+
+The v18 strategy audit was also regenerated without overwriting the older audit:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_20260627
+A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_20260627
+```
+
+The regenerated strategy keeps the existing 51 AV-blocked ready-missing events
+out of the actionable render queue and adds `av_semantic_lane` to queue CSVs.
+The blocked lanes are:
+
+```json
+{
+  "audible_gameplay_result_with_role_voice": 41,
+  "blocked_short_role_voice_variant": 36,
+  "normal_animation_candidate_needs_visual_speech_review": 11
+}
+```

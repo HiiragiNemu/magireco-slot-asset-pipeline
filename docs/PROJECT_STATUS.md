@@ -120,6 +120,21 @@
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001`。
   QA：1/1 passed，32.766 秒，416x232，30/1，48 kHz stereo，字幕/无字幕音频哈希一致。
   这是修复路线样片，不代表旧 v18 batch 可恢复为交付品。
+- `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
+  不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
+  `semantic_lane`。5 个官方重捕获样本的 lane 审计位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_lane_audit_bad_samples_v1`，
+  结论是 5/5 仍为 `blocked_pending_runtime_av_verification`：
+  `ac4901_025/026` 为短角色语音变体，`ac7204_003` 为 gameplay/result with
+  role voice，`ac0921_001` 和 `ac7204_017` 为带角色语音、需视觉语音复核的动画候选。
+- v18 trust/strategy 已用新版 lane gate 重算到
+  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_20260627`
+  和
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_20260627`；
+  ready-missing 217 中 166 仍为可行动渲染候选、51 个继续 AV-blocked。阻断 lane：
+  41 个 `audible_gameplay_result_with_role_voice`、36 个
+  `blocked_short_role_voice_variant`、11 个
+  `normal_animation_candidate_needs_visual_speech_review`。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入

@@ -42,7 +42,49 @@ GAMEPLAY_TERMS = (
     "card",
 )
 
-BGM_TERMS = ("BGM", "bgm", "ＢＧＭ")
+BGM_TERMS = ("BGM", "bgm", "ＢＧＭ", "次回予告", "レバー")
+ROLE_VOICE_SPEAKER_TOKENS = {
+    "ai",
+    "ari",
+    "fel",
+    "fer",
+    "hom",
+    "iro",
+    "kae",
+    "kan",
+    "kuro",
+    "kuroe",
+    "mad",
+    "mam",
+    "mami",
+    "mif",
+    "mihu",
+    "mit",
+    "mita",
+    "mom",
+    "nag",
+    "nem",
+    "nemu",
+    "ren",
+    "rena",
+    "qb",
+    "riko",
+    "sana",
+    "say",
+    "sigure",
+    "sqb",
+    "toka",
+    "tou",
+    "tsu",
+    "tukasa",
+    "tukuyo",
+    "tur",
+    "turk",
+    "ui",
+    "uwa",
+    "yac",
+    "yach",
+}
 VOICE_SOURCES = ("z2d_req_sound",)
 ASR_SOURCES = ("asr_verified", "voice_subtitle_override")
 
@@ -175,6 +217,44 @@ def has_term(values: list[str], terms: tuple[str, ...]) -> bool:
     return any(term in joined for term in terms)
 
 
+def is_role_voice_audio(row: dict[str, Any], subtitle_voice_requests: set[str]) -> bool:
+    request_id = str(row.get("request_id", "")).strip()
+    if request_id and request_id in subtitle_voice_requests:
+        return True
+    code_name = str(row.get("code_name", "")).strip()
+    parts = [part.casefold() for part in code_name.split("_")]
+    if any(part in ROLE_VOICE_SPEAKER_TOKENS for part in parts[1:-1]):
+        return True
+    return str(row.get("source", "")) in VOICE_SOURCES and str(
+        row.get("code_name", "")
+    ).startswith("3")
+
+
+def semantic_lane(
+    *,
+    role_voice_count: int,
+    gameplay_marker: bool,
+    short_variant: bool,
+    audience_excluded: bool,
+    audio_count: int,
+) -> str:
+    if gameplay_marker and role_voice_count:
+        return "audible_gameplay_result_with_role_voice"
+    if gameplay_marker:
+        return "pure_gameplay_or_effect_material"
+    if audience_excluded and role_voice_count:
+        return "audible_excluded_component_with_role_voice"
+    if audience_excluded:
+        return "excluded_material_or_component"
+    if role_voice_count and short_variant:
+        return "blocked_short_role_voice_variant"
+    if role_voice_count:
+        return "normal_animation_candidate_needs_visual_speech_review"
+    if audio_count:
+        return "non_dialogue_audio_or_effect_component"
+    return "silent_or_video_only_material_candidate"
+
+
 def event_prefix(event: str) -> str:
     return event.split("_", 1)[0]
 
@@ -203,17 +283,40 @@ def summarize_manifest(
     clip_names = [str(row.get("dgm_name", "")) for row in clips]
     subtitle_sources = [str(row.get("subtitle_source", "")) for row in subtitles]
     subtitle_texts = [str(row.get("text", "")) for row in subtitles]
+    subtitle_voice_requests = {
+        str(row.get("voice_request_id", "")).strip()
+        for row in subtitles
+        if str(row.get("voice_request_id", "")).strip()
+    }
 
-    voice_count = sum(str(row.get("source", "")) in VOICE_SOURCES for row in audio)
+    role_voice_rows = [
+        row for row in audio if is_role_voice_audio(row, subtitle_voice_requests)
+    ]
+    role_voice_count = len(role_voice_rows)
+    non_dialogue_audio_count = len(audio) - role_voice_count
     base_audio_count = sum(str(row.get("source", "")) == "event_audio_component" for row in audio)
     bgm_request_count = sum(has_term([str(row.get("code_name", ""))], BGM_TERMS) for row in audio)
     asr_subtitle_count = sum(
         any(source_term in source for source_term in ASR_SOURCES)
         for source in subtitle_sources
     )
-    official_label_count = sum(source == "official_voice_label" for source in subtitle_sources)
+    runtime_capture_subtitle_count = sum(
+        source == "official_runtime_capture" for source in subtitle_sources
+    )
+    official_label_count = sum(
+        source in {"official_voice_label", "official_runtime_capture"}
+        for source in subtitle_sources
+    )
     gameplay_marker = has_term(audio_names + clip_names, GAMEPLAY_TERMS)
     short_variant = int(manifest.get("render_duration_ms") or 0) <= 3000
+    audience_excluded = bool(manifest.get("audience_exclusion_reason"))
+    lane = semantic_lane(
+        role_voice_count=role_voice_count,
+        gameplay_marker=gameplay_marker,
+        short_variant=short_variant,
+        audience_excluded=audience_excluded,
+        audio_count=len(audio),
+    )
     invalidated_paths = sorted(
         path
         for path in set(render_paths) | set(series_paths) | set(material_paths)
@@ -224,20 +327,20 @@ def summarize_manifest(
     risk_flags: list[str] = []
     if invalidated:
         risk_flags.append("invalidated_output_root")
-    if not bgm_request_count:
-        risk_flags.append("no_bgm_request_in_manifest")
     if official_label_count and not asr_subtitle_count:
         risk_flags.append("subtitle_from_voice_label_only")
-    if voice_count and not any("runtime_capture" in str(row.get("evidence", "")) for row in audio):
-        risk_flags.append("voice_timing_without_full_av_capture")
-    if voice_count:
-        risk_flags.append("visual_lip_sync_unverified")
-    if gameplay_marker and voice_count:
+    if role_voice_count and not any(
+        "runtime_capture" in str(row.get("evidence", "")) for row in role_voice_rows
+    ):
+        risk_flags.append("role_voice_timing_without_full_av_capture")
+    if role_voice_count:
+        risk_flags.append("role_voice_visual_speech_unverified")
+    if gameplay_marker and role_voice_count:
         risk_flags.append("gameplay_or_result_with_role_voice")
     elif gameplay_marker:
         risk_flags.append("gameplay_or_result_material")
-    if short_variant and voice_count:
-        risk_flags.append("short_variant_with_voice")
+    if short_variant and role_voice_count:
+        risk_flags.append("short_variant_with_role_voice")
     if gates.get("ready") and risk_flags:
         risk_flags.append("technical_ready_not_delivery_ready")
 
@@ -252,17 +355,20 @@ def summarize_manifest(
         "event": event,
         "series": event_prefix(event),
         "delivery_status": delivery_status,
+        "semantic_lane": lane,
         "risk_flags": ";".join(risk_flags),
         "ready": "yes" if gates.get("ready") else "no",
-        "audience_excluded": "yes" if manifest.get("audience_exclusion_reason") else "no",
+        "audience_excluded": "yes" if audience_excluded else "no",
         "render_duration_ms": manifest.get("render_duration_ms", ""),
         "video_composition_model": manifest.get("video_composition_model", ""),
         "clip_count": len(clips),
         "base_audio_count": base_audio_count,
-        "voice_count": voice_count,
+        "role_voice_count": role_voice_count,
+        "non_dialogue_audio_count": non_dialogue_audio_count,
         "bgm_request_count": bgm_request_count,
         "subtitle_count": len(subtitles),
         "official_voice_label_subtitle_count": official_label_count,
+        "runtime_capture_subtitle_count": runtime_capture_subtitle_count,
         "asr_or_override_subtitle_count": asr_subtitle_count,
         "gameplay_marker": "yes" if gameplay_marker else "no",
         "audio_names": " | ".join(audio_names),
@@ -278,6 +384,7 @@ def summarize_manifest(
 
 def write_markdown(path: Path, rows: list[dict[str, Any]], invalidated: list[dict[str, str]]) -> None:
     counts = Counter(row["delivery_status"] for row in rows)
+    lane_counts = Counter(row["semantic_lane"] for row in rows)
     risk_counts: Counter[str] = Counter()
     for row in rows:
         for flag in str(row["risk_flags"]).split(";"):
@@ -293,6 +400,9 @@ def write_markdown(path: Path, rows: list[dict[str, Any]], invalidated: list[dic
     ]
     for key, value in sorted(counts.items()):
         lines.append(f"- `{key}`: {value}")
+    lines.extend(["", "## Semantic lanes", ""])
+    for key, value in sorted(lane_counts.items()):
+        lines.append(f"- `{key}`: {value}")
     lines.extend(["", "## Risk flags", ""])
     for key, value in risk_counts.most_common():
         lines.append(f"- `{key}`: {value}")
@@ -303,7 +413,8 @@ def write_markdown(path: Path, rows: list[dict[str, Any]], invalidated: list[dic
     lines.extend(["", "## Audited events", ""])
     for row in rows:
         lines.append(
-            f"- `{row['event']}`: {row['delivery_status']} "
+            f"- `{row['event']}`: {row['delivery_status']} / "
+            f"{row['semantic_lane']} "
             f"({row['risk_flags'] or 'no flags'})"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -355,6 +466,7 @@ def main() -> int:
         "event",
         "series",
         "delivery_status",
+        "semantic_lane",
         "risk_flags",
         "ready",
         "audience_excluded",
@@ -362,10 +474,12 @@ def main() -> int:
         "video_composition_model",
         "clip_count",
         "base_audio_count",
-        "voice_count",
+        "role_voice_count",
+        "non_dialogue_audio_count",
         "bgm_request_count",
         "subtitle_count",
         "official_voice_label_subtitle_count",
+        "runtime_capture_subtitle_count",
         "asr_or_override_subtitle_count",
         "gameplay_marker",
         "audio_names",
@@ -382,6 +496,7 @@ def main() -> int:
     summary = {
         "audited_events": len(rows),
         "status_counts": dict(Counter(row["delivery_status"] for row in rows)),
+        "semantic_lane_counts": dict(Counter(row["semantic_lane"] for row in rows)),
         "invalidated_output_root_count": len(invalidated_entries),
         "csv": str(csv_path),
         "report": str(out_dir / "runtime_av_trust_audit.md"),
