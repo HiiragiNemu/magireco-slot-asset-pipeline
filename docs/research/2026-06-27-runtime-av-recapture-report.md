@@ -215,3 +215,46 @@ The blocked lanes are:
   "normal_animation_candidate_needs_visual_speech_review": 11
 }
 ```
+
+## Source integrity audit
+
+`audit_render_source_integrity.py` was added to make a rendered event auditable
+without re-rendering.  It reads a `render_manifest.json`, follows its source
+production manifest, and writes:
+
+- `source_integrity_manifest.json`;
+- `source_hashes.csv`;
+- `source_timeline.csv`.
+
+For `ac0921_001`, the audit output is:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\audit
+```
+
+Important audited values:
+
+```json
+{
+  "event": "ac0921_001",
+  "event_code_hex": "0x544549382d424c4d",
+  "event_index": "2814",
+  "event_key": "MLB-8IET",
+  "clip_count": 3,
+  "audio_count": 5,
+  "subtitle_count": 4,
+  "output_hash_match": true
+}
+```
+
+The timeline CSV records the cumulative event timeline and input hashes.  The
+first entries prove the corrected BGM and main voice timings:
+
+```text
+video    0-27433    ac0921_jikai_yokoku_lev_01
+audio    74-1840    2990_次回予告_レバー
+audio    2579-9318  30031_037_iro_私どうして忘れちゃ
+audio    9694-16167 30032_075_iro_上手く言えないけど
+video    27433-32433 ac0921_jikai_yokoku_3on_01
+video    32433-32766 ac0921_jikai_yokoku_3on_01_lp
+```

@@ -135,6 +135,11 @@
   41 个 `audible_gameplay_result_with_role_voice`、36 个
   `blocked_short_role_voice_variant`、11 个
   `normal_animation_candidate_needs_visual_speech_review`。
+- 新增 `audit_render_source_integrity.py`，用于给已渲染单事件补 source hash、
+  event index、累计时间轴和输出哈希复核。`ac0921_001` 审计位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\audit`：
+  event_index=2814，event_key=`MLB-8IET`，3 个输入视频、5 个输入 OGG、
+  4 条字幕，`output_hash_match=true`。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入
