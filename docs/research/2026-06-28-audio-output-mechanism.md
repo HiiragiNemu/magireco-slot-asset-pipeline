@@ -146,6 +146,43 @@ Interpretation:
 - attaching only after the app is already running can miss early init/open calls,
   so the next probe must start before or during sound-system initialization.
 
+### Correction: audible one-shot path uses libAMAIN CSLSound/OpenSL
+
+Later 2026-06-28 runtime work confirmed that the currently audible one-shot
+voice/SE route does not use `zg::snd::OutputCtrl` as its final device path in
+this MuMu/Gadget state.  The successful capture point is:
+
+```text
+CSndMng::SndReq(int, int)
+  -> CSLMng::SndReq(int, int)
+  -> CSLMng::PlayStart(SSound_Data*, int)
+  -> CSLAndroidSimpleBufferQueue::Enqueue(void const*, unsigned int)
+```
+
+Detailed report:
+
+```text
+docs/research/2026-06-28-csl-audio-queue-runtime-capture.md
+```
+
+Key `ac0921_001` evidence:
+
+- `--with-sound=false` and `--with-sound=true` were both captured through
+  `CSLAndroidSimpleBufferQueue::Enqueue`;
+- the explicit `--with-sound` route sent `forced_event_sound_request_sent`, but
+  only duplicated request `2990` and did not create extra BGM buffers;
+- actual queue output remained five one-shot chunks:
+  `2990 -> 6893`, `30031 -> 6930`, `30032 -> 6931`,
+  `30077 -> 6976`, `30078 -> 6977`;
+- no continuous BGM/OpenSL buffer appeared in the forced single-event window.
+
+Diagnostic listening artifacts:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_post_slot_v2_20260628\ac0921_001_runtime_audio_timeline.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline.wav
+```
+
 ## Repository tools added
 
 These probes are diagnostic tools only.  They do not generate delivery video:
@@ -154,6 +191,8 @@ These probes are diagnostic tools only.  They do not generate delivery video:
 tools/frida_runtime_probe/audio_output_buffer_probe.js
 tools/frida_runtime_probe/decode_audio_output_buffer_dump.py
 tools/frida_runtime_probe/sound_device_state_probe.js
+tools/frida_runtime_probe/csl_audio_queue_probe.js
+tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 ```
 
 Use cases:
@@ -166,25 +205,28 @@ Use cases:
   explicit `TransBuf` modes.
 - `sound_device_state_probe.js`: record sound-system init/open/close/output
   state, including the `OutputCtrl` device pointer at `[this + 0x10]`.
+- `csl_audio_queue_probe.js`: hook `libAMAIN.so` `CSndMng`/`CSLMng` requests
+  and `CSLAndroidSimpleBufferQueue::Enqueue` to dump the actual OpenSL queue
+  chunks with runtime request id and `SSound_Data` sound id evidence.
+- `decode_csl_audio_queue_dump.py`: decode queue chunks either as raw concat
+  WAV or as a runtime-offset timeline WAV with simple 16-bit PCM mixing.
 
 ## Next cracking target
 
 Valid next work is one of these routes:
 
-1. Start the device-state probe before sound-system initialization, then capture:
-   - `SndSystem::init(TagZGSndConfig const*)`
-   - `zgSndOpenDevice`
-   - `SndSystem::openDevice(int)`
-   - `OutputCtrl::initDevice/openDevice`
-   - final device-write vtable target when `[OutputCtrl + 0x10]` becomes non-null.
-2. If early attach still sees no device object, reverse `OutputCtrl::initDevice`
-   and the `libopenal.so` backend to determine why MuMu/game state has no output
-   device in this route.
-3. Capture the full gameplay trigger that starts global BGM before the animation
-   event, then compare the active channel/play-info state against the forced
-   single-event request.
-4. Only after final device PCM or a complete official sound timeline is proven,
-   resume native-resolution rendering and long-form Bilibili assembly.
+1. Capture the full gameplay trigger that starts or transitions into the
+   relevant scene, not only the forced GBoss single event.  The missing BGM, if
+   real, is likely owned by an outer scene/state object.
+2. Run the `CSLAndroidSimpleBufferQueue` capture together with high-level BGM
+   hooks such as `Macro_SND_BGM_PLAY`, `SoundMng_isAlreadyPlayingBGM`,
+   `SndIsAlreadyPlayingBGM`, `zgSndReqCode`, and `C_CtrlSndLib` request helpers.
+3. If no BGM request appears in the outer flow either, classify the scene as
+   no-BGM official runtime and use the five runtime one-shot requests as the
+   authoritative audio timeline.
+4. If BGM appears outside the single event, derive a general manifest rule from
+   runtime request timeline + OpenSL queue PCM before resuming native-resolution
+   rendering and long-form Bilibili assembly.
 
 Until then, any file that merely has an AAC stream, visual contact sheet, or
 partial voice/subtitle match remains diagnostic, not deliverable.

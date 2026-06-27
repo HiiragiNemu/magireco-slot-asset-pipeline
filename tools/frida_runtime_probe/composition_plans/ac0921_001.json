@@ -8,7 +8,9 @@
     "width": 416,
     "height": 232
   },
-  "evidence": "official runtime recapture 2026-06-27 via ARM64 Gadget: ac0921_001 plays the next-preview lever/BGM sound and four Iroha voice lines before loading ac0921_jikai_yokoku_3on_01 and ac0921_jikai_yokoku_3on_01_lp at the event tail; static audience clips provide the matching full-frame source durations and no slot foreground layer is included",
+  "delivery_status": "blocked_pending_runtime_bgm_or_no_bgm_classification",
+  "audio_evidence_report": "docs/research/2026-06-28-csl-audio-queue-runtime-capture.md",
+  "evidence": "official runtime recapture via ARM64 Gadget: ac0921_001 forced single-event playback produces request 2990 lever SE plus four Iroha voice requests (30031, 30032, 30077, 30078) before loading ac0921_jikai_yokoku_3on_01 and ac0921_jikai_yokoku_3on_01_lp at the event tail; 2026-06-28 CSLSound/OpenSL queue capture did not observe continuous BGM in the forced event window, so this plan is diagnostic and must not be promoted until the outer gameplay BGM/no-BGM state is verified",
   "clips": [
     {
       "dgm_name": "ac0921_jikai_yokoku_lev_01",

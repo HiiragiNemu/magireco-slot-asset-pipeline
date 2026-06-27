@@ -162,6 +162,20 @@
   游戏最终音频设备/全局 BGM 触发链没有被完整复现，不是继续按视觉拼接单 ac 能解决。
   已新增 `audio_output_buffer_probe.js`、`decode_audio_output_buffer_dump.py` 和
   `sound_device_state_probe.js` 用于后续从进程启动/设备初始化阶段继续破解。
+- 2026-06-28 后续突破：`docs/research/2026-06-28-csl-audio-queue-runtime-capture.md`
+  记录了 `libAMAIN.so` 实际可听 one-shot 路线：
+  `CSndMng::SndReq -> CSLMng::SndReq -> CSLMng::PlayStart ->
+  CSLAndroidSimpleBufferQueue::Enqueue`。新增
+  `csl_audio_queue_probe.js` 和 `decode_csl_audio_queue_dump.py`，可把 OpenSL queue
+  chunks 解码为 concat 或 runtime timeline WAV。`ac0921_001` 复测得到 5 段真实入队音频：
+  request `2990/30031/30032/30077/30078` 对应 sound id
+  `6893/6930/6931/6976/6977`；`--with-sound` 只额外重复请求 `2990`，没有产生额外
+  BGM buffer。诊断 WAV 位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_post_slot_v2_20260628\ac0921_001_runtime_audio_timeline.wav`
+  和
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline.wav`。
+  这证明单 event 强制路径有权威 SE/voice 时间轴，但仍没有证明完整 BGM；继续禁止把
+  `ac0921_001` 晋升为投稿成片，下一步必须捕获外层 gameplay/BGM 状态机。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于
