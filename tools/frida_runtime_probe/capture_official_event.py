@@ -5,10 +5,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+NUMERIC_EVENT_CODE_RE = re.compile(r"^(?:0x[0-9a-fA-F]+|[0-9]+)$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,6 +41,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    args.code = str(args.code).strip()
+    if not NUMERIC_EVENT_CODE_RE.fullmatch(args.code):
+        raise SystemExit(
+            "--code must be the resolved numeric GBoss uint64 code, for example "
+            "0x544549382d424c4d. Keep the scene name in --label; do not pass "
+            "labels such as ac0921_001 as --code."
+        )
     tool_dir = Path(__file__).resolve().parent
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)

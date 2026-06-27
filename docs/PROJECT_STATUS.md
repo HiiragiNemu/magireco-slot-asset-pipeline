@@ -135,6 +135,16 @@
   事件窗口只见 lever SE 和 4 条 voice request，没有 BGM request，说明单 event 强制触发
   不进入外层 BGM 状态机。后续必须捕获完整触发流程或游戏最终混音，不能继续只靠单 event
   拼接生成投稿成片。
+- 已新增 `tools/frida_runtime_probe/audio_output_probe.js` 作为游戏最终音频输出路径的
+  metadata-only 探针。有效数值 code smoke 位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\audio_output_probe_ac0921_numeric_smoke_20260627`：
+  `OutputCtrl::output` 捕获 265 个样本，其中 210 个为 output-enabled、5 个
+  `TransBuf` 头部非零；事件侧仍只有 lever SE 和 4 条 Iroha 语音，没有 BGM request。
+  这证明游戏混音出口可 hook，但 `TransBuf` PCM 布局尚未验证，不能据此生成投稿音频。
+- `event_scene_host.py`、`capture_official_event.py` 和 `event_scene_probe.js` 已加
+  numeric code 防呆：`--code` 必须是 resolved GBoss uint64，例如
+  `0x544549382d424c4d`，`ac0921_001` 这类名称只能放在 `--label`。这避免 RPC 报错但
+  pending request 已进入游戏而污染证据。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于

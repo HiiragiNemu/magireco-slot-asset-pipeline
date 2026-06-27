@@ -5,10 +5,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 from pathlib import Path
 
 import frida
+
+
+NUMERIC_EVENT_CODE_RE = re.compile(r"^(?:0x[0-9a-fA-F]+|[0-9]+)$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,6 +64,15 @@ def main() -> int:
         raise SystemExit(f"--name is required for {args.action}")
     if args.action in {"inspect-code", "request-code", "request-official-code"} and not args.code:
         raise SystemExit(f"--code is required for {args.action}")
+    if args.action in {"inspect-code", "request-code", "request-official-code"}:
+        code = str(args.code).strip()
+        if not NUMERIC_EVENT_CODE_RE.fullmatch(code):
+            raise SystemExit(
+                "--code must be a numeric GBoss uint64 code such as "
+                "0x544549382d424c4d. Use --label for names like ac0921_001; "
+                "do not pass the label as --code."
+            )
+        args.code = code
     if args.action == "request-official-sequence" and not args.sequence_json:
         raise SystemExit("--sequence-json is required for request-official-sequence")
     if args.action == "dump" and args.offset is None:

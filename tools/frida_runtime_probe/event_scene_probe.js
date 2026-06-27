@@ -46,6 +46,20 @@ function findExport(symbol) {
   return address;
 }
 
+function normalizeEventCode(value) {
+  const raw = String(value === undefined || value === null ? "" : value).trim();
+  if (!/^(0x[0-9a-fA-F]+|[0-9]+)$/.test(raw)) {
+    throw new Error(
+      "event code must be a numeric uint64 value, not a scene label: " + raw
+    );
+  }
+  const code = uint64(raw);
+  return {
+    code,
+    hex: "0x" + code.toString(16).padStart(16, "0"),
+  };
+}
+
 function safeCString(pointerValue) {
   if (pointerValue === null || pointerValue.isNull()) {
     return null;
@@ -466,7 +480,8 @@ function describeEventCode(codeHex, name) {
   if (loader === null || loader.isNull()) {
     throw new Error("GBoss loader is not available");
   }
-  const code = uint64(codeHex);
+  const normalized = normalizeEventCode(codeHex);
+  const code = normalized.code;
   const getEventObject = new NativeFunction(
     findExport("_ZN2zg11GBossLoader14getEventObjectEy"),
     "pointer",
@@ -577,7 +592,7 @@ function describeEventCode(codeHex, name) {
 
   return {
     name: name || null,
-    code_hex: codeHex,
+    code_hex: normalized.hex,
     event_object: eventObject.toString(),
     exists: !eventObject.isNull(),
     anim_count: animCount,
@@ -1045,8 +1060,9 @@ rpc.exports = {
     if (pendingRequest !== null) {
       throw new Error("a scene request is already pending");
     }
-    const normalizedCode = String(codeHex);
+    const normalizedCode = normalizeEventCode(codeHex).hex;
     const label = labelValue ? String(labelValue) : normalizedCode;
+    const event = describeEventCode(normalizedCode, label);
     requestSequence += 1;
     pendingRequest = {
       id: requestSequence,
@@ -1069,7 +1085,7 @@ rpc.exports = {
     return {
       accepted: true,
       request: pendingRequest,
-      event: describeEventCode(normalizedCode, label),
+      event,
     };
   },
   dump(relativeOffsetValue, sizeValue) {
