@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -24,6 +25,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass
     script_path = Path(args.script).resolve()
     output_path = Path(args.out).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)

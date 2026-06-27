@@ -231,6 +231,50 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay
 That skeleton is intentionally marked evidence-only and carries the
 metadata-only warning for `814` / sound id `287`.
 
+## Targeted `814` / sound id `287` recapture
+
+A later focused slot-input capture reused the 8 MiB per-chunk cap and sent 8
+lever/stop cycles from the visible slot UI:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628
+```
+
+Decoded listening artifact:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\slot_targeted_814_runtime_audio_timeline.wav
+```
+
+Summary and evidence skeleton:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\summary_tables
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\evidence_skeleton_v1
+```
+
+Result:
+
+```json
+{
+  "chunk_count": 47,
+  "duration_seconds": 41.395020833333334,
+  "observed_sound_ids": [60, 61, 62, 64, 278, 279, 287, 291, 445, 451, 453, 531, 1769, 2993, 3196, 3198, 3206, 6698, 6714, 6758, 6759, 6760, 9002],
+  "metadata_sound_ids": []
+}
+```
+
+The previously capped branch is now resolved:
+
+| Runtime evidence | Static mapping |
+| --- | --- |
+| active event `ac0910_001` at about 28.249 s requested sound code `814` | request table id `344`, SMZ `213B22458D11890FF6BEEC183F22.smz` |
+| final OpenSL queue chunk at about 28.309 s had `sound_id_u16_at_0x2=287`, `buffer_bytes=3072004`, not metadata-only | `sound_id.dat` maps OGG chunk `287` to `snd_00814_bank01_ogg_00287.ogg` |
+
+This confirms the runtime path and removes the earlier evidence gap for this
+gameplay sound.  It does not authorize a clean-story render because the capture
+is a slot gameplay state-machine sequence with reel/UI state.
+
 ## Static table cross-check
 
 The request table and `sound_id.dat` confirm why numeric shortcuts are unsafe:
@@ -287,8 +331,6 @@ mechanism proof and a listening artifact for user verification.
 
 Allowed next actions:
 
-- repeat this capture with a targeted larger per-chunk cap for sound id `287`
-  / code `814`;
 - extend the evidence skeleton into a strict production-manifest builder only
   after each scene has complete visual, subtitle, and final OpenSL/game-decoder
   audio evidence;

@@ -209,6 +209,15 @@
   输出明确标记 `evidence_only_not_render_ready`：首轮 slot skeleton 保留
   metadata-only 警告；大块重采样 skeleton 无警告。它是后续批量 manifest 生成前的
   证据层，不会自动把诊断捕获晋升为投稿成片。
+- 2026-06-28 定向 slot 输入复抓位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628`：
+  8 轮 lever/stop 输入捕获 47 个完整 OpenSL queue chunks、约 41.40 秒、无
+  metadata-only chunks，observed sound ids 包含 `287`。运行时确认 `814` 在
+  `ac0910_001` 活跃窗口触发，`sound_code_sequence.csv` 映射为 request table id
+  `344` / `213B22458D11890FF6BEEC183F22.smz`；`queue_sequence.csv` 中
+  `sound_id_u16_at_0x2=287` 的 3,072,004-byte chunk 映射到
+  `snd_00814_bank01_ogg_00287.ogg`。这解决了首轮 `814/287` 只记录 metadata 的缺口，
+  但仍属于 gameplay/slot 机制证据，不是正常动画成片。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换

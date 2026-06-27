@@ -224,6 +224,14 @@ about 19.86 seconds, with no metadata-only chunks.  It proves the larger cap is
 safe for focused diagnostics, but it did not reproduce the earlier `814` /
 sound id `287` branch.
 
+A subsequent targeted slot-input recapture did reproduce that branch.  It
+captured 47 complete OpenSL queue chunks, about 41.40 seconds, with no
+metadata-only chunks.  The `814` sound-code lookup occurred during the
+`ac0910_001` active event window and mapped to request table id `344` /
+`213B22458D11890FF6BEEC183F22.smz`; the final queue row had sound id `287`,
+3,072,004 bytes, and static `sound_id.dat` mapping
+`snd_00814_bank01_ogg_00287.ogg`.
+
 This changes the general strategy: the recovery pipeline must derive manifests
 from runtime event-code dispatch plus sound-code/request timelines and final
 OpenSL/game-decoder evidence.  It must not continue classifying every `ac`
