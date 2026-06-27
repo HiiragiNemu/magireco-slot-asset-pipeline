@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-06-27
+更新时间：2026-06-28
 
 ## 2026-06-26 v18 当前状态
 
@@ -148,12 +148,20 @@
 - 用户继续复核确认 `ac0921_001__subtitles.mp4` 无 BGM/不可听；文件级 audit 证明
   MP4 虽有 48 kHz stereo AAC 音轨，但 23 秒后到 32.766 秒尾段为实质静音
   (`mean/max=-91.0 dB`)。`qa_event_batch.py` 已补
-  `manifest_audio_tail_gap` 和 `tail_digital_silence_after_manifest_audio` 门禁；
-  重跑
+  `manifest_audio_tail_gap` 和 `tail_digital_silence_after_manifest_audio` 门禁；重跑
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921`
   后 `ac0921_001` 从旧 technical passed 改为 failed，记录
   `manifest_last_audio_end_ms=22777`、`manifest_audio_tail_gap_ms=9989`、
   `tail_max_volume_db=-91.0`。
+- 2026-06-28 声音机制进展已写入
+  `docs/research/2026-06-28-audio-output-mechanism.md`。静态证据确认
+  `SndSystem::updateOutputBuf()` 先四平面混音并调用 `OutputCtrl::output(system+0xf78, ...)`，
+  `OutputCtrl::output()` 会先检查 `[this+0x10]` 输出设备指针；当前 runtime
+  `sound_device_state_ac0921_numeric_v3_20260628` 在 35 秒窗口内 46/46 个输出样本均为
+  `output_device=0x0`，其中 23 个样本仍为 `output_enabled=1`。因此现在的阻塞点是
+  游戏最终音频设备/全局 BGM 触发链没有被完整复现，不是继续按视觉拼接单 ac 能解决。
+  已新增 `audio_output_buffer_probe.js`、`decode_audio_output_buffer_dump.py` 和
+  `sound_device_state_probe.js` 用于后续从进程启动/设备初始化阶段继续破解。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于
