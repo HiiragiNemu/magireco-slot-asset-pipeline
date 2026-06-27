@@ -94,6 +94,15 @@
   emulated realm 返回 `ProtocolError('process is not using emulation')`；包本身
   `primaryCpuAbi=arm64-v8a`、`ro.debuggable=0`。捕获工具已补 `--realm native|emulated`
   入口以便未来环境验证，但当前状态仍不能恢复官方运行时 AV 捕获。
+- 2026-06-27 Gadget 恢复：旧会话中的可用路线已固化为
+  `tools/frida_runtime_probe/reinject_gadget.py`，通过 x86 frida-server endpoint 运行
+  `inject_gadget.js`，加载 app 私有目录中的 ARM64 Gadget。当前 smoke 输出
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_tool_smoke4_20260627`
+  为 `ok=true`，`gadget_arch=arm64`，且通过 `_ZN8CScnSlot4CalcEv` 导出反推到游戏映射；
+  后续诊断
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_after_gadget_reinject_v3_20260627`
+  结论为 `runtime_capture_ready_via_arm64_gadget`。这只恢复了官方运行时取证能力；
+  `ac0921/ac4901/ac7204` 等被作废样本仍需重新捕获、解析和人工验证后才可重新渲染。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入

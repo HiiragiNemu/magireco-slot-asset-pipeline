@@ -127,16 +127,78 @@ def parse_package_dump(stdout: str) -> dict[str, Any]:
 
 
 def try_gadget(host: str) -> dict[str, Any]:
+    session: frida.core.Session | None = None
+    script: frida.core.Script | None = None
     try:
         device = frida.get_device_manager().add_remote_device(host)
         processes = device.enumerate_processes()
+        if not processes:
+            return {"ok": False, "error": "no_process_exposed"}
+        target = processes[0]
+        session = device.attach(target.pid)
+        script = session.create_script(
+            """
+setImmediate(function(){
+  var all = Process.enumerateModules();
+  var gameExport = Module.findGlobalExportByName("_ZN8CScnSlot4CalcEv");
+  var gameProc = gameExport === null ?
+    Process.findModuleByName("libGameProc.so") :
+    Process.findModuleByAddress(gameExport);
+  var modules = all.filter(function(m) {
+    return /GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|libart|split_config|magireco/i
+      .test(m.name + " " + m.path);
+  }).map(function(m) {
+    return {name:m.name, path:m.path, base:m.base.toString(), size:m.size};
+  });
+  send({kind:"gadget_probe", arch:Process.arch, platform:Process.platform,
+        gameExport: gameExport === null ? null : gameExport.toString(),
+        libGameProc: gameProc === null ? null :
+          {name:gameProc.name, path:gameProc.path, base:gameProc.base.toString(), size:gameProc.size},
+        module_count:all.length, modules:modules});
+});
+""",
+            runtime="v8",
+        )
+        messages: list[dict[str, Any]] = []
+        script.on("message", lambda message, data: messages.append(message))
+        script.load()
+        time.sleep(1.0)
+        payloads = [msg.get("payload", {}) for msg in messages if msg.get("type") == "send"]
+        payload = payloads[0] if payloads else {}
+        module_texts = [
+            f"{row.get('name', '')} {row.get('path', '')}"
+            for row in payload.get("modules", [])
+        ]
+        lib_game_proc = payload.get("libGameProc")
         return {
             "ok": True,
+            "target_pid": target.pid,
+            "target_name": target.name,
+            "arch": payload.get("arch", ""),
+            "platform": payload.get("platform", ""),
+            "module_count": payload.get("module_count", 0),
+            "gameExport": payload.get("gameExport"),
+            "libGameProc": lib_game_proc,
+            "sees_libGameProc": bool(lib_game_proc)
+            or any("libGameProc" in text for text in module_texts),
+            "modules": payload.get("modules", []),
             "process_count": len(processes),
             "processes": [{"pid": p.pid, "name": p.name} for p in processes[:20]],
+            "raw_messages": messages,
         }
     except Exception as error:
         return {"ok": False, "error": repr(error)}
+    finally:
+        if script is not None:
+            try:
+                script.unload()
+            except Exception:
+                pass
+        if session is not None:
+            try:
+                session.detach()
+            except Exception:
+                pass
 
 
 def try_x86_attach(
@@ -151,6 +213,10 @@ def try_x86_attach(
             """
 setImmediate(function(){
   var all = Process.enumerateModules();
+  var gameExport = Module.findGlobalExportByName("_ZN8CScnSlot4CalcEv");
+  var gameProc = gameExport === null ?
+    Process.findModuleByName("libGameProc.so") :
+    Process.findModuleByAddress(gameExport);
   var modules = all.filter(function(m) {
     return /GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|libart|split_config|magireco/i
       .test(m.name + " " + m.path);
@@ -168,10 +234,14 @@ setImmediate(function(){
     }
   }
   send({kind:"x86_attach_probe", arch:Process.arch, platform:Process.platform,
+        gameExport: gameExport === null ? null : gameExport.toString(),
+        libGameProc: gameProc === null ? null :
+          {name:gameProc.name, path:gameProc.path, base:gameProc.base.toString(), size:gameProc.size},
         hasJava:hasJava, javaAvailable:javaAvailable, javaError:javaError,
         module_count:all.length, modules:modules});
 });
-"""
+""",
+            runtime="v8",
         )
         messages: list[dict[str, Any]] = []
         script.on("message", lambda message, data: messages.append(message))
@@ -183,6 +253,7 @@ setImmediate(function(){
             f"{row.get('name', '')} {row.get('path', '')}"
             for row in payload.get("modules", [])
         ]
+        lib_game_proc = payload.get("libGameProc")
         return {
             "ok": True,
             "realm": realm_label,
@@ -192,7 +263,10 @@ setImmediate(function(){
             "javaAvailable": payload.get("javaAvailable", False),
             "javaError": payload.get("javaError", ""),
             "module_count": payload.get("module_count", 0),
-            "sees_libGameProc": any("libGameProc" in text for text in module_texts),
+            "gameExport": payload.get("gameExport"),
+            "libGameProc": lib_game_proc,
+            "sees_libGameProc": bool(lib_game_proc)
+            or any("libGameProc" in text for text in module_texts),
             "modules": payload.get("modules", []),
             "raw_messages": messages,
         }
@@ -244,6 +318,8 @@ def write_markdown(path: Path, summary: dict[str, Any]) -> None:
         "## Frida surfaces",
         "",
         f"- Gadget `{summary['gadget_host']}` ok: `{summary['gadget'].get('ok')}`",
+        f"- Gadget arch: `{summary['gadget'].get('arch', '')}`",
+        f"- Gadget sees libGameProc: `{summary['gadget'].get('sees_libGameProc', '')}`",
         f"- x86 fallback `{summary['x86_host']}` default ok: `{summary['x86_attach'].get('ok')}`",
         f"- any x86 realm sees libGameProc: `{summary.get('x86_any_sees_libGameProc')}`",
         f"- any x86 realm exposes Java bridge: `{summary.get('x86_any_java_bridge')}`",
@@ -362,8 +438,10 @@ def main() -> int:
         for result in x86_attach_realms
     )
 
-    if gadget.get("ok"):
+    if gadget.get("ok") and gadget.get("sees_libGameProc"):
         verdict = "runtime_capture_ready_via_arm64_gadget"
+    elif gadget.get("ok"):
+        verdict = "blocked_gadget_does_not_expose_game_code"
     elif x86_any_sees_libGameProc:
         verdict = "runtime_capture_possible_via_x86_realm"
     elif any(result.get("ok") for result in x86_attach_realms):

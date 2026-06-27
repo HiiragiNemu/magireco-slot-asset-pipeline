@@ -230,6 +230,61 @@ native|emulated` for future environments where Frida can expose the correct
 surface, but no current capture should be promoted without a reachable ARM64
 Gadget or equivalent proof that `libGameProc` hooks are active.
 
+### Gadget recovery
+
+The older successful recovery path was found in the archived 2026-06-18 session:
+attach to the x86 frida-server endpoint and run `inject_gadget.js`, which loads
+the already-pushed ARM64 Gadget from the app private directory.  This path works
+again in the current MuMu session.
+
+Reusable command:
+
+```powershell
+python tools\frida_runtime_probe\reinject_gadget.py `
+  --out-dir 'A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_tool_smoke4_20260627'
+```
+
+The recovery evidence is:
+
+```json
+{
+  "ok": true,
+  "pid": "3213",
+  "gadget_arch": "arm64",
+  "gadget_sees_libGameProc": true
+}
+```
+
+Follow-up diagnosis:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_after_gadget_reinject_v3_20260627
+```
+
+Current verdict:
+
+```json
+{
+  "verdict": "runtime_capture_ready_via_arm64_gadget"
+}
+```
+
+`title_scene_host.py status` also attached through the Gadget and installed
+scene hooks using global `libGameProc` exports, confirming the app is currently
+in the slot scene and that the native game probe path is active:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\title_status_after_gadget_reinject_20260627.jsonl
+```
+
+Important diagnostic correction: in this native-bridge environment
+`Process.enumerateModules()` may report the game mapping as
+`split_config.arm64_v8a.apk`.  The reliable proof is resolving a known game
+export such as `_ZN8CScnSlot4CalcEv` and then calling
+`Process.findModuleByAddress(...)`.  `diagnose_runtime_capture_state.py` and
+`reinject_gadget.py` now use that export-based check before declaring the
+Gadget capture path ready.
+
 ## 2026-06-27 strategy queue protection
 
 `report_pipeline_strategy.py` no longer leaves AV-blocked events in the
