@@ -20,7 +20,10 @@ const cslSoundQueueOffset = 0x70;
 const soundDataSoundIdOffset = 0x2;
 const maxDumpChunks = 2000;
 const maxDumpTotalBytes = 96 * 1024 * 1024;
-const maxBytesPerChunk = 0x200000;
+// Gameplay BGM/effect chunks can exceed 2 MiB.  Keep the total dump cap fixed
+// but allow a single focused chunk, such as code 814 / sound id 287, to be
+// captured for listening verification.
+const maxBytesPerChunk = 0x800000;
 const previewBytes = 0x80;
 
 let dumpedChunks = 0;

@@ -217,6 +217,13 @@ Key evidence:
   exceeded the per-chunk dump cap, so it needs a focused recapture before use
   as final audio evidence.
 
+The follow-up capture raised the CSL per-chunk dump cap from 2 MiB to 8 MiB
+while keeping the total cap at 96 MiB.  That run entered a different random
+gameplay branch (`ac0908/ac0909`) and captured 25 complete OpenSL queue chunks,
+about 19.86 seconds, with no metadata-only chunks.  It proves the larger cap is
+safe for focused diagnostics, but it did not reproduce the earlier `814` /
+sound id `287` branch.
+
 This changes the general strategy: the recovery pipeline must derive manifests
 from runtime event-code dispatch plus sound-code/request timelines and final
 OpenSL/game-decoder evidence.  It must not continue classifying every `ac`
@@ -247,6 +254,7 @@ tools/frida_runtime_probe/decode_audio_output_buffer_dump.py
 tools/frida_runtime_probe/sound_device_state_probe.js
 tools/frida_runtime_probe/csl_audio_queue_probe.js
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
+tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 ```
 
 Use cases:
@@ -264,6 +272,11 @@ Use cases:
   chunks with runtime request id and `SSound_Data` sound id evidence.
 - `decode_csl_audio_queue_dump.py`: decode queue chunks either as raw concat
   WAV or as a runtime-offset timeline WAV with simple 16-bit PCM mixing.
+- `summarize_runtime_audio_capture.py`: reduce `runtime_probe.jsonl` and
+  `csl_audio_queue.jsonl` into CSV/JSON tables for event codes, DGM strings,
+  sound-code lookups, play requests, BGM calls, and OpenSL queue chunks.  This
+  is the bridge toward a manifest skeleton generator and keeps the next work
+  evidence-first instead of screenshot/contact-sheet-first.
 
 ## Next cracking target
 

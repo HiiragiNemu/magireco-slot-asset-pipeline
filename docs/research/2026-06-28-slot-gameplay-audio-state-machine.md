@@ -36,6 +36,18 @@ The timeline WAV is a diagnostic reconstruction from the game's final
 `CSLAndroidSimpleBufferQueue::Enqueue` PCM payloads.  It is not an externally
 matched OGG/SMZ guess.
 
+Machine-readable summary tables were generated with:
+
+```text
+tools/frida_runtime_probe/summarize_runtime_audio_capture.py
+```
+
+Output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\summary_tables
+```
+
 ## Event-code result
 
 The runtime capture saw these GBoss event codes.  They were then resolved
@@ -160,6 +172,50 @@ as metadata only because it exceeded the per-chunk dump cap.  That corresponds
 to the `814` gameplay sound-code path and should be captured with a larger cap
 only in a targeted diagnostic run, not during broad rendering.
 
+## Larger-chunk recapture
+
+`csl_audio_queue_probe.js` was adjusted from a 2 MiB per-chunk cap to an 8 MiB
+per-chunk cap while keeping the total dump cap at 96 MiB.  This prevents
+gameplay BGM/effect chunks from being silently metadata-only during focused
+diagnostics.
+
+Recapture output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628
+```
+
+Decoded listening artifact:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628\slot_gameplay_large_chunk_runtime_audio_timeline.wav
+```
+
+Summary table output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628\summary_tables
+```
+
+This later run took a different random/gameplay branch: it loaded
+`ac0908_001`, `ac0908_002`, `ac0909_*`, and reel UI resources instead of the
+earlier `ac0910` branch.  It produced 25 fully dumped queue chunks and no
+metadata-only chunks:
+
+```json
+{
+  "chunk_count": 25,
+  "source_total_pcm_bytes": 11216610,
+  "duration_seconds": 19.862375,
+  "observed_sound_ids": [60, 61, 64, 291, 864, 1768, 6698, 6709, 8573, 8575, 9002],
+  "largest_dumped_chunk_bytes": 2949132
+}
+```
+
+The recapture proves the larger cap works.  It did not reproduce the earlier
+`814` / sound id `287` branch, so that specific branch still needs targeted
+state steering if its audio is needed for final evidence.
+
 ## Static table cross-check
 
 The request table and `sound_id.dat` confirm why numeric shortcuts are unsafe:
@@ -218,8 +274,9 @@ Allowed next actions:
 
 - repeat this capture with a targeted larger per-chunk cap for sound id `287`
   / code `814`;
-- add a generic resolver that turns runtime event-code + sound-code logs into a
-  machine-readable manifest skeleton;
+- extend the new summary-table parser into a manifest skeleton generator that
+  turns runtime event-code + sound-code logs into machine-readable production
+  candidates;
 - continue reversing `zgSndWinDllConstruction -> zgSndInit -> SndSystem::init`
   only as a separate official-decoder route;
 - use `slot_gameplay_runtime_audio_timeline.wav` for human listening checks.

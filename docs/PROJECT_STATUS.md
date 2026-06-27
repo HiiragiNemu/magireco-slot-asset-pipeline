@@ -191,6 +191,16 @@
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\slot_gameplay_runtime_audio_timeline.wav`。
   这确认游戏机制是 runtime event-code + sound-code/request 状态机，不是手工逐个
   `ac` family 视觉分类；后续 manifest 必须以运行时请求和最终 OpenSL/官方解码证据为准。
+- `tools/frida_runtime_probe/summarize_runtime_audio_capture.py` 已新增，用于把
+  `runtime_probe.jsonl` 与 `csl_audio_queue.jsonl` 规整成可审计 CSV/JSON 表，而不是靠
+  contact sheet 或人工截图判断。首轮 slot 捕获和大块重采样均已生成 `summary_tables`；
+  大块重采样位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628`，
+  在 8 MiB per-chunk cap 下捕获 25 个完整 OpenSL queue chunks、约 19.86 秒、
+  无 metadata-only chunks，observed sound ids 为
+  `60/61/64/291/864/1768/6698/6709/8573/8575/9002`。该 run 走到不同随机 gameplay
+  分支（`ac0908/ac0909`），没有复现早先 `814/287` 分支；因此 `814/287` 仍需定向状态
+  steering 才能作为最终音频证据。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换
