@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=("status", "enter-slot"))
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument("--attach-timeout", type=float, default=30.0)
     parser.add_argument(
         "--script",
@@ -26,7 +27,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def attach_gadget(host: str, timeout: float) -> tuple[frida.core.Session, object]:
+def attach_gadget(
+    host: str, timeout: float, realm: str | None
+) -> tuple[frida.core.Session, object]:
     manager = frida.get_device_manager()
     deadline = time.monotonic() + max(timeout, 0.0)
     last_error: Exception | None = None
@@ -37,7 +40,7 @@ def attach_gadget(host: str, timeout: float) -> tuple[frida.core.Session, object
             if not processes:
                 raise RuntimeError(f"no process exposed at {host}")
             target = processes[0]
-            return device.attach(target.pid), target
+            return device.attach(target.pid, realm=realm), target
         except Exception as error:
             last_error = error
             if time.monotonic() >= deadline:
@@ -53,7 +56,7 @@ def main() -> int:
     if output_path:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    session, target = attach_gadget(args.host, args.attach_timeout)
+    session, target = attach_gadget(args.host, args.attach_timeout, args.realm)
     source = Path(args.script).resolve().read_text(encoding="utf-8")
     script = session.create_script(source)
     records: list[dict] = []

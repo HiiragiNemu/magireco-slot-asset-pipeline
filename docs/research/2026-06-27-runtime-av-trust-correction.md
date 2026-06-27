@@ -186,6 +186,50 @@ reachable again.  Broad rendering remains paused; the correct next runtime step
 is to restore Gadget loading, then re-capture the bad samples with the expanded
 high-level sound hooks.
 
+### Realm re-check
+
+The diagnostic was expanded to test all useful Frida attach realms and Java
+bridge visibility instead of only the default x86 attach surface:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_realm_20260627
+```
+
+Current result:
+
+```json
+{
+  "verdict": "blocked_x86_frida_cannot_see_arm64_game_code",
+  "package_primary_abi": "arm64-v8a",
+  "ro_debuggable": "0",
+  "native_bridge": "libnb.so",
+  "default_realm": {
+    "ok": true,
+    "arch": "x64",
+    "hasJava": false,
+    "sees_libGameProc": false
+  },
+  "native_realm": {
+    "ok": true,
+    "arch": "x64",
+    "hasJava": false,
+    "sees_libGameProc": false
+  },
+  "emulated_realm": {
+    "ok": false,
+    "error": "ProtocolError('process is not using emulation')"
+  }
+}
+```
+
+This rules out a simple `frida --realm emulated` fix for the current MuMu
+session.  The default and native realms still attach only to the x64 process
+shell; the emulated realm is rejected; and Frida exposes no Java bridge from
+this x86 surface.  The capture tools now accept an optional `--realm
+native|emulated` for future environments where Frida can expose the correct
+surface, but no current capture should be promoted without a reachable ARM64
+Gadget or equivalent proof that `libGameProc` hooks are active.
+
 ## 2026-06-27 strategy queue protection
 
 `report_pipeline_strategy.py` no longer leaves AV-blocked events in the

@@ -44,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--index", type=int)
     parser.add_argument("--frames", type=int)
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument(
         "--script",
         default=str(Path(__file__).with_name("force_selector_probe.js")),
@@ -73,7 +74,7 @@ def main() -> int:
         raise RuntimeError(f"no process exposed by Gadget at {args.host}")
 
     target = processes[0]
-    session = device.attach(target.pid)
+    session = device.attach(target.pid, realm=args.realm)
     source = Path(args.script).resolve().read_text(encoding="utf-8")
     script = session.create_script(source)
     records: list[dict] = []

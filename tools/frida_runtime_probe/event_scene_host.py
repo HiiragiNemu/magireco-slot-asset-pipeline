@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--immediate", action="store_true")
     parser.add_argument("--with-sound", action="store_true")
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument("--attach-timeout", type=float, default=60.0)
     parser.add_argument(
         "--script",
@@ -82,7 +83,7 @@ def main() -> int:
             if not processes:
                 raise RuntimeError(f"no process exposed by Gadget at {args.host}")
             target = processes[0]
-            session = device.attach(target.pid)
+            session = device.attach(target.pid, realm=args.realm)
             break
         except Exception as error:
             last_attach_error = error

@@ -88,6 +88,12 @@
   但看不到 arm64 `libGameProc`；27043 ARM64 Gadget 仍不可达；arm64 frida-server 在
   native bridge 下仍连接即关闭；旧 Java-layer Gadget injector 在 x86 attach 表面报
   `Java is not defined`。因此在 Gadget 恢复前不生成新的投稿样片或批量成片。
+- 2026-06-27 realm 复测输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_realm_20260627`：
+  default/native realm 都只能看到 `x64` 壳，均无 Java bridge、均看不到 `libGameProc`；
+  emulated realm 返回 `ProtocolError('process is not using emulation')`；包本身
+  `primaryCpuAbi=arm64-v8a`、`ro.debuggable=0`。捕获工具已补 `--realm native|emulated`
+  入口以便未来环境验证，但当前状态仍不能恢复官方运行时 AV 捕获。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入

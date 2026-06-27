@@ -15,6 +15,7 @@ import frida
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument("--script", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--duration", type=float, default=120.0)
@@ -34,7 +35,7 @@ def main() -> int:
         raise RuntimeError(f"no process exposed by Gadget at {args.host}")
 
     target = processes[0]
-    session = device.attach(target.pid)
+    session = device.attach(target.pid, realm=args.realm)
     source = script_path.read_text(encoding="utf-8")
     script = session.create_script(source)
 

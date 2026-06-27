@@ -25,8 +25,13 @@ import frida
 
 
 RELEVANT_MODULE_RE = re.compile(
-    r"GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|split_config|magireco",
+    r"GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|libart|split_config|magireco",
     re.IGNORECASE,
+)
+X86_REALMS: tuple[tuple[str, str | None], ...] = (
+    ("default", None),
+    ("native", "native"),
+    ("emulated", "emulated"),
 )
 
 
@@ -93,6 +98,34 @@ def summarize_maps(lines: list[str]) -> dict[str, Any]:
     }
 
 
+def parse_package_dump(stdout: str) -> dict[str, Any]:
+    fields: dict[str, Any] = {
+        "primaryCpuAbi": "",
+        "secondaryCpuAbi": "",
+        "versionCode": "",
+        "versionName": "",
+        "pkgFlags": "",
+        "privateFlags": "",
+        "debuggable": False,
+    }
+    for line in stdout.splitlines():
+        stripped = line.strip()
+        for key in (
+            "primaryCpuAbi",
+            "secondaryCpuAbi",
+            "versionCode",
+            "versionName",
+            "pkgFlags",
+            "privateFlags",
+        ):
+            prefix = f"{key}="
+            if stripped.startswith(prefix):
+                fields[key] = stripped[len(prefix) :]
+        if "DEBUGGABLE" in stripped or "debuggable=true" in stripped:
+            fields["debuggable"] = True
+    return fields
+
+
 def try_gadget(host: str) -> dict[str, Any]:
     try:
         device = frida.get_device_manager().add_remote_device(host)
@@ -106,21 +139,36 @@ def try_gadget(host: str) -> dict[str, Any]:
         return {"ok": False, "error": repr(error)}
 
 
-def try_x86_attach(host: str, pid: int) -> dict[str, Any]:
+def try_x86_attach(
+    host: str, pid: int, *, realm_label: str, realm: str | None
+) -> dict[str, Any]:
+    session: frida.core.Session | None = None
+    script: frida.core.Script | None = None
     try:
         device = frida.get_device_manager().add_remote_device(host)
-        session = device.attach(pid)
+        session = device.attach(pid, realm=realm)
         script = session.create_script(
             """
 setImmediate(function(){
   var all = Process.enumerateModules();
   var modules = all.filter(function(m) {
-    return /GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|split_config|magireco/i
+    return /GameProc|AMAIN|ARES|openal|ogg|frida|gadget|libnb|libart|split_config|magireco/i
       .test(m.name + " " + m.path);
   }).map(function(m) {
     return {name:m.name, path:m.path, base:m.base.toString(), size:m.size};
   });
+  var hasJava = (typeof Java !== "undefined");
+  var javaAvailable = false;
+  var javaError = "";
+  if (hasJava) {
+    try {
+      javaAvailable = Java.available;
+    } catch (e) {
+      javaError = e.toString();
+    }
+  }
   send({kind:"x86_attach_probe", arch:Process.arch, platform:Process.platform,
+        hasJava:hasJava, javaAvailable:javaAvailable, javaError:javaError,
         module_count:all.length, modules:modules});
 });
 """
@@ -129,22 +177,45 @@ setImmediate(function(){
         script.on("message", lambda message, data: messages.append(message))
         script.load()
         time.sleep(1.0)
-        script.unload()
-        session.detach()
         payloads = [msg.get("payload", {}) for msg in messages if msg.get("type") == "send"]
         payload = payloads[0] if payloads else {}
-        module_names = [row.get("name", "") for row in payload.get("modules", [])]
+        module_texts = [
+            f"{row.get('name', '')} {row.get('path', '')}"
+            for row in payload.get("modules", [])
+        ]
         return {
             "ok": True,
+            "realm": realm_label,
             "arch": payload.get("arch", ""),
             "platform": payload.get("platform", ""),
+            "hasJava": payload.get("hasJava", False),
+            "javaAvailable": payload.get("javaAvailable", False),
+            "javaError": payload.get("javaError", ""),
             "module_count": payload.get("module_count", 0),
-            "sees_libGameProc": any("libGameProc" in name for name in module_names),
+            "sees_libGameProc": any("libGameProc" in text for text in module_texts),
             "modules": payload.get("modules", []),
             "raw_messages": messages,
         }
     except Exception as error:
-        return {"ok": False, "error": repr(error)}
+        return {"ok": False, "realm": realm_label, "error": repr(error)}
+    finally:
+        if script is not None:
+            try:
+                script.unload()
+            except Exception:
+                pass
+        if session is not None:
+            try:
+                session.detach()
+            except Exception:
+                pass
+
+
+def try_x86_realms(host: str, pid: int) -> list[dict[str, Any]]:
+    return [
+        try_x86_attach(host, pid, realm_label=label, realm=realm)
+        for label, realm in X86_REALMS
+    ]
 
 
 def write_markdown(path: Path, summary: dict[str, Any]) -> None:
@@ -161,13 +232,46 @@ def write_markdown(path: Path, summary: dict[str, Any]) -> None:
         f"- ABI: `{summary['device'].get('abi', '').strip()}`",
         f"- Native bridge: `{summary['device'].get('native_bridge', '').strip()}`",
         f"- Kernel arch: `{summary['device'].get('uname_m', '').strip()}`",
+        f"- ro.debuggable: `{summary['device'].get('ro_debuggable', '').strip()}`",
+        "",
+        "## Package",
+        "",
+        f"- Version: `{summary['package_info'].get('versionName', '')}` (`{summary['package_info'].get('versionCode', '')}`)",
+        f"- Primary ABI: `{summary['package_info'].get('primaryCpuAbi', '')}`",
+        f"- Secondary ABI: `{summary['package_info'].get('secondaryCpuAbi', '')}`",
+        f"- Debuggable: `{summary['package_info'].get('debuggable')}`",
         "",
         "## Frida surfaces",
         "",
         f"- Gadget `{summary['gadget_host']}` ok: `{summary['gadget'].get('ok')}`",
-        f"- x86 fallback `{summary['x86_host']}` ok: `{summary['x86_attach'].get('ok')}`",
-        f"- x86 arch: `{summary['x86_attach'].get('arch', '')}`",
-        f"- x86 sees libGameProc: `{summary['x86_attach'].get('sees_libGameProc', '')}`",
+        f"- x86 fallback `{summary['x86_host']}` default ok: `{summary['x86_attach'].get('ok')}`",
+        f"- any x86 realm sees libGameProc: `{summary.get('x86_any_sees_libGameProc')}`",
+        f"- any x86 realm exposes Java bridge: `{summary.get('x86_any_java_bridge')}`",
+        "",
+        "### x86 realm probes",
+        "",
+        "| realm | ok | arch | Java global | Java.available | sees libGameProc | error |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for result in summary.get("x86_attach_realms", []):
+        error = str(result.get("error", "")).replace("|", "\\|")
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    f"`{result.get('realm', '')}`",
+                    f"`{result.get('ok')}`",
+                    f"`{result.get('arch', '')}`",
+                    f"`{result.get('hasJava', '')}`",
+                    f"`{result.get('javaAvailable', '')}`",
+                    f"`{result.get('sees_libGameProc', '')}`",
+                    f"`{error}`",
+                ]
+            )
+            + " |"
+        )
+    lines.extend(
+        [
         "",
         "## Process maps",
         "",
@@ -175,7 +279,8 @@ def write_markdown(path: Path, summary: dict[str, Any]) -> None:
         f"- contains Gadget/Frida: `{summary['maps'].get('contains_gadget')}`",
         f"- APK mapping count: `{summary['maps'].get('apk_mapping_count')}`",
         "",
-    ]
+        ]
+    )
     if not summary["gadget"].get("ok"):
         lines.extend(
             [
@@ -218,7 +323,17 @@ def main() -> int:
             args.adb, args.adb_serial, "getprop ro.dalvik.vm.native.bridge"
         ).get("stdout", ""),
         "uname_m": adb_shell(args.adb, args.adb_serial, "uname -m").get("stdout", ""),
+        "ro_debuggable": adb_shell(
+            args.adb, args.adb_serial, "getprop ro.debuggable"
+        ).get("stdout", ""),
     }
+    package_dump = adb_shell(
+        args.adb,
+        args.adb_serial,
+        f"dumpsys package {args.package}",
+        timeout=20.0,
+    )
+    package_info = parse_package_dump(package_dump.get("stdout", ""))
 
     maps_lines: list[str] = []
     if pid:
@@ -231,16 +346,27 @@ def main() -> int:
         maps_lines = split_maps(maps.get("stdout", ""))
 
     gadget = try_gadget(args.gadget_host)
-    x86_attach = (
-        try_x86_attach(args.x86_host, int(pid))
+    x86_attach_realms = (
+        try_x86_realms(args.x86_host, int(pid))
         if pid and pid.isdigit()
-        else {"ok": False, "error": "pid_not_found"}
+        else [{"ok": False, "realm": label, "error": "pid_not_found"} for label, _ in X86_REALMS]
     )
+    x86_attach = x86_attach_realms[0]
     maps_summary = summarize_maps(maps_lines)
+    x86_any_sees_libGameProc = any(
+        result.get("ok") and result.get("sees_libGameProc")
+        for result in x86_attach_realms
+    )
+    x86_any_java_bridge = any(
+        result.get("ok") and result.get("hasJava")
+        for result in x86_attach_realms
+    )
 
     if gadget.get("ok"):
         verdict = "runtime_capture_ready_via_arm64_gadget"
-    elif x86_attach.get("ok") and not x86_attach.get("sees_libGameProc"):
+    elif x86_any_sees_libGameProc:
+        verdict = "runtime_capture_possible_via_x86_realm"
+    elif any(result.get("ok") for result in x86_attach_realms):
         verdict = "blocked_x86_frida_cannot_see_arm64_game_code"
     elif not pid:
         verdict = "blocked_app_process_not_found"
@@ -252,12 +378,17 @@ def main() -> int:
         "adb_serial": args.adb_serial,
         "pid": pid,
         "device": device,
+        "package_dump": package_dump,
+        "package_info": package_info,
         "gadget_host": args.gadget_host,
         "x86_host": args.x86_host,
         "pidof": pidof,
         "maps": maps_summary,
         "gadget": gadget,
         "x86_attach": x86_attach,
+        "x86_attach_realms": x86_attach_realms,
+        "x86_any_sees_libGameProc": x86_any_sees_libGameProc,
+        "x86_any_java_bridge": x86_any_java_bridge,
         "verdict": verdict,
     }
     json_path = out_dir / "runtime_capture_state.json"

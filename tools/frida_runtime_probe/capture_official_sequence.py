@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--serial", default="127.0.0.1:16384")
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument("--pre-wait", type=float, default=3.0)
     parser.add_argument("--post-wait", type=float, default=5.0)
     parser.add_argument("--object-wait", type=float, default=10.0)
@@ -102,6 +103,9 @@ def main() -> int:
         "--out",
         str(event_log),
     ]
+    if args.realm:
+        runtime_command.extend(["--realm", args.realm])
+        event_command.extend(["--realm", args.realm])
     screen_command = [
         "adb",
         "-s",
