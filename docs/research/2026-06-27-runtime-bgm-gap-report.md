@@ -18,10 +18,45 @@ User review found:
 - no BGM for the whole video;
 - no voice after about 23 seconds;
 - subtitle/voice correctness cannot be accepted from the current evidence.
+- follow-up PC playback review also found no audible BGM/expected scene audio.
 
 Therefore `runtime_repair_v1_ac0921` is demoted to failed diagnostic evidence.
 It must not be promoted to clean-story/Bilibili output, and the old v18
 technical QA/contact-sheet result is not sufficient delivery evidence.
+
+## Rendered-file audio audit
+
+The failed rendered sample does contain an AAC audio stream:
+
+- 48 kHz stereo;
+- about 124 kb/s;
+- duration about 32.766 seconds.
+
+However, ffmpeg volume checks show the actual tail failure:
+
+- whole file: `mean_volume=-16.5 dB`, `max_volume=-0.0 dB`;
+- first 23 seconds: `mean_volume=-15.0 dB`, `max_volume=-0.0 dB`;
+- from 23 seconds to the end: `mean_volume=-91.0 dB`,
+  `max_volume=-91.0 dB`.
+
+`qa_event_batch.py` now rejects this class of output.  Re-running QA on:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921
+```
+
+now produces:
+
+```text
+status=failed
+errors=manifest_audio_tail_gap;tail_digital_silence_after_manifest_audio
+manifest_last_audio_end_ms=22777
+manifest_audio_tail_gap_ms=9989
+tail_max_volume_db=-91.0
+```
+
+This closes the specific QA hole where an output passed only because the whole
+file had some audible audio before a long silent tail.
 
 ## What the repaired capture actually proves
 

@@ -145,6 +145,15 @@
   numeric code 防呆：`--code` 必须是 resolved GBoss uint64，例如
   `0x544549382d424c4d`，`ac0921_001` 这类名称只能放在 `--label`。这避免 RPC 报错但
   pending request 已进入游戏而污染证据。
+- 用户继续复核确认 `ac0921_001__subtitles.mp4` 无 BGM/不可听；文件级 audit 证明
+  MP4 虽有 48 kHz stereo AAC 音轨，但 23 秒后到 32.766 秒尾段为实质静音
+  (`mean/max=-91.0 dB`)。`qa_event_batch.py` 已补
+  `manifest_audio_tail_gap` 和 `tail_digital_silence_after_manifest_audio` 门禁；
+  重跑
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921`
+  后 `ac0921_001` 从旧 technical passed 改为 failed，记录
+  `manifest_last_audio_end_ms=22777`、`manifest_audio_tail_gap_ms=9989`、
+  `tail_max_volume_db=-91.0`。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于

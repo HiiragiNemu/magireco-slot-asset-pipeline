@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 MAX_VOLUME_RE = re.compile(r"max_volume:\s+(-?inf|-?\d+(?:\.\d+)?)\s+dB")
+TAIL_SILENCE_PROBE_MARGIN_MS = 250
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,14 +73,25 @@ def audio_hash(path: Path, ffmpeg: str) -> str:
     return result.stdout.strip().split("=", 1)[-1].lower()
 
 
-def max_volume_db(path: Path, ffmpeg: str) -> float | None:
-    result = subprocess.run(
+def max_volume_db(
+    path: Path,
+    ffmpeg: str,
+    *,
+    start_ms: int | None = None,
+    duration_ms: int | None = None,
+) -> float | None:
+    command = [
+        ffmpeg,
+        "-hide_banner",
+        "-nostats",
+    ]
+    if start_ms is not None:
+        command.extend(["-ss", f"{max(start_ms, 0) / 1000:.3f}"])
+    command.extend(["-i", str(path)])
+    if duration_ms is not None:
+        command.extend(["-t", f"{max(duration_ms, 0) / 1000:.3f}"])
+    command.extend(
         [
-            ffmpeg,
-            "-hide_banner",
-            "-nostats",
-            "-i",
-            str(path),
             "-map",
             "0:a:0",
             "-af",
@@ -87,7 +99,10 @@ def max_volume_db(path: Path, ffmpeg: str) -> float | None:
             "-f",
             "null",
             "NUL",
-        ],
+        ]
+    )
+    result = subprocess.run(
+        command,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -96,6 +111,10 @@ def max_volume_db(path: Path, ffmpeg: str) -> float | None:
     if not match or match.group(1).lower() == "-inf":
         return None
     return float(match.group(1))
+
+
+def audio_end_ms(row: dict) -> int:
+    return int(row.get("start_ms", 0)) + int(row.get("duration_ms", 0))
 
 
 def file_sha256(path: Path) -> str:
@@ -171,6 +190,20 @@ def main() -> int:
         expected_height = int(manifest["native_dimensions"]["height"])
         expected_rate = manifest["native_frame_rate"]
         expected_duration_ms = int(manifest["render_duration_ms"])
+        voice_tracks = sum(
+            row["source"] == "z2d_req_sound" for row in manifest["audio"]
+        )
+        base_audio_tracks = sum(
+            row["source"] == "event_audio_component" for row in manifest["audio"]
+        )
+        manifest_last_audio_end_ms = (
+            max((audio_end_ms(row) for row in manifest["audio"]), default=0)
+            if manifest["audio"]
+            else 0
+        )
+        manifest_audio_tail_gap_ms = max(
+            0, expected_duration_ms - manifest_last_audio_end_ms
+        )
         variants = (
             ("without", without_probe),
             ("with", with_probe),
@@ -212,6 +245,26 @@ def main() -> int:
         max_db = max_volume_db(without_path, args.ffmpeg)
         if max_db is None or max_db <= -90.0:
             errors.append("silent_audio")
+        tail_max_db: float | None = None
+        if (
+            expected_subtitle_count
+            and voice_tracks
+            and manifest_audio_tail_gap_ms >= 3000
+        ):
+            tail_probe_start_ms = manifest_last_audio_end_ms + TAIL_SILENCE_PROBE_MARGIN_MS
+            tail_probe_duration_ms = max(
+                0,
+                expected_duration_ms - tail_probe_start_ms,
+            )
+            tail_max_db = max_volume_db(
+                without_path,
+                args.ffmpeg,
+                start_ms=tail_probe_start_ms,
+                duration_ms=tail_probe_duration_ms,
+            )
+            errors.append("manifest_audio_tail_gap")
+            if tail_max_db is None or tail_max_db <= -80.0:
+                errors.append("tail_digital_silence_after_manifest_audio")
         subtitle_text = subtitle_path.read_text(encoding="utf-8").strip()
         if expected_subtitle_count and not subtitle_text:
             errors.append("empty_subtitle")
@@ -228,15 +281,13 @@ def main() -> int:
                 "frame_rate": expected_rate,
                 "render_duration_ms": expected_duration_ms,
                 "video_extension_policy": manifest["video_extension_policy"],
-                "voice_tracks": sum(
-                    row["source"] == "z2d_req_sound" for row in manifest["audio"]
-                ),
-                "base_audio_tracks": sum(
-                    row["source"] == "event_audio_component"
-                    for row in manifest["audio"]
-                ),
+                "voice_tracks": voice_tracks,
+                "base_audio_tracks": base_audio_tracks,
                 "subtitle_count": len(manifest["subtitles"]),
                 "max_volume_db": "" if max_db is None else f"{max_db:.1f}",
+                "manifest_last_audio_end_ms": manifest_last_audio_end_ms,
+                "manifest_audio_tail_gap_ms": manifest_audio_tail_gap_ms,
+                "tail_max_volume_db": "" if tail_max_db is None else f"{tail_max_db:.1f}",
                 "edition_audio_sha256": without_audio_hash,
                 "without_size": without_path.stat().st_size,
                 "with_size": with_path.stat().st_size,
@@ -258,6 +309,9 @@ def main() -> int:
         "base_audio_tracks",
         "subtitle_count",
         "max_volume_db",
+        "manifest_last_audio_end_ms",
+        "manifest_audio_tail_gap_ms",
+        "tail_max_volume_db",
         "edition_audio_sha256",
         "without_size",
         "with_size",
@@ -280,6 +334,10 @@ def main() -> int:
         ),
         "non_silent_audio": sum(
             not row.get("errors", "").find("silent_audio") >= 0 for row in rows
+        ),
+        "audio_tail_gap_passed": sum(
+            row.get("errors", "").find("manifest_audio_tail_gap") < 0
+            for row in rows
         ),
         "total_output_bytes": sum(
             int(row.get("without_size", 0)) + int(row.get("with_size", 0))
