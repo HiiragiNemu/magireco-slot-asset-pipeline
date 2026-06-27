@@ -113,6 +113,13 @@
 - `resolve_official_event_capture.py` 已把空字符串声回调改写到
   `ignored_sound_events.csv`，并把默认解析窗口改为 60 秒。真实未解析音频仍保留在
   `unresolved_sound_events.csv` 和 `unresolved_sound_event_count`，不能被忽略。
+- `ac0921_001` 已生成第一条 runtime-repair 用户复核样片：
+  production manifest 位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\production_manifests_runtime_repair_v1_ac0921\events\ac0921_001.json`，
+  渲染输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001`。
+  QA：1/1 passed，32.766 秒，416x232，30/1，48 kHz stereo，字幕/无字幕音频哈希一致。
+  这是修复路线样片，不代表旧 v18 batch 可恢复为交付品。
 - `report_pipeline_strategy.py` 现在默认把 `invalidated_do_not_use` 和
   `blocked_pending_runtime_av_verification` 从 `ready_missing_queue.csv` /
   `verification_sample_queue.csv` 剥离，写入

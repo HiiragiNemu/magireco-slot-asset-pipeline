@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac0921_001",
+  "model": "linear_full_frame_sequence",
+  "duration_ms": 32766,
+  "extension_policy": "hold_last_frame",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "evidence": "official runtime recapture 2026-06-27 via ARM64 Gadget: ac0921_001 plays the next-preview lever/BGM sound and four Iroha voice lines before loading ac0921_jikai_yokoku_3on_01 and ac0921_jikai_yokoku_3on_01_lp at the event tail; static audience clips provide the matching full-frame source durations and no slot foreground layer is included",
+  "clips": [
+    {
+      "dgm_name": "ac0921_jikai_yokoku_lev_01",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac0921_jikai_yokoku_3on_01",
+      "role": "background",
+      "start_ms": 27433
+    },
+    {
+      "dgm_name": "ac0921_jikai_yokoku_3on_01_lp",
+      "role": "background",
+      "start_ms": 32433
+    }
+  ]
+}

@@ -559,6 +559,13 @@ def synthesize_runtime_audio_rows(
             str(item.get("request_id", "")),
         ),
     ):
+        is_actual_play = str(row.get("is_actual_play", "")).strip().lower()
+        if is_actual_play and is_actual_play != "yes":
+            continue
+        if not str(row.get("ogg_path", "")).strip() and not number(
+            row.get("duration_ms", "")
+        ):
+            continue
         request_id = str(row.get("request_id", ""))
         start_ms = number(row.get("relative_ms", ""))
         source = "z2d_req_sound"
@@ -1184,6 +1191,11 @@ def main() -> int:
                 )
 
         audio_rows = filter_audio_rows_for_plan(audio_rows, composition_plan)
+        if any(
+            not row["path"] or not Path(row["path"]).exists()
+            for row in audio_rows
+        ):
+            errors.append("missing_audio_media")
         subtitle_rows = filter_subtitle_rows_for_plan(
             subtitle_rows,
             composition_plan,

@@ -104,3 +104,55 @@ review, not in clean-story delivery.
   entering pure material collections or clean-story Bilibili collections.
 - Replace contact-sheet-only QA with AV timeline reports plus short watchable
   review samples that the user can verify directly.
+
+## First repaired user-review sample
+
+`ac0921_001` now has an explicit composition plan:
+
+```text
+tools/frida_runtime_probe/composition_plans/ac0921_001.json
+```
+
+The plan keeps the official full-frame video sequence at native 416x232:
+
+1. `ac0921_jikai_yokoku_lev_01`
+2. `ac0921_jikai_yokoku_3on_01`
+3. `ac0921_jikai_yokoku_3on_01_lp`
+
+It uses the long-window runtime audio/subtitle evidence: five actual OGG plays
+and four subtitle rows.  The mute control request
+`259_ボタン音ボイス消音` is filtered out of the production audio mix because it
+has no OGG media and zero duration.
+
+Rebuilt production manifest:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\production_manifests_runtime_repair_v1_ac0921\events\ac0921_001.json
+```
+
+User-review render:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\without_subtitles\ac0921_001.mp4
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\with_subtitles\ac0921_001__subtitles.mp4
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\subtitles\ac0921_001.srt
+```
+
+QA summary:
+
+```json
+{
+  "audited_events": 1,
+  "passed": 1,
+  "failed": 0,
+  "subtitle_and_no_subtitle_audio_identical": 1,
+  "non_silent_audio": 1,
+  "duration_ms": 32766,
+  "video": "416x232 30/1",
+  "audio": "AAC 48000 Hz stereo"
+}
+```
+
+This is a review sample, not a blanket approval of the old v18 batch.  The
+remaining bad-sample families still require the same runtime-timeline and
+classification gates before rendering.
