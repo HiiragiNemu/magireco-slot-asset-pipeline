@@ -201,6 +201,14 @@
   `60/61/64/291/864/1768/6698/6709/8573/8575/9002`。该 run 走到不同随机 gameplay
   分支（`ac0908/ac0909`），没有复现早先 `814/287` 分支；因此 `814/287` 仍需定向状态
   steering 才能作为最终音频证据。
+- `tools/frida_runtime_probe/build_runtime_evidence_skeleton.py` 已新增，用于把上述
+  summary tables 与 `event_timeline_events.csv`、`event_timeline_sounds.csv`、
+  `sound_request_struct_requests.csv` 和 `sound_id_records.csv` 离线合并为
+  `runtime_evidence_skeleton.json`、`event_sequence.csv`、`sound_code_sequence.csv`、
+  `play_request_sequence.csv`、`queue_sequence.csv` 和 `static_event_sounds.csv`。
+  输出明确标记 `evidence_only_not_render_ready`：首轮 slot skeleton 保留
+  metadata-only 警告；大块重采样 skeleton 无警告。它是后续批量 manifest 生成前的
+  证据层，不会自动把诊断捕获晋升为投稿成片。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换

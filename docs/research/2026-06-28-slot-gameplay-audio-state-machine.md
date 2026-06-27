@@ -197,6 +197,12 @@ Summary table output:
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628\summary_tables
 ```
 
+Evidence skeleton output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_large_chunk_20260628\evidence_skeleton_v1
+```
+
 This later run took a different random/gameplay branch: it loaded
 `ac0908_001`, `ac0908_002`, `ac0909_*`, and reel UI resources instead of the
 earlier `ac0910` branch.  It produced 25 fully dumped queue chunks and no
@@ -215,6 +221,15 @@ metadata-only chunks:
 The recapture proves the larger cap works.  It did not reproduce the earlier
 `814` / sound id `287` branch, so that specific branch still needs targeted
 state steering if its audio is needed for final evidence.
+
+The first run also has an evidence skeleton:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\evidence_skeleton_v1
+```
+
+That skeleton is intentionally marked evidence-only and carries the
+metadata-only warning for `814` / sound id `287`.
 
 ## Static table cross-check
 
@@ -274,9 +289,9 @@ Allowed next actions:
 
 - repeat this capture with a targeted larger per-chunk cap for sound id `287`
   / code `814`;
-- extend the new summary-table parser into a manifest skeleton generator that
-  turns runtime event-code + sound-code logs into machine-readable production
-  candidates;
+- extend the evidence skeleton into a strict production-manifest builder only
+  after each scene has complete visual, subtitle, and final OpenSL/game-decoder
+  audio evidence;
 - continue reversing `zgSndWinDllConstruction -> zgSndInit -> SndSystem::init`
   only as a separate official-decoder route;
 - use `slot_gameplay_runtime_audio_timeline.wav` for human listening checks.

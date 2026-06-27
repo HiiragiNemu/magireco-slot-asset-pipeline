@@ -255,6 +255,7 @@ tools/frida_runtime_probe/sound_device_state_probe.js
 tools/frida_runtime_probe/csl_audio_queue_probe.js
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 tools/frida_runtime_probe/summarize_runtime_audio_capture.py
+tools/frida_runtime_probe/build_runtime_evidence_skeleton.py
 ```
 
 Use cases:
@@ -277,6 +278,11 @@ Use cases:
   sound-code lookups, play requests, BGM calls, and OpenSL queue chunks.  This
   is the bridge toward a manifest skeleton generator and keeps the next work
   evidence-first instead of screenshot/contact-sheet-first.
+- `build_runtime_evidence_skeleton.py`: join those summary tables to static
+  event/audio/request/sound-id manifests and emit evidence-only skeleton tables.
+  Its output is intentionally marked `evidence_only_not_render_ready`; it is the
+  auditable input for a future production-manifest builder, not a delivery
+  approval.
 
 ## Next cracking target
 
