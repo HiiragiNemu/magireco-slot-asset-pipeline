@@ -183,6 +183,60 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_que
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline.wav
 ```
 
+### Outer slot gameplay state-machine capture
+
+A later real slot-input capture confirmed why forced single-event playback is
+not enough.  With the emulator already in the slot main screen, a minimal
+lever/stop-button input sequence triggered the outer gameplay state machine and
+produced non-empty final OpenSL queue output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628
+```
+
+Detailed report:
+
+```text
+docs/research/2026-06-28-slot-gameplay-audio-state-machine.md
+```
+
+Key evidence:
+
+- the runtime resolved event codes to `ac0001_001`, `ac9902_001`,
+  `ac9010_060`, `ac9071_001`, `ac9100_001`, `ac9903_001`,
+  `ac9920_001`, `ac9071_002`, `ac0910_001`, and `ac0910_002`;
+- real gameplay called `C_ObjNml::fnSndRequest_BGM_*` repeatedly and fired
+  `C_DirectionControllerBase::Macro_SND_BGM_PLAY`, unlike the forced
+  `ac0921_001` single-event path;
+- `zgSndReqCode -> RequestCtrl::codeName2ReqId -> SoundMng` resolved string
+  codes `301/302/303/304/305/814/295/271`;
+- final `CSLAndroidSimpleBufferQueue::Enqueue` capture produced 15 dumped
+  chunks, 48 kHz stereo, about 15.48 seconds, with observed sound ids
+  `60/61/62/6758/6759/9002`;
+- one large code `814` / sound id `287` chunk was metadata-only because it
+  exceeded the per-chunk dump cap, so it needs a focused recapture before use
+  as final audio evidence.
+
+This changes the general strategy: the recovery pipeline must derive manifests
+from runtime event-code dispatch plus sound-code/request timelines and final
+OpenSL/game-decoder evidence.  It must not continue classifying every `ac`
+family manually or promoting outputs from visual contact sheets.
+
+### Game WAV conversion export status
+
+`zgSndCaptureConvertWav` and `zgSndCaptureConvertWavByHashCode` do exist in the
+ARM64 runtime, but the loaded module name is `split_config.arm64_v8a.apk`, not
+`libGameProc.so`.  `tools/frida_smz_wav_probe.py` now searches all loaded
+modules for these exports.
+
+Direct conversion attempts for code `814` and raw media
+`213B22458D11890FF6BEEC183F22.smz` returned `0` and produced no WAV.  Static
+disassembly shows the exports require the zgsnd `SndSystem` global constructed
+by `zgSndWinDllConstruction` / initialized by `zgSndInit`.  The current MuMu
+runtime's audible path is `libAMAIN.so` `CSLSound` / OpenSL, so direct zgsnd
+conversion remains a separate cracking route and is not yet a replacement for
+OpenSL queue capture.
+
 ## Repository tools added
 
 These probes are diagnostic tools only.  They do not generate delivery video:

@@ -2,8 +2,8 @@
 """Probe the game's native WAV conversion exports through Frida.
 
 This tool does not decode SMZ locally. It attaches to a running game process and
-calls exported functions from libGameProc.so after the game's sound runtime has
-initialized them.
+calls the game's exported WAV conversion functions after the game's sound
+runtime has initialized them.
 
 Prerequisites:
 - The game is running in the emulator.
@@ -26,28 +26,43 @@ DEFAULT_OUTPUT_DIR = "/sdcard/Download/magireco_wav_probe"
 FRIDA_SCRIPT = r"""
 'use strict';
 
-const LIB_NAME = 'libGameProc.so';
+const EXPORT_BY_CODE = 'zgSndCaptureConvertWavByHashCode';
+const EXPORT_RAW = 'zgSndCaptureConvertWav';
 
 function ptrToString(p) {
   return p === null ? null : p.toString();
 }
 
-function findExport(name) {
-  const module = Process.findModuleByName(LIB_NAME);
-  if (module === null) {
-    return null;
-  }
-  const exports = module.enumerateExports();
-  for (const item of exports) {
-    if (item.name === name) {
-      return item.address;
+function findExportInfo(name) {
+  for (const module of Process.enumerateModules()) {
+    let exports = [];
+    try {
+      exports = module.enumerateExports();
+    } catch (e) {
+      continue;
+    }
+    for (const item of exports) {
+      if (item.name === name) {
+        return {
+          address: item.address,
+          moduleName: module.name,
+          moduleBase: module.base,
+          modulePath: module.path,
+          exportType: item.type,
+        };
+      }
     }
   }
   return null;
 }
 
+function findExport(name) {
+  const info = findExportInfo(name);
+  return info === null ? null : info.address;
+}
+
 function ensureDir(path) {
-  if (!Java.available) {
+  if (typeof Java === 'undefined' || !Java.available) {
     return false;
   }
   let ok = false;
@@ -69,22 +84,32 @@ function requireExport(name) {
 
 rpc.exports = {
   status: function () {
-    const module = Process.findModuleByName(LIB_NAME);
-    const byHash = findExport('zgSndCaptureConvertWavByHashCode');
-    const raw = findExport('zgSndCaptureConvertWav');
+    const byHash = findExportInfo(EXPORT_BY_CODE);
+    const raw = findExportInfo(EXPORT_RAW);
     return {
       pid: Process.id,
-      libGameProcBase: module === null ? null : ptrToString(module.base),
-      convertByHashExport: ptrToString(byHash),
-      convertRawExport: ptrToString(raw)
+      convertByHashExport: byHash === null ? null : {
+        address: ptrToString(byHash.address),
+        moduleName: byHash.moduleName,
+        moduleBase: ptrToString(byHash.moduleBase),
+        modulePath: byHash.modulePath,
+        exportType: byHash.exportType,
+      },
+      convertRawExport: raw === null ? null : {
+        address: ptrToString(raw.address),
+        moduleName: raw.moduleName,
+        moduleBase: ptrToString(raw.moduleBase),
+        modulePath: raw.modulePath,
+        exportType: raw.exportType,
+      }
     };
   },
 
-  convert_by_code: function (code, outputDir) {
+  convertByCode: function (code, outputDir) {
     outputDir = outputDir || '/sdcard/Download/magireco_wav_probe';
     ensureDir(outputDir);
     const fn = new NativeFunction(
-      requireExport('zgSndCaptureConvertWavByHashCode'),
+      requireExport(EXPORT_BY_CODE),
       'int',
       ['pointer', 'pointer']
     );
@@ -99,12 +124,12 @@ rpc.exports = {
     };
   },
 
-  convert_raw: function (mediaName, outputDir, outputStem) {
+  convertRaw: function (mediaName, outputDir, outputStem) {
     outputDir = outputDir || '/sdcard/Download/magireco_wav_probe';
     outputStem = outputStem || mediaName;
     ensureDir(outputDir);
     const fn = new NativeFunction(
-      requireExport('zgSndCaptureConvertWav'),
+      requireExport(EXPORT_RAW),
       'int',
       ['pointer', 'pointer', 'pointer']
     );
@@ -162,6 +187,8 @@ def attach_or_spawn(device, args: argparse.Namespace) -> tuple[int, bool]:
         if identifier == args.package and pid:
             return pid, False
     processes = device.enumerate_processes()
+    if args.remote and len(processes) == 1:
+        return int(processes[0].pid), False
     for process in processes:
         identifier = getattr(process, "identifier", "")
         if process.name == args.package or identifier == args.package:
@@ -170,7 +197,7 @@ def attach_or_spawn(device, args: argparse.Namespace) -> tuple[int, bool]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe libGameProc SMZ/PCM WAV conversion exports through Frida.")
+    parser = argparse.ArgumentParser(description="Probe the game's SMZ/PCM WAV conversion exports through Frida.")
     parser.add_argument("--package", default=DEFAULT_PACKAGE)
     parser.add_argument("--pid", type=int, default=0)
     parser.add_argument("--spawn", action="store_true", help="spawn the package before attaching")

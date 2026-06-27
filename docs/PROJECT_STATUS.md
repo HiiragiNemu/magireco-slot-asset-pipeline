@@ -176,6 +176,28 @@
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline.wav`。
   这证明单 event 强制路径有权威 SE/voice 时间轴，但仍没有证明完整 BGM；继续禁止把
   `ac0921_001` 晋升为投稿成片，下一步必须捕获外层 gameplay/BGM 状态机。
+- 2026-06-28 真实 slot 输入机制捕获已写入
+  `docs/research/2026-06-28-slot-gameplay-audio-state-machine.md`。在 MuMu slot 主界面
+  发送最小 lever/stop-button 输入后，运行时 event code 解析到
+  `ac0001_001/ac9902_001/ac9010_060/ac9071_001/ac9100_001/ac9903_001/ac9920_001/ac9071_002/ac0910_001/ac0910_002`；
+  `runtime_probe` 同时记录到反复的 `C_ObjNml::fnSndRequest_BGM_*`、
+  1 次 `C_DirectionControllerBase::Macro_SND_BGM_PLAY`，以及 sound code
+  `301/302/303/304/305/814/295/271` 通过
+  `zgSndReqCode -> RequestCtrl::codeName2ReqId -> SoundMng` 进入请求层。
+  `csl_audio_queue` 最终 OpenSL 队列捕获 15 个 dumped PCM chunks、48 kHz stereo、
+  约 15.48 秒，observed sound ids 为 `60/61/62/6758/6759/9002`；另有
+  sound id `287` / code `814` 的 3,072,004-byte chunk 因 per-chunk dump cap 只记录
+  metadata，需要小范围提高 cap 复抓。诊断听音 WAV：
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\slot_gameplay_runtime_audio_timeline.wav`。
+  这确认游戏机制是 runtime event-code + sound-code/request 状态机，不是手工逐个
+  `ac` family 视觉分类；后续 manifest 必须以运行时请求和最终 OpenSL/官方解码证据为准。
+- `tools/frida_smz_wav_probe.py` 已修正为全模块查找
+  `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
+  `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换
+  code `814` / raw media `213B22458D11890FF6BEEC183F22.smz` 目前返回 0 且不写 WAV；
+  反汇编显示该导出依赖 zgsnd `SndSystem` 全局（`zgSndWinDllConstruction` /
+  `zgSndInit` 路线），而当前可听路径是 `libAMAIN.so` `CSLSound` / OpenSL。因此
+  官方 game-decoder 转 WAV 仍是后续破解路线，不能替代当前 OpenSL queue 取证。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于
