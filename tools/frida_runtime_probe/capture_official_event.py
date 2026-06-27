@@ -21,6 +21,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pre-wait", type=float, default=3.0)
     parser.add_argument("--post-wait", type=float, default=10.0)
     parser.add_argument("--object-wait", type=float, default=10.0)
+    parser.add_argument(
+        "--with-event-sound",
+        action="store_true",
+        help=(
+            "Also call C_CtrlSndLib::fnReqSndEventCode for the requested "
+            "event. This is diagnostic only for official scene requests: some "
+            "official paths already request their own SE/voice and this option "
+            "can duplicate those sounds."
+        ),
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -85,6 +95,8 @@ def main() -> int:
         "--out",
         str(event_log),
     ]
+    if args.with_event_sound:
+        event_command.append("--with-sound")
     if args.realm:
         runtime_command.extend(["--realm", args.realm])
         event_command.extend(["--realm", args.realm])
@@ -127,6 +139,7 @@ def main() -> int:
         "runtime_exit_code": runtime_result,
         "event_log": str(event_log),
         "runtime_log": str(runtime_log),
+        "manual_event_sound_requested": args.with_event_sound,
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     if event_result.returncode != 0 or runtime_result != 0:

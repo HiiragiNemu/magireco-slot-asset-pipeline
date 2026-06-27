@@ -11,6 +11,72 @@ import subprocess
 from pathlib import Path
 
 
+SOUND_ID_RE = re.compile(r"^(\d{4,5})(?:_|\s|$)")
+ROLE_VOICE_SPEAKER_TOKENS = {
+    "ai",
+    "ari",
+    "fel",
+    "fer",
+    "hom",
+    "iro",
+    "kae",
+    "kan",
+    "kuro",
+    "kuroe",
+    "mad",
+    "mam",
+    "mami",
+    "mif",
+    "mihu",
+    "mit",
+    "mita",
+    "mom",
+    "nag",
+    "nem",
+    "nemu",
+    "ren",
+    "rena",
+    "qb",
+    "riko",
+    "sana",
+    "say",
+    "sigure",
+    "sqb",
+    "toka",
+    "tou",
+    "tsu",
+    "tukasa",
+    "tukuyo",
+    "tur",
+    "turk",
+    "ui",
+    "uwa",
+    "yac",
+    "yach",
+}
+GAMEPLAY_TERMS = (
+    "地図",
+    "結果表示",
+    "CHANCE",
+    "WIN",
+    "PUSH",
+    "押し",
+    "押して",
+    "狙え",
+    "告弱",
+    "告強",
+    "上乗せ",
+    "連撃",
+    "長押し",
+    "連打",
+    "ルーレット",
+    "roulette",
+    "chance_btn",
+    "mekure",
+    "card",
+)
+
+
 def file_sha256(path: Path) -> str:
     import hashlib
 
@@ -26,6 +92,38 @@ def event_sort_key(event: str) -> tuple:
         int(token) if token.isdigit() else token.casefold()
         for token in re.split(r"(\d+)", event)
     )
+
+
+def is_role_voice_audio(row: dict) -> bool:
+    code_name = str(row.get("code_name", "")).strip()
+    parts = [part.casefold() for part in code_name.split("_")]
+    has_speaker = any(part in ROLE_VOICE_SPEAKER_TOKENS for part in parts[1:-1])
+    has_at_marker = "at" in parts[1:-1]
+    match = SOUND_ID_RE.match(code_name)
+    resource_id = int(match.group(1)) if match else 0
+    return has_speaker and (has_at_marker or 30000 <= resource_id < 40000)
+
+
+def has_gameplay_marker(values: list[str]) -> bool:
+    joined = "\n".join(values)
+    return any(term in joined for term in GAMEPLAY_TERMS)
+
+
+def material_lane(
+    *,
+    role_voice_audio_count: int,
+    gameplay_marker: bool,
+    hybrid_slot_story: bool,
+) -> str:
+    if hybrid_slot_story:
+        return "hybrid_slot_story_material_not_clean_animation"
+    if role_voice_audio_count and gameplay_marker:
+        return "audible_gameplay_result_with_role_voice_not_pure_material"
+    if role_voice_audio_count:
+        return "audible_component_with_role_voice_not_pure_material"
+    if gameplay_marker:
+        return "pure_gameplay_or_effect_material"
+    return "reviewed_audience_components_not_standalone_animation"
 
 
 def format_srt_time(value_ms: int) -> str:
@@ -631,6 +729,39 @@ def build_collection(
         "hybrid" in str(row.get("audience_exclusion_reason", "")).casefold()
         for row in sources
     )
+    role_voice_audio_rows = []
+    all_audio_rows = []
+    for source in audible_event_sources:
+        for audio_row in source.get("official_audio_evidence", []):
+            if not isinstance(audio_row, dict):
+                continue
+            audited_row = {
+                "event": source["event"],
+                "request_id": str(audio_row.get("request_id", "")),
+                "code_name": str(audio_row.get("code_name", "")),
+                "start_ms": int(audio_row.get("start_ms", 0)),
+                "duration_ms": int(audio_row.get("duration_ms", 0)),
+                "path": str(audio_row.get("path", "")),
+                "evidence": str(audio_row.get("evidence", "")),
+            }
+            all_audio_rows.append(audited_row)
+            if is_role_voice_audio(audio_row):
+                role_voice_audio_rows.append(audited_row)
+    role_voice_events = sorted(
+        {row["event"] for row in role_voice_audio_rows}, key=event_sort_key
+    )
+    gameplay_marker = has_gameplay_marker(
+        [
+            *(str(row.get("dgm_name", "")) for row in sources),
+            *(str(row.get("audience_exclusion_reason", "")) for row in sources),
+            *(str(row.get("code_name", "")) for row in all_audio_rows),
+        ]
+    )
+    lane = material_lane(
+        role_voice_audio_count=len(role_voice_audio_rows),
+        gameplay_marker=gameplay_marker,
+        hybrid_slot_story=hybrid_slot_story,
+    )
     transcript_required = any(
         "transcript remains required"
         in str(row.get("audience_exclusion_reason", "")).casefold()
@@ -641,11 +772,14 @@ def build_collection(
         "series": series,
         "status": "passed" if not errors else "failed",
         "errors": errors,
-        "classification": (
-            "hybrid_slot_story_material_not_clean_animation"
-            if hybrid_slot_story
-            else "reviewed_audience_components_not_standalone_animation"
-        ),
+        "classification": lane,
+        "semantic_lane": lane,
+        "pure_material": not role_voice_audio_rows,
+        "role_voice_audio_count": len(role_voice_audio_rows),
+        "non_dialogue_audio_count": len(all_audio_rows) - len(role_voice_audio_rows),
+        "role_voice_events": role_voice_events,
+        "role_voice_audio": role_voice_audio_rows,
+        "gameplay_marker": gameplay_marker,
         "transcript_status": (
             "required_not_verified" if transcript_required else "not_applicable"
         ),
@@ -699,6 +833,10 @@ def build_collection(
         "audio_sample_rate": audible_audio.get("sample_rate", ""),
         "audio_channels": audible_audio.get("channels", 0),
         "manifest": str(manifest_path.resolve()),
+        "semantic_lane": lane,
+        "pure_material": not role_voice_audio_rows,
+        "role_voice_audio_count": len(role_voice_audio_rows),
+        "role_voice_events": "|".join(role_voice_events),
     }
 
 

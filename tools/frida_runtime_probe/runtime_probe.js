@@ -354,6 +354,43 @@ function hookPointerEvent(moduleValue, symbol, kind) {
   emit("hook_installed", { symbol, address: address.toString() });
 }
 
+function hookRawCall(moduleValue, symbol, kind, argumentCount, stringArgIndexes) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const fields = {
+          symbol,
+          address: address.toString(),
+        };
+        for (let index = 0; index < argumentCount; index += 1) {
+          fields["arg" + index + "_pointer"] = args[index].toString();
+          fields["arg" + index + "_i32"] = args[index].toInt32();
+        }
+        stringArgIndexes.forEach((argIndex) => {
+          const value = readCStringBytes(args[argIndex]);
+          fields["arg" + argIndex + "_text_utf8"] = value.text;
+          fields["arg" + argIndex + "_byte_length"] = value.length;
+          fields["arg" + argIndex + "_read_error"] = value.error || "";
+        });
+        emit(kind, fields);
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_failed", {
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { symbol, address: address.toString() });
+}
+
 function hookZ2DSoundCallback(moduleValue) {
   const symbol =
     "_ZN2zg19Z2DreqSoundCallbackEPNS_10CZ2DPlayerEPNS_15CZ2DElemUCBFuncEPv";
@@ -474,6 +511,75 @@ setImmediate(function () {
   hookIntCall(moduleValue, "_ZN8SoundMng10sndPlayReqEiii", "sound_mng_play_request", 3);
   hookIntCall(moduleValue, "_ZN8SoundMng10wrapSndReqEi", "sound_mng_wrap_request", 1);
   hookIntCall(moduleValue, "_ZN8SoundMng12wrapSndReqChEii", "sound_mng_wrap_request_channel", 2);
+  hookRawCall(moduleValue, "SoundMng_isAlreadyPlayingBGM", "sound_mng_is_already_playing_bgm", 2, []);
+  hookRawCall(moduleValue, "SndIsAlreadyPlayingBGM", "snd_is_already_playing_bgm", 2, []);
+  hookRawCall(moduleValue, "zgSndReqCode", "zg_snd_req_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqFadeCode", "zg_snd_req_fade_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqVolumeCode", "zg_snd_req_volume_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqPauseCode", "zg_snd_req_pause_code", 4, [0, 1]);
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml25fnSndRequest_BGM_SEQUENCEEv",
+    "obj_nml_snd_request_bgm_sequence",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_DIREv",
+    "obj_nml_snd_request_bgm_dir",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_STGEv",
+    "obj_nml_snd_request_bgm_stg",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_ENDEv",
+    "obj_nml_snd_request_bgm_end",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml25fnSndRequest_BGM_DIR_NEXTEv",
+    "obj_nml_snd_request_bgm_dir_next",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml26fnSndRequest_BGM_FADE_NEXTEv",
+    "obj_nml_snd_request_bgm_fade_next",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml21fnSndRequest_BGM_FADEEv",
+    "obj_nml_snd_request_bgm_fade",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN25C_DirectionControllerBase18Macro_SND_BGM_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_snd_bgm_play",
+    2,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN14C_ObjSelectBNS15fnSndRequestBGMEv",
+    "obj_select_bns_snd_request_bgm",
+    1,
+    []
+  );
   hookU64Call(
     moduleValue,
     "_ZN12C_CtrlSndLib17fnReqSndEventCodeEy",

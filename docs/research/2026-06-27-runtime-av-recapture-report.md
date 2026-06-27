@@ -138,7 +138,7 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_ou
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\subtitles\ac0921_001.srt
 ```
 
-QA summary:
+Technical QA summary:
 
 ```json
 {
@@ -153,9 +153,16 @@ QA summary:
 }
 ```
 
-This is a review sample, not a blanket approval of the old v18 batch.  The
-remaining bad-sample families still require the same runtime-timeline and
-classification gates before rendering.
+User review supersedes the technical QA result.  The sample has no accepted BGM
+evidence and no voice after about 23 seconds, so it is a failed diagnostic
+sample and must not be promoted to Bilibili/clean-story output.  See:
+
+```text
+docs/research/2026-06-27-runtime-bgm-gap-report.md
+```
+
+The remaining bad-sample families require full runtime AV evidence, including
+BGM/SE/voice coverage and visual speech/subtitle review, before rendering.
 
 ## Role-voice lane gate
 
@@ -194,14 +201,14 @@ This is the machine-checkable form of the user correction:
 - `ac7204_003` is gameplay/result with role voice and must not be pure material.
 - `ac7204_017` has role voice and remains blocked pending visual/speech review,
   not pure material.
-- `ac0921_001` remains a user-review sample until the repaired render is
-  visually accepted.
+- `ac0921_001` failed user review because the render lacks accepted BGM evidence
+  and has no voice after about 23 seconds.
 
 The v18 strategy audit was also regenerated without overwriting the older audit:
 
 ```text
-A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_20260627
-A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_20260627
+A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_v4_bgm_gap_20260627
+A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_v4_bgm_gap_20260627
 ```
 
 The regenerated strategy keeps the existing 51 AV-blocked ready-missing events
@@ -210,11 +217,16 @@ The blocked lanes are:
 
 ```json
 {
-  "audible_gameplay_result_with_role_voice": 41,
+  "pure_gameplay_or_effect_material": 10,
+  "audible_gameplay_result_with_role_voice": 31,
   "blocked_short_role_voice_variant": 36,
   "normal_animation_candidate_needs_visual_speech_review": 11
 }
 ```
+
+The v4 audit also adds `long_role_voice_scene_without_bgm_or_bed_audio_evidence`.
+It currently flags `ac0921_001` and `ac0921_002`; both remain invalidated until
+full runtime BGM/bed-audio evidence exists.
 
 ## Source integrity audit
 

@@ -42,7 +42,7 @@ GAMEPLAY_TERMS = (
     "card",
 )
 
-BGM_TERMS = ("BGM", "bgm", "ＢＧＭ", "次回予告", "レバー")
+BGM_TERMS = ("BGM", "bgm", "ＢＧＭ")
 ROLE_VOICE_SPEAKER_TOKENS = {
     "ai",
     "ari",
@@ -87,6 +87,19 @@ ROLE_VOICE_SPEAKER_TOKENS = {
 }
 VOICE_SOURCES = ("z2d_req_sound",)
 ASR_SOURCES = ("asr_verified", "voice_subtitle_override")
+SOUND_ID_RE = re.compile(r"^(\d{4,5})(?:_|\s|$)")
+NON_DIALOGUE_TEXT_TERMS = (
+    "モキュ",
+    "小キュ",
+    "切替",
+    "SE",
+    "ＢＧＭ",
+    "BGM",
+    "ジングル",
+    "結果表示",
+    "CHANCE",
+    "WIN",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -223,11 +236,20 @@ def is_role_voice_audio(row: dict[str, Any], subtitle_voice_requests: set[str]) 
         return True
     code_name = str(row.get("code_name", "")).strip()
     parts = [part.casefold() for part in code_name.split("_")]
-    if any(part in ROLE_VOICE_SPEAKER_TOKENS for part in parts[1:-1]):
+    has_speaker = any(part in ROLE_VOICE_SPEAKER_TOKENS for part in parts[1:-1])
+    has_at_marker = "at" in parts[1:-1]
+    match = SOUND_ID_RE.match(code_name)
+    resource_id = int(match.group(1)) if match else 0
+    if has_speaker and (has_at_marker or 30000 <= resource_id < 40000):
         return True
-    return str(row.get("source", "")) in VOICE_SOURCES and str(
-        row.get("code_name", "")
-    ).startswith("3")
+    return False
+
+
+def is_dialogue_subtitle_row(row: dict[str, Any]) -> bool:
+    text = str(row.get("text", "")).strip()
+    if not text:
+        return False
+    return not any(term in text for term in NON_DIALOGUE_TEXT_TERMS)
 
 
 def semantic_lane(
@@ -287,6 +309,7 @@ def summarize_manifest(
         str(row.get("voice_request_id", "")).strip()
         for row in subtitles
         if str(row.get("voice_request_id", "")).strip()
+        and is_dialogue_subtitle_row(row)
     }
 
     role_voice_rows = [
@@ -296,6 +319,18 @@ def summarize_manifest(
     non_dialogue_audio_count = len(audio) - role_voice_count
     base_audio_count = sum(str(row.get("source", "")) == "event_audio_component" for row in audio)
     bgm_request_count = sum(has_term([str(row.get("code_name", ""))], BGM_TERMS) for row in audio)
+    render_duration_ms = int(manifest.get("render_duration_ms") or 0)
+    audio_end_ms_values: list[int] = []
+    for row in audio:
+        try:
+            audio_end_ms_values.append(
+                int(float(row.get("start_ms") or 0))
+                + int(float(row.get("duration_ms") or 0))
+            )
+        except (TypeError, ValueError):
+            continue
+    last_audio_end_ms = max(audio_end_ms_values) if audio_end_ms_values else 0
+    audio_tail_gap_ms = max(0, render_duration_ms - last_audio_end_ms)
     asr_subtitle_count = sum(
         any(source_term in source for source_term in ASR_SOURCES)
         for source in subtitle_sources
@@ -308,7 +343,7 @@ def summarize_manifest(
         for source in subtitle_sources
     )
     gameplay_marker = has_term(audio_names + clip_names, GAMEPLAY_TERMS)
-    short_variant = int(manifest.get("render_duration_ms") or 0) <= 3000
+    short_variant = render_duration_ms <= 3000
     audience_excluded = bool(manifest.get("audience_exclusion_reason"))
     lane = semantic_lane(
         role_voice_count=role_voice_count,
@@ -341,6 +376,13 @@ def summarize_manifest(
         risk_flags.append("gameplay_or_result_material")
     if short_variant and role_voice_count:
         risk_flags.append("short_variant_with_role_voice")
+    if (
+        role_voice_count
+        and render_duration_ms >= 15000
+        and bgm_request_count == 0
+        and audio_tail_gap_ms >= 3000
+    ):
+        risk_flags.append("long_role_voice_scene_without_bgm_or_bed_audio_evidence")
     if gates.get("ready") and risk_flags:
         risk_flags.append("technical_ready_not_delivery_ready")
 
@@ -359,13 +401,15 @@ def summarize_manifest(
         "risk_flags": ";".join(risk_flags),
         "ready": "yes" if gates.get("ready") else "no",
         "audience_excluded": "yes" if audience_excluded else "no",
-        "render_duration_ms": manifest.get("render_duration_ms", ""),
+        "render_duration_ms": render_duration_ms,
         "video_composition_model": manifest.get("video_composition_model", ""),
         "clip_count": len(clips),
         "base_audio_count": base_audio_count,
         "role_voice_count": role_voice_count,
         "non_dialogue_audio_count": non_dialogue_audio_count,
         "bgm_request_count": bgm_request_count,
+        "last_audio_end_ms": last_audio_end_ms,
+        "audio_tail_gap_ms": audio_tail_gap_ms,
         "subtitle_count": len(subtitles),
         "official_voice_label_subtitle_count": official_label_count,
         "runtime_capture_subtitle_count": runtime_capture_subtitle_count,
@@ -477,6 +521,8 @@ def main() -> int:
         "role_voice_count",
         "non_dialogue_audio_count",
         "bgm_request_count",
+        "last_audio_end_ms",
+        "audio_tail_gap_ms",
         "subtitle_count",
         "official_voice_label_subtitle_count",
         "runtime_capture_subtitle_count",

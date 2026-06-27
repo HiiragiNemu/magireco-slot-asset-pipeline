@@ -104,22 +104,37 @@
   结论为 `runtime_capture_ready_via_arm64_gadget`。这只恢复了官方运行时取证能力；
   `ac0921/ac4901/ac7204` 等被作废样本仍需重新捕获、解析和人工验证后才可重新渲染。
 - 2026-06-27 官方 code 重新捕获报告已写入
-  `docs/research/2026-06-27-runtime-av-recapture-report.md`。关键结论：
+  `docs/research/2026-06-27-runtime-av-recapture-report.md`，后续 BGM 缺口复核写入
+  `docs/research/2026-06-27-runtime-bgm-gap-report.md`。关键结论：
   `ac0921_001` 必须用长窗口解析，官方运行时在约 74 ms 播放
   `2990_次回予告_レバー`，后续有 4 条 Iroha 语音/字幕，并在约 27.46 秒才加载
-  `ac0921_jikai_yokoku_3on_01(.lp)`；旧 15 秒 resolver 窗口会漏掉后段画面。
+  `ac0921_jikai_yokoku_3on_01(.lp)`；旧 15 秒 resolver 窗口会漏掉后段画面。但用户
+  复核确认该 runtime-repair 样片全程无 BGM、约 23 秒后无语音，因此它是失败诊断样片，
+  不能作为投稿成片或旧 v18 batch 的恢复证据。
   `ac4901_025/026` 和 `ac7204_003/017` 均有官方角色语音，不得归入纯素材；
   其中 `ac4901` 视觉说话校验不通过时也不得归入 clean-story 投稿候选。
 - `resolve_official_event_capture.py` 已把空字符串声回调改写到
   `ignored_sound_events.csv`，并把默认解析窗口改为 60 秒。真实未解析音频仍保留在
   `unresolved_sound_events.csv` 和 `unresolved_sound_event_count`，不能被忽略。
-- `ac0921_001` 已生成第一条 runtime-repair 用户复核样片：
+- `ac0921_001` 的第一条 runtime-repair 用户复核样片已降级为 failed diagnostic：
   production manifest 位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\production_manifests_runtime_repair_v1_ac0921\events\ac0921_001.json`，
   渲染输出位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001`。
-  QA：1/1 passed，32.766 秒，416x232，30/1，48 kHz stereo，字幕/无字幕音频哈希一致。
-  这是修复路线样片，不代表旧 v18 batch 可恢复为交付品。
+  虽然技术 QA 曾显示 1/1 passed、32.766 秒、416x232、30/1、48 kHz stereo、
+  字幕/无字幕音频哈希一致，但用户复核发现全程缺 BGM 且尾段无语音；因此 contact sheet
+  / stream QA 不能作为交付充分条件。
+- `event_scene_probe.js` 的 `--with-sound` 官方路径已修通并记录
+  `forced_event_sound_request_sent`，但 `ac0921_001` 诊断证明手动 event sound 只会多打一条
+  `2990_次回予告_レバー`，不会补 BGM；`capture_official_event.py` 因此保留
+  `--with-event-sound` 为诊断开关，默认不额外请求 event sound。
+- `runtime_probe.js` 已补 BGM/request 层 hook：`zgSndReqCode/FadeCode/VolumeCode/PauseCode`、
+  `SoundMng_isAlreadyPlayingBGM`、`C_ObjNml::fnSndRequest_BGM_*`、
+  `C_DirectionControllerBase::Macro_SND_BGM_PLAY` 等。`ac0921_001` BGM-hook 捕获位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\official_bgm_hook_smoke_20260627`；
+  事件窗口只见 lever SE 和 4 条 voice request，没有 BGM request，说明单 event 强制触发
+  不进入外层 BGM 状态机。后续必须捕获完整触发流程或游戏最终混音，不能继续只靠单 event
+  拼接生成投稿成片。
 - `audit_runtime_av_trust.py` 已从粗略 `voice_count` 改为 `role_voice_count`，
   不再把 BGM/SE/effect 的 `z2d_req_sound` 误判为角色语音；审计 CSV 新增
   `semantic_lane`。5 个官方重捕获样本的 lane 审计位于
@@ -127,14 +142,16 @@
   结论是 5/5 仍为 `blocked_pending_runtime_av_verification`：
   `ac4901_025/026` 为短角色语音变体，`ac7204_003` 为 gameplay/result with
   role voice，`ac0921_001` 和 `ac7204_017` 为带角色语音、需视觉语音复核的动画候选。
-- v18 trust/strategy 已用新版 lane gate 重算到
-  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_20260627`
+- v18 trust/strategy 已用新版 lane/BGM gate 重算到
+  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_role_lane_v4_bgm_gap_20260627`
   和
-  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_20260627`；
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_role_lane_v4_bgm_gap_20260627`；
   ready-missing 217 中 166 仍为可行动渲染候选、51 个继续 AV-blocked。阻断 lane：
-  41 个 `audible_gameplay_result_with_role_voice`、36 个
+  31 个 `audible_gameplay_result_with_role_voice`、36 个
   `blocked_short_role_voice_variant`、11 个
-  `normal_animation_candidate_needs_visual_speech_review`。
+  `normal_animation_candidate_needs_visual_speech_review`，另有 10 个
+  `pure_gameplay_or_effect_material`。新增风险
+  `long_role_voice_scene_without_bgm_or_bed_audio_evidence=2`，当前命中 `ac0921_001/002`。
 - 新增 `audit_render_source_integrity.py`，用于给已渲染单事件补 source hash、
   event index、累计时间轴和输出哈希复核。`ac0921_001` 审计位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\validation_outputs_runtime_repair_v1_ac0921\ac0921_001\audit`：
@@ -164,6 +181,11 @@
   作为素材合集，不混入 clean story。
 - `D:\MagiReco_Reverse\magireco_material_collections_v18_audible_20260626\ac0912`
   作为 small-Kyubey / CHANCE / WIN / 上乗せ 等玩法素材合集，不混入 clean story。
+- 2026-06-27 素材纯度 smoke 输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\material_collection_purity_smoke_20260627`：
+  `ac0912` 为 `pure_gameplay_or_effect_material`、`pure_material=true`、role voice=0；
+  `ac7204` 为 `audible_gameplay_result_with_role_voice_not_pure_material`、
+  `pure_material=false`、role voice=14，因此不得作为纯素材或 clean-story 动画。
 - 以下 v18 输出已作废为“不可交付，只保留审计”：generic strategy sample、
   `validation_outputs_v18_clean_story_ac4901_full`、
   `magireco_verified_series_v18_clean_story_ac4901_20260626`、

@@ -32,9 +32,26 @@ HIGH_LEVEL_STRING_SOUND_KINDS = {
     "ctrl_snd_req_now",
     "ctrl_snd_call_code_callback",
     "snd_proc_code_callback",
+    "zg_snd_req_code",
+    "zg_snd_req_fade_code",
+    "zg_snd_req_volume_code",
+    "zg_snd_req_pause_code",
 }
 HIGH_LEVEL_EVENT_SOUND_KINDS = {
     "ctrl_snd_req_event_code",
+}
+BGM_CONTROL_KINDS = {
+    "obj_nml_snd_request_bgm_sequence",
+    "obj_nml_snd_request_bgm_dir",
+    "obj_nml_snd_request_bgm_stg",
+    "obj_nml_snd_request_bgm_end",
+    "obj_nml_snd_request_bgm_dir_next",
+    "obj_nml_snd_request_bgm_fade_next",
+    "obj_nml_snd_request_bgm_fade",
+    "direction_macro_snd_bgm_play",
+    "obj_select_bns_snd_request_bgm",
+    "sound_mng_is_already_playing_bgm",
+    "snd_is_already_playing_bgm",
 }
 INT_SOUND_KINDS = {
     "sound_mng_play",
@@ -91,6 +108,18 @@ def decode_text(record: dict) -> str:
     return str(payload(record).get("text_utf8", ""))
 
 
+def decode_sound_text(record: dict) -> str:
+    text = decode_text(record).strip()
+    if text:
+        return text
+    item = payload(record)
+    for key in ("arg0_text_utf8", "arg1_text_utf8"):
+        text = str(item.get(key, "")).strip()
+        if text:
+            return text
+    return ""
+
+
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as source:
         return list(csv.DictReader(source))
@@ -119,15 +148,22 @@ def srt_time(milliseconds: int) -> str:
 
 def event_context(records: list[dict]) -> dict:
     context: dict = {}
+    event_sound_request_sent_count = 0
     for record in records:
         item = payload(record)
         if item.get("kind") == "forced_event_context_started":
+            request = item.get("request", {})
+            if not isinstance(request, dict):
+                request = {}
             context = {
                 "event": item.get("forced_event_label", ""),
                 "code_hex": item.get("forced_event_code", ""),
                 "context_unix_ms": int(item.get("unix_ms", 0)),
                 "request_id": item.get("forced_event_request_id"),
+                "event_sound_requested": bool(request.get("with_sound")),
             }
+        elif item.get("kind") == "forced_event_sound_request_sent":
+            event_sound_request_sent_count += 1
         elif item.get("kind") == "scene_request_executed":
             context.setdefault("event", item.get("forced_event_label", ""))
             context.setdefault("code_hex", item.get("forced_event_code", ""))
@@ -135,9 +171,14 @@ def event_context(records: list[dict]) -> dict:
             context["scene_object_source"] = (
                 item.get("animation_state", {}).get("selected_source", "")
             )
+            request = item.get("request", {})
+            if isinstance(request, dict) and "event_sound_requested" not in context:
+                context["event_sound_requested"] = bool(request.get("with_sound"))
     if not context:
         raise SystemExit("event log has no forced event context")
     context.setdefault("scene_request_unix_ms", context["context_unix_ms"])
+    context.setdefault("event_sound_requested", False)
+    context["event_sound_request_sent_count"] = event_sound_request_sent_count
     return context
 
 
@@ -451,6 +492,7 @@ def main() -> int:
             | HIGH_LEVEL_STRING_SOUND_KINDS
             | HIGH_LEVEL_EVENT_SOUND_KINDS
             | INT_SOUND_KINDS
+            | BGM_CONTROL_KINDS
         ):
             continue
 
@@ -484,9 +526,28 @@ def main() -> int:
             )
             continue
 
+        if kind in BGM_CONTROL_KINDS:
+            unresolved_sound_events.append(
+                {
+                    "sequence": len(unresolved_sound_events),
+                    "line_number": line_number,
+                    "relative_ms": relative_ms,
+                    "kind": kind,
+                    "code_name": "",
+                    "event_code_hex": "",
+                    "mapping_basis": "bgm_control_or_status_call",
+                    "unresolved_reason": (
+                        "bgm_control_call_requires_followup_sound_code_or_mix_capture"
+                    ),
+                    "raw_int_args": raw_int_args,
+                    "raw_u64_args": raw_u64_args,
+                }
+            )
+            continue
+
         resolved_media: list[dict[str, str]]
         if kind in STRING_SOUND_KINDS | HIGH_LEVEL_STRING_SOUND_KINDS:
-            code_name = text
+            code_name = decode_sound_text(record)
             if not code_name:
                 ignored_sound_events.append(
                     {

@@ -690,7 +690,7 @@ function executePendingRequest(source) {
       const label = Memory.allocUtf8String(request.label);
       call(scene, uint64(request.code_hex), request.immediate ? 1 : 0, label);
     }
-    if (request.with_sound && !request.official) {
+    if (request.with_sound) {
       const getSoundController = new NativeFunction(
         findExport("_Z10CTRLSNDLIBv"),
         "pointer",
@@ -702,6 +702,11 @@ function executePendingRequest(source) {
         ["pointer", "uint64"]
       );
       requestSound(getSoundController(), uint64(request.code_hex));
+      emit("forced_event_sound_request_sent", {
+        request_id: request.id,
+        event_code_hex: request.code_hex,
+        official: Boolean(request.official),
+      });
     }
     emit("scene_request_executed", {
       request_id: request.id,
