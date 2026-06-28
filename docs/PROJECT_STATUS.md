@@ -16,6 +16,29 @@
 
 最新新增：
 
+- 2026-06-28 交接与尾帧门禁修正：已新增核心交接文档
+  `docs/HANDOFF_NEXT_AI_MAGIRECO.md`。用户确认
+  `validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628` 的语音和字幕正确，
+  但指出 `ac7116_001` 约 11 s 后画面静止、声音/字幕延续到约 13 s，且对是否缺
+  BGM 存疑。复核结论：v19 没有删除 `420xx_SPストーリー...` bed/base-scene audio；
+  `ac7116_001` 的静止尾巴来自 `hold_last_frame` 策略，保留最后角色语音
+  `31186_282_mihu_く…ぐ…` 到 13027 ms。源 DGM `ac7116_AT_SP_story5_01.mp4`
+  未检测到同等冻结，渲染版检测到 `freeze_start: 11.2`。因此当前 ac7114-16
+  长片只能作为用户验证/机制验证输出，不能标为最终投稿成品；需要运行时画面或
+  compositor/frame hook 证明尾帧 hold 是否为游戏原生行为，并继续用运行时 BGM/CSL
+  queue 证据证明是否存在额外 BGM。
+- `audit_runtime_av_trust.py` 已新增 `visual_tail_hold_ms`、
+  `video_extension_policy`、`video_duration_ms` CSV 字段和
+  `visual_tail_hold_needs_runtime_confirmation` 风险标记：角色语音事件若使用
+  `hold_last_frame`/`black_tail` 且视觉尾巴 >= 750 ms，不再视为最终交付可信。
+  v19 ac7114-16 子集重审位于
+  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v19_clean_audio_gate_tail_hold_20260628`，
+  3/3 均保持 `blocked_pending_runtime_av_verification`；`ac7115_001` 与
+  `ac7116_001` 命中新的尾帧确认门禁。全量 v18 manifest-only 重审位于
+  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_tail_hold_gate_20260628`，
+  新门禁共命中 29 个事件。使用该 CSV 重算后的 strategy 位于
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_tail_hold_gate_20260628`；
+  217 个 ready-missing 事件中仍只有 4 个 delivery-actionable，213 个保持 AV-blocked。
 - 2026-06-28 clean-story 音频门禁修正：`audit_runtime_av_trust.py` 现在默认可全量审计
   manifest-root，区分 bed/base-scene audio、role voice 与 slot/foreground effect audio，
   并新增 `slot_or_foreground_effect_audio_in_clean_story_candidate`。全量 v18 manifest-only

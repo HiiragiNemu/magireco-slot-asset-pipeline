@@ -194,3 +194,56 @@ Important boundary: this fixes the known foreground-effect audio pollution and
 creates an auditable same-scene review long edition.  It does not by itself
 prove every role voice mouth movement; the runtime AV trust audit still flags
 role-voice visual-speech verification as a delivery gate for final publication.
+
+## Post-review tail-hold and BGM note
+
+User review later confirmed that the v19 voice/subtitle mapping is correct, but
+also identified a visible tail-hold problem: `ac7116_001__subtitles.mp4` freezes
+around 11 seconds while audio/subtitles continue to about 13 seconds.  The same
+class of short tail exists in the joined scene.
+
+Manifest and stream checks show:
+
+| event | source video duration | render duration | hold tail | retained bed/base-scene audio |
+| --- | ---: | ---: | ---: | --- |
+| `ac7114_001` | 9167 ms | 9629 ms | 462 ms | `42040_SPストーリー3_01_2G` |
+| `ac7115_001` | 21200 ms | 22167 ms | 967 ms | `42060_SPストーリー4_かえでドッペル_01` |
+| `ac7116_001` | 11267 ms | 13027 ms | 1760 ms | `42080_SPストーリー5_みふゆとももこ_01` |
+
+For `ac7116_001`, the source DGM did not show a 0.5 s+ freeze under
+`ffmpeg`'s `freezedetect`, while the rendered subtitle edition reported
+`freeze_start: 11.2`.  Therefore the visible still tail is a render-policy
+effect from `video_extension_policy=hold_last_frame`, used to preserve the
+official final role voice `31186_282_mihu_く…ぐ…` through 13027 ms.  It is not
+yet proven that the game itself displays the clean main-story final frame for
+that whole tail after excluding the gold-frame foreground layer.
+
+The current BGM interpretation is also narrower than "no BGM": these manifests
+retain the `420xx_SPストーリー...` bed/base-scene audio tracks.  `bgm_request_count=0`
+only means there is no literal `BGM`-named request in the production manifest.
+Whether an additional outer-state BGM should be present remains a runtime
+evidence question.
+
+`tools/frida_runtime_probe/audit_runtime_av_trust.py` now adds
+`visual_tail_hold_needs_runtime_confirmation` when a role-voice event relies on
+a visible `hold_last_frame`/`black_tail` extension of at least 750 ms.  The
+updated v19 subset audit is:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v19_clean_audio_gate_tail_hold_20260628
+```
+
+Result:
+
+```json
+{
+  "audited_events": 3,
+  "status_counts": {
+    "blocked_pending_runtime_av_verification": 3
+  }
+}
+```
+
+Consequently the ac7114-16 joined scene is a review/mechanism-validation output,
+not a final Bilibili upload candidate, until runtime visual tail and BGM/bed
+completeness are proven.

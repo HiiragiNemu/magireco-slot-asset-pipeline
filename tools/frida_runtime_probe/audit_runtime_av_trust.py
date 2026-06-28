@@ -381,6 +381,11 @@ def summarize_manifest(
         str(row.get("code_name", "")) for row in slot_effect_audio_rows
     ]
     render_duration_ms = int(manifest.get("render_duration_ms") or 0)
+    video_duration_ms = int(manifest.get("video_duration_ms") or 0)
+    video_extension_policy = str(manifest.get("video_extension_policy", ""))
+    visual_tail_hold_ms = (
+        max(0, render_duration_ms - video_duration_ms) if video_duration_ms else 0
+    )
     audio_end_ms_values: list[int] = []
     for row in audio:
         try:
@@ -448,6 +453,12 @@ def summarize_manifest(
         and audio_tail_gap_ms >= 3000
     ):
         risk_flags.append("long_role_voice_scene_without_bgm_or_bed_audio_evidence")
+    if (
+        role_voice_count
+        and visual_tail_hold_ms >= 750
+        and video_extension_policy in {"hold_last_frame", "black_tail"}
+    ):
+        risk_flags.append("visual_tail_hold_needs_runtime_confirmation")
     if gates.get("ready") and risk_flags:
         risk_flags.append("technical_ready_not_delivery_ready")
 
@@ -467,6 +478,9 @@ def summarize_manifest(
         "ready": "yes" if gates.get("ready") else "no",
         "audience_excluded": "yes" if audience_excluded else "no",
         "render_duration_ms": render_duration_ms,
+        "video_duration_ms": video_duration_ms,
+        "visual_tail_hold_ms": visual_tail_hold_ms,
+        "video_extension_policy": video_extension_policy,
         "video_composition_model": manifest.get("video_composition_model", ""),
         "clip_count": len(clips),
         "base_audio_count": base_audio_count,
@@ -585,6 +599,9 @@ def main() -> int:
         "ready",
         "audience_excluded",
         "render_duration_ms",
+        "video_duration_ms",
+        "visual_tail_hold_ms",
+        "video_extension_policy",
         "video_composition_model",
         "clip_count",
         "base_audio_count",
