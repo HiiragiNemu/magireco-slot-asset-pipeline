@@ -264,6 +264,7 @@ tools/frida_runtime_probe/csl_audio_queue_probe.js
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/build_runtime_evidence_skeleton.py
+tools/frida_runtime_probe/package_runtime_evidence_capture.py
 ```
 
 Use cases:
@@ -291,6 +292,12 @@ Use cases:
   Its output is intentionally marked `evidence_only_not_render_ready`; it is the
   auditable input for a future production-manifest builder, not a delivery
   approval.
+- `package_runtime_evidence_capture.py`: run decode + summary + skeleton in one
+  reproducible package step and write `source_hashes.csv`,
+  `cumulative_runtime_timeline.csv`, `qa_report.json`, and
+  `package_manifest.json`.  Its passing state is
+  `passed_evidence_not_delivery`; a capture with metadata-only queue chunks is
+  rejected as `failed_evidence_package`.
 
 ## Next cracking target
 

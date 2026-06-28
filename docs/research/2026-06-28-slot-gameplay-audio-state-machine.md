@@ -253,6 +253,17 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\evidence_skeleton_v1
 ```
 
+Packaged evidence:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\evidence_package_v1
+```
+
+The package was generated with
+`tools/frida_runtime_probe/package_runtime_evidence_capture.py` and includes
+`source_hashes.csv`, `cumulative_runtime_timeline.csv`, `qa_report.json`, and
+`package_manifest.json`.
+
 Result:
 
 ```json
@@ -261,6 +272,18 @@ Result:
   "duration_seconds": 41.395020833333334,
   "observed_sound_ids": [60, 61, 62, 64, 278, 279, 287, 291, 445, 451, 453, 531, 1769, 2993, 3196, 3198, 3206, 6698, 6714, 6758, 6759, 6760, 9002],
   "metadata_sound_ids": []
+}
+```
+
+Evidence package QA:
+
+```json
+{
+  "status": "passed_evidence_not_delivery",
+  "timeline_rows": 128,
+  "hashed_files": 12,
+  "queue_metadata_count": 0,
+  "rendered_rms_dbfs": -21.187805792199768
 }
 ```
 
@@ -274,6 +297,18 @@ The previously capped branch is now resolved:
 This confirms the runtime path and removes the earlier evidence gap for this
 gameplay sound.  It does not authorize a clean-story render because the capture
 is a slot gameplay state-machine sequence with reel/UI state.
+
+As a negative gate check, the original first slot capture was also packaged:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\evidence_package_v1
+```
+
+That package reports `failed_evidence_package` because it still has
+`queue_metadata_count=1` and the skeleton warning
+`capture contains metadata-only queue chunks; recapture with larger per-chunk cap before delivery`.
+This is the intended behavior: incomplete audio evidence must not enter the
+render/long-form pipeline.
 
 ## Static table cross-check
 

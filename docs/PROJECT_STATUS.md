@@ -218,6 +218,16 @@
   `sound_id_u16_at_0x2=287` 的 3,072,004-byte chunk 映射到
   `snd_00814_bank01_ogg_00287.ogg`。这解决了首轮 `814/287` 只记录 metadata 的缺口，
   但仍属于 gameplay/slot 机制证据，不是正常动画成片。
+- `tools/frida_runtime_probe/package_runtime_evidence_capture.py` 已新增，用于把一次
+  runtime capture 固化成可复现证据包：重新解码 OpenSL WAV、生成 summary tables、
+  evidence skeleton、`source_hashes.csv`、`cumulative_runtime_timeline.csv`、
+  `qa_report.json` 和 `package_manifest.json`。定向 `814/287` 捕获的证据包位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_targeted_814_probe_20260628\evidence_package_v1`，
+  QA 状态为 `passed_evidence_not_delivery`，12 个关键文件已写 SHA-256，累计时间轴
+  128 行。首轮 slot 捕获也用同一工具生成负例证据包：
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\evidence_package_v1`，
+  QA 状态为 `failed_evidence_package`，失败原因是 `queue_metadata_count=1` 和
+  skeleton metadata-only warning；这证明门禁会阻止不完整音频证据进入渲染。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换
