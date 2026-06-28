@@ -43,6 +43,32 @@ GAMEPLAY_TERMS = (
 )
 
 BGM_TERMS = ("BGM", "bgm", "ＢＧＭ")
+BED_AUDIO_TERMS = (
+    "BGM",
+    "bgm",
+    "ＢＧＭ",
+    "SPストーリー",
+    "ストーリー",
+)
+SLOT_OR_FOREGROUND_EFFECT_AUDIO_TERMS = (
+    "シネスコ",
+    "変化音",
+    "金帯",
+    "金枠",
+    "銀帯",
+    "銀枠",
+    "PUSH",
+    "CHANCE",
+    "WIN",
+    "押し",
+    "押して",
+    "狙え",
+    "上乗せ",
+    "ルーレット",
+    "告弱",
+    "告強",
+    "SU",
+)
 ROLE_VOICE_SPEAKER_TOKENS = {
     "ai",
     "ari",
@@ -245,6 +271,30 @@ def is_role_voice_audio(row: dict[str, Any], subtitle_voice_requests: set[str]) 
     return False
 
 
+def resource_id_from_code_name(code_name: str) -> int:
+    match = SOUND_ID_RE.match(code_name)
+    return int(match.group(1)) if match else 0
+
+
+def is_bed_audio(row: dict[str, Any], subtitle_voice_requests: set[str]) -> bool:
+    """Return true for BGM/base-scene audio, not voice or slot/effect stingers."""
+
+    if is_role_voice_audio(row, subtitle_voice_requests):
+        return False
+    if str(row.get("source", "")) == "event_audio_component":
+        return True
+    code_name = str(row.get("code_name", "")).strip()
+    if has_term([code_name], BED_AUDIO_TERMS):
+        return True
+    resource_id = resource_id_from_code_name(code_name)
+    return 40000 <= resource_id < 50000
+
+
+def is_slot_or_foreground_effect_audio(row: dict[str, Any]) -> bool:
+    code_name = str(row.get("code_name", "")).strip()
+    return has_term([code_name], SLOT_OR_FOREGROUND_EFFECT_AUDIO_TERMS)
+
+
 def is_dialogue_subtitle_row(row: dict[str, Any]) -> bool:
     text = str(row.get("text", "")).strip()
     if not text:
@@ -319,6 +369,17 @@ def summarize_manifest(
     non_dialogue_audio_count = len(audio) - role_voice_count
     base_audio_count = sum(str(row.get("source", "")) == "event_audio_component" for row in audio)
     bgm_request_count = sum(has_term([str(row.get("code_name", ""))], BGM_TERMS) for row in audio)
+    bed_audio_rows = [
+        row for row in audio if is_bed_audio(row, subtitle_voice_requests)
+    ]
+    bed_audio_count = len(bed_audio_rows)
+    slot_effect_audio_rows = [
+        row for row in audio if is_slot_or_foreground_effect_audio(row)
+    ]
+    slot_effect_audio_count = len(slot_effect_audio_rows)
+    slot_effect_audio_names = [
+        str(row.get("code_name", "")) for row in slot_effect_audio_rows
+    ]
     render_duration_ms = int(manifest.get("render_duration_ms") or 0)
     audio_end_ms_values: list[int] = []
     for row in audio:
@@ -374,12 +435,16 @@ def summarize_manifest(
         risk_flags.append("gameplay_or_result_with_role_voice")
     elif gameplay_marker:
         risk_flags.append("gameplay_or_result_material")
+    if slot_effect_audio_count and not audience_excluded:
+        risk_flags.append("slot_or_foreground_effect_audio_in_clean_story_candidate")
     if short_variant and role_voice_count:
         risk_flags.append("short_variant_with_role_voice")
+    if role_voice_count and render_duration_ms >= 8000 and bed_audio_count == 0:
+        risk_flags.append("role_voice_scene_without_bed_audio_evidence")
     if (
         role_voice_count
         and render_duration_ms >= 15000
-        and bgm_request_count == 0
+        and bed_audio_count == 0
         and audio_tail_gap_ms >= 3000
     ):
         risk_flags.append("long_role_voice_scene_without_bgm_or_bed_audio_evidence")
@@ -408,6 +473,8 @@ def summarize_manifest(
         "role_voice_count": role_voice_count,
         "non_dialogue_audio_count": non_dialogue_audio_count,
         "bgm_request_count": bgm_request_count,
+        "bed_audio_count": bed_audio_count,
+        "slot_effect_audio_count": slot_effect_audio_count,
         "last_audio_end_ms": last_audio_end_ms,
         "audio_tail_gap_ms": audio_tail_gap_ms,
         "subtitle_count": len(subtitles),
@@ -415,6 +482,7 @@ def summarize_manifest(
         "runtime_capture_subtitle_count": runtime_capture_subtitle_count,
         "asr_or_override_subtitle_count": asr_subtitle_count,
         "gameplay_marker": "yes" if gameplay_marker else "no",
+        "slot_effect_audio_names": " | ".join(slot_effect_audio_names),
         "audio_names": " | ".join(audio_names),
         "subtitle_texts": " | ".join(subtitle_texts),
         "clip_names": " | ".join(clip_names),
@@ -489,6 +557,8 @@ def main() -> int:
         if event:
             payload["_path"] = str(path)
             manifests[event] = payload
+    if not requested:
+        requested.update(manifests)
 
     rows: list[dict[str, Any]] = []
     for event in sorted(requested, key=event_sort_key):
@@ -521,6 +591,8 @@ def main() -> int:
         "role_voice_count",
         "non_dialogue_audio_count",
         "bgm_request_count",
+        "bed_audio_count",
+        "slot_effect_audio_count",
         "last_audio_end_ms",
         "audio_tail_gap_ms",
         "subtitle_count",
@@ -528,6 +600,7 @@ def main() -> int:
         "runtime_capture_subtitle_count",
         "asr_or_override_subtitle_count",
         "gameplay_marker",
+        "slot_effect_audio_names",
         "audio_names",
         "subtitle_texts",
         "clip_names",

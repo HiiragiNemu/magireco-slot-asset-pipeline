@@ -4,6 +4,12 @@
   "model": "linear_full_frame_sequence",
   "duration_ms": 9629,
   "extension_policy": "hold_last_frame",
+  "excluded_audio_request_ids": [
+    "1681"
+  ],
+  "excluded_audio_code_names": [
+    "8040_シネスコ変化音_金帯"
+  ],
   "native_dimensions": {
     "width": 512,
     "height": 288

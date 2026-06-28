@@ -16,6 +16,31 @@
 
 最新新增：
 
+- 2026-06-28 clean-story 音频门禁修正：`audit_runtime_av_trust.py` 现在默认可全量审计
+  manifest-root，区分 bed/base-scene audio、role voice 与 slot/foreground effect audio，
+  并新增 `slot_or_foreground_effect_audio_in_clean_story_candidate`。全量 v18 manifest-only
+  审计位于
+  `A:\magireco_corrected_research_20260612\runtime_av_trust_audits_v18_clean_audio_gate_20260628`，
+  926 个事件中 897 个仍被 AV 信任门禁阻塞，134 个命中 clean-story 中混入
+  slot/foreground effect audio 的风险。
+  使用该全量 AV trust CSV 重算后的 strategy 位于
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_clean_audio_gate_20260628`；
+  217 个 ready-missing 事件中只有 4 个仍是 delivery-actionable，213 个转入
+  `av_blocked_ready_missing_queue.csv`。
+- `ac7114_001`、`ac7115_001`、`ac7116_001` 的 clean composition plans 已明确排除
+  request `1681` / `8040_シネスコ変化音_金帯`，因为它属于被排除的 gold-frame/foreground
+  slot 演出音效，不属于正常动画上传版。修正后的 production manifests 位于
+  `A:\magireco_corrected_research_20260612\production_manifests_v19_clean_audio_gate_20260628`；
+  修正后的单事件双版本位于
+  `A:\magireco_corrected_research_20260612\validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628`，
+  标准 QA 3/3 通过、非静音、字幕/无字幕音频一致、512x288、30/1、48 kHz 双声道。
+- 已新增 `tools/frida_runtime_probe/build_scene_editions.py`，用于显式事件序列的同场景长片；
+  旧 `build_series_editions.py` 只支持单 `acXXXX` 前缀 family，不适合 `ac7114 + ac7115 + ac7116`
+  这种跨前缀同场景。已生成可审计 review 长片：
+  `D:\MagiReco_Reverse\magireco_verified_scenes_v19_clean_audio_gate_20260628\ac7114_16_sp_story_clean_audio_gate`，
+  含字幕版/无字幕版、合并 SRT、`scene_manifest.json`、`audit\scene_index.csv`、源文件 hash 和累计时间轴；
+  scene-level QA 通过，3 段、44.854 s、10 条字幕、512x288、30/1、48 kHz 双声道。
+  该输出用于用户验证；角色口型/视觉语音一致性仍按 AV trust gate 保持为最终交付前门禁。
 - `ac5208_001`、`ac5208_002` 和 `ac5208_003` 已转为 clean story composition plans，
   剥离黑幕 `ac8002_chance_btn*` 按钮层和对应按钮提示音/押して声；`ac5208_003`
   采用主攻击层 `ac5208_lev_madhom` 归零、`ac5208_lev_madhom_LP` 从 4167 ms
