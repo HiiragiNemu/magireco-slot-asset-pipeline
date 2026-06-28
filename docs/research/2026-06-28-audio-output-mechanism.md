@@ -308,6 +308,11 @@ Use cases:
   conservative promotion/isolation queue.  Failed packages are blocked; passed
   packages containing slot/gameplay markers or dialogue audio are isolated as
   material/gameplay candidates and explicitly marked not clean-story eligible.
+- `report_pipeline_strategy.py`: now accepts
+  `--runtime-evidence-promotion-csv` and copies package-level runtime evidence
+  gates into the global strategy report.  This makes runtime evidence status
+  visible next to v18 production/coverage/AV-trust queues without promoting any
+  package to delivery.
 
 ## Next cracking target
 

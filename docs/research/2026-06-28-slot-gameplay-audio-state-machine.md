@@ -359,6 +359,33 @@ The passed `814/287` package is therefore retained as reliable runtime audio
 evidence but isolated from clean-story/Bilibili rendering.  Its next action is
 material/gameplay review only.
 
+The runtime evidence queue is also copied into the global strategy report:
+
+```text
+A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_runtime_evidence_gate_20260628
+```
+
+This report keeps the v18 production/coverage counts unchanged while adding
+package-level runtime evidence status:
+
+```json
+{
+  "runtime_evidence_package_count": 2,
+  "runtime_evidence_status_counts": {
+    "failed_evidence_package": 1,
+    "passed_evidence_not_delivery": 1
+  },
+  "runtime_evidence_promotion_lane_counts": {
+    "blocked_failed_runtime_evidence_package": 1,
+    "runtime_gameplay_or_slot_material_with_dialogue_audio": 1
+  },
+  "runtime_evidence_clean_story_status_counts": {
+    "not_eligible": 1,
+    "not_eligible_gameplay_or_slot_sequence": 1
+  }
+}
+```
+
 ## Static table cross-check
 
 The request table and `sound_id.dat` confirm why numeric shortcuts are unsafe:

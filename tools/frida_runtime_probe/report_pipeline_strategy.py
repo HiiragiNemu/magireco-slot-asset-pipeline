@@ -34,6 +34,14 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="optional output from audit_runtime_av_trust.py",
     )
+    parser.add_argument(
+        "--runtime-evidence-promotion-csv",
+        default="",
+        help=(
+            "optional output from build_runtime_evidence_promotion_queue.py; "
+            "used only as a package-level runtime evidence gate summary"
+        ),
+    )
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--top", type=int, default=12)
     return parser.parse_args()
@@ -90,6 +98,12 @@ def main() -> int:
     av_rows = (
         read_csv(Path(args.runtime_av_trust_csv))
         if args.runtime_av_trust_csv and Path(args.runtime_av_trust_csv).exists()
+        else []
+    )
+    runtime_evidence_rows = (
+        read_csv(Path(args.runtime_evidence_promotion_csv))
+        if args.runtime_evidence_promotion_csv
+        and Path(args.runtime_evidence_promotion_csv).exists()
         else []
     )
     out_dir = Path(args.out_dir)
@@ -308,6 +322,36 @@ def main() -> int:
             "production_manifest",
         ],
     )
+    if runtime_evidence_rows:
+        write_csv(
+            out_dir / "runtime_evidence_promotion_queue.csv",
+            runtime_evidence_rows,
+            [
+                "capture_name",
+                "status",
+                "promotion_lane",
+                "clean_story_status",
+                "next_action",
+                "gameplay_marker",
+                "gameplay_reasons",
+                "role_or_dialogue_audio_count",
+                "root_count",
+                "roots",
+                "primary_animation_count",
+                "primary_animations",
+                "event_code_count",
+                "sound_code_lookup_count",
+                "queue_chunk_count",
+                "queue_metadata_count",
+                "duration_seconds",
+                "observed_sound_ids",
+                "failed_checks",
+                "package_dir",
+                "qa_report",
+                "explicit_guard",
+                "qa_summary_status",
+            ],
+        )
 
     model_counts = Counter(
         f"{row.get('ready', '')}:{row.get('video_composition_model', '')}"
@@ -325,6 +369,15 @@ def main() -> int:
     exclusions_count = len(exclusions_payload.get("events", {}))
     composition_plan_count = len(list(Path(args.composition_plans).glob("*.json")))
     av_status_counts = Counter(row.get("delivery_status", "") for row in av_rows)
+    runtime_evidence_status_counts = Counter(
+        row.get("status", "") for row in runtime_evidence_rows
+    )
+    runtime_evidence_lane_counts = Counter(
+        row.get("promotion_lane", "") for row in runtime_evidence_rows
+    )
+    runtime_evidence_clean_story_counts = Counter(
+        row.get("clean_story_status", "") for row in runtime_evidence_rows
+    )
     av_risk_counts: Counter[str] = Counter()
     for row in av_rows:
         for flag in row.get("risk_flags", "").split(";"):
@@ -371,6 +424,16 @@ def main() -> int:
         ),
         "runtime_av_trust_status_counts": dict(av_status_counts.most_common()),
         "runtime_av_trust_risk_counts": dict(av_risk_counts.most_common()),
+        "runtime_evidence_package_count": len(runtime_evidence_rows),
+        "runtime_evidence_status_counts": dict(
+            runtime_evidence_status_counts.most_common()
+        ),
+        "runtime_evidence_promotion_lane_counts": dict(
+            runtime_evidence_lane_counts.most_common()
+        ),
+        "runtime_evidence_clean_story_status_counts": dict(
+            runtime_evidence_clean_story_counts.most_common()
+        ),
         "ready_missing_top_series": group_prefix(ready_missing, "event")[: args.top],
         "delivery_actionable_ready_missing_top_series": group_prefix(
             ready_missing_actionable_rows, "event"
@@ -390,6 +453,11 @@ def main() -> int:
             "av_blocked_queue_csv": str(out_dir / "av_blocked_queue.csv"),
             "verification_sample_queue_csv": str(
                 out_dir / "verification_sample_queue.csv"
+            ),
+            "runtime_evidence_promotion_queue_csv": (
+                str(out_dir / "runtime_evidence_promotion_queue.csv")
+                if runtime_evidence_rows
+                else ""
             ),
         },
     }
@@ -433,6 +501,31 @@ def main() -> int:
         )
     else:
         report_lines.append("- No runtime AV trust audit CSV was provided.")
+    report_lines.extend(["", "## Runtime evidence package gates", ""])
+    if runtime_evidence_rows:
+        report_lines.append(
+            f"- Runtime evidence packages indexed: {summary['runtime_evidence_package_count']}"
+        )
+        report_lines.extend(
+            f"- status {key or '<blank>'}: {value}"
+            for key, value in summary["runtime_evidence_status_counts"].items()
+        )
+        report_lines.extend(["", "Promotion/isolation lanes:", ""])
+        report_lines.extend(
+            f"- {key or '<blank>'}: {value}"
+            for key, value in summary[
+                "runtime_evidence_promotion_lane_counts"
+            ].items()
+        )
+        report_lines.extend(["", "Clean-story eligibility from runtime packages:", ""])
+        report_lines.extend(
+            f"- {key or '<blank>'}: {value}"
+            for key, value in summary[
+                "runtime_evidence_clean_story_status_counts"
+            ].items()
+        )
+    else:
+        report_lines.append("- No runtime evidence promotion queue CSV was provided.")
     report_lines.extend(
         [
             "",

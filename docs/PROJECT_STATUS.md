@@ -242,6 +242,16 @@
   `runtime_gameplay_or_slot_material_with_dialogue_audio`，`clean_story_status` 为
   `not_eligible_gameplay_or_slot_sequence`。因此通过运行态音频 gate 仍不会自动进入
   normal animation / Bilibili clean-story 渲染。
+- `report_pipeline_strategy.py` 已接入可选
+  `--runtime-evidence-promotion-csv`，把 runtime evidence package gates 纳入全局
+  pipeline strategy summary/report。重算输出位于
+  `A:\magireco_corrected_research_20260612\pipeline_strategy_audits_v18_runtime_evidence_gate_20260628`；
+  当前仍为 926 个 production events、521 ready、217 个 ready-missing，其中
+  166 个不被 AV gate 阻断、51 个 AV-blocked。新增 runtime package gate 统计为
+  `failed_evidence_package=1`、`passed_evidence_not_delivery=1`，promotion lanes 为
+  `blocked_failed_runtime_evidence_package=1`、
+  `runtime_gameplay_or_slot_material_with_dialogue_audio=1`，clean-story eligibility
+  为 `not_eligible=1`、`not_eligible_gameplay_or_slot_sequence=1`。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换
