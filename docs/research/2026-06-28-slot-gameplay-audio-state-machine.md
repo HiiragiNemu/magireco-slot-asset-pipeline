@@ -310,6 +310,28 @@ That package reports `failed_evidence_package` because it still has
 This is the intended behavior: incomplete audio evidence must not enter the
 render/long-form pipeline.
 
+Both packages are indexed by:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_evidence_package_audit_20260628
+```
+
+Current index summary:
+
+```json
+{
+  "package_count": 2,
+  "status_counts": {
+    "failed_evidence_package": 1,
+    "passed_evidence_not_delivery": 1
+  },
+  "failed_check_counts": {
+    "no_metadata_only_queue_chunks": 1,
+    "skeleton_has_no_warnings": 1
+  }
+}
+```
+
 ## Static table cross-check
 
 The request table and `sound_id.dat` confirm why numeric shortcuts are unsafe:

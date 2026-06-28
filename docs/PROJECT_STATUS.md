@@ -228,6 +228,12 @@
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay_input_probe_20260628\evidence_package_v1`，
   QA 状态为 `failed_evidence_package`，失败原因是 `queue_metadata_count=1` 和
   skeleton metadata-only warning；这证明门禁会阻止不完整音频证据进入渲染。
+- `tools/frida_runtime_probe/audit_runtime_evidence_packages.py` 已新增，用于扫描
+  `evidence_package_v*` 并生成 package index。当前审计输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_evidence_package_audit_20260628`；
+  结果为 2 个 package：`passed_evidence_not_delivery=1`、
+  `failed_evidence_package=1`。失败检查统计为
+  `no_metadata_only_queue_chunks=1`、`skeleton_has_no_warnings=1`。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换

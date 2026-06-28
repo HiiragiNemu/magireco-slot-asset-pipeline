@@ -265,6 +265,7 @@ tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/build_runtime_evidence_skeleton.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
+tools/frida_runtime_probe/audit_runtime_evidence_packages.py
 ```
 
 Use cases:
@@ -298,6 +299,10 @@ Use cases:
   `package_manifest.json`.  Its passing state is
   `passed_evidence_not_delivery`; a capture with metadata-only queue chunks is
   rejected as `failed_evidence_package`.
+- `audit_runtime_evidence_packages.py`: scan a research root for
+  `evidence_package_v*/qa_report.json` and produce a status index CSV/JSON.
+  This makes the pass/fail state machine-readable across captures, so broad
+  work can use package status instead of conversation memory.
 
 ## Next cracking target
 
