@@ -332,6 +332,33 @@ Current index summary:
 }
 ```
 
+The package index is then converted into a conservative promotion/isolation
+queue:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_evidence_promotion_queue_20260628
+```
+
+Current queue summary:
+
+```json
+{
+  "package_count": 2,
+  "promotion_lane_counts": {
+    "blocked_failed_runtime_evidence_package": 1,
+    "runtime_gameplay_or_slot_material_with_dialogue_audio": 1
+  },
+  "clean_story_status_counts": {
+    "not_eligible": 1,
+    "not_eligible_gameplay_or_slot_sequence": 1
+  }
+}
+```
+
+The passed `814/287` package is therefore retained as reliable runtime audio
+evidence but isolated from clean-story/Bilibili rendering.  Its next action is
+material/gameplay review only.
+
 ## Static table cross-check
 
 The request table and `sound_id.dat` confirm why numeric shortcuts are unsafe:

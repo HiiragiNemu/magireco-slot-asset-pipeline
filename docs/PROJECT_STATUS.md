@@ -234,6 +234,14 @@
   结果为 2 个 package：`passed_evidence_not_delivery=1`、
   `failed_evidence_package=1`。失败检查统计为
   `no_metadata_only_queue_chunks=1`、`skeleton_has_no_warnings=1`。
+- `tools/frida_runtime_probe/build_runtime_evidence_promotion_queue.py` 已新增，用于把
+  package index 转成保守晋升/隔离队列。当前输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_evidence_promotion_queue_20260628`：
+  首轮 failed package 被标记为 `blocked_failed_runtime_evidence_package`；定向
+  `814/287` passed package 被标记为
+  `runtime_gameplay_or_slot_material_with_dialogue_audio`，`clean_story_status` 为
+  `not_eligible_gameplay_or_slot_sequence`。因此通过运行态音频 gate 仍不会自动进入
+  normal animation / Bilibili clean-story 渲染。
 - `tools/frida_smz_wav_probe.py` 已修正为全模块查找
   `zgSndCaptureConvertWav*`，因为当前 ARM64 Gadget 中导出位于
   `split_config.arm64_v8a.apk`，不是单独的 `libGameProc.so` 模块名。直接转换

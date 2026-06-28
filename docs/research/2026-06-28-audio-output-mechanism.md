@@ -266,6 +266,7 @@ tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/build_runtime_evidence_skeleton.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
 tools/frida_runtime_probe/audit_runtime_evidence_packages.py
+tools/frida_runtime_probe/build_runtime_evidence_promotion_queue.py
 ```
 
 Use cases:
@@ -303,6 +304,10 @@ Use cases:
   `evidence_package_v*/qa_report.json` and produce a status index CSV/JSON.
   This makes the pass/fail state machine-readable across captures, so broad
   work can use package status instead of conversation memory.
+- `build_runtime_evidence_promotion_queue.py`: convert package status into a
+  conservative promotion/isolation queue.  Failed packages are blocked; passed
+  packages containing slot/gameplay markers or dialogue audio are isolated as
+  material/gameplay candidates and explicitly marked not clean-story eligible.
 
 ## Next cracking target
 
