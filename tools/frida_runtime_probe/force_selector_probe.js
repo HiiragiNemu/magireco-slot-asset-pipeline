@@ -225,33 +225,33 @@ function executeAction(action) {
       ["int"]
     );
     call(value ? 1 : 0);
+  } else if (name === "gat_tick") {
+    const call = new NativeFunction(
+      resolve("_Z12gat_CallBackv", symbolOffsets.gatCallback),
+      "void",
+      []
+    );
+    call();
+  } else if (name === "gat_drive") {
+    const frames = Number(value);
+    if (!Number.isInteger(frames) || frames < 1 || frames > 36000) {
+      throw new Error("gat drive frames must be an integer from 1 through 36000");
+    }
+    gatDriveFramesRemaining = frames;
+    gatDriveFramesRequested = frames;
+    gatDriveFramesCompleted = 0;
+    gatDriveActive = true;
+    emit("gat_drive_start", {
+      frames_requested: frames,
+      state_before: snapshot(),
+    });
   } else {
     if (slotPointer === null) {
       throw new Error("CScnSlot instance has not been observed");
     }
     const force = slotPointer.add(forceWindowOffset);
 
-    if (name === "gat_tick") {
-      const call = new NativeFunction(
-        resolve("_Z12gat_CallBackv", symbolOffsets.gatCallback),
-        "void",
-        []
-      );
-      call();
-    } else if (name === "gat_drive") {
-      const frames = Number(value);
-      if (!Number.isInteger(frames) || frames < 1 || frames > 36000) {
-        throw new Error("gat drive frames must be an integer from 1 through 36000");
-      }
-      gatDriveFramesRemaining = frames;
-      gatDriveFramesRequested = frames;
-      gatDriveFramesCompleted = 0;
-      gatDriveActive = true;
-      emit("gat_drive_start", {
-        frames_requested: frames,
-        state_before: snapshot(),
-      });
-    } else if (Object.prototype.hasOwnProperty.call(bodyInputSymbols, name)) {
+    if (Object.prototype.hasOwnProperty.call(bodyInputSymbols, name)) {
       pressBodyInput(name);
     } else if (name === "set_manager_gate") {
     const manager = readPointer(slotPointer.add(0x308));
@@ -789,7 +789,10 @@ rpc.exports = {
       name: String(action),
       value,
     };
-    if (pendingAction.name === "set_debug" && moduleValue !== null) {
+    if (
+      ["set_debug", "gat_tick"].includes(pendingAction.name) &&
+      moduleValue !== null
+    ) {
       runPendingAction("rpc");
     }
     return {

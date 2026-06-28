@@ -11,8 +11,16 @@ the live game also holds or locks the clean main-story visual while the voice
 tail continues.  If the live game shows another visual state during that tail,
 the external render must reproduce that state instead of holding a still frame.
 
-This report records the first visual-tail runtime probe results.  The current
-answer is: the clean main-story tail hold is still not proven native.
+This report records the visual-tail runtime probe results.  The current answer
+after v6/v7 is narrower:
+
+- the official main story payload identity is now proven:
+  `ac7116_AT_SP_story5_01.usm`, 512x288, 30 fps, 338 frames, about 11.267 s;
+- the official final voice/subtitle tail after that movie duration is proven;
+- no additional main-story USM continuation was observed;
+- the clean main-story tail hold is still not fully proven native, because the
+  current probes have not yet captured the exact clean/story compositor output
+  after the main CRI movie reaches its last frame.
 
 ## Existing resolved runtime evidence
 
@@ -187,12 +195,189 @@ The hooks installed, but `event_scene_host` again failed to find an active
 `C_AnmBase` scene object within 12 seconds.  This run is not evidence for or
 against native tail hold.
 
+## Runtime capture surface recovery before v6
+
+After v5, the capture surface degraded: the x86 Frida endpoint could still
+attach to the process shell, but could not see the arm64 game code, while the
+arm64 Gadget endpoint timed out.
+
+Diagnostic output:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_visual_tail_recovery_20260628
+```
+
+The verdict was:
+
+```text
+blocked_x86_frida_cannot_see_arm64_game_code
+```
+
+Reinjecting Gadget without an app restart still timed out:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_visual_tail_recovery_20260628
+```
+
+Restarting the app and then reinjecting Gadget recovered the arm64 runtime
+surface:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_visual_tail_recovery_after_restart_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_visual_tail_after_reinject_20260628
+```
+
+The recovered verdict was:
+
+```text
+runtime_capture_ready_via_arm64_gadget
+```
+
+MuMu screenshots in this state were 2160x3840.  ADB taps must use physical
+coordinates, not half-resolution coordinates.  Known useful taps in this run:
+
+```text
+title simulation button: adb -s 127.0.0.1:16384 shell input tap 1080 3000
+game start button:        adb -s 127.0.0.1:16384 shell input tap 600 2670
+```
+
+## v6 runtime result after app restart and Gadget reinjection
+
+Capture directory:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v6_after_reinject_20260628
+```
+
+Event log:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v6_after_reinject_20260628\ac7116_001_visual_tail_v6_after_reinject__event.jsonl
+```
+
+Runtime log:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v6_after_reinject_20260628\ac7116_001_visual_tail_v6_after_reinject__runtime.jsonl
+```
+
+The forced event started at runtime unix ms `1782634408007` and was executed
+through `CScnSlot::Calc`.  The event host selected an active
+`C_AnmMain+0x350` child and the final `last_animation_frame.unix_ms` was
+`1782634424995`, about 16.988 s after event start.
+
+The official event path played:
+
+| relative time | event |
+| ---: | --- |
+| 0.087 s | `42080_SPストーリー5_みふゆとももこ_01` |
+| 0.088 s | `8040_シネスコ変化音_金帯` |
+| 8.918 s | Z2D sound callback for `31186_282_mihu_く…ぐ…` |
+| 8.923 s | `31186_282_mihu_く…ぐ…` sound-code lookup/play |
+
+The `CriManaWrapper::SetData` identities seen in v6 were:
+
+| relative time | receiver | size | FNV-1a first 4 KiB | matched raw CRI evidence |
+| ---: | --- | ---: | --- | --- |
+| 0.107 s | `0x793f333b3980` | 1955904 | `1e31c4fa` | `patch_index=1321` / `ac7116_AT_SP_story5_01.usm` |
+| 0.129 s | `0x793f33383c50` | 1507616 | `c8fd6fe7` | `patch_index=2582` / `AT_SPstory_gold_frame_add.usm` |
+| 0.138 s | `0x793f333b2810` | 2159168 | `72e6f81c` | `patch_index=2581` / `AT_SPstory_gold_frame.usm` |
+| 6.747 s | `0x793f333b3770` | 1483776 | `c9cc7d28` | `patch_index=2583` / `AT_SPstory_gold_frame_add_LP.usm` |
+| 6.759 s | `0x793f333b1e20` | 2157056 | `f32a4a6b` | `patch_index=2584` / `AT_SPstory_gold_frame_LP.usm` |
+
+This resolves the v3 gap: the clean main story payload was not merely a guess or
+an older candidate.  In a recovered v6 official run, the game itself loaded
+`ac7116_AT_SP_story5_01.usm` for this event.
+
+`GetMovieInfo` for the main story receiver reported:
+
+| receiver | width | height | frame rate | frame count/value3 | duration implied |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `0x793f333b3980` | 512 | 288 | 30 | 338 | 11.267 s |
+
+The current v19 clean render holds the last frame from that same 11.267 s
+boundary to the final voice/subtitle end at about 13.027 s.  v6 therefore proves
+that the renderer is not truncating hidden main-story video content after 11.267
+s: the official main story USM itself is 338 frames.  It does not by itself prove
+the exact clean compositor state during the tail, because no downstream
+`GetFrameYUVA`, `CopyFrameYUVA`, `GetFrameInfo`, `DirGetFrame`,
+`NotifyMovieStart`, `NotifyStartAnim`, or screen-object lock/draw metadata fired
+in this v6 capture.
+
+Runtime kind counts in v6:
+
+| kind | count |
+| --- | ---: |
+| `cri_get_status` | 295 |
+| `nscn_calc` | 99 |
+| `cri_update` | 80 |
+| `hook_installed` | 46 |
+| `cri_create_player` | 5 |
+| `cri_set_data` | 5 |
+| `cri_set_loop` | 5 |
+| `cri_movie_info` | 5 |
+| `cri_start` | 5 |
+| `cri_stop` | 4 |
+| `cri_destroy_player` | 2 |
+| `snd_is_already_playing_bgm` | 1 |
+| `ctrl_snd_req_sequence_sc` | 1 |
+| `zg_snd_req_code` | 1 |
+
+The initial gold-frame foreground receivers stopped/destroyed near the LP
+switch at about 6.74 s; the LP foreground receivers stayed active through the
+post-wait.  The main receiver did not emit a stop/destroy event during the
+capture window.  This supports, but does not conclusively prove, the clean-story
+`hold_last_frame` interpretation.
+
+## v7 native screenrecord diagnostic
+
+To get an external visual reference from the live game, a small diagnostic
+Android screenrecord was captured while forcing the same official event.  This
+is not a production output and contains only the full machine screen, not the
+clean story crop/layer.
+
+Screenrecord:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_visual_tail_native_screen_v7_20260628.mp4
+```
+
+Event log:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_native_screen_v7_event.jsonl
+```
+
+Contact sheets:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_visual_tail_native_screen_v7_contact.jpg
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_visual_tail_native_screen_v7_tail_frames.jpg
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_visual_tail_native_screen_v7_late_tail_frames.jpg
+```
+
+The screenrecord stream is 720x1280 H.264, about 24.026 s, about 8.7 Mbps, with
+no audio stream.  The event-side timing again showed the base bed at about
+0.051 s, the foreground SE at about 0.052 s, and final voice request at about
+8.901 s.  The event host final `last_animation_frame.unix_ms` was
+`1782634634198`, about 16.966 s after event start.
+
+Visual review of the contact sheets shows the official full-machine screen
+transitions through the gold-frame/slot presentation and then into a white
+title-like foreground display.  This is useful proof that the full live game has
+foreground presentation after the main story movie starts, but it cannot answer
+the clean-story tail question by itself: the foreground layers cover or dominate
+the visible machine screen exactly in the time window where the clean edition
+has removed those layers.
+
 ## BGM state during this probe
 
 The v3 visual-tail run saw repeated
 `C_ObjNml::fnSndRequest_BGM_DIR/STG/END` calls, but those are per-frame helper
 paths and were not accompanied by an additional concrete sound-code/BGM request
-for the forced scene.  The only concrete late sound request was:
+for the forced scene.  v6 saw one `snd_is_already_playing_bgm` probe-side hook
+event, one `ctrl_snd_req_sequence_sc`, and one `zg_snd_req_code`, but the only
+concrete late sound request was:
 
 ```text
 31186_282_mihu_く…ぐ…
@@ -210,7 +395,8 @@ should be mixed in.
 - voice/subtitle timing is currently user-accepted;
 - foreground gold-frame SE/layers are correctly excluded from the clean story
   edition;
-- the clean tail hold is still not proven native;
+- the main-story source identity and duration are now runtime-proven;
+- the clean tail hold is strongly supported but still not compositor-proven;
 - additional BGM remains unproven absent.
 
 Keep the v19 ac7114-16 joined scene as a review/mechanism-validation output
@@ -226,10 +412,13 @@ Use the least invasive route first:
    `Start`, `Stop`, `GetStatus`, `GetMovieInfo`, `GetFrameInfo`,
    `NotifyMovieStart`, `NotifyStartAnim`, `DirGetFrame`, and
    `CScreenObjectMng` lock/draw helpers.
-3. Treat passive frame extraction hooks as experimental until a run proves they
+3. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
+   window.  The proof target is not another full-machine screenrecord; it is the
+   clean/story layer state after the main CRI movie reaches frame 338.
+4. Treat passive frame extraction hooks as experimental until a run proves they
    do not interfere.
-4. In parallel, capture final audio through `CSLAndroidSimpleBufferQueue` or a
+5. In parallel, capture final audio through `CSLAndroidSimpleBufferQueue` or a
    direct game-produced recording to decide whether extra BGM exists.
-5. Only after the runtime state is understood should the renderer decide
+6. Only after the runtime state is understood should the renderer decide
    between `hold_last_frame`, a real visual continuation layer, a loop, or a
    cut/black transition.

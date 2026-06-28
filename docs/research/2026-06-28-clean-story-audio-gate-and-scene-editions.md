@@ -258,11 +258,8 @@ docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md
 
 The v3 visual-tail runtime probe captured CRI player lifecycle and `SetData`
 metadata while forcing `ac7116_001`.  It confirmed the official gold-frame
-foreground data and the LP foreground switch around 6.66 s, but it did not
-observe the clean main story payload `ac7116_AT_SP_story5_01.usm` in
-`CriManaWrapper::SetData`.  The main movie may have been preloaded or reached
-through another path, so this is not proof that the clean main-story tail hold
-is native.
+foreground data and the LP foreground switch around 6.66 s, but did not observe
+the clean main story payload.
 
 Two follow-up attempts were inconclusive:
 
@@ -270,6 +267,24 @@ Two follow-up attempts were inconclusive:
   strategy as-is.
 - v5 installed passive frame-YUVA metadata hooks, but `event_scene_host` did not
   find an active `C_AnmBase` scene object within 12 s, so no event was reached.
+
+After restarting the app and reinjecting the arm64 Gadget, v6 did observe the
+clean main story payload directly:
+
+| relative time | size | first-4KiB FNV | matched raw CRI |
+| ---: | ---: | --- | --- |
+| 0.107 s | 1955904 | `1e31c4fa` | `ac7116_AT_SP_story5_01.usm` |
+
+The same run reported `GetMovieInfo` for that receiver as 512x288, 30 fps, 338
+frames, implying the official main movie is 11.267 s long.  This resolves the
+"wrong source video" risk for `ac7116_001`: do not replace it with the older
+416x232 restaurant/table candidate.
+
+However, v6 did not fire the downstream frame/compositor hooks needed to prove
+the exact clean/story layer state after frame 338.  A full-machine v7
+screenrecord proves the live slot presentation continues into foreground
+slot/title layers, but those are exactly the layers excluded from the clean
+edition and therefore do not settle the clean tail question.
 
 The delivery decision is unchanged: the v19 ac7114-16 scene is useful for
 review because voice/subtitle timing is now correct, but it remains blocked as

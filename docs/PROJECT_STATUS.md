@@ -16,19 +16,23 @@
 
 最新新增：
 
-- 2026-06-28 ac7116 visual-tail 运行时探针报告已新增：
+- 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v3_20260628`，
   证明官方 `SetData` 命中了 gold-frame 前景层及 6.66 s 左右的 LP 前景切换：
   `AT_SPstory_gold_frame_add.usm`、`AT_SPstory_gold_frame.usm`、
   `AT_SPstory_gold_frame_add_LP.usm`、`AT_SPstory_gold_frame_LP.usm`。
-  但主故事 `ac7116_AT_SP_story5_01.usm`
-  (`patch_index=1321`, size `1955904`, first-4KiB FNV `1e31c4fa`) 没在 v3
-  `CriManaWrapper::SetData` 中出现；它可能预加载或走其它路径。因此 v3 不能证明
-  clean 主画面尾帧 hold 是游戏原生。v4 主动 CRI 查询探针超时，v5 被动 frame-YUVA
-  元数据探针未进入事件，二者均不得作为正向证明。`C_ObjNml::fnSndRequest_BGM_*`
-  的 per-frame helper 调用也不是可听 BGM 证明；BGM 仍需最终 queue 或直接游戏捕获证明。
+  v6 在重启 app 并 reinject arm64 Gadget 后，直接观察到主故事
+  `ac7116_AT_SP_story5_01.usm`
+  (`patch_index=1321`, size `1955904`, first-4KiB FNV `1e31c4fa`) 的
+  `CriManaWrapper::SetData`，且 `GetMovieInfo` 为 512x288、30 fps、338 帧
+  （约 11.267 s）。这证明当前主视频源和时长是游戏运行时官方调度，不应换成旧
+  416x232 restaurant/table 候选。但 v6 没捕获到 downstream frame/compositor
+  证据，仍不能最终证明 clean 主画面在 11.267 s 后的尾帧 hold 是游戏原生；
+  v7 官方 full-machine screenrecord 只证明前景 slot/title 层继续显示，不能代替
+  clean/story layer 证明。`C_ObjNml::fnSndRequest_BGM_*` 的 per-frame helper
+  调用也不是可听 BGM 证明；BGM 仍需最终 queue 或直接游戏捕获证明。
 - 2026-06-28 交接与尾帧门禁修正：已新增核心交接文档
   `docs/HANDOFF_NEXT_AI_MAGIRECO.md`。用户确认
   `validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628` 的语音和字幕正确，
