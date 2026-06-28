@@ -1,0 +1,62 @@
+{
+  "schema": "magireco-analysis-evidence-release-v1",
+  "tag": "analysis-evidence-v18.27-20260628",
+  "target_branch": "codex/corrected-runtime-pipeline",
+  "source_commit": "51518da1731982657c470d00169173a00b287569",
+  "release_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.27-20260628",
+  "asset": {
+    "name": "magireco-analysis-evidence-v18-20260628-100858.zip",
+    "content_type": "application/zip",
+    "size_bytes": 12765785,
+    "sha256": "2D440A240CEF5A2A7F08D0B4FDE6D356A10CAF80655CA5E8370657000AD06797",
+    "download_url": "https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/download/analysis-evidence-v18.27-20260628/magireco-analysis-evidence-v18-20260628-100858.zip"
+  },
+  "evidence_files": 1599,
+  "zip_entry_count": 1614,
+  "production_catalog": {
+    "events": 926,
+    "ready": 521,
+    "failed_including_excluded": 405,
+    "audience_excluded": 405
+  },
+  "coverage_audit_after_invalidation": {
+    "ready_missing_single_event_QA": 217,
+    "ready_missing_single_event_QA_delivery_actionable": 166,
+    "ready_missing_single_event_QA_av_blocked": 51,
+    "covered_by_material_collection": 82,
+    "material_candidates_without_collection": 323
+  },
+  "runtime_evidence_package_gates": {
+    "package_count": 2,
+    "status_counts": {
+      "failed_evidence_package": 1,
+      "passed_evidence_not_delivery": 1
+    },
+    "promotion_lane_counts": {
+      "blocked_failed_runtime_evidence_package": 1,
+      "runtime_gameplay_or_slot_material_with_dialogue_audio": 1
+    },
+    "clean_story_status_counts": {
+      "not_eligible": 1,
+      "not_eligible_gameplay_or_slot_sequence": 1
+    }
+  },
+  "runtime_evidence_inputs": {
+    "runtime_evidence_package_audit": "${RESEARCH_ROOT}\\runtime_av_repair_20260627\\runtime_evidence_package_audit_20260628",
+    "runtime_evidence_promotion_queue": "${RESEARCH_ROOT}\\runtime_av_repair_20260627\\runtime_evidence_promotion_queue_20260628",
+    "pipeline_strategy_with_runtime_evidence_gate": "${RESEARCH_ROOT}\\pipeline_strategy_audits_v18_runtime_evidence_gate_20260628"
+  },
+  "content_policy": "derived text evidence only; no proprietary payloads, media, APKs, OBBs, native libraries, rendered videos, screenshots, WAV audio, JSONL raw Frida captures, or contact-sheet images",
+  "local_bundle_audit": {
+    "allowed_extensions": [
+      ".csv",
+      ".json",
+      ".md",
+      ".txt",
+      ".srt"
+    ],
+    "bad_extension_count": 0,
+    "media_or_binary_extension_count": 0,
+    "absolute_local_path_pattern_matches": 0
+  }
+}

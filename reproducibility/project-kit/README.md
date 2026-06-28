@@ -54,6 +54,13 @@ is `../reference-inputs.sha256.csv`.
 6. Use the production manifests and composition plans in this repo as the source
    of truth; do not infer CRI indexes from `ac` suffix numbers.
 
+Latest derived evidence release recorded in this checkout:
+
+- `analysis-evidence-v18.27-20260628`
+- asset: `magireco-analysis-evidence-v18-20260628-100858.zip`
+- scope: text-only derived evidence, including runtime evidence package QA,
+  promotion/isolation queue, and strategy report package gates.
+
 This kit is intentionally conservative: it is designed to make the work
 auditable without turning the repository or release page into a mirror of the
 game package.

@@ -64,6 +64,15 @@
   官方事件音频证据；
 - `reproducibility/project-kit/` 已建立，用于索引非 Python 探针/配置/清单、
   大型输入 fingerprint-only 策略和公开 Release 的派生证据边界。
+- 2026-06-28 已发布 text-only derived evidence release
+  `analysis-evidence-v18.27-20260628`：
+  `magireco-analysis-evidence-v18-20260628-100858.zip`，12,765,785 bytes，
+  SHA-256 `2D440A240CEF5A2A7F08D0B4FDE6D356A10CAF80655CA5E8370657000AD06797`。
+  Release URL：
+  `https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/releases/tag/analysis-evidence-v18.27-20260628`。
+  本地 bundle audit：1,599 个 evidence files、0 个 disallowed/media/binary
+  extension、0 个绝对本机路径 pattern match；内容只包含 CSV/JSON/MD/TXT/SRT 派生证据，
+  不含 `.jsonl` 原始 Frida 捕获、WAV、截图、视频、APK/OBB/native 库或游戏 payload。
 - 2026-06-27 纠偏：用户复核确认 `ac0921_001` 缺预期 BGM，`ac4901_025/026`
   存在角色未张嘴但有语音/字幕的问题，`ac7204` material/result 输出含角色语音、
   不能称为纯素材；因此 technical QA/contact-sheet 不能再作为交付充分条件。
