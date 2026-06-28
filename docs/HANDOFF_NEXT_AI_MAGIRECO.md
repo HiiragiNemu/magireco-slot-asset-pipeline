@@ -293,6 +293,7 @@ Important evidence files:
 docs/research/2026-06-28-audio-output-mechanism.md
 docs/research/2026-06-28-csl-audio-queue-runtime-capture.md
 docs/research/2026-06-28-slot-gameplay-audio-state-machine.md
+docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md
 docs/research/2026-06-27-runtime-av-recapture-report.md
 docs/research/2026-06-27-runtime-bgm-gap-report.md
 docs/research/2026-06-27-runtime-av-trust-correction.md
@@ -323,6 +324,16 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_gameplay
 These prove that a real outer slot-input path triggers high-level BGM helpers
 and sound-code mapping that forced single-event playback may not trigger.
 
+Additional 2026-06-28 ac7116 BGM note:
+
+- `visual_tail_probe_ac7116_v3_20260628` saw repeated
+  `C_ObjNml::fnSndRequest_BGM_DIR/STG/END` helper calls, but no additional
+  concrete BGM/sound-code request for the forced scene beyond the retained
+  `42080...` bed and `31186...` role voice.
+- Therefore those per-frame `C_ObjNml` helper calls are not proof of audible
+  BGM.  The BGM gate remains open until final queue/direct game capture proves
+  either presence or absence.
+
 ## Visual tail/compositor hook candidates
 
 `libGameProc.so` has no normal symbol table, but dynamic exports provide useful
@@ -352,16 +363,73 @@ addresses/names:
 0x43c21cc C_DirectionControllerBase::Macro_EVENT_PLAY(tagDirectionControllerDeviceData)
 ```
 
+### 2026-06-28 ac7116 visual-tail probe update
+
+Read the detailed report before changing the renderer:
+
+```text
+docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md
+```
+
+Runtime capture directories:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v3_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v4_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v5_frame_yuva_20260628
+```
+
+Current conclusion:
+
+- `ac7116_001` clean main-story tail hold is still not proven native.
+- v3 proves official CRI lifecycle/data identity for gold-frame foreground
+  layers and the LP foreground switch near 6.66 s.
+- v3 did not observe the main clean story payload
+  `ac7116_AT_SP_story5_01.usm` in `CriManaWrapper::SetData`; the main movie may
+  have been preloaded or reached through another path.
+- v4 active CRI query probing timed out and must not be repeated as-is.
+- v5 installed passive frame-extraction metadata hooks but did not reach the
+  event because `event_scene_host` found no active `C_AnmBase` scene object; it
+  is inconclusive.
+
+Important v3 `SetData` identities:
+
+| relative time from first event sound | size | first-4KiB FNV | matched raw CRI |
+| ---: | ---: | --- | --- |
+| 0.014 s | 1507616 | `c8fd6fe7` | `AT_SPstory_gold_frame_add.usm` |
+| 0.026 s | 2159168 | `72e6f81c` | `AT_SPstory_gold_frame.usm` |
+| 1.814 s | 1730240 | `85a81c24` | unresolved 416x232 CRID payload |
+| 6.652 s | 1483776 | `c9cc7d28` | `AT_SPstory_gold_frame_add_LP.usm` |
+| 6.662 s | 2157056 | `f32a4a6b` | `AT_SPstory_gold_frame_LP.usm` |
+| 12.984 s | 1259744 | `4525de55` | unresolved 416x232 CRID payload |
+
+The clean main story raw CRI identity is:
+
+```text
+patch_index=1321
+size=1955904
+first-4KiB FNV=1e31c4fa
+name=ac7116_AT_SP_story5_01.usm
+```
+
+Do not use the older `main_video_0000_candidates264.mp4` lead as a replacement
+without stronger proof.  It is a 416x232 restaurant/table scene and conflicts
+with the official 2026-06-18 runtime DGM string
+`[ac7116_AT_SP_story5_01.dgm]`.
+
 Recommended next visual proof route for the ac7116 tail:
 
-1. Hook `CSlotBody::NotifyMovieStart` and `CDirMngListener::NotifyStartAnim` to
+1. Re-run from a game state where `event_scene_host` can find an active
+   `C_AnmBase` scene object.
+2. Hook `CSlotBody::NotifyMovieStart` and `CDirMngListener::NotifyStartAnim` to
    identify which movie/animation object is active.
-2. Hook `CriManaWrapper::GetFrameInfo` / `IsFrameReady` / `ExecuteVideoProcess`
-   during the 10-13.5 s window to see whether the movie decoder has ended or is
-   still producing frames.
-3. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
+3. Passively intercept `CriManaWrapper::GetFrameInfo` / `IsFrameReady` /
+   `ExecuteVideoProcess` during the 10-13.5 s window to see whether the movie
+   decoder has ended or is still producing frames.  Do not call those CRI
+   methods from a Frida `NativeFunction` inside hot hooks.
+4. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
    determine whether the game explicitly locks/holds a frame.
-4. Hook `GLtask_display1/2` only for throttled metadata, not full frame dumps,
+5. Hook `GLtask_display1/2` only for throttled metadata, not full frame dumps,
    unless a focused capture is needed.
 
 If the live game locks the final main-story frame while the voice tail plays,

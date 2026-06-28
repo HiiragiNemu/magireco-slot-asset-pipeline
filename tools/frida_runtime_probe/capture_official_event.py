@@ -26,6 +26,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--post-wait", type=float, default=10.0)
     parser.add_argument("--object-wait", type=float, default=10.0)
     parser.add_argument(
+        "--runtime-script",
+        default="",
+        help=(
+            "runtime probe script to load; defaults to runtime_probe.js. "
+            "Use visual_tail_probe.js for frame/hold diagnostics."
+        ),
+    )
+    parser.add_argument(
         "--with-event-sound",
         action="store_true",
         help=(
@@ -51,6 +59,11 @@ def main() -> int:
     tool_dir = Path(__file__).resolve().parent
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    runtime_script = (
+        Path(args.runtime_script).resolve()
+        if args.runtime_script
+        else tool_dir / "runtime_probe.js"
+    )
 
     runtime_log = out_dir / f"{args.label}__runtime.jsonl"
     event_log = out_dir / f"{args.label}__event.jsonl"
@@ -81,7 +94,7 @@ def main() -> int:
         "--host",
         args.host,
         "--script",
-        str(tool_dir / "runtime_probe.js"),
+        str(runtime_script),
         "--out",
         str(runtime_log),
         "--duration",

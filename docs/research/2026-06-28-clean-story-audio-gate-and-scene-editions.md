@@ -247,3 +247,31 @@ Result:
 Consequently the ac7114-16 joined scene is a review/mechanism-validation output,
 not a final Bilibili upload candidate, until runtime visual tail and BGM/bed
 completeness are proven.
+
+## ac7116 visual-tail probe follow-up
+
+Follow-up report:
+
+```text
+docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md
+```
+
+The v3 visual-tail runtime probe captured CRI player lifecycle and `SetData`
+metadata while forcing `ac7116_001`.  It confirmed the official gold-frame
+foreground data and the LP foreground switch around 6.66 s, but it did not
+observe the clean main story payload `ac7116_AT_SP_story5_01.usm` in
+`CriManaWrapper::SetData`.  The main movie may have been preloaded or reached
+through another path, so this is not proof that the clean main-story tail hold
+is native.
+
+Two follow-up attempts were inconclusive:
+
+- v4 used active CRI `NativeFunction` queries and timed out; do not repeat that
+  strategy as-is.
+- v5 installed passive frame-YUVA metadata hooks, but `event_scene_host` did not
+  find an active `C_AnmBase` scene object within 12 s, so no event was reached.
+
+The delivery decision is unchanged: the v19 ac7114-16 scene is useful for
+review because voice/subtitle timing is now correct, but it remains blocked as
+a final Bilibili upload candidate until the visual tail and BGM/bed questions
+are proven by runtime evidence.
