@@ -555,6 +555,25 @@ main CRI reaches the end near the source duration, then the animation/compositor
 layer holds its output while the final voice continues.  It still is not a
 clean-layer texture/pixel hash after frame 338.
 
+Full ac7114-16 receiver summary:
+
+```text
+docs/research/2026-07-02-ac7114-16-cri-receiver-tail-sampler.md
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7114_v1_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7115_v1_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702
+```
+
+| Event | Main FNV | Movie info | Update/status summary |
+| --- | --- | --- | --- |
+| `ac7114_001` | `a5b2c906` | 512x288, 30 fps, 275 frames | update 3-8131 ms; `GetStatus=5` 263-9065 ms |
+| `ac7115_001` | `4ad69770` | 512x288, 30 fps, 636 frames | update 3-20145 ms; `GetStatus=5` 278-20959 ms |
+| `ac7116_001` | `1e31c4fa` | 512x288, 30 fps, 338 frames | update 4-11134 ms; `GetStatus=5` 267-10973 ms |
+
+The `ac7115_001` run also saw `89802b19`, a 512x416, 5277-frame, 33.5 MiB CRI
+receiver.  Treat it as slot/gameplay/material state, not a clean story
+continuation.
+
 Recommended next visual proof route for the ac7116 tail:
 
 1. Start from a known-good recovered Gadget state; if 27043 times out, restart

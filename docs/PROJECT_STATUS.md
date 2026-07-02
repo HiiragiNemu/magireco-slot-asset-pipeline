@@ -42,6 +42,11 @@
   `cri_update` 覆盖 4-11134 ms，`GetStatus=5` 覆盖 267-10973 ms，receiver 数值采样
   到 20746 ms。该证据支持“主 CRI 到源时长后由上层动画/合成保持最后输出”，但仍不是
   clean-layer texture/pixel hash。
+  同一方法已扩展到 `ac7114_001`/`ac7115_001`，报告位于
+  `docs/research/2026-07-02-ac7114-16-cri-receiver-tail-sampler.md`：`ac7114`
+  主 receiver `a5b2c906` 为 512x288/30fps/275 帧，`ac7115` 主 receiver
+  `4ad69770` 为 512x288/30fps/636 帧。`ac7115` 另见 512x416/5277 帧大
+  receiver `89802b19`，明确标记为非 clean story continuation。
 - 2026-07-02 slot idle audio smoke 已记录到
   `docs/research/2026-06-28-audio-output-mechanism.md`：在恢复后的真实 slot
   gameplay 画面上分别运行 20 s `runtime_probe.js` 和 `csl_audio_queue_probe.js`，
