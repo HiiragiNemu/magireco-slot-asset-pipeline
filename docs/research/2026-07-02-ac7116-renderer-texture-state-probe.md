@@ -229,6 +229,85 @@ structure layout is not fully named.  The safe conclusion is that the same
 renderer and three stable TextureStateGL records remain active in the voice-tail
 window after the main 338-frame movie boundary.
 
+## 2026-07-03 renderer drawCall primitive sampler
+
+`cri_video_texture_probe.js` was extended again to sample
+`RendererImplGL::drawCall(Primitive*)` and the `Primitive` texture slots passed
+into the renderer.  The summarizer now groups both
+`sprite_renderer_check_bind_texture_states` and `sprite_renderer_draw_call`
+records by pointer/signature and reports the same source/tail/late windows.
+
+This remains metadata-only:
+
+- no framebuffer dump;
+- no texture byte dump;
+- no decoded movie frame;
+- no audio/PCM data.
+
+Important failed/incomplete run note:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v6_primitive_20260703
+```
+
+v6 proved that the primitive sampler could observe tail renderer activity, but
+it did not capture the main story `1e31c4fa` `SetData` in the same run.
+Therefore v6 must not be used as clean-main identity proof.
+
+The usable run is v8, after app restart, Gadget reinjection, and title-flow
+taps:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary\cri_video_texture_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary\cri_video_texture_events.csv
+```
+
+v8 captured the official main story movie and the foreground/slot CRIs in one
+run:
+
+| Event-relative ms | Receiver | Size | FNV | Movie info | Interpretation |
+| ---: | --- | ---: | --- | --- | --- |
+| 108 | `0x72af8bcef050` | 1955904 | `1e31c4fa` | 512x288, 30 fps, 338 frames | `ac7116_AT_SP_story5_01.usm` main clean story |
+| 116 | `0x72af8bcee0c0` | 1507616 | `c8fd6fe7` | 512x288, 30 fps, 200 frames | gold-frame add foreground |
+| 122 | `0x72af8bcef410` | 2159168 | `72e6f81c` | 512x288, 30 fps, 200 frames | gold-frame foreground |
+| 314 | `0x72af8bcedbb0` | 33574784 | `89802b19` | 512x416, 30 fps, 5277 frames | large slot/gameplay/material receiver; not clean story continuation |
+| 6813 | `0x72af8bced640` | 1483776 | `c9cc7d28` | 512x288, 30 fps, 200 frames | LP gold-frame add foreground |
+| 6820 | `0x72af8bcefe60` | 2157056 | `f32a4a6b` | 512x288, 30 fps, 200 frames | LP gold-frame foreground |
+
+The same run emitted 280 renderer checks and 280 renderer draw calls.
+`RendererImplGL::makeupTextures` did not fire in this path.
+
+| Window | `checkAndBindTextureStates` | `drawCall` | `cri_update` / `cri_get_status` |
+| --- | ---: | ---: | ---: |
+| 9.000-11.000 s | 24 | 24 | 30 / 30 |
+| 11.267-13.050 s | 19 | 19 | 20 / 20 |
+| 14.000-20.000 s | 69 | 69 | 69 / 69 |
+
+The tail window keeps submitting stable single-texture quad primitives through
+the same renderer:
+
+| Primitive | Total | 9-11 s | 11.267-13.05 s | 14-20 s | Texture signature |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `0x72af405bd370` | 79 | 8 | 6 | 23 | mode `2`, vertices `4`, texture id `155`, `+0xc=29359` |
+| `0x72af405bd168` | 75 | 6 | 6 | 23 | mode `2`, vertices `4`, texture id `151`, `+0xc=2606733044` |
+| `0x72af405bd148` | 74 | 8 | 6 | 21 | mode `2`, vertices `4`, texture id `150`, `+0xc=29360` |
+
+There is one short-lived tail sample for `0x72af405bd168` with texture id `158`
+instead of `151`; the stable pattern still remains the same renderer plus the
+same primitive pointers and one texture slot per primitive.
+
+Safe conclusion: in the same run that loaded the official main clean story
+`1e31c4fa` 338-frame movie, the game renderer continued to submit stable
+single-texture quad primitives during the 11.267-13.05 s final voice/subtitle
+tail.  This strengthens `hold_last_frame` from "animation/CRI lifecycle
+supported" to "renderer drawCall path continues with stable primitive state".
+
+Do not overclaim this as clean-layer pixel proof.  The primitive sampler does
+not yet identify which submitted primitive is the clean main layer versus
+foreground/slot layers, and the 512x416 `89802b19` receiver must not be treated
+as story continuation.
+
 ## Interpretation
 
 The combined evidence now supports this mechanism:
@@ -238,14 +317,16 @@ The combined evidence now supports this mechanism:
    the clean upload edition.
 3. In the 11.267-13.05 s final voice/subtitle tail, the same sprite renderer
    texture-state objects continue to be checked/bound.
-4. No ordinary GL texture upload/draw continuation was observed in that tail.
-5. The 2026-07-03 field sampler shows that the active TextureStateGL numeric
+4. The 2026-07-03 drawCall primitive sampler shows that the renderer continues
+   submitting stable single-texture quad primitives in the same tail window.
+5. No ordinary GL texture upload/draw continuation was observed in that tail.
+6. The 2026-07-03 field sampler shows that the active TextureStateGL numeric
    fields are stable through the tail window, strengthening the hold/steady
    compositor interpretation.
 
 This is stronger than the earlier animation-object-only proof: the renderer
-path itself remains active through the voice tail with a stable texture-state
-tuple after the 338-frame movie boundary.
+path itself remains active through the voice tail with stable texture-state and
+drawCall primitive state after the 338-frame movie boundary.
 
 It is still not exact clean-layer pixel proof.  No framebuffer hash, clean layer
 texture hash, or decoded post-frame-338 pixel was captured.  For final Bilibili

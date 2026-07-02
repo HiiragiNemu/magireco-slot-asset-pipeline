@@ -677,6 +677,48 @@ with `GL_TEXTURE_2D`, not as a fully reverse-engineered struct layout.  This is
 stronger steady-renderer-state evidence, but it still is not clean-layer
 framebuffer/pixel proof.
 
+2026-07-03 renderer drawCall primitive sampler:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary\cri_video_texture_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary\cri_video_texture_events.csv
+```
+
+This is the strongest ac7116 hold evidence so far.  v8 was captured after app
+restart, Gadget reinjection, and title-flow taps.  It captured the main story
+`1e31c4fa`/1955904 as 512x288, 30 fps, 338 frames in the same run as renderer
+primitive samples.  Counts:
+
+| Window | `checkAndBindTextureStates` | `drawCall` | `cri_update` / `cri_get_status` |
+| --- | ---: | ---: | ---: |
+| 9.000-11.000 s | 24 | 24 | 30 / 30 |
+| 11.267-13.050 s | 19 | 19 | 20 / 20 |
+| 14.000-20.000 s | 69 | 69 | 69 / 69 |
+
+Tail-window primitive groups:
+
+| Primitive | Total | 9-11 s | 11.267-13.05 s | 14-20 s | Texture signature |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `0x72af405bd370` | 79 | 8 | 6 | 23 | mode `2`, vertices `4`, texture id `155`, `+0xc=29359` |
+| `0x72af405bd168` | 75 | 6 | 6 | 23 | mode `2`, vertices `4`, texture id `151`, `+0xc=2606733044` |
+| `0x72af405bd148` | 74 | 8 | 6 | 21 | mode `2`, vertices `4`, texture id `150`, `+0xc=29360` |
+
+The safe conclusion is that the game renderer keeps submitting stable
+single-texture quad primitives during the final voice/subtitle tail after the
+main 338-frame movie boundary.  This supports the current external
+`hold_last_frame` behavior as runtime-mechanism-matched.
+
+Caveats:
+
+- v6 primitive capture worked but did not see the main story `1e31c4fa`
+  `SetData`; use v8 for same-run identity.
+- This is still not a clean-layer framebuffer/pixel hash.  If final release
+  policy requires pixel identity, capture a clean-layer texture or framebuffer
+  hash next.
+- The same run also saw `89802b19`, 512x416, 5277 frames.  Keep treating it as
+  slot/gameplay/material state, not clean story continuation.
+
 Full ac7114-16 receiver summary:
 
 ```text
@@ -712,10 +754,12 @@ Recommended next visual proof route for the ac7116 tail:
    methods from a Frida `NativeFunction` inside hot hooks.
 5. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
    determine whether the game explicitly locks/holds a frame.
-6. If more visual proof is needed, target a clean-layer texture/pixel hash or a
-   narrower `TextureStateGL`/primitive field read for the tuple already found in
-   `cri_video_texture_ac7116_v5_combined_after_restart_20260702`; the goal is
-   clean/story layer state, not another full-machine screenrecord.
+6. The narrower `TextureStateGL` and primitive sampler route has now been done
+   through `texture_state_fields_ac7116_v2_after_restart_20260703` and
+   `cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703`.
+   If more visual proof is needed, target a clean-layer texture/pixel hash or a
+   compositor/frame-lock state hook.  The goal is clean/story layer state, not
+   another full-machine screenrecord.
 
 If the live game locks the final main-story frame while the voice tail plays,
 the current hold is acceptable.  If the game switches to another visual layer or

@@ -32,6 +32,7 @@ const symbols = {
     "_ZN2zg6sprite14RendererImplGL25checkAndBindTextureStatesEPNS0_14TextureStateGLEj",
   rendererMakeupTextures:
     "_ZN2zg6sprite14RendererImplGL14makeupTexturesEPNS0_14TextureStateGLEPNS0_9PrimitiveE",
+  rendererDrawCall: "_ZN2zg6sprite14RendererImplGL8drawCallEPNS0_9PrimitiveE",
   rendererUnbindTexture: "_ZN2zg6sprite14RendererImplGL13unbindTextureEij",
   rendererUnbindCurrentTextures: "_ZN2zg6sprite8Renderer21unbindCurrentTexturesEv",
 };
@@ -172,6 +173,59 @@ function sampleNumericFields(pointerValue, maxOffset) {
     pointer: pointerValue.toString(),
     max_offset: "0x" + maxOffset.toString(16),
     fields,
+  };
+}
+
+function readU32At(pointerValue, offset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return null;
+  }
+  try {
+    return pointerValue.add(offset).readU32();
+  } catch (_) {
+    return null;
+  }
+}
+
+function readPointerAt(pointerValue, offset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return "0x0";
+  }
+  try {
+    return pointerValue.add(offset).readPointer().toString();
+  } catch (_) {
+    return "0x0";
+  }
+}
+
+function samplePrimitive(pointerValue) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return { pointer: "0x0", error: "null pointer" };
+  }
+  const textureCount = readU32At(pointerValue, 0xb8);
+  const safeTextureCount = Math.max(0, Math.min(textureCount || 0, 3));
+  const textures = [];
+  for (let index = 0; index < safeTextureCount; index += 1) {
+    const base = 0x40 + index * 0x28;
+    textures.push({
+      index,
+      type_u32_at_base: readU32At(pointerValue, base),
+      texture_object_u32_at_base_plus_0x8: readU32At(pointerValue, base + 0x8),
+      texture_object_u32_at_base_plus_0xc: readU32At(pointerValue, base + 0xc),
+      texture_object_pointer_at_base_plus_0x18: readPointerAt(pointerValue, base + 0x18),
+      filter_u32_at_base_plus_0x20: readU32At(pointerValue, base + 0x20),
+      address_u32_at_base_plus_0x24: readU32At(pointerValue, base + 0x24),
+    });
+  }
+  return {
+    pointer: pointerValue.toString(),
+    primitive_mode_u32_at_0x0: readU32At(pointerValue, 0x0),
+    vertex_pointer_at_0x20: readPointerAt(pointerValue, 0x20),
+    vertex_count_u32_at_0x28: readU32At(pointerValue, 0x28),
+    index_pointer_at_0x30: readPointerAt(pointerValue, 0x30),
+    index_count_u32_at_0x38: readU32At(pointerValue, 0x38),
+    texture_count_u32_at_0xb8: textureCount,
+    textures,
   };
 }
 
@@ -426,7 +480,60 @@ function hookRendererActivity(moduleValue) {
       };
     }
   );
-  hookEnterArgs(moduleValue, symbols.rendererMakeupTextures, "sprite_renderer_makeup_textures", 3, 250);
+  installHook(
+    moduleValue,
+    symbols.rendererMakeupTextures,
+    "sprite_renderer_makeup_textures",
+    function (address) {
+      return {
+        onEnter(args) {
+          const identity = args[0].toString() + "\u0000" + args[2].toString();
+          this.skip = !shouldEmit("sprite_renderer_makeup_textures", identity, 250);
+          if (this.skip) {
+            return;
+          }
+          this.textureState = args[1];
+          this.fields = {
+            symbol: symbols.rendererMakeupTextures,
+            address: address.toString(),
+            renderer_pointer: args[0].toString(),
+            texture_state_pointer: args[1].toString(),
+            primitive_pointer: args[2].toString(),
+            primitive: samplePrimitive(args[2]),
+            texture_state_before: sampleNumericFields(args[1], textureStateNumericMaxOffset),
+          };
+        },
+        onLeave(retval) {
+          if (this.skip) {
+            return;
+          }
+          this.fields.return_i32 = toI32(retval);
+          this.fields.texture_state_after = sampleNumericFields(
+            this.textureState,
+            textureStateNumericMaxOffset
+          );
+          emit("sprite_renderer_makeup_textures", this.fields);
+        },
+      };
+    }
+  );
+  installHook(moduleValue, symbols.rendererDrawCall, "sprite_renderer_draw_call", function (address) {
+    return {
+      onEnter(args) {
+        const identity = args[0].toString() + "\u0000" + args[1].toString();
+        if (!shouldEmit("sprite_renderer_draw_call", identity, 250)) {
+          return;
+        }
+        emit("sprite_renderer_draw_call", {
+          symbol: symbols.rendererDrawCall,
+          address: address.toString(),
+          renderer_pointer: args[0].toString(),
+          primitive_pointer: args[1].toString(),
+          primitive: samplePrimitive(args[1]),
+        });
+      },
+    };
+  });
   hookEnterArgs(moduleValue, symbols.rendererUnbindTexture, "sprite_renderer_unbind_texture", 3, 250);
   hookEnterArgs(moduleValue, symbols.rendererUnbindCurrentTextures, "sprite_renderer_unbind_current_textures", 1, 250);
 }

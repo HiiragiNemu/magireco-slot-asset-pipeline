@@ -44,7 +44,19 @@
   `0x72af42645f58`、`0x72af42645f78`、`0x72af42646148` 均在尾段持续出现，
   且关键字段如 `+0x4=3553`、`+0xc=3`、`+0x68=194423728` 等保持稳定；
   其中 `+0x4=3553` 与 `GL_TEXTURE_2D` 一致，但结构布局未完全命名，不能直接把单个
-  offset 当成最终 pixel proof。
+  offset 当成最终 pixel proof。随后 `cri_video_texture_probe.js` 继续加入
+  `RendererImplGL::drawCall(Primitive*)` primitive metadata 采样，v8 可用 run 位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703`：
+  同一 run 捕获主故事 `1e31c4fa`/1955904/512x288/30fps/338 帧和 280 次
+  renderer drawCall；在 11.267-13.05 s 尾段仍有 19 次
+  `checkAndBindTextureStates` 与 19 次 `drawCall`。尾段保持同一 renderer
+  `0x72b10b9830a0` 下的单纹理四顶点 primitive
+  `0x72af405bd370`/`0x72af405bd168`/`0x72af405bd148`，分别带 texture id
+  `155`/`151`/`150` 的稳定签名。该证据进一步证明游戏 renderer path 在主 338 帧后
+  的语音/字幕尾段仍持续提交稳定 primitive，支持当前 clean `hold_last_frame` 策略；
+  但仍不是 clean-layer framebuffer/pixel hash，且同 run 的 `89802b19`
+  512x416/5277 帧 receiver 仍必须标记为 slot/gameplay/material 状态，不能当作 clean
+  story continuation。
 - 2026-07-02 ac7116 animation-state sampler 已新增：
   `docs/research/2026-07-02-ac7116-animation-state-sampler.md`。
   新版 `event_scene_probe.js` 在 forced event context 活跃时每约 250 ms 输出

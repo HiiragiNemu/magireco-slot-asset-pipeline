@@ -245,6 +245,76 @@ def summarize_renderer_checks(
     return summaries
 
 
+def primitive_signature(row: dict[str, Any]) -> tuple[Any, ...]:
+    primitive = row.get("primitive") if isinstance(row.get("primitive"), dict) else {}
+    textures = primitive.get("textures") if isinstance(primitive.get("textures"), list) else []
+    texture_sig = tuple(
+        (
+            item.get("index"),
+            item.get("type_u32_at_base"),
+            item.get("texture_object_u32_at_base_plus_0x8"),
+            item.get("texture_object_u32_at_base_plus_0xc"),
+            item.get("texture_object_pointer_at_base_plus_0x18"),
+            item.get("filter_u32_at_base_plus_0x20"),
+            item.get("address_u32_at_base_plus_0x24"),
+        )
+        for item in textures
+        if isinstance(item, dict)
+    )
+    return (
+        row.get("renderer_pointer"),
+        row.get("texture_state_pointer"),
+        row.get("primitive_pointer"),
+        primitive.get("primitive_mode_u32_at_0x0"),
+        primitive.get("vertex_count_u32_at_0x28"),
+        primitive.get("index_count_u32_at_0x38"),
+        primitive.get("texture_count_u32_at_0xb8"),
+        texture_sig,
+    )
+
+
+def summarize_primitive_rows(
+    rows: list[dict[str, Any]], windows: list[tuple[str, float, float]]
+) -> list[dict[str, Any]]:
+    grouped: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        grouped[primitive_signature(row)].append(row)
+
+    summaries: list[dict[str, Any]] = []
+    for key, group in grouped.items():
+        primitive = group[0].get("primitive") if isinstance(group[0].get("primitive"), dict) else {}
+        doc: dict[str, Any] = {
+            "renderer_pointer": key[0],
+            "texture_state_pointer": key[1],
+            "primitive_pointer": key[2],
+            "primitive_mode_u32_at_0x0": key[3],
+            "vertex_count_u32_at_0x28": key[4],
+            "index_count_u32_at_0x38": key[5],
+            "texture_count_u32_at_0xb8": key[6],
+            "textures": primitive.get("textures") if isinstance(primitive, dict) else [],
+            "windows": {},
+        }
+        doc.update(time_range(group))
+        for name, start, end in windows:
+            in_window = [
+                row
+                for row in group
+                if isinstance(row.get("event_relative_ms"), (int, float))
+                and start <= row["event_relative_ms"] <= end
+            ]
+            doc["windows"][name] = {"count": len(in_window)}
+        summaries.append(doc)
+    summaries.sort(
+        key=lambda item: (
+            -(item.get("count") or 0),
+            str(item.get("renderer_pointer")),
+            str(item.get("primitive_pointer")),
+            str(item.get("texture_state_pointer")),
+        )
+    )
+    return summaries
+
+
 def main() -> int:
     args = parse_args()
     runtime_log = Path(args.runtime_log)
@@ -285,6 +355,12 @@ def main() -> int:
         for row in rows
         if row.get("kind") == "sprite_renderer_check_bind_texture_states"
     ]
+    renderer_makeup_rows = [
+        row for row in rows if row.get("kind") == "sprite_renderer_makeup_textures"
+    ]
+    renderer_draw_call_rows = [
+        row for row in rows if row.get("kind") == "sprite_renderer_draw_call"
+    ]
     summary_doc = {
         "runtime_log": str(runtime_log),
         "event_log": args.event_log,
@@ -300,6 +376,10 @@ def main() -> int:
         "texture_update_groups": summarize_texture_updates(texture_updates, windows),
         "renderer_check_count": len(renderer_checks),
         "renderer_check_groups": summarize_renderer_checks(renderer_checks, windows),
+        "renderer_makeup_count": len(renderer_makeup_rows),
+        "renderer_makeup_groups": summarize_primitive_rows(renderer_makeup_rows, windows),
+        "renderer_draw_call_count": len(renderer_draw_call_rows),
+        "renderer_draw_call_groups": summarize_primitive_rows(renderer_draw_call_rows, windows),
     }
     (out_dir / "cri_video_texture_summary.json").write_text(
         json.dumps(summary_doc, ensure_ascii=False, indent=2) + "\n",
@@ -332,6 +412,12 @@ def main() -> int:
             "return_i32",
             "return_u32",
             "texture_state_numeric",
+            "renderer_pointer",
+            "texture_state_pointer",
+            "primitive_pointer",
+            "primitive",
+            "texture_state_before",
+            "texture_state_after",
         ]
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -343,6 +429,13 @@ def main() -> int:
                     ensure_ascii=False,
                     sort_keys=True,
                 )
+            for json_field in ("primitive", "texture_state_before", "texture_state_after"):
+                if flat.get(json_field) is not None:
+                    flat[json_field] = json.dumps(
+                        flat[json_field],
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    )
             writer.writerow(flat)
 
     print(json.dumps({"summary": str(out_dir / "cri_video_texture_summary.json")}, ensure_ascii=False))
