@@ -599,6 +599,39 @@ This strengthens ac7116 hold evidence from animation-object/CRI-lifecycle
 support to renderer-path support.  It still is not an exact clean-layer
 framebuffer or pixel hash.
 
+2026-07-03 narrow TextureStateGL field sampler:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\texture_state_fields_ac7116_v2_after_restart_20260703
+```
+
+This run extended `cri_video_texture_probe.js` to sample only numeric
+candidates in the first 0x80 bytes of each `TextureStateGL` pointer passed to
+`RendererImplGL::checkAndBindTextureStates`.  It again captured the main story
+`1e31c4fa`/1955904 payload as 512x288, 30 fps, 338 frames.  Renderer check
+counts:
+
+| Window | count |
+| --- | ---: |
+| 9.000-11.000 s | 22 |
+| 11.267-13.050 s | 20 |
+| 14.000-20.000 s | 68 |
+
+Three texture-state pointers stayed active through the tail:
+
+| Texture state | total | 9-11 s | 11.267-13.05 s | 14-20 s |
+| --- | ---: | ---: | ---: | ---: |
+| `0x72af42645f58` | 95 | 7 | 7 | 23 |
+| `0x72af42645f78` | 95 | 7 | 7 | 23 |
+| `0x72af42646148` | 94 | 8 | 6 | 22 |
+
+Stable tail-window fields included `+0x4=3553`, `+0xc=3`, and
+`+0x68=194423728` across the active texture-state records; one state also had
+`+0x8=148`, `+0x58=1024`, `+0x60=1` stable.  Treat `+0x4=3553` as consistent
+with `GL_TEXTURE_2D`, not as a fully reverse-engineered struct layout.  This is
+stronger steady-renderer-state evidence, but it still is not clean-layer
+framebuffer/pixel proof.
+
 Full ac7114-16 receiver summary:
 
 ```text

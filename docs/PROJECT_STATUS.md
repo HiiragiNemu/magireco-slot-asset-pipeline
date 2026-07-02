@@ -36,7 +36,15 @@
   `ac7116_001` 的 hold 从“动画对象/CRI receiver 支持”提升为“renderer path
   仍持续活动且状态稳定”支持；但仍不是 framebuffer/clean-layer pixel hash，最终
   B站投稿仍需 clean-layer pixel/texture proof 或明确接受该机制证据，outer-flow BGM
-  门禁也仍未解除。
+  门禁也仍未解除。2026-07-03 继续在
+  `texture_state_fields_ac7116_v2_after_restart_20260703` 中加入
+  `TextureStateGL` 前 0x80 字节的 metadata-only 数值字段采样；同一 run 再次捕获主故事
+  `1e31c4fa`/1955904/512x288/30fps/338 帧，并在 11.267-13.05 s 尾段捕获
+  20 次 `sprite_renderer_check_bind_texture_states`。三个 texture-state 指针
+  `0x72af42645f58`、`0x72af42645f78`、`0x72af42646148` 均在尾段持续出现，
+  且关键字段如 `+0x4=3553`、`+0xc=3`、`+0x68=194423728` 等保持稳定；
+  其中 `+0x4=3553` 与 `GL_TEXTURE_2D` 一致，但结构布局未完全命名，不能直接把单个
+  offset 当成最终 pixel proof。
 - 2026-07-02 ac7116 animation-state sampler 已新增：
   `docs/research/2026-07-02-ac7116-animation-state-sampler.md`。
   新版 `event_scene_probe.js` 在 forced event context 活跃时每约 250 ms 输出

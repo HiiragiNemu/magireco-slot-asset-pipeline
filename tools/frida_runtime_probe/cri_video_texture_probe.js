@@ -10,6 +10,7 @@
 const moduleName = "libGameProc.so";
 const scriptStartUnixMs = Date.now();
 const hashByteLimit = 4096;
+const textureStateNumericMaxOffset = 0x80;
 const lastEmitByKey = new Map();
 
 const symbols = {
@@ -26,6 +27,7 @@ const symbols = {
   screenObjectCheckLock: "_ZN16CScreenObjectMng9checkLockEv",
   screenObjectShaderSetData: "_ZN19CScreenObjectShader7SetDataEP8SRenList",
   textureStateBind: "_ZN2zg6sprite14TextureStateGL4bindEv",
+  textureStateSet: "_ZN2zg6sprite14TextureStateGL3setEjjjj",
   rendererCheckBindTextureStates:
     "_ZN2zg6sprite14RendererImplGL25checkAndBindTextureStatesEPNS0_14TextureStateGLEj",
   rendererMakeupTextures:
@@ -136,6 +138,41 @@ function checksumBytes(pointerValue, byteCount) {
       error: String(error),
     };
   }
+}
+
+function sampleNumericFields(pointerValue, maxOffset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return { pointer: "0x0", max_offset: "0x" + maxOffset.toString(16), fields: [] };
+  }
+  const fields = [];
+  for (let offset = 0; offset < maxOffset; offset += 4) {
+    const address = pointerValue.add(offset);
+    try {
+      const u32 = address.readU32();
+      const f32 = address.readFloat();
+      const item = { offset: "0x" + offset.toString(16) };
+      let keep = false;
+      if (u32 > 0 && u32 < 0x10000000) {
+        item.u32 = u32;
+        keep = true;
+      }
+      if (Number.isFinite(f32) && Math.abs(f32) >= 0.0001 && Math.abs(f32) < 100000) {
+        item.f32 = Number(f32.toFixed(6));
+        keep = true;
+      }
+      if (keep) {
+        fields.push(item);
+      }
+    } catch (error) {
+      fields.push({ offset: "0x" + offset.toString(16), error: String(error) });
+      break;
+    }
+  }
+  return {
+    pointer: pointerValue.toString(),
+    max_offset: "0x" + maxOffset.toString(16),
+    fields,
+  };
 }
 
 function findGameModule() {
@@ -362,12 +399,32 @@ function hookRendererActivity(moduleValue) {
   hookReturn(moduleValue, symbols.screenObjectCheckLock, "screen_object_check_lock", 1, 250);
   hookEnterArgs(moduleValue, symbols.screenObjectShaderSetData, "screen_object_shader_set_data", 2, 250);
   hookEnterArgs(moduleValue, symbols.textureStateBind, "sprite_texture_state_bind", 1, 250);
-  hookEnterArgs(
+  hookEnterArgs(moduleValue, symbols.textureStateSet, "sprite_texture_state_set", 5, 0);
+  installHook(
     moduleValue,
     symbols.rendererCheckBindTextureStates,
     "sprite_renderer_check_bind_texture_states",
-    3,
-    250
+    function (address) {
+      return {
+        onEnter(args) {
+          const identity = args[0].toString() + "\u0000" + args[1].toString() + "\u0000" + args[2].toString();
+          if (!shouldEmit("sprite_renderer_check_bind_texture_states", identity, 250)) {
+            return;
+          }
+          emit("sprite_renderer_check_bind_texture_states", {
+            symbol: symbols.rendererCheckBindTextureStates,
+            address: address.toString(),
+            arg0_pointer: args[0].toString(),
+            arg0_i32: toI32(args[0]),
+            arg1_pointer: args[1].toString(),
+            arg1_i32: toI32(args[1]),
+            arg2_pointer: args[2].toString(),
+            arg2_i32: toI32(args[2]),
+            texture_state_numeric: sampleNumericFields(args[1], textureStateNumericMaxOffset),
+          });
+        },
+      };
+    }
   );
   hookEnterArgs(moduleValue, symbols.rendererMakeupTextures, "sprite_renderer_makeup_textures", 3, 250);
   hookEnterArgs(moduleValue, symbols.rendererUnbindTexture, "sprite_renderer_unbind_texture", 3, 250);

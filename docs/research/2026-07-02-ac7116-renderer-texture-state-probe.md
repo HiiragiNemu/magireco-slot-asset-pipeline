@@ -154,6 +154,81 @@ _ZN2zg6sprite14RendererImplGL25checkAndBindTextureStatesEPNS0_14TextureStateGLEj
 Therefore this function is not the active video frame upload path for this
 event, or the current build routes updates through lower/internal code.
 
+## 2026-07-03 TextureStateGL field sampler
+
+`cri_video_texture_probe.js` was extended to sample only numeric candidates from
+the first 0x80 bytes of the `TextureStateGL` pointer passed to
+`RendererImplGL::checkAndBindTextureStates`.
+
+This is still metadata-only:
+
+- no framebuffer dump;
+- no texture bytes;
+- no decoded movie frame;
+- no PCM/audio data.
+
+The summarizer now writes renderer check groups and per-window numeric field
+stability:
+
+```text
+tools/frida_runtime_probe/summarize_cri_video_texture_probe.py
+```
+
+After an app restart and Gadget reinjection, v2 captured both the main story
+payload and the TextureStateGL fields in one run:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\texture_state_fields_ac7116_v2_after_restart_20260703
+```
+
+Summary:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\texture_state_fields_ac7116_v2_after_restart_20260703\summary\cri_video_texture_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\texture_state_fields_ac7116_v2_after_restart_20260703\summary\cri_video_texture_events.csv
+```
+
+The run again captured the official main story movie:
+
+| Relative ms | Kind | Receiver | Size | FNV | Movie info |
+| ---: | --- | --- | ---: | --- | --- |
+| 120 | `cri_set_data` | `0x72af8bcef7d0` | 1955904 | `1e31c4fa` | 512x288, 30 fps, 338 frames |
+| 131 | `cri_set_data` | `0x72af8bcee2d0` | 1507616 | `c8fd6fe7` | 512x288, 30 fps, 200 frames |
+| 145 | `cri_set_data` | `0x72af8bcee030` | 2159168 | `72e6f81c` | 512x288, 30 fps, 200 frames |
+| 6725 | `cri_set_data` | `0x72af8b9e47c0` | 1483776 | `c9cc7d28` | 512x288, 30 fps, 200 frames |
+| 6733 | `cri_set_data` | `0x72af8bcef1d0` | 2157056 | `f32a4a6b` | 512x288, 30 fps, 200 frames |
+
+The same run emitted 284 `sprite_renderer_check_bind_texture_states` records.
+Window counts:
+
+| Window | Count |
+| --- | ---: |
+| 9.000-11.000 s | 22 |
+| 11.267-13.050 s | 20 |
+| 14.000-20.000 s | 68 |
+
+Three `TextureStateGL` pointers were active in the key windows:
+
+| Texture state | Total count | 9-11 s | 11.267-13.05 s | 14-20 s |
+| --- | ---: | ---: | ---: | ---: |
+| `0x72af42645f58` | 95 | 7 | 7 | 23 |
+| `0x72af42645f78` | 95 | 7 | 7 | 23 |
+| `0x72af42646148` | 94 | 8 | 6 | 22 |
+
+Stable numeric fields across the tail window included:
+
+| Texture state | Stable examples in 11.267-13.05 s |
+| --- | --- |
+| `0x72af42645f58` | `+0x4 = 3553`, `+0xc = 3`, `+0x48 = 57.094604`, `+0x50 = 67243.9375`, `+0x68 = 194423728` |
+| `0x72af42645f78` | `+0x4 = 3553`, `+0xc = 3`, `+0x48 = 57.094727`, `+0x50 = 67243.9375`, `+0x68 = 194423728` |
+| `0x72af42646148` | `+0x4 = 3553`, `+0x8 = 148`, `+0xc = 3`, `+0x58 = 1024`, `+0x60 = 1`, `+0x68 = 194423728` |
+
+Do not over-interpret individual offsets yet.  `+0x4 = 3553` is consistent
+with `GL_TEXTURE_2D`, and `+0x8` behaves like a texture/id-like field, but the
+structure layout is not fully named.  The safe conclusion is that the same
+renderer and three stable TextureStateGL records remain active in the voice-tail
+window after the main 338-frame movie boundary.
+
 ## Interpretation
 
 The combined evidence now supports this mechanism:
@@ -162,8 +237,11 @@ The combined evidence now supports this mechanism:
 2. LP/gold-frame foreground CRIs switch around 6.7 s and remain excluded from
    the clean upload edition.
 3. In the 11.267-13.05 s final voice/subtitle tail, the same sprite renderer
-   texture-state object continues to be checked/bound.
+   texture-state objects continue to be checked/bound.
 4. No ordinary GL texture upload/draw continuation was observed in that tail.
+5. The 2026-07-03 field sampler shows that the active TextureStateGL numeric
+   fields are stable through the tail window, strengthening the hold/steady
+   compositor interpretation.
 
 This is stronger than the earlier animation-object-only proof: the renderer
 path itself remains active through the voice tail with a stable texture-state

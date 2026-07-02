@@ -148,6 +148,103 @@ def summarize_texture_updates(
     return summaries
 
 
+def numeric_values(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    values_by_offset: dict[str, dict[str, list[Any]]] = defaultdict(
+        lambda: {"u32": [], "f32": [], "error": []}
+    )
+    for row in rows:
+        numeric = row.get("texture_state_numeric")
+        if not isinstance(numeric, dict):
+            continue
+        fields = numeric.get("fields")
+        if not isinstance(fields, list):
+            continue
+        for field in fields:
+            if not isinstance(field, dict):
+                continue
+            offset = str(field.get("offset") or "")
+            if not offset:
+                continue
+            if "u32" in field:
+                values_by_offset[offset]["u32"].append(field.get("u32"))
+            if "f32" in field:
+                values_by_offset[offset]["f32"].append(field.get("f32"))
+            if "error" in field:
+                values_by_offset[offset]["error"].append(field.get("error"))
+
+    result: dict[str, dict[str, Any]] = {}
+    for offset, typed_values in sorted(
+        values_by_offset.items(), key=lambda item: int(item[0], 16)
+    ):
+        offset_doc: dict[str, Any] = {}
+        for value_type in ("u32", "f32", "error"):
+            values = typed_values[value_type]
+            if not values:
+                continue
+            distinct = []
+            for value in values:
+                if value not in distinct:
+                    distinct.append(value)
+            value_doc: dict[str, Any] = {
+                "count": len(values),
+                "distinct_count": len(distinct),
+                "first": values[0],
+                "last": values[-1],
+                "distinct_first8": distinct[:8],
+            }
+            numeric_only = [value for value in values if isinstance(value, (int, float))]
+            if numeric_only:
+                value_doc["min"] = min(numeric_only)
+                value_doc["max"] = max(numeric_only)
+            offset_doc[value_type] = value_doc
+        result[offset] = offset_doc
+    return result
+
+
+def summarize_renderer_checks(
+    rows: list[dict[str, Any]], windows: list[tuple[str, float, float]]
+) -> list[dict[str, Any]]:
+    grouped: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        key = (
+            row.get("arg0_pointer"),
+            row.get("arg1_pointer"),
+            row.get("arg2_i32"),
+        )
+        grouped[key].append(row)
+
+    summaries: list[dict[str, Any]] = []
+    for key, group in grouped.items():
+        doc: dict[str, Any] = {
+            "renderer_arg0": key[0],
+            "texture_state_arg1": key[1],
+            "arg2_i32": key[2],
+            "windows": {},
+            "numeric_offsets": numeric_values(group),
+        }
+        doc.update(time_range(group))
+        for name, start, end in windows:
+            in_window = [
+                row
+                for row in group
+                if isinstance(row.get("event_relative_ms"), (int, float))
+                and start <= row["event_relative_ms"] <= end
+            ]
+            doc["windows"][name] = {
+                "count": len(in_window),
+                "numeric_offsets": numeric_values(in_window),
+            }
+        summaries.append(doc)
+    summaries.sort(
+        key=lambda item: (
+            -(item.get("count") or 0),
+            str(item.get("renderer_arg0")),
+            str(item.get("texture_state_arg1")),
+        )
+    )
+    return summaries
+
+
 def main() -> int:
     args = parse_args()
     runtime_log = Path(args.runtime_log)
@@ -183,6 +280,11 @@ def main() -> int:
     texture_updates = [
         row for row in rows if row.get("kind") == "cri_video_update_texture"
     ]
+    renderer_checks = [
+        row
+        for row in rows
+        if row.get("kind") == "sprite_renderer_check_bind_texture_states"
+    ]
     summary_doc = {
         "runtime_log": str(runtime_log),
         "event_log": args.event_log,
@@ -196,6 +298,8 @@ def main() -> int:
         "window_kind_counts": window_counts(rows, windows),
         "texture_update_count": len(texture_updates),
         "texture_update_groups": summarize_texture_updates(texture_updates, windows),
+        "renderer_check_count": len(renderer_checks),
+        "renderer_check_groups": summarize_renderer_checks(renderer_checks, windows),
     }
     (out_dir / "cri_video_texture_summary.json").write_text(
         json.dumps(summary_doc, ensure_ascii=False, indent=2) + "\n",
@@ -208,6 +312,9 @@ def main() -> int:
             "kind",
             "receiver",
             "renderer",
+            "arg0_pointer",
+            "arg1_pointer",
+            "arg2_i32",
             "texture_id_u32",
             "width",
             "height",
@@ -224,11 +331,19 @@ def main() -> int:
             "nonzero_hashed_bytes",
             "return_i32",
             "return_u32",
+            "texture_state_numeric",
         ]
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
-            writer.writerow({name: row.get(name) for name in fieldnames})
+            flat = {name: row.get(name) for name in fieldnames}
+            if flat.get("texture_state_numeric") is not None:
+                flat["texture_state_numeric"] = json.dumps(
+                    flat["texture_state_numeric"],
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+            writer.writerow(flat)
 
     print(json.dumps({"summary": str(out_dir / "cri_video_texture_summary.json")}, ensure_ascii=False))
     return 0
