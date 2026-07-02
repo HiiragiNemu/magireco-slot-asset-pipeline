@@ -14,6 +14,8 @@ let lastAnimationRequest = null;
 let lastAnimationFrameObject = null;
 let activeForcedEvent = null;
 let hooksInstalled = false;
+let animationStateSamplerStarted = false;
+const animationStateSampleIntervalMs = 250;
 
 function emit(kind, fields) {
   const eventFields =
@@ -367,6 +369,67 @@ function loaderStatus() {
   };
 }
 
+function compactObjectDescription(description) {
+  if (description === null || description === undefined) {
+    return null;
+  }
+  return {
+    pointer: description.pointer || null,
+    readable: description.readable ?? null,
+    vtable: description.vtable || null,
+    vtable_module: description.vtable_module || null,
+    vtable_module_offset: description.vtable_module_offset || null,
+    error: description.error || null,
+  };
+}
+
+function compactAnimationState(state) {
+  const lastFrame = state.last_animation_frame || null;
+  return {
+    current_task_id: state.current_task_id,
+    old_task_id: state.old_task_id,
+    selected_source: state.selected_source,
+    selected_object: compactObjectDescription(state.selected_object),
+    frame_animation_object: compactObjectDescription(state.frame_animation_object),
+    active_animation_child: compactObjectDescription(state.active_animation_child),
+    last_animation_frame:
+      lastFrame === null
+        ? null
+        : {
+            animation_object: lastFrame.animation_object,
+            unix_ms: lastFrame.unix_ms,
+            age_ms: Date.now() - lastFrame.unix_ms,
+          },
+    errors: state.errors,
+  };
+}
+
+function emitAnimationStateSample(reason) {
+  try {
+    emit("animation_state_sample", {
+      sample_reason: reason,
+      animation_state: compactAnimationState(getAnimationState()),
+    });
+  } catch (error) {
+    emit("animation_state_sample_error", {
+      sample_reason: reason,
+      error: String(error),
+    });
+  }
+}
+
+function startAnimationStateSampler() {
+  if (animationStateSamplerStarted) {
+    return;
+  }
+  animationStateSamplerStarted = true;
+  setInterval(function () {
+    if (activeForcedEvent !== null) {
+      emitAnimationStateSample("interval");
+    }
+  }, animationStateSampleIntervalMs);
+}
+
 function printableCString(pointerValue) {
   const value = safeCString(pointerValue);
   if (value === null || value.length === 0 || value.length > 256) {
@@ -670,6 +733,8 @@ function executePendingRequest(source) {
       start_unix_ms: Date.now(),
     };
     emit("forced_event_context_started", { request });
+    startAnimationStateSampler();
+    emitAnimationStateSample("context_started");
     if (request.official) {
       const animationState = getAnimationState();
       if (

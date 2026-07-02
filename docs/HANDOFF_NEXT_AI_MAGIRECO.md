@@ -487,6 +487,26 @@ Current ac7116 queue facts:
 supports `--sound-id-channel SOUND_ID=CHANNELS`.  This matters for role voices:
 sound id `8008` is 397838 bytes and cannot be interpreted as 16-bit stereo.
 
+2026-07-02 animation-state sampler follow-up:
+
+```text
+docs/research/2026-07-02-ac7116-animation-state-sampler.md
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_state_sampler_ac7116_v10_after_recovery_20260702
+```
+
+`event_scene_probe.js` now emits passive `animation_state_sample` records every
+about 250 ms while a forced event context is active.  For `ac7116_001`, v10
+captured 68 samples through 16.817 s.  The selected source stayed
+`C_AnmMain+0x350`, selected object `0x72b06b9bacc0`, frame object
+`0x72b06b9bcf40`, and `last_frame_age_ms` remained low during the
+11.267-13.027 s voice/subtitle tail.  This proves the live official animation
+system is still actively rendering the same story animation object after the
+main USM duration.  Combined with v6's 338-frame `GetMovieInfo`, the current
+clean `hold_last_frame` behavior is now runtime-supported for
+mechanism-validation renders.  It is still not exact clean-layer pixel proof,
+so final publication remains gated on compositor/pixel evidence and BGM/full
+outer-flow evidence.
+
 Recommended next visual proof route for the ac7116 tail:
 
 1. Start from a known-good recovered Gadget state; if 27043 times out, restart
@@ -514,6 +534,7 @@ Read these before changing pipeline behavior:
 
 ```text
 tools/frida_runtime_probe/runtime_probe.js
+tools/frida_runtime_probe/event_scene_probe.js
 tools/frida_runtime_probe/csl_audio_queue_probe.js
 tools/frida_runtime_probe/resolve_official_event_capture.py
 tools/frida_runtime_probe/build_event_production_manifests.py

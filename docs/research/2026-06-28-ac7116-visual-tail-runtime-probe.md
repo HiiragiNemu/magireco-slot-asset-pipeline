@@ -12,15 +12,18 @@ tail continues.  If the live game shows another visual state during that tail,
 the external render must reproduce that state instead of holding a still frame.
 
 This report records the visual-tail runtime probe results.  The current answer
-after v6/v7 is narrower:
+after v6/v7 plus the 2026-07-02 animation-state sampler follow-up is:
 
 - the official main story payload identity is now proven:
   `ac7116_AT_SP_story5_01.usm`, 512x288, 30 fps, 338 frames, about 11.267 s;
 - the official final voice/subtitle tail after that movie duration is proven;
 - no additional main-story USM continuation was observed;
-- the clean main-story tail hold is still not fully proven native, because the
-  current probes have not yet captured the exact clean/story compositor output
-  after the main CRI movie reaches its last frame.
+- the 2026-07-02 sampler proved `C_AnmMain+0x350` continues to render the same
+  selected animation object through 16.817 s, including the 11.267-13.027 s
+  voice/subtitle tail;
+- the clean main-story tail hold is runtime-supported for mechanism-validation
+  renders, but final publication still needs exact clean/story compositor pixel
+  proof after the main CRI movie reaches its last frame.
 
 ## Existing resolved runtime evidence
 
@@ -456,7 +459,8 @@ gameplay flow could not add BGM.
 - foreground gold-frame SE/layers are correctly excluded from the clean story
   edition;
 - the main-story source identity and duration are now runtime-proven;
-- the clean tail hold is strongly supported but still not compositor-proven;
+- the clean tail hold is now runtime-supported by the 2026-07-02
+  animation-state sampler, but still not exact clean-layer pixel proven;
 - forced-event audio queue contains bed/foreground SE/voice only; additional
   outer-state BGM remains unproven absent.
 
@@ -467,20 +471,22 @@ until the visual tail and BGM gates are resolved.
 
 Use the least invasive route first:
 
-1. Re-run `visual_tail_probe.js` from a known-good game state where
+1. Read the follow-up sampler report:
+   `docs/research/2026-07-02-ac7116-animation-state-sampler.md`.
+2. Re-run `visual_tail_probe.js` from a known-good game state where
    `event_scene_host` can find an active `C_AnmBase` object.
-2. Keep passive lifecycle/metadata hooks enabled: `SetData`, `SetLoop`,
+3. Keep passive lifecycle/metadata hooks enabled: `SetData`, `SetLoop`,
    `Start`, `Stop`, `GetStatus`, `GetMovieInfo`, `GetFrameInfo`,
    `NotifyMovieStart`, `NotifyStartAnim`, `DirGetFrame`, and
    `CScreenObjectMng` lock/draw helpers.
-3. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
+4. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
    window.  The proof target is not another full-machine screenrecord; it is the
    clean/story layer state after the main CRI movie reaches frame 338.
-4. Treat passive frame extraction hooks as experimental until a run proves they
+5. Treat passive frame extraction hooks as experimental until a run proves they
    do not interfere.
-5. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
+6. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
    must come from full outer gameplay flow capture or a direct game-produced
    recording, not another forced-event-only run.
-6. Only after the runtime state is understood should the renderer decide
+7. Only after the runtime state is understood should the renderer decide
    between `hold_last_frame`, a real visual continuation layer, a loop, or a
    cut/black transition.

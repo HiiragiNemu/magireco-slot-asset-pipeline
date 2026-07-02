@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-06-28
+更新时间：2026-07-02
 
 ## 2026-06-26 v18 当前状态
 
@@ -16,6 +16,19 @@
 
 最新新增：
 
+- 2026-07-02 ac7116 animation-state sampler 已新增：
+  `docs/research/2026-07-02-ac7116-animation-state-sampler.md`。
+  新版 `event_scene_probe.js` 在 forced event context 活跃时每约 250 ms 输出
+  `animation_state_sample`。成功捕获位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_state_sampler_ac7116_v10_after_recovery_20260702`。
+  结果：`ac7116_001` 从 16 ms 到 16817 ms 共 68 个采样，11.267-13.027 s
+  声音/字幕尾段期间仍为 `C_AnmMain+0x350`、selected object
+  `0x72b06b9bacc0`、frame object `0x72b06b9bcf40`，`last_frame_age_ms`
+  保持几十毫秒。这证明官方动画系统在主 USM 338 帧结束后仍持续渲染同一故事动画对象；
+  结合 v6 的主 USM 时长证据，`ac7116_001` 的 clean `hold_last_frame`
+  现在可视为 runtime-supported mechanism-validation 行为，而不是纯外部拼接猜测。
+  但仍未捕获 clean/story layer 的逐帧像素/texture，所以最终 B站投稿仍受
+  clean-layer compositor proof 与 outer-flow BGM proof 门禁限制。
 - 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于
