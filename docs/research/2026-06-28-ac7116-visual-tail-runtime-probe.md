@@ -455,6 +455,69 @@ forced official event.  This strengthens the current clean audio interpretation
 for `ac7116_001`, but it still does not prove that a non-forced full outer
 gameplay flow could not add BGM.
 
+## 2026-07-03 visual-tail lock rerun
+
+After the 2026-07-03 renderer primitive proof, `visual_tail_probe.js` was
+rerun from a runtime-capture-ready Gadget state to test whether the older
+high-level frame-lock hooks would now hit from a known-good state.
+
+Readiness and capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\diag_visual_tail_lock_probe_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703\summary_animation\animation_state_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703\summary_cri_receiver\cri_receiver_summary.json
+```
+
+`diagnose_runtime_capture_state.py` reported
+`runtime_capture_ready_via_arm64_gadget`.  `capture_official_event.py` exited
+cleanly for both the event side and runtime side.
+
+Animation-state summary:
+
+| Field | Value |
+| --- | --- |
+| sample count | 88 |
+| first / last forced-event relative sample | 18 ms / 21829 ms |
+| selected source | `C_AnmMain+0x350` for all 88 samples |
+| selected object | `0x72b06b9870c0` for all 88 samples |
+| frame object | `0x72b06b987510` for all 88 samples |
+| last-frame age | min 17 ms, max 51 ms, avg 32.65 ms |
+| selected object `+0x350` | 4289 -> 4944, 87 increasing steps, 0 decreasing steps |
+
+This repeats the animation-object continuity evidence: the game keeps the same
+animation object active and its timer-like `+0x350` field keeps advancing well
+past the voice tail.
+
+However, the targeted high-level frame/lock hooks produced zero call records:
+
+| Hook kind | Calls |
+| --- | ---: |
+| `dir_get_frame` / `dir_set_frame` / `dir_draw_ctrl` | 0 |
+| `notify_movie_start` / `notify_start_anim` | 0 |
+| `cri_get_frame_info` / `cri_is_frame_ready` | 0 |
+| `screen_object_calc_frame_control` / `screen_object_draw` | 0 |
+| `screen_object_set_lock_frame` / `screen_object_check_lock` / `screen_object_is_lock` | 0 |
+
+The hooks were installed, so this is not a syntax/setup failure.  It means
+these exported/fallback high-level entry points are not the active forced-path
+calls for this scene, or the active calls happen through lower-level/inlined
+code that these hooks do not see.
+
+The runtime receiver summary also makes v10 unsuitable as main-clean identity
+proof: it captured only foreground/gold-frame `SetData` rows (`c8fd6fe7`,
+`72e6f81c`, `c9cc7d28`, `f32a4a6b`) plus two pre-existing CRI receiver pointers
+without `SetData` metadata.  It did not recapture main story `1e31c4fa` in this
+run.  Use `cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703`
+for same-run main-story identity plus renderer primitive evidence.
+
+Conclusion from v10: do not keep repeating the same `DirGetFrame`,
+`NotifyMovieStart`, `NotifyStartAnim`, `GetFrameInfo`, or `CScreenObjectMng`
+lock/draw hooks by themselves.  The next visual proof should either target a
+lower-level compositor/renderer state already known to fire, or directly
+capture a clean-layer texture/framebuffer hash.
+
 ## Current decision
 
 `ac7116_001` remains blocked for final Bilibili publication:
@@ -483,20 +546,17 @@ Use the least invasive route first:
    hand-parse future JSONL captures.
 3. Read the renderer texture-state follow-up before adding more GL hooks:
    `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`.
-4. Re-run `visual_tail_probe.js` from a known-good restarted/reinjected game
-   state if main CRI `1e31c4fa` must be recaptured.
-5. Keep passive lifecycle/metadata hooks enabled: `SetData`, `SetLoop`,
-   `Start`, `Stop`, `GetStatus`, `GetMovieInfo`, `GetFrameInfo`,
-   `NotifyMovieStart`, `NotifyStartAnim`, `DirGetFrame`, and
-   `CScreenObjectMng` lock/draw helpers.
-6. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
+4. Do not repeat the v10 high-level lock hook set by itself; it installed but
+   produced zero `DirGetFrame`/`GetFrameInfo`/screen-object lock/draw call
+   records.
+5. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
    window.  The proof target is not another full-machine screenrecord; it is the
    clean/story layer state after the main CRI movie reaches frame 338.
-7. Treat passive frame extraction hooks as experimental until a run proves they
+6. Treat passive frame extraction hooks as experimental until a run proves they
    do not interfere.
-8. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
+7. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
    must come from full outer gameplay flow capture or a direct game-produced
    recording, not another forced-event-only run.
-9. Only after the runtime state is understood should the renderer decide
+8. Only after the runtime state is understood should the renderer decide
    between `hold_last_frame`, a real visual continuation layer, a loop, or a
    cut/black transition.

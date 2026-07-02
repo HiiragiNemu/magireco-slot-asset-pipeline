@@ -719,6 +719,51 @@ Caveats:
 - The same run also saw `89802b19`, 512x416, 5277 frames.  Keep treating it as
   slot/gameplay/material state, not clean story continuation.
 
+2026-07-03 visual-tail lock rerun:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\diag_visual_tail_lock_probe_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703\summary_animation\animation_state_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703\summary_cri_receiver\cri_receiver_summary.json
+```
+
+This reran `visual_tail_probe.js` after `diagnose_runtime_capture_state.py`
+reported `runtime_capture_ready_via_arm64_gadget`.  Event and runtime sides
+both exited 0.  The animation summary is useful:
+
+| Field | Value |
+| --- | --- |
+| sample count | 88 |
+| first / last forced-event relative sample | 18 ms / 21829 ms |
+| selected source | `C_AnmMain+0x350` for all 88 samples |
+| selected object | `0x72b06b9870c0` for all 88 samples |
+| frame object | `0x72b06b987510` for all 88 samples |
+| last-frame age | 17-51 ms, avg 32.65 ms |
+| selected object `+0x350` | 4289 -> 4944, 87 increasing steps, 0 decreasing steps |
+
+The frame-lock route itself was negative:
+
+| Hook kind | Calls |
+| --- | ---: |
+| `dir_get_frame` / `dir_set_frame` / `dir_draw_ctrl` | 0 |
+| `notify_movie_start` / `notify_start_anim` | 0 |
+| `cri_get_frame_info` / `cri_is_frame_ready` | 0 |
+| `screen_object_calc_frame_control` / `screen_object_draw` | 0 |
+| `screen_object_set_lock_frame` / `screen_object_check_lock` / `screen_object_is_lock` | 0 |
+
+The hooks installed, so this is negative/inconclusive mechanism evidence, not a
+setup failure.  Also, v10 did not recapture main story `1e31c4fa`; it only saw
+foreground/gold-frame `SetData` rows (`c8fd6fe7`, `72e6f81c`, `c9cc7d28`,
+`f32a4a6b`) plus pre-existing receiver pointers.  Do not use v10 for main-clean
+identity.  Use v8 primitive capture for that.
+
+Practical instruction: do not spend another run repeating the same high-level
+`DirGetFrame` / `NotifyMovieStart` / `NotifyStartAnim` / `GetFrameInfo` /
+`CScreenObjectMng` lock hook set by itself.  The next useful visual proof is
+either lower-level compositor/renderer metadata on a path already known to fire,
+or direct clean-layer texture/framebuffer hash.
+
 Full ac7114-16 receiver summary:
 
 ```text
@@ -745,16 +790,11 @@ Recommended next visual proof route for the ac7116 tail:
 2. Read
    `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`; do not
    repeat blind `GLtask_display1/2` work.
-3. Hook `CSlotBody::NotifyMovieStart` and `CDirMngListener::NotifyStartAnim` to
-   identify which movie/animation object is active.  v6 did not see those calls,
-   so a lower-level call site or different hook point may be needed.
-4. Passively intercept `CriManaWrapper::GetFrameInfo` / `IsFrameReady` /
-   `ExecuteVideoProcess` during the 10-13.5 s window to see whether the movie
-   decoder has ended or is still producing frames.  Do not call those CRI
-   methods from a Frida `NativeFunction` inside hot hooks.
-5. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
-   determine whether the game explicitly locks/holds a frame.
-6. The narrower `TextureStateGL` and primitive sampler route has now been done
+3. Do not repeat the v10 high-level lock/notification route by itself:
+   `DirGetFrame`, `NotifyMovieStart`, `NotifyStartAnim`, `GetFrameInfo`,
+   `IsFrameReady`, and `CScreenObjectMng` lock/draw hooks installed but produced
+   zero call records.
+4. The narrower `TextureStateGL` and primitive sampler route has now been done
    through `texture_state_fields_ac7116_v2_after_restart_20260703` and
    `cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703`.
    If more visual proof is needed, target a clean-layer texture/pixel hash or a

@@ -57,6 +57,18 @@
   但仍不是 clean-layer framebuffer/pixel hash，且同 run 的 `89802b19`
   512x416/5277 帧 receiver 仍必须标记为 slot/gameplay/material 状态，不能当作 clean
   story continuation。
+- 2026-07-03 `visual_tail_probe.js` 以已恢复 Gadget 状态重跑 frame-lock 路线，结果位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703`。
+  事件与 runtime 两侧均 exit 0，`summary_animation` 显示 88 个样本从 18 ms 覆盖到
+  21829 ms，selected source 全部为 `C_AnmMain+0x350`，selected object
+  `0x72b06b9870c0`、frame object `0x72b06b987510` 全程不变，`last_frame_age_ms`
+  17-51 ms，selected object `+0x350` 从 4289 单调增到 4944。负证据同样重要：
+  已安装的 `DirGetFrame`/`NotifyMovieStart`/`NotifyStartAnim`/`GetFrameInfo`/
+  `IsFrameReady`/`CScreenObjectMng` lock-draw 高层 hook 在该 run 中全部 0 calls；
+  runtime receiver 也只重捕获 foreground/gold-frame `c8fd6fe7`、`72e6f81c`、
+  `c9cc7d28`、`f32a4a6b`，没有主故事 `1e31c4fa`。因此 v10 不能作为 main-clean
+  identity proof；后续不要重复同一高层 hook set，应转向已知会触发的 lower renderer/
+  compositor path 或 clean-layer texture/framebuffer hash。
 - 2026-07-02 ac7116 animation-state sampler 已新增：
   `docs/research/2026-07-02-ac7116-animation-state-sampler.md`。
   新版 `event_scene_probe.js` 在 forced event context 活跃时每约 250 ms 输出
