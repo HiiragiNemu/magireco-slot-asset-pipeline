@@ -10,6 +10,11 @@ const moduleName = "libGameProc.so";
 const maxCStringBytes = 256;
 let activeEvent = null;
 const lastEmitByKey = new Map();
+const trackedCriReceivers = new Map();
+let firstTrackedCriReceiverUnixMs = null;
+const criReceiverSampleIntervalMs = 250;
+const criReceiverNumericMaxOffset = 0x400;
+const maxTrackedCriReceivers = 12;
 
 const symbolOffsetFallbacks = {
   GLtask_display1: 0x424791c,
@@ -100,6 +105,65 @@ function checksumBytes(pointerValue, byteCount) {
   } catch (_) {
     return null;
   }
+}
+
+function sampleNumericFields(pointerValue, maxOffset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return { pointer: "0x0", max_offset: "0x" + maxOffset.toString(16), fields: [] };
+  }
+  const fields = [];
+  for (let offset = 0; offset < maxOffset; offset += 4) {
+    const address = pointerValue.add(offset);
+    try {
+      const u32 = address.readU32();
+      const f32 = address.readFloat();
+      const item = { offset: "0x" + offset.toString(16) };
+      let keep = false;
+      if (u32 > 0 && u32 < 1000000) {
+        item.u32 = u32;
+        keep = true;
+      }
+      if (Number.isFinite(f32) && Math.abs(f32) >= 0.0001 && Math.abs(f32) < 100000) {
+        item.f32 = Number(f32.toFixed(6));
+        keep = true;
+      }
+      if (keep) {
+        fields.push(item);
+      }
+    } catch (_) {
+      // Stop at unreadable holes.  CriManaWrapper receivers are normally
+      // contiguous; repeated exceptions inside the timer would add noise.
+      break;
+    }
+  }
+  return {
+    pointer: pointerValue.toString(),
+    max_offset: "0x" + maxOffset.toString(16),
+    fields,
+  };
+}
+
+function startCriReceiverSampler() {
+  setInterval(function () {
+    if (trackedCriReceivers.size === 0) {
+      return;
+    }
+    const samples = [];
+    trackedCriReceivers.forEach((metadata, receiver) => {
+      samples.push({
+        receiver,
+        metadata,
+        numeric_probe: sampleNumericFields(ptr(receiver), criReceiverNumericMaxOffset),
+      });
+    });
+    emit("cri_receiver_numeric_sample", {
+      receiver_count: trackedCriReceivers.size,
+      sample_interval_ms: criReceiverSampleIntervalMs,
+      first_tracked_relative_ms:
+        firstTrackedCriReceiverUnixMs === null ? null : nowMs() - firstTrackedCriReceiverUnixMs,
+      samples,
+    });
+  }, criReceiverSampleIntervalMs);
 }
 
 function readStdStringCandidates(pointerValue) {
@@ -596,10 +660,24 @@ function hookCriSetData(moduleValue) {
     Interceptor.attach(address, {
       onEnter(args) {
         const size = args[2].toUInt32();
+        const receiver = args[0].toString();
+        if (!trackedCriReceivers.has(receiver) && trackedCriReceivers.size < maxTrackedCriReceivers) {
+          if (firstTrackedCriReceiverUnixMs === null) {
+            firstTrackedCriReceiverUnixMs = nowMs();
+          }
+          trackedCriReceivers.set(receiver, {
+            first_seen_unix_ms: nowMs(),
+            first_tracked_relative_ms: nowMs() - firstTrackedCriReceiverUnixMs,
+            first_active_event_code: activeEvent === null ? null : activeEvent.code_hex,
+            byte_size_u32: size,
+            data_fnv1a_4k: checksumBytes(args[1], size),
+            data_head32_hex: readBytesHex(args[1], size),
+          });
+        }
         emit("cri_set_data", {
           symbol,
           address: address.toString(),
-          receiver: args[0].toString(),
+          receiver,
           data_pointer: args[1].toString(),
           data_address: describeAddress(args[1]),
           byte_size_u32: size,
@@ -795,6 +873,7 @@ setImmediate(function () {
   hookEnterArgs(moduleValue, "_ZN25C_DirectionControllerBase16Macro_EVENT_PLAYE32tagDirectionControllerDeviceData", "direction_macro_event_play", 2, 0);
 
   hookSelectedBgmAudio(moduleValue);
+  startCriReceiverSampler();
 
   emit("probe_ready", {});
 });

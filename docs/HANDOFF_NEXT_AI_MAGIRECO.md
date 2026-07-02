@@ -535,6 +535,26 @@ animation object's clock, not as the CRI movie frame index.  A broad pointer
 scan was attempted in v12 and caused capture timeout/Gadget reinjection; leave
 `includePointerProbe=false` unless the offset list is narrowed first.
 
+v16 CRI receiver follow-up:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702\summary\cri_receiver_summary.json
+```
+
+After app restart and Gadget reinjection, `visual_tail_probe.js` captured the
+main CRI receiver:
+
+| receiver | FNV | size | movie info | update/status |
+| --- | --- | ---: | --- | --- |
+| `0x72af8bceec90` | `1e31c4fa` | `1955904` | 512x288, 30 fps, 338 frames | `cri_update` 4-11134 ms; `GetStatus=5` 267-10973 ms |
+
+The same receiver remained numerically sampleable through 20746 ms, while the
+higher animation object remained active in v10/v13.  This supports the model:
+main CRI reaches the end near the source duration, then the animation/compositor
+layer holds its output while the final voice continues.  It still is not a
+clean-layer texture/pixel hash after frame 338.
+
 Recommended next visual proof route for the ac7116 tail:
 
 1. Start from a known-good recovered Gadget state; if 27043 times out, restart
@@ -576,6 +596,7 @@ tools/frida_runtime_probe/build_material_collection.py
 tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 tools/frida_runtime_probe/summarize_animation_state_samples.py
+tools/frida_runtime_probe/summarize_cri_receiver_samples.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
 tools/frida_runtime_probe/reinject_gadget.py
 ```

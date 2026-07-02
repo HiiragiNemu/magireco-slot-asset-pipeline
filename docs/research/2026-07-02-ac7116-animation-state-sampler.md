@@ -251,6 +251,71 @@ The generated summary reports:
 Use this summarizer for future event captures instead of ad-hoc JSONL
 inspection.
 
+## CRI receiver follow-up
+
+`visual_tail_probe.js` was extended with a metadata-only
+`cri_receiver_numeric_sample` emitter:
+
+- it tracks only receivers observed through `CriManaWrapper::SetData`;
+- it samples numeric u32/float candidates in the first 0x400 bytes;
+- it does not scan pointers by default and does not dump media/frame/audio
+  buffers.
+
+The first attempt, v14, still depended on `activeEvent` and emitted no receiver
+samples.  v15 removed that dependency and proved the sampler worked, but it
+only saw already-reused gold-frame receivers.  v16 restarted the app, reinjected
+Gadget, entered the slot screen again, and captured the main story receiver:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702
+```
+
+Generic summarizer added:
+
+```text
+tools/frida_runtime_probe/summarize_cri_receiver_samples.py
+```
+
+Validation command:
+
+```powershell
+python tools\frida_runtime_probe\summarize_cri_receiver_samples.py `
+  --runtime-log A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702\ac7116_001_cri_receiver_sampler_v16_after_restart__runtime.jsonl `
+  --out-dir A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702\summary `
+  --window pre9_11:9000:11000 `
+  --window source_tail11_267_13_05:11267:13050 `
+  --window late14_20_75:14000:20750
+```
+
+Outputs:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702\summary\cri_receiver_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_receiver_sampler_ac7116_v16_after_restart_20260702\summary\cri_receiver_events.csv
+```
+
+Main receiver summary:
+
+| Field | Value |
+| --- | --- |
+| receiver | `0x72af8bceec90` |
+| first-4KiB FNV | `1e31c4fa` |
+| byte size | `1955904` |
+| movie info | 512x288, 30 fps, 338 frames |
+| `cri_update` span | 4-11134 ms |
+| `cri_get_status=5` span | 267-10973 ms |
+| receiver numeric sample span | 195-20746 ms |
+
+Interpretation: the main CRI movie wrapper is updated and queried until just
+before the 11.267 s source duration, then it is no longer observed as an active
+updating CRI movie, while the receiver object remains resident and the higher
+animation object from v10/v13 continues ticking.  This is consistent with the
+game reaching the last movie frame and the animation/compositor layer holding
+that output while the final voice/subtitle tail continues.
+
+This still is not exact pixel proof: no clean-layer texture hash, framebuffer,
+or CRI frame index after frame 338 has been captured.
+
 ## Current interpretation
 
 The combined evidence is now stronger than the previous state:
@@ -260,14 +325,17 @@ The combined evidence is now stronger than the previous state:
 2. v6/v10 do not show a second clean main-story movie replacing it after
    11.267 s.
 3. CSL queue capture proves official voice continues to about 13.044 s.
-4. v10 proves the official animation object remains actively rendered through
-   the voice tail and beyond.
+4. v10/v13 prove the official animation object remains actively rendered
+   through the voice tail and beyond.
+5. v16 proves the main CRI receiver is the 338-frame story movie, is updated
+   only through about 11.134 s, and remains resident while the higher animation
+   object continues.
 
 Therefore, for mechanism-validation renders, `hold_last_frame` for the clean
 main story after 11.267 s is now runtime-supported for `ac7116_001`.  This is
 not merely a blind external concat artifact.
 
-The remaining limitation is exact clean-layer pixel proof: this run still did
+The remaining limitation is exact clean-layer pixel proof: these runs still did
 not capture the clean compositor texture/pixels or the CRI movie frame index
 after frame 338.  That matters for final publication QA, especially if
 foreground/title/slot layers might cover or alter the machine presentation while

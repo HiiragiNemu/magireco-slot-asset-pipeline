@@ -36,7 +36,12 @@
   `tools/frida_runtime_probe/summarize_animation_state_samples.py`，用于把任意
   `event_scene_probe.js` 的 `animation_state_sample` JSONL 自动汇总为
   `animation_state_summary.json` 和 `animation_state_samples.csv`，避免后续继续手工
-  逐个 ac 解析。
+  逐个 ac 解析。随后 `visual_tail_probe.js` 新增 CRI receiver metadata sampler，
+  并新增 `tools/frida_runtime_probe/summarize_cri_receiver_samples.py`。v16 重启 app
+  并 reinject 后命中主 receiver `1e31c4fa`：512x288、30fps、338 帧，
+  `cri_update` 覆盖 4-11134 ms，`GetStatus=5` 覆盖 267-10973 ms，receiver 数值采样
+  到 20746 ms。该证据支持“主 CRI 到源时长后由上层动画/合成保持最后输出”，但仍不是
+  clean-layer texture/pixel hash。
 - 2026-07-02 slot idle audio smoke 已记录到
   `docs/research/2026-06-28-audio-output-mechanism.md`：在恢复后的真实 slot
   gameplay 画面上分别运行 20 s `runtime_probe.js` 和 `csl_audio_queue_probe.js`，
