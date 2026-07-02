@@ -11,6 +11,23 @@ const maxCStringBytes = 256;
 let activeEvent = null;
 const lastEmitByKey = new Map();
 
+const symbolOffsetFallbacks = {
+  GLtask_display1: 0x424791c,
+  GLtask_display2: 0x424797c,
+  DirDrawCtrl: 0x42545d8,
+  DirGetFrame: 0x42545fc,
+  _ZN9CSlotBody16NotifyMovieStartEixP11CDirCriAnim: 0x4253d58,
+  _ZN9CSlotBody15GetRenderTargetEix: 0x4253d50,
+  _ZN14CriManaWrapper19ExecuteVideoProcessEv: 0x4258238,
+  _ZN14CriManaWrapper12IsFrameReadyEv: 0x4258284,
+  _ZN14CriManaWrapper12GetFrameInfoEPiS0_S0_S0_: 0x42582c8,
+  _ZN14CriManaWrapper12GetFrameYUVAEPPhS1_S1_S1_PiS2_S2_: 0x42582c0,
+  _ZN14CriManaWrapper13CopyFrameYUVAEPhS0_S0_S0_iii: 0x42582d0,
+  _ZN16CScreenObjectMng16calcFrameControlEv: 0x424b574,
+  _ZN16CScreenObjectMng4drawEv: 0x424b578,
+  _ZN16CScreenObjectMng12setLockFrameEi: 0x424b5c8,
+};
+
 function nowMs() {
   return Date.now();
 }
@@ -186,11 +203,59 @@ function shouldEmit(kind, identity, intervalMs) {
   return true;
 }
 
+function findGameModule() {
+  const namedModule = Process.findModuleByName(moduleName);
+  if (namedModule !== null) {
+    return namedModule;
+  }
+  const anchorSymbols = [
+    "_ZN9C_AnmBase10fnReqSceneEyhtt",
+    "Java_util_JniBridge_nscnCalc",
+    "_ZN14CriManaWrapper7SetDataEPKhm",
+  ];
+  for (const symbol of anchorSymbols) {
+    const address = Module.findGlobalExportByName(symbol);
+    if (address === null) {
+      continue;
+    }
+    const addressModule = Process.findModuleByAddress(address);
+    if (addressModule !== null) {
+      return addressModule;
+    }
+  }
+  return null;
+}
+
 function findExport(moduleValue, symbol) {
-  const address =
+  let address =
     moduleValue !== null
       ? moduleValue.findExportByName(symbol)
       : Module.findGlobalExportByName(symbol);
+  if (address === null) {
+    address = Module.findGlobalExportByName(symbol);
+  }
+  if (address === null && moduleValue !== null) {
+    const fallbackOffset = symbolOffsetFallbacks[symbol];
+    if (fallbackOffset !== undefined) {
+      if (fallbackOffset >= 0 && fallbackOffset < moduleValue.size) {
+        address = moduleValue.base.add(fallbackOffset);
+        emit("hook_resolved_by_offset", {
+          symbol,
+          module_base: moduleValue.base.toString(),
+          module_size: moduleValue.size,
+          offset: "0x" + fallbackOffset.toString(16),
+          address: address.toString(),
+        });
+      } else {
+        emit("hook_offset_out_of_range", {
+          symbol,
+          module_base: moduleValue.base.toString(),
+          module_size: moduleValue.size,
+          offset: "0x" + fallbackOffset.toString(16),
+        });
+      }
+    }
+  }
   if (address === null) {
     emit("hook_missing", { symbol });
     return null;
@@ -657,11 +722,21 @@ function hookSelectedBgmAudio(moduleValue) {
 }
 
 setImmediate(function () {
-  const moduleValue = Process.findModuleByName(moduleName);
+  const moduleValue = findGameModule();
   emit("probe_start", {
     architecture: Process.arch,
     platform: Process.platform,
+    requested_module_name: moduleName,
     module_found: moduleValue !== null,
+    resolved_module:
+      moduleValue === null
+        ? null
+        : {
+            name: moduleValue.name,
+            path: moduleValue.path,
+            base: moduleValue.base.toString(),
+            size: moduleValue.size,
+          },
     relevant_modules: Process.enumerateModules()
       .filter((item) => /GameProc|AMAIN|openal|ogg|ARES/i.test(item.name))
       .map((item) => ({

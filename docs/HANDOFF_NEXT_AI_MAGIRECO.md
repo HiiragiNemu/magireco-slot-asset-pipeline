@@ -334,9 +334,16 @@ Additional 2026-06-28 ac7116 BGM note:
   `snd_is_already_playing_bgm` hook event plus the same concrete bed/SE/voice
   path, but still did not prove an additional audible BGM stream for this forced
   scene.
+- `csl_audio_queue_ac7116_v1_20260628` captured final OpenSL queue chunks for
+  the forced official event: request `42080` / sound id `8912`, request `8040`
+  / sound id `9544`, and request `31186` / sound id `8008`.  No additional BGM
+  request or continuous BGM queue chunk appeared in the forced-event path.
+- sound id `8008` is mono in this capture.  The decoder now defaults to
+  per-chunk channel inference; older global-stereo timeline WAVs under this
+  directory are diagnostic only and understate the final voice duration.
 - Therefore those per-frame `C_ObjNml` helper calls are not proof of audible
-  BGM.  The BGM gate remains open until final queue/direct game capture proves
-  either presence or absence.
+  BGM.  The remaining BGM gate is specifically an outer-gameplay/full-flow
+  question, not a forced-event-only queue question.
 
 ## Visual tail/compositor hook candidates
 
@@ -382,6 +389,8 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_p
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v4_20260628
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v5_frame_yuva_20260628
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v6_after_reinject_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v8_offset_compositor_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v9_offset_compositor_20260628
 ```
 
 Current conclusion:
@@ -401,6 +410,12 @@ Current conclusion:
 - v6 did not fire the downstream frame/compositor hooks needed to prove the
   exact clean/story layer state after frame 338.  The current hold is supported,
   but not yet compositor-proven.
+- v8/v9 added module/offset fallback to `visual_tail_probe.js`.  v8 was only a
+  tool smoke because global exports were accidentally missed after resolving the
+  module as `split_config.arm64_v8a.apk`.  v9 fixed that, restored CRI/audio
+  hooks, and installed `GLtask_display1/2` offset hooks, but those visual hooks
+  still did not fire in the forced event window.  The actual clean/story
+  compositor hot path remains unidentified.
 
 Important v6 `SetData` identities:
 
@@ -452,6 +467,25 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\ac7116_visual
 This proves the live full-machine presentation enters/holds foreground
 slot/title layers after the main story section, but it does not prove the clean
 story layer state after those foreground layers are excluded.
+
+Forced-event final audio queue diagnostic:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_runtime_audio_timeline_inferred.json
+```
+
+Current ac7116 queue facts:
+
+| Runtime request | Sound id | Queue start | Queue clear / inferred end | Format |
+| ---: | ---: | ---: | ---: | --- |
+| `42080` | `8912` | 0.066 s | 11.344 s | stereo |
+| `8040` | `9544` | 0.070 s | 2.744 s | stereo |
+| `31186` | `8008` | 8.879 s | 13.044 s | mono |
+
+`decode_csl_audio_queue_dump.py` now has `--channel-mode infer` by default and
+supports `--sound-id-channel SOUND_ID=CHANNELS`.  This matters for role voices:
+sound id `8008` is 397838 bytes and cannot be interpreted as 16-bit stereo.
 
 Recommended next visual proof route for the ac7116 tail:
 

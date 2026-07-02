@@ -6,8 +6,9 @@ libAMAIN/OpenSL playback queue used by the game runtime.  Unlike visual or
 manifest-only matching, this is evidence from the game's audible output path.
 
 The expected runtime format for the observed slot build is signed 16-bit
-little-endian PCM, 48 kHz, stereo.  The script keeps metadata and basic signal
-statistics so bad captures can be rejected before any delivery render.
+little-endian PCM, 48 kHz.  Some queue chunks are stereo and some role-voice
+chunks are mono.  The script keeps metadata and basic signal statistics so bad
+captures can be rejected before any delivery render.
 """
 
 from __future__ import annotations
@@ -31,6 +32,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--channels", type=int, default=2)
     parser.add_argument("--sample-width", type=int, default=2)
     parser.add_argument(
+        "--channel-mode",
+        choices=("infer", "fixed"),
+        default="infer",
+        help=(
+            "infer treats 16-bit chunks that cannot form complete output-channel "
+            "frames as mono; fixed decodes every chunk with --channels."
+        ),
+    )
+    parser.add_argument(
+        "--sound-id-channel",
+        action="append",
+        default=[],
+        metavar="SOUND_ID=CHANNELS",
+        help=(
+            "Override source channel count for a sound id, for example "
+            "--sound-id-channel 8008=1."
+        ),
+    )
+    parser.add_argument(
         "--layout",
         choices=("concat", "timeline"),
         default="concat",
@@ -52,6 +72,83 @@ def iter_i16_samples(chunk: bytes) -> Iterable[int]:
     usable = len(chunk) - (len(chunk) % 2)
     for (sample,) in struct.iter_unpack("<h", chunk[:usable]):
         yield sample
+
+
+def parse_sound_id_channel_overrides(values: list[str]) -> dict[int, int]:
+    overrides: dict[int, int] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError("--sound-id-channel must use SOUND_ID=CHANNELS")
+        sound_id_text, channels_text = value.split("=", 1)
+        sound_id = int(sound_id_text.strip(), 0)
+        channels = int(channels_text.strip(), 0)
+        if channels < 1 or channels > 8:
+            raise ValueError(f"invalid channel count for sound id {sound_id}: {channels}")
+        overrides[sound_id] = channels
+    return overrides
+
+
+def infer_source_channels(
+    chunk: bytes,
+    *,
+    sound_id: int | None,
+    output_channels: int,
+    sample_width: int,
+    channel_mode: str,
+    overrides: dict[int, int],
+) -> tuple[int, str]:
+    if sound_id is not None and sound_id in overrides:
+        return overrides[sound_id], "sound_id_override"
+    if channel_mode == "fixed":
+        return output_channels, "fixed"
+    if sample_width == 2 and output_channels > 1:
+        output_frame_bytes = output_channels * sample_width
+        if len(chunk) % output_frame_bytes != 0 and len(chunk) % sample_width == 0:
+            return 1, "not_multiple_of_output_frame_bytes"
+    return output_channels, "default_output_channels"
+
+
+def convert_pcm_channels(
+    chunk: bytes,
+    *,
+    source_channels: int,
+    output_channels: int,
+    sample_width: int,
+) -> bytes:
+    if source_channels == output_channels:
+        usable = len(chunk) - (len(chunk) % sample_width)
+        return chunk[:usable]
+    if sample_width != 2:
+        raise ValueError("channel conversion currently requires 16-bit PCM")
+    if source_channels <= 0 or output_channels <= 0:
+        raise ValueError("invalid channel count")
+
+    samples = list(iter_i16_samples(chunk))
+    source_frame_count = len(samples) // source_channels
+    converted: list[int] = []
+    for frame_index in range(source_frame_count):
+        frame = samples[
+            frame_index * source_channels : (frame_index + 1) * source_channels
+        ]
+        if source_channels == 1:
+            mono = frame[0]
+        else:
+            mono = int(round(sum(frame) / len(frame)))
+        if output_channels == 1:
+            converted.append(mono)
+        elif source_channels == 1:
+            converted.extend([mono] * output_channels)
+        else:
+            for channel_index in range(output_channels):
+                if channel_index < len(frame):
+                    converted.append(frame[channel_index])
+                else:
+                    converted.append(mono)
+
+    out = bytearray()
+    for sample in converted:
+        out += struct.pack("<h", clamp_i16(sample))
+    return bytes(out)
 
 
 def pcm_stats(chunks: list[bytes]) -> dict:
@@ -184,7 +281,9 @@ def main() -> int:
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
 
     wanted_sound_ids = set(args.sound_id or [])
-    chunks: list[bytes] = []
+    channel_overrides = parse_sound_id_channel_overrides(args.sound_id_channel)
+    source_chunks: list[bytes] = []
+    render_chunks: list[bytes] = []
     rows: list[dict] = []
     seen_kinds: dict[str, int] = {}
 
@@ -207,7 +306,24 @@ def main() -> int:
             if not data_base64:
                 continue
             chunk = base64.b64decode(data_base64)
-            chunks.append(chunk)
+            source_channels, channel_inference = infer_source_channels(
+                chunk,
+                sound_id=sound_id,
+                output_channels=args.channels,
+                sample_width=args.sample_width,
+                channel_mode=args.channel_mode,
+                overrides=channel_overrides,
+            )
+            rendered_chunk = convert_pcm_channels(
+                chunk,
+                source_channels=source_channels,
+                output_channels=args.channels,
+                sample_width=args.sample_width,
+            )
+            source_frame_bytes = max(1, source_channels * args.sample_width)
+            source_frame_count = len(chunk) // source_frame_bytes
+            source_chunks.append(chunk)
+            render_chunks.append(rendered_chunk)
             rows.append(
                 {
                     "line_number": line_number,
@@ -224,14 +340,24 @@ def main() -> int:
                     "buffer_pointer": payload.get("buffer_pointer"),
                     "buffer_bytes": payload.get("buffer_bytes"),
                     "source_byte_count": len(chunk),
+                    "source_channels": source_channels,
+                    "output_channels": args.channels,
+                    "channel_inference": channel_inference,
+                    "source_frame_count": source_frame_count,
+                    "source_duration_seconds": (
+                        source_frame_count / args.sample_rate
+                        if args.sample_rate
+                        else None
+                    ),
+                    "rendered_byte_count": len(rendered_chunk),
                     "preview_hex": payload.get("preview", {}).get("hex", ""),
                 }
             )
 
     if args.layout == "timeline":
-        rendered_pcm, rows = render_timeline(chunks, rows, args)
+        rendered_pcm, rows = render_timeline(render_chunks, rows, args)
     else:
-        rendered_pcm = render_concat(chunks)
+        rendered_pcm = render_concat(render_chunks)
 
     with wave.open(str(wav_path), "wb") as target:
         target.setnchannels(args.channels)
@@ -239,7 +365,7 @@ def main() -> int:
         target.setframerate(args.sample_rate)
         target.writeframes(rendered_pcm)
 
-    source_total_bytes = sum(len(chunk) for chunk in chunks)
+    source_total_bytes = sum(len(chunk) for chunk in source_chunks)
     total_bytes = len(rendered_pcm)
     bytes_per_frame = args.channels * args.sample_width
     frame_count = total_bytes // bytes_per_frame if bytes_per_frame else 0
@@ -249,19 +375,28 @@ def main() -> int:
     summary = {
         "source_jsonl": str(jsonl_path),
         "output_wav": str(wav_path),
-        "chunk_count": len(chunks),
+        "chunk_count": len(source_chunks),
         "source_total_pcm_bytes": source_total_bytes,
         "rendered_total_pcm_bytes": total_bytes,
         "sample_rate": args.sample_rate,
         "channels": args.channels,
+        "output_channels": args.channels,
         "sample_width": args.sample_width,
+        "channel_mode": args.channel_mode,
+        "sound_id_channel_overrides": channel_overrides,
         "layout": args.layout,
         "frame_count": frame_count,
         "duration_seconds": frame_count / args.sample_rate if args.sample_rate else None,
         "filtered_sound_ids": sorted(wanted_sound_ids),
         "observed_sound_ids": sound_ids,
+        "observed_source_channels": sorted(
+            {row["source_channels"] for row in rows if row.get("source_channels")}
+        ),
+        "mixed_source_channels": (
+            len({row["source_channels"] for row in rows if row.get("source_channels")}) > 1
+        ),
         "seen_kinds": seen_kinds,
-        "source_signal": pcm_stats(chunks),
+        "source_signal": pcm_stats(source_chunks),
         "rendered_signal": pcm_stats([rendered_pcm]),
         "chunks": rows,
     }

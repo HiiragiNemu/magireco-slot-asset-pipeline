@@ -32,7 +32,14 @@
   证据，仍不能最终证明 clean 主画面在 11.267 s 后的尾帧 hold 是游戏原生；
   v7 官方 full-machine screenrecord 只证明前景 slot/title 层继续显示，不能代替
   clean/story layer 证明。`C_ObjNml::fnSndRequest_BGM_*` 的 per-frame helper
-  调用也不是可听 BGM 证明；BGM 仍需最终 queue 或直接游戏捕获证明。
+  调用也不是可听 BGM 证明。v8/v9 给 `visual_tail_probe.js` 增加了
+  `split_config.arm64_v8a.apk` 模块解析和 offset fallback，能安装
+  `GLtask_display1/2` hook，但这些 hook 在 forced event 窗口仍未触发，说明实际
+  clean/story compositor 热路径还没打到。`csl_audio_queue_ac7116_v1_20260628`
+  证明 forced official event 的最终 OpenSL 队列只有 request `42080`、`8040`、
+  `31186`，无额外 BGM queue chunk；其中 `31186`/sound id `8008` 是 mono，
+  `decode_csl_audio_queue_dump.py` 已新增默认 per-chunk 声道推断，避免把 4.144 s
+  语音误判为 2.072 s。剩余 BGM 门禁现在是 outer gameplay/full-flow 捕获问题。
 - 2026-06-28 交接与尾帧门禁修正：已新增核心交接文档
   `docs/HANDOFF_NEXT_AI_MAGIRECO.md`。用户确认
   `validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628` 的语音和字幕正确，

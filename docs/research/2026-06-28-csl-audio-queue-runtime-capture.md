@@ -73,6 +73,8 @@ Timeline WAV for listening verification:
 
 ```text
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_post_slot_v2_20260628\ac0921_001_runtime_audio_timeline.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_post_slot_v2_20260628\ac0921_001_runtime_audio_timeline_inferred.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_post_slot_v2_20260628\ac0921_001_runtime_audio_timeline_inferred.json
 ```
 
 Observed queue data:
@@ -82,11 +84,13 @@ Observed queue data:
 | `2990` | `6893` | 0.000 s | 1.767 s | 339188 |
 | `30031` | `6930` | 2.526 s | 3.370 s | 646964 |
 | `30032` | `6931` | 9.660 s | 3.237 s | 621448 |
-| `30077` | `6976` | 16.425 s | 1.637 s | 314382 |
-| `30078` | `6977` | 20.291 s | 1.224 s | 235102 |
+| `30077` | `6976` | 16.425 s | 3.275 s | 314382 |
+| `30078` | `6977` | 20.291 s | 2.449 s | 235102 |
 
-The timeline render is 21.515 s.  It contains only these discrete one-shot
-buffers, not continuous BGM.
+The original global-stereo timeline render is 21.515 s and is now considered a
+legacy diagnostic.  The corrected per-chunk inferred timeline is 22.740 s,
+reports `observed_source_channels=[1, 2]`, and contains only these discrete
+one-shot buffers, not continuous BGM.
 
 ### `ac0921_001`, official event request with `--with-sound`
 
@@ -100,6 +104,8 @@ Timeline WAV for listening verification:
 
 ```text
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline_inferred.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac0921_with_sound_v3_20260628\ac0921_001_with_sound_runtime_audio_timeline_inferred.json
 ```
 
 The event host confirmed that `with_sound=true` sent the official event sound
@@ -124,11 +130,80 @@ actual OpenSL queue output remained the same five chunks:
 | `2990` | `6893` | 0.000 s | 1.767 s | 339188 |
 | `30031` | `6930` | 2.507 s | 3.370 s | 646964 |
 | `30032` | `6931` | 9.641 s | 3.237 s | 621448 |
-| `30077` | `6976` | 16.407 s | 1.637 s | 314382 |
-| `30078` | `6977` | 20.274 s | 1.224 s | 235102 |
+| `30077` | `6976` | 16.407 s | 3.275 s | 314382 |
+| `30078` | `6977` | 20.274 s | 2.449 s | 235102 |
 
 Conclusion: for `ac0921_001`, manually adding official event sound only
 duplicates the lever SE request and does not recover any BGM.
+
+The corrected per-chunk inferred with-sound timeline is 22.723 s and also
+reports `observed_source_channels=[1, 2]`.  The duplicate `2990` still does not
+produce an extra queue chunk.
+
+### `ac7116_001`, official event request
+
+Capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628
+```
+
+Runtime log:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1__runtime.jsonl
+```
+
+Diagnostic output files:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_runtime_audio_timeline.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_runtime_audio_timeline.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_runtime_audio_timeline_inferred.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_runtime_audio_timeline_inferred.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_sound_id_8008_voice_mono.wav
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628\ac7116_001_csl_audio_v1_sound_id_8008_voice_mono.json
+```
+
+Observed `CSndMng` requests and queue chunks:
+
+| Runtime request | Sound id | Queue start | Queue clear / inferred end | Format inference | PCM bytes |
+| ---: | ---: | ---: | ---: | --- | ---: |
+| `42080` | `8912` | 0.066 s | 11.344 s | 48 kHz stereo PCM | 2163204 |
+| `8040` | `9544` | 0.070 s | 2.744 s | 48 kHz stereo PCM | 500736 |
+| `31186` | `8008` | 8.879 s | 13.044 s | 48 kHz mono PCM | 397838 |
+
+Important decoder correction: the first ac7116 timeline WAV was generated with
+a single global stereo interpretation, which made final voice sound id `8008`
+appear to last only about 2.072 s.  This was wrong: its chunk is 397838 bytes,
+not divisible by a 16-bit stereo frame, and is therefore mono in this capture.
+
+`decode_csl_audio_queue_dump.py` now defaults to `--channel-mode infer`:
+
+- chunks that fit the requested output channel frame keep the output channel
+  count, currently stereo by default;
+- 16-bit chunks that cannot form full stereo frames are treated as mono;
+- mono chunks are duplicated into the stereo diagnostic WAV so the output WAV
+  remains playable as a single stream;
+- explicit overrides are available with `--sound-id-channel SOUND_ID=CHANNELS`.
+
+The inferred ac7116 timeline metadata reports:
+
+```text
+duration_seconds=12.957145833333334
+observed_source_channels=[1, 2]
+mixed_source_channels=true
+sound_id 8008 source_channels=1 source_duration_seconds=4.144145833333333
+```
+
+This matches the queue timing: `31186` starts at about 8.879 s and its queue is
+cleared near 13.044 s.
+
+Within the forced official event path, no additional BGM request or continuous
+BGM queue chunk was observed beyond `42080` bed/base audio, the excluded
+foreground SE `8040`, and final role voice `31186`.  This is stronger than a
+manifest-only `bgm_request_count=0`, but still does not prove that an outer
+gameplay state could not add BGM in a non-forced full-flow capture.
 
 ## Current interpretation
 
@@ -140,6 +215,9 @@ Evidence now supports these points:
   `CSLAndroidSimpleBufferQueue::Enqueue`, not `zg::snd::OutputCtrl`;
 - `ac0921_001` single-event forcing produces lever SE plus four Iroha voice
   requests, but no BGM request or continuous BGM buffer;
+- `ac7116_001` single-event forcing produces only the scene bed/base audio,
+  excluded foreground SE, and final role voice in the final queue; its final
+  role voice is mono while the bed/SE chunks are stereo;
 - the earlier repair render failed because it did not preserve this runtime
   timing and because it tried to treat incomplete audio evidence as delivery
   audio.

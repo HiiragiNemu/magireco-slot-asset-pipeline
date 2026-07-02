@@ -370,6 +370,47 @@ the clean-story tail question by itself: the foreground layers cover or dominate
 the visible machine screen exactly in the time window where the clean edition
 has removed those layers.
 
+## v8/v9 compositor hook follow-up
+
+`visual_tail_probe.js` was updated to reduce hook blindness:
+
+- if the loaded game code is exposed as `split_config.arm64_v8a.apk` rather than
+  `libGameProc.so`, the probe now resolves the game module through known anchor
+  exports;
+- if selected visual functions are not exported by name, the probe can fall back
+  to known module offsets;
+- if a module-specific export lookup fails, the probe now still tries
+  `Module.findGlobalExportByName` before falling back to offsets.
+
+v8 capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v8_offset_compositor_20260628
+```
+
+v8 proved the offset resolver installed the intended GL/Dir/screen-object hook
+addresses, but a probe bug caused many global exports, including CRI/audio
+symbols, to be missed after module resolution switched to
+`split_config.arm64_v8a.apk`.  Treat v8 as a tool smoke only, not event
+evidence.
+
+v9 capture after fixing global-export fallback:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_probe_ac7116_v9_offset_compositor_20260628
+```
+
+v9 restored CRI/audio hooks and installed offset fallback hooks for
+`GLtask_display1` and `GLtask_display2`, but no visual/compositor events fired
+in the forced event window.  CRI/audio evidence remained useful, but v9 still
+did not identify the actual clean/story compositor hot path.
+
+Important v9 nuance: the main story USM did not appear in `SetData` during this
+run, while the foreground gold-frame players did.  This is consistent with the
+earlier v3 behavior and likely reflects preload/reuse state after v6.  Do not
+use v9 to contradict v6; v6 remains the direct proof that the official event can
+load `ac7116_AT_SP_story5_01.usm`.
+
 ## BGM state during this probe
 
 The v3 visual-tail run saw repeated
@@ -388,6 +429,25 @@ the v19 render retains `42080_SPストーリー5_みふゆとももこ_01` as th
 audio, but there is not yet final proof that no additional outer-state BGM
 should be mixed in.
 
+Additional CSL queue capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_audio_queue_ac7116_v1_20260628
+```
+
+This run captured final OpenSL queue chunks for the forced official event:
+
+| Runtime request | Sound id | Queue start | Queue clear / inferred end | Format |
+| ---: | ---: | ---: | ---: | --- |
+| `42080` | `8912` | 0.066 s | 11.344 s | stereo |
+| `8040` | `9544` | 0.070 s | 2.744 s | stereo |
+| `31186` | `8008` | 8.879 s | 13.044 s | mono |
+
+No additional BGM request or continuous BGM queue chunk was observed in the
+forced official event.  This strengthens the current clean audio interpretation
+for `ac7116_001`, but it still does not prove that a non-forced full outer
+gameplay flow could not add BGM.
+
 ## Current decision
 
 `ac7116_001` remains blocked for final Bilibili publication:
@@ -397,7 +457,8 @@ should be mixed in.
   edition;
 - the main-story source identity and duration are now runtime-proven;
 - the clean tail hold is strongly supported but still not compositor-proven;
-- additional BGM remains unproven absent.
+- forced-event audio queue contains bed/foreground SE/voice only; additional
+  outer-state BGM remains unproven absent.
 
 Keep the v19 ac7114-16 joined scene as a review/mechanism-validation output
 until the visual tail and BGM gates are resolved.
@@ -417,8 +478,9 @@ Use the least invasive route first:
    clean/story layer state after the main CRI movie reaches frame 338.
 4. Treat passive frame extraction hooks as experimental until a run proves they
    do not interfere.
-5. In parallel, capture final audio through `CSLAndroidSimpleBufferQueue` or a
-   direct game-produced recording to decide whether extra BGM exists.
+5. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
+   must come from full outer gameplay flow capture or a direct game-produced
+   recording, not another forced-event-only run.
 6. Only after the runtime state is understood should the renderer decide
    between `hold_last_frame`, a real visual continuation layer, a loop, or a
    cut/black transition.
