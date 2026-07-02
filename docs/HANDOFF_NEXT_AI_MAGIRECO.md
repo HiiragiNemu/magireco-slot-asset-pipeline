@@ -704,6 +704,19 @@ Tail-window primitive groups:
 | `0x72af405bd168` | 75 | 6 | 6 | 23 | mode `2`, vertices `4`, texture id `151`, `+0xc=2606733044` |
 | `0x72af405bd148` | 74 | 8 | 6 | 21 | mode `2`, vertices `4`, texture id `150`, `+0xc=29360` |
 
+Fine-window resummary from the same v8 JSONL:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary_fine_windows\cri_video_texture_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary_fine_windows\cri_video_texture_events.csv
+```
+
+| Primitive | 0-0.5 s | 0.5-6.6 s | 6.6-7.2 s | 7.2-11.0 s | 11.267-13.05 s | 14-20 s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `0x72af405bd370` / tex `155` | 1 | 22 | 2 | 14 | 6 | 23 |
+| `0x72af405bd168` / tex `151` | 2 | 22 | 1 | 10 | 6 | 23 |
+| `0x72af405bd148` / tex `150` | 1 | 20 | 1 | 13 | 6 | 21 |
+
 The safe conclusion is that the game renderer keeps submitting stable
 single-texture quad primitives during the final voice/subtitle tail after the
 main 338-frame movie boundary.  This supports the current external

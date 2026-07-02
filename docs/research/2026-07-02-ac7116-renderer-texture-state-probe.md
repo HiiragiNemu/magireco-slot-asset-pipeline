@@ -297,6 +297,38 @@ There is one short-lived tail sample for `0x72af405bd168` with texture id `158`
 instead of `151`; the stable pattern still remains the same renderer plus the
 same primitive pointers and one texture slot per primitive.
 
+A finer-window resummary was generated from the same v8 JSONL so future work
+does not need ad-hoc CSV parsing:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary_fine_windows\cri_video_texture_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v8_primitive_after_restart_taps_20260703\summary_fine_windows\cri_video_texture_events.csv
+```
+
+Fine-window drawCall counts:
+
+| Window | drawCall count |
+| --- | ---: |
+| 0.000-0.500 s | 4 |
+| 0.500-6.600 s | 70 |
+| 6.600-7.200 s | 6 |
+| 7.200-11.000 s | 45 |
+| 11.267-13.050 s | 19 |
+| 14.000-20.000 s | 69 |
+
+The three stable primitive signatures persist across the main visual period,
+the LP switch, the mid section, the voice tail, and late post-tail state:
+
+| Primitive | 0-0.5 s | 0.5-6.6 s | 6.6-7.2 s | 7.2-11.0 s | 11.267-13.05 s | 14-20 s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `0x72af405bd370` / tex `155` | 1 | 22 | 2 | 14 | 6 | 23 |
+| `0x72af405bd168` / tex `151` | 2 | 22 | 1 | 10 | 6 | 23 |
+| `0x72af405bd148` / tex `150` | 1 | 20 | 1 | 13 | 6 | 21 |
+
+This is useful continuity evidence, but it still does not name which primitive
+is the clean story layer.  The next step for pixel-level certainty remains
+layer correlation or a clean-layer texture/framebuffer hash.
+
 Safe conclusion: in the same run that loaded the official main clean story
 `1e31c4fa` 338-frame movie, the game renderer continued to submit stable
 single-texture quad primitives during the 11.267-13.05 s final voice/subtitle

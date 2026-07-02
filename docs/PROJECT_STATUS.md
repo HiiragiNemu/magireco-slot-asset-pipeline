@@ -56,7 +56,10 @@
   的语音/字幕尾段仍持续提交稳定 primitive，支持当前 clean `hold_last_frame` 策略；
   但仍不是 clean-layer framebuffer/pixel hash，且同 run 的 `89802b19`
   512x416/5277 帧 receiver 仍必须标记为 slot/gameplay/material 状态，不能当作 clean
-  story continuation。
+  story continuation。已用同一 v8 JSONL 额外生成
+  `summary_fine_windows`，确认三组稳定 primitive 在 0.5-6.6 s 主段、6.6-7.2 s
+  LP 切换、7.2-11.0 s 中段、11.267-13.05 s 尾段和 14-20 s 后段均持续出现；
+  该细分 summary 用于后续 layer correlation，仍不能直接命名 clean story primitive。
 - 2026-07-03 `visual_tail_probe.js` 以已恢复 Gadget 状态重跑 frame-lock 路线，结果位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703`。
   事件与 runtime 两侧均 exit 0，`summary_animation` 显示 88 个样本从 18 ms 覆盖到
