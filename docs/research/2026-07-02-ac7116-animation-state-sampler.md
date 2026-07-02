@@ -211,6 +211,46 @@ clock, not the CRI movie frame index.  It proves the active story animation
 object continues ticking at frame rate through the voice tail.  It does not by
 itself prove whether the clean main movie texture is held, replaced, or masked.
 
+## Generic summarizer added
+
+Manual parsing is not acceptable as the project scales to more events, so a
+generic summarizer was added:
+
+```text
+tools/frida_runtime_probe/summarize_animation_state_samples.py
+```
+
+Validation command used on v13:
+
+```powershell
+python tools\frida_runtime_probe\summarize_animation_state_samples.py `
+  --event-log A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702\ac7116_001_animation_numeric_v13_default_after_reinject__event.jsonl `
+  --out-dir A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702\summary `
+  --window pre9_11:9000:11000 `
+  --window tail11_3_13_2:11300:13200 `
+  --window late14_16_85:14000:16850
+```
+
+Outputs:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702\summary\animation_state_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702\summary\animation_state_samples.csv
+```
+
+The generated summary reports:
+
+- 68 samples, 22-16813 ms;
+- selected source `C_AnmMain+0x350` for all samples;
+- selected object `0x72b06b9a3590` for all samples;
+- frame object `0x72b06b967830` for all samples;
+- `last_frame_age_ms` min 16 ms, max 59 ms, average 32.68 ms;
+- selected-object `+0x350` as the only varying numeric field:
+  2163 -> 2665, 67 increasing steps, no decreasing steps.
+
+Use this summarizer for future event captures instead of ad-hoc JSONL
+inspection.
+
 ## Current interpretation
 
 The combined evidence is now stronger than the previous state:

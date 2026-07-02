@@ -32,7 +32,11 @@
   index。v12 的宽泛 pointer scan 会导致 Frida/Gadget capture timeout，已将
   `includePointerProbe=false` 作为默认。仍未捕获 clean/story layer 的逐帧
   像素/texture 或 CRI frame index，所以最终 B站投稿仍受 clean-layer compositor
-  proof 与 outer-flow BGM proof 门禁限制。
+  proof 与 outer-flow BGM proof 门禁限制。新增通用解析脚本
+  `tools/frida_runtime_probe/summarize_animation_state_samples.py`，用于把任意
+  `event_scene_probe.js` 的 `animation_state_sample` JSONL 自动汇总为
+  `animation_state_summary.json` 和 `animation_state_samples.csv`，避免后续继续手工
+  逐个 ac 解析。
 - 2026-07-02 slot idle audio smoke 已记录到
   `docs/research/2026-06-28-audio-output-mechanism.md`：在恢复后的真实 slot
   gameplay 画面上分别运行 20 s `runtime_probe.js` 和 `csl_audio_queue_probe.js`，

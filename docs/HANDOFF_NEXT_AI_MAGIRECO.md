@@ -575,6 +575,7 @@ tools/frida_runtime_probe/build_series_editions.py
 tools/frida_runtime_probe/build_material_collection.py
 tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
+tools/frida_runtime_probe/summarize_animation_state_samples.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
 tools/frida_runtime_probe/reinject_gadget.py
 ```
