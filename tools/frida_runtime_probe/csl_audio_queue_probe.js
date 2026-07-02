@@ -1,6 +1,8 @@
 "use strict";
 
 const moduleName = "libAMAIN.so";
+const gameProcModuleName = "libGameProc.so";
+const maxCStringBytes = 2048;
 
 const symbols = {
   csndMngSndReq: "_ZN7CSndMng6SndReqEii",
@@ -25,6 +27,7 @@ const maxDumpTotalBytes = 96 * 1024 * 1024;
 // captured for listening verification.
 const maxBytesPerChunk = 0x800000;
 const previewBytes = 0x80;
+const maxHighLevelEmitsPerKind = 1000;
 
 let dumpedChunks = 0;
 let dumpedBytes = 0;
@@ -37,6 +40,8 @@ const activePlayStartByThread = {};
 const activeRequestByThread = {};
 const soundByCslSound = {};
 const soundByQueue = {};
+const highLevelEmitCounts = {};
+const highLevelSuppressions = {};
 
 function nowMs() {
   return Date.now();
@@ -54,6 +59,30 @@ function emit(kind, fields, data) {
     ),
     data || null
   );
+}
+
+function emitHighLevel(kind, fields) {
+  const previous = highLevelEmitCounts[kind] || 0;
+  highLevelEmitCounts[kind] = previous + 1;
+  if (previous < maxHighLevelEmitsPerKind) {
+    emit(
+      kind,
+      Object.assign(
+        {
+          high_level_call_count_for_kind: previous + 1,
+        },
+        fields || {}
+      )
+    );
+    return;
+  }
+  if (!highLevelSuppressions[kind]) {
+    highLevelSuppressions[kind] = true;
+    emit("high_level_audio_hook_suppressed", {
+      suppressed_kind: kind,
+      max_emits_per_kind: maxHighLevelEmitsPerKind,
+    });
+  }
 }
 
 function pointerKey(pointerValue) {
@@ -80,6 +109,35 @@ function toI32(pointerValue) {
     return pointerValue.toInt32();
   } catch (_) {
     return null;
+  }
+}
+
+function readCStringSafe(pointerValue) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return { text_utf8: "", text_length: 0, error: "null pointer" };
+  }
+  try {
+    let length = 0;
+    while (length < maxCStringBytes && pointerValue.add(length).readU8() !== 0) {
+      length += 1;
+    }
+    let text = "";
+    try {
+      text = pointerValue.readCString();
+    } catch (_) {
+      text = "";
+    }
+    return {
+      text_utf8: text,
+      text_length: length,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      text_utf8: "",
+      text_length: 0,
+      error: String(error),
+    };
   }
 }
 
@@ -211,6 +269,111 @@ function findExport(moduleValue, symbol) {
     return null;
   }
   return address;
+}
+
+function hookRawCall(moduleValue, symbol, kind, argCount, cStringArgIndexes) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  const cStringIndexes = new Set(cStringArgIndexes || []);
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const fields = {
+          symbol,
+          address: address.toString(),
+        };
+        for (let index = 0; index < argCount; index += 1) {
+          fields["arg" + index + "_pointer"] = args[index].toString();
+          fields["arg" + index + "_i32"] = toI32(args[index]);
+          if (cStringIndexes.has(index)) {
+            const stringInfo = readCStringSafe(args[index]);
+            fields["arg" + index + "_text_utf8"] = stringInfo.text_utf8;
+            fields["arg" + index + "_text_length"] = stringInfo.text_length;
+            fields["arg" + index + "_text_error"] = stringInfo.error;
+          }
+        }
+        emitHighLevel(kind, fields);
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
+}
+
+function hookCStringAndInts(moduleValue, symbol, kind, cStringArgIndex, intArgIndexes) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const stringInfo = readCStringSafe(args[cStringArgIndex]);
+        const fields = {
+          symbol,
+          address: address.toString(),
+          text_utf8: stringInfo.text_utf8,
+          text_length: stringInfo.text_length,
+          text_error: stringInfo.error,
+          string_arg_index: cStringArgIndex,
+        };
+        for (const index of intArgIndexes || []) {
+          fields["arg" + index + "_i32"] = toI32(args[index]);
+          fields["arg" + index + "_pointer"] = args[index].toString();
+        }
+        emitHighLevel(kind, fields);
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
+}
+
+function hookIntCall(moduleValue, symbol, kind, argCount) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const fields = {
+          symbol,
+          address: address.toString(),
+        };
+        for (let index = 0; index < argCount; index += 1) {
+          fields["arg" + index + "_i32"] = toI32(args[index]);
+          fields["arg" + index + "_pointer"] = args[index].toString();
+        }
+        emitHighLevel(kind, fields);
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
 }
 
 function installSimpleEnterLeave(moduleValue, symbol, kind, onEnterExtra, onLeaveExtra) {
@@ -505,14 +668,176 @@ function installHooks(moduleValue) {
   );
 }
 
+function installHighLevelAudioHooks(moduleValue) {
+  hookIntCall(moduleValue, "_ZN8SoundMng4playEii", "sound_mng_play", 2);
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN8SoundMng4playEPhii",
+    "sound_mng_play_bytes",
+    1,
+    [2, 3]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "SoundMng_play_bySoundCd",
+    "sound_mng_play_by_sound_cd",
+    0,
+    [1, 2]
+  );
+  hookCStringAndInts(moduleValue, "SndReqBySoundCd", "snd_req_by_sound_cd", 0, [1, 2]);
+  hookIntCall(moduleValue, "_ZN8SoundMng10sndPlayReqEiii", "sound_mng_play_request", 3);
+  hookIntCall(moduleValue, "_ZN8SoundMng10wrapSndReqEi", "sound_mng_wrap_request", 1);
+  hookIntCall(
+    moduleValue,
+    "_ZN8SoundMng12wrapSndReqChEii",
+    "sound_mng_wrap_request_channel",
+    2
+  );
+  hookRawCall(
+    moduleValue,
+    "SoundMng_isAlreadyPlayingBGM",
+    "sound_mng_is_already_playing_bgm",
+    2,
+    []
+  );
+  hookRawCall(moduleValue, "SndIsAlreadyPlayingBGM", "snd_is_already_playing_bgm", 2, []);
+  hookRawCall(moduleValue, "zgSndReqCode", "zg_snd_req_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqFadeCode", "zg_snd_req_fade_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqVolumeCode", "zg_snd_req_volume_code", 6, [0, 1]);
+  hookRawCall(moduleValue, "zgSndReqPauseCode", "zg_snd_req_pause_code", 4, [0, 1]);
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml25fnSndRequest_BGM_SEQUENCEEv",
+    "obj_nml_snd_request_bgm_sequence",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_DIREv",
+    "obj_nml_snd_request_bgm_dir",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_STGEv",
+    "obj_nml_snd_request_bgm_stg",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml20fnSndRequest_BGM_ENDEv",
+    "obj_nml_snd_request_bgm_end",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml25fnSndRequest_BGM_DIR_NEXTEv",
+    "obj_nml_snd_request_bgm_dir_next",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml26fnSndRequest_BGM_FADE_NEXTEv",
+    "obj_nml_snd_request_bgm_fade_next",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN8C_ObjNml21fnSndRequest_BGM_FADEEv",
+    "obj_nml_snd_request_bgm_fade",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN25C_DirectionControllerBase18Macro_SND_BGM_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_snd_bgm_play",
+    2,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN14C_ObjSelectBNS15fnSndRequestBGMEv",
+    "obj_select_bns_snd_request_bgm",
+    1,
+    []
+  );
+  hookRawCall(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndEventCodeEy",
+    "ctrl_snd_req_event_code",
+    2,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKch",
+    "ctrl_snd_req_sound_code",
+    1,
+    [2]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSoundCodeEPKchm",
+    "ctrl_snd_req_sound_code_timed",
+    1,
+    [2, 3]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib17fnReqSndSeqenceSCEPKch",
+    "ctrl_snd_req_sequence_sc",
+    1,
+    [2]
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib25fnReqSndSoundCodeCallBackEPKc",
+    "ctrl_snd_req_sound_code_callback",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib11fnReqSndNowEPKc",
+    "ctrl_snd_req_now",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_ZN12C_CtrlSndLib16fnCallSndCodeCbkEPKc",
+    "ctrl_snd_call_code_callback",
+    1,
+    []
+  );
+  hookCStringAndInts(
+    moduleValue,
+    "_Z16fnProcSndCodeCbkPKc",
+    "snd_proc_code_callback",
+    0,
+    []
+  );
+}
+
 setImmediate(function () {
   const modules = Process.enumerateModules();
   const moduleValue = Process.findModuleByName(moduleName);
+  const gameProcModuleValue = Process.findModuleByName(gameProcModuleName);
   emit("probe_start", {
     architecture: Process.arch,
     platform: Process.platform,
     module_found: moduleValue !== null,
+    game_proc_module_found: gameProcModuleValue !== null,
     target_module: moduleName,
+    high_level_audio_module: gameProcModuleName,
+    max_high_level_emits_per_kind: maxHighLevelEmitsPerKind,
     relevant_modules: modules
       .filter((item) => /AMAIN|OpenSLES|openal|GameProc|ARES|audio|snd/i.test(item.name))
       .map((item) => ({
@@ -523,4 +848,5 @@ setImmediate(function () {
       })),
   });
   installHooks(moduleValue);
+  installHighLevelAudioHooks(gameProcModuleValue);
 });

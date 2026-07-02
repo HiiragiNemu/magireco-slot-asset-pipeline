@@ -22,6 +22,44 @@ from pathlib import Path
 from typing import Any
 
 
+SOUND_CODE_CALL_KINDS = {
+    "ctrl_snd_req_sound_code",
+    "ctrl_snd_req_sound_code_timed",
+    "ctrl_snd_req_sequence_sc",
+    "ctrl_snd_req_sound_code_callback",
+    "snd_proc_code_callback",
+    "sound_mng_play_by_sound_cd",
+    "sound_mng_play_bytes",
+    "snd_req_by_sound_cd",
+    "zg_snd_req_code",
+    "zg_snd_req_fade_code",
+    "zg_snd_req_volume_code",
+    "zg_snd_req_pause_code",
+    "ctrl_snd_req_now",
+    "ctrl_snd_call_code_callback",
+}
+
+
+def first_present(payload: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        value = payload.get(key)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+def sound_code_text(payload: dict[str, Any]) -> Any:
+    return first_present(
+        payload,
+        (
+            "text_utf8",
+            "arg0_text_utf8",
+            "arg1_text_utf8",
+            "arg2_text_utf8",
+        ),
+    )
+
+
 def iter_jsonl(path: Path):
     with path.open("r", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
@@ -82,7 +120,15 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
             event_codes.append(
                 {
                     "time_s": t,
-                    "event_code": payload.get("arg1_u64_hex"),
+                    "event_code": first_present(
+                        payload,
+                        (
+                            "arg1_u64_hex",
+                            "arg1_pointer",
+                            "arg0_u64_hex",
+                            "arg0_pointer",
+                        ),
+                    ),
                     "active_event_code": payload.get("active_event_code"),
                     "active_event_relative_ms": payload.get("active_event_relative_ms"),
                 }
@@ -118,18 +164,12 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "active_event_relative_ms": payload.get("active_event_relative_ms"),
                 }
             )
-        elif kind in {
-            "ctrl_snd_req_sound_code",
-            "ctrl_snd_req_sound_code_timed",
-            "ctrl_snd_req_sequence_sc",
-            "ctrl_snd_req_sound_code_callback",
-            "snd_proc_code_callback",
-        }:
+        elif kind in SOUND_CODE_CALL_KINDS:
             sound_code_calls.append(
                 {
                     "time_s": t,
                     "kind": kind,
-                    "code_string": payload.get("text_utf8"),
+                    "code_string": sound_code_text(payload),
                     "arg2_i32": payload.get("arg2_i32"),
                     "arg3_i32": payload.get("arg3_i32"),
                     "active_event_code": payload.get("active_event_code"),

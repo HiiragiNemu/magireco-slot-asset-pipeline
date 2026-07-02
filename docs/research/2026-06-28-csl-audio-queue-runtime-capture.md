@@ -205,6 +205,77 @@ foreground SE `8040`, and final role voice `31186`.  This is stronger than a
 manifest-only `bgm_request_count=0`, but still does not prove that an outer
 gameplay state could not add BGM in a non-forced full-flow capture.
 
+### 2026-07-03 combined CSL+BGM probe update
+
+`csl_audio_queue_probe.js` now also installs high-level `libGameProc.so`
+sound-code/BGM hooks in the same run as the final
+`CSLAndroidSimpleBufferQueue::Enqueue` hook.  This is still metadata-first:
+high-level calls are capped per kind and queue PCM dumping keeps the existing
+bounded CSL limits.
+
+The relevant tool changes are:
+
+```text
+tools/frida_runtime_probe/csl_audio_queue_probe.js
+tools/frida_runtime_probe/summarize_runtime_audio_capture.py
+```
+
+Forced ac7116 capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703\summary_v2\summary.json
+```
+
+The same JSONL was summarized as both runtime high-level evidence and CSL final
+queue evidence.  Counts:
+
+| Evidence class | Count / value |
+| --- | --- |
+| successful hooks | 38 |
+| hook missing | 1 queue callback-register symbol; `Enqueue` hook installed |
+| hook attach error | 1, `SndIsAlreadyPlayingBGM`; `SoundMng_isAlreadyPlayingBGM` and later hooks installed |
+| high-level sound-code rows | 13 |
+| BGM helper rows | 0 |
+| `SoundMng::sndPlayReq` rows | 3 |
+| final queue chunks | 3 |
+| observed sound ids | `8912`, `9544`, `8008` |
+
+The sound-code chain is:
+
+| Time | Kind | Code |
+| ---: | --- | --- |
+| 3.082 s | `snd_req_by_sound_cd` / `sound_mng_play_by_sound_cd` / `sound_mng_play_bytes` | `42080_SPストーリー5_みふゆとももこ_01` |
+| 3.084-3.085 s | `snd_req_by_sound_cd` / `sound_mng_play_by_sound_cd` / `sound_mng_play_bytes` | `8040_シネスコ変化音_金帯 ` |
+| 11.902-11.905 s | callback / sequence / `zg_snd_req_code` / SoundMng path | `31186_282_mihu_く…ぐ…` |
+
+The final OpenSL queue chain is:
+
+| Time | Sound id | Bytes | Play index |
+| ---: | ---: | ---: | ---: |
+| 3.131 s | `8912` | 2163204 | 3 |
+| 3.145 s | `9544` | 500736 | 21 |
+| 11.928 s | `8008` | 397838 | 8 |
+
+Interpretation: in the forced `ac7116_001` official event path, the retained
+`42080...` bed/base-scene audio, foreground SE `8040...`, and voice
+`31186...` are the only observed high-level sound-code requests that reach the
+final OpenSL queue.  No BGM helper call and no additional continuous queue
+chunk appeared in this run.
+
+Current live slot-state smoke with the same combined probe:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703\summary\summary.json
+```
+
+For this 20 s passive window, the probe installed the same 38 hooks and observed
+no high-level sound request, no BGM helper row, and no final OpenSL queue chunk.
+This is only negative evidence for the current screen/state.  It still does not
+prove that a natural gameplay transition into `ac7114/ac7115/ac7116` lacks
+outer-flow BGM.
+
 ## Current interpretation
 
 Evidence now supports these points:

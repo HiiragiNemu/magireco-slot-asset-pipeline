@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-07-02
+更新时间：2026-07-03
 
 ## 2026-06-26 v18 当前状态
 
@@ -86,6 +86,20 @@
   两者均没有非 hook 的 BGM/sound request 或 OpenSL play/enqueue 事件。这只证明当前
   idle slot 状态没有正在观测窗口内持续 enqueue 的 BGM，不能解除真实 story 触发路径的
   outer-flow BGM 门禁。
+- 2026-07-03 `csl_audio_queue_probe.js` 已升级为同源 CSL+BGM 合并探针：同一次
+  Frida run 同时记录 `libGameProc.so` 高层 sound-code/BGM helper 与 `libAMAIN.so`
+  最终 `CSLAndroidSimpleBufferQueue::Enqueue` 队列，且单个高层 hook attach 失败不会
+  中断后续 hook 安装。`summarize_runtime_audio_capture.py` 已适配该合并 JSONL 的
+  sound-code/event-code 字段。验证捕获位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703`
+  和
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703`。
+  forced `ac7116_001` 同源捕获结果：38 个 hook 安装成功，`SndIsAlreadyPlayingBGM`
+  1 个 attach error，BGM helper 行为 0，高层 sound-code 行为 13，最终 OpenSL queue
+  仍只有 `42080_SPストーリー5_みふゆとももこ_01` / sound id `8912`、`8040_シネスコ変化音_金帯`
+  / sound id `9544`、`31186_282_mihu_く…ぐ…` / sound id `8008` 三段。当前 live
+  slot 状态 20 s 被动探针无 sound request、无 BGM helper、无 OpenSL enqueue。这强化
+  forced ac7116 “无额外 BGM”结论，但仍不能解除自然 outer gameplay transition 门禁。
 - 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于

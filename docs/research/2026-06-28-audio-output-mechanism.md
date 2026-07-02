@@ -338,6 +338,50 @@ This is useful negative evidence for the idle state only.  It does not prove
 that an outer gameplay transition into a story event lacks BGM; the full
 trigger flow still has to be captured.
 
+## 2026-07-03 combined CSL+BGM probe
+
+`csl_audio_queue_probe.js` now combines the final `libAMAIN.so`
+`CSLAndroidSimpleBufferQueue::Enqueue` hook with high-level `libGameProc.so`
+sound-code and BGM request hooks in the same Frida script.  One failed high
+level attach no longer aborts later hook installation.  This matters because a
+single capture can now answer both questions:
+
+- what high-level sound/BGM requests were made;
+- which requests actually reached the final OpenSL queue.
+
+Validation captures:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703
+```
+
+Forced `ac7116_001` summary:
+
+| Field | Value |
+| --- | --- |
+| successful hooks | 38 |
+| BGM helper rows | 0 |
+| high-level sound-code rows | 13 |
+| `SoundMng::sndPlayReq` rows | 3 |
+| final OpenSL queue chunks | 3 |
+| observed sound ids | `8912`, `9544`, `8008` |
+
+The high-level sound-code rows resolve to exactly the same three audible items
+already seen in the older CSL-only capture:
+
+- `42080_SPストーリー5_みふゆとももこ_01`;
+- `8040_シネスコ変化音_金帯 `;
+- `31186_282_mihu_く…ぐ…`.
+
+The passive current-state 20 s probe installed the same hook set and observed
+no non-hook sound request, no BGM helper row, and no final OpenSL queue chunk.
+
+Interpretation: the forced ac7116 path now has same-run high-level sound-code
+and final queue evidence showing no extra BGM.  This still leaves the same
+delivery gate: a natural outer gameplay transition into the scene has not yet
+been captured, so an outer-flow BGM cannot be globally ruled out.
+
 ## Next cracking target
 
 Valid next work is one of these routes:

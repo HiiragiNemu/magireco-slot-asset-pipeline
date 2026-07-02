@@ -242,6 +242,36 @@ Required proof before final publication:
   audible output, or
 - a direct game-produced capture that proves no additional BGM exists.
 
+2026-07-03 update:
+
+- `csl_audio_queue_probe.js` now combines high-level `libGameProc.so`
+  sound-code/BGM hooks with final `libAMAIN.so`
+  `CSLAndroidSimpleBufferQueue::Enqueue` hooks in one Frida script.
+- `summarize_runtime_audio_capture.py` now understands the combined-probe
+  sound-code fields.
+- Forced `ac7116_001` same-run capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703\summary_v2\summary.json
+```
+
+  Result: 38 hooks installed, one `SndIsAlreadyPlayingBGM` attach error,
+  0 BGM helper rows, 13 high-level sound-code rows, and only three final
+  OpenSL queue chunks: `42080...` / sound id `8912`, `8040...` / sound id
+  `9544`, and `31186...` / sound id `8008`.
+- Passive current live slot-state 20 s capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703\summary\summary.json
+```
+
+  Result: no sound request, no BGM helper, no OpenSL queue chunk.
+- This strengthens the forced ac7116 "no extra BGM" evidence, but it still does
+  not prove the natural outer gameplay transition into `ac7114/ac7115/ac7116`
+  lacks or carries BGM.  Do not remove the outer-flow BGM gate yet.
+
 ## Invalidated outputs that must not be promoted
 
 The user found major defects in earlier v18/generic outputs:
@@ -359,6 +389,21 @@ narrows the BGM problem: the current idle slot screen was not continuously
 enqueueing a visible BGM stream during the probe window.  It still does not
 settle whether a real transition into `ac7114/ac7115/ac7116` starts or carries
 BGM.
+
+2026-07-03 same-run CSL+BGM combined probe:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_combined_ac7116_v3_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_current_csl_bgm_combined_v2_20260703
+```
+
+For forced `ac7116_001`, the same JSONL captured high-level sound-code requests
+and final OpenSL queue chunks.  It found exactly three high-level/final audible
+items: `42080_SPストーリー5_みふゆとももこ_01`, `8040_シネスコ変化音_金帯 `,
+and `31186_282_mihu_く…ぐ…`.  It found 0 BGM helper rows and no additional
+continuous queue chunk.  The passive current-state run found no non-hook
+request or queue activity.  This is not a natural-trigger capture; keep the
+outer-flow BGM gate open.
 
 ## Visual tail/compositor hook candidates
 
