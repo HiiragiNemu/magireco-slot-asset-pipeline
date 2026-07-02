@@ -314,6 +314,30 @@ Use cases:
   visible next to v18 production/coverage/AV-trust queues without promoting any
   package to delivery.
 
+## 2026-07-02 slot idle audio smoke
+
+After recovering MuMu/Gadget from the v12 animation pointer-scan timeout, the
+game was left on the real slot gameplay screen and two passive 20 s probes were
+run without forcing an event:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_runtime_probe_20260702\slot_idle_runtime_probe_20s.jsonl
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_csl_queue_probe_20260702\slot_idle_csl_queue_20s.jsonl
+```
+
+Results:
+
+| Probe | Counts | Non-hook examples |
+| --- | --- | ---: |
+| `runtime_probe.js` | 40 `hook_installed`, 1 `host_attached`, 1 `probe_start`, 1 `hook_attach_failed` | 0 |
+| `csl_audio_queue_probe.js` | 9 `hook_installed`, 1 `host_attached`, 1 `probe_start`, 1 `hook_missing` | 0 |
+
+Interpretation: in this idle slot state there was no new high-level sound/BGM
+request and no observed final OpenSL queue activity during the 20 s windows.
+This is useful negative evidence for the idle state only.  It does not prove
+that an outer gameplay transition into a story event lacks BGM; the full
+trigger flow still has to be captured.
+
 ## Next cracking target
 
 Valid next work is one of these routes:

@@ -33,6 +33,16 @@
   `includePointerProbe=false` 作为默认。仍未捕获 clean/story layer 的逐帧
   像素/texture 或 CRI frame index，所以最终 B站投稿仍受 clean-layer compositor
   proof 与 outer-flow BGM proof 门禁限制。
+- 2026-07-02 slot idle audio smoke 已记录到
+  `docs/research/2026-06-28-audio-output-mechanism.md`：在恢复后的真实 slot
+  gameplay 画面上分别运行 20 s `runtime_probe.js` 和 `csl_audio_queue_probe.js`，
+  输出位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_runtime_probe_20260702`
+  与
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_csl_queue_probe_20260702`。
+  两者均没有非 hook 的 BGM/sound request 或 OpenSL play/enqueue 事件。这只证明当前
+  idle slot 状态没有正在观测窗口内持续 enqueue 的 BGM，不能解除真实 story 触发路径的
+  outer-flow BGM 门禁。
 - 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于

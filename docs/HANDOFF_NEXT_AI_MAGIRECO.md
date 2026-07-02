@@ -345,6 +345,21 @@ Additional 2026-06-28 ac7116 BGM note:
   BGM.  The remaining BGM gate is specifically an outer-gameplay/full-flow
   question, not a forced-event-only queue question.
 
+2026-07-02 idle slot audio smoke:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_runtime_probe_20260702\slot_idle_runtime_probe_20s.jsonl
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\slot_idle_csl_queue_probe_20260702\slot_idle_csl_queue_20s.jsonl
+```
+
+Both 20 s probes were run from a live slot gameplay screen without forcing an
+event.  `runtime_probe.js` produced no non-hook BGM/sound events, and
+`csl_audio_queue_probe.js` produced no non-hook play/enqueue events.  This
+narrows the BGM problem: the current idle slot screen was not continuously
+enqueueing a visible BGM stream during the probe window.  It still does not
+settle whether a real transition into `ac7114/ac7115/ac7116` starts or carries
+BGM.
+
 ## Visual tail/compositor hook candidates
 
 `libGameProc.so` has no normal symbol table, but dynamic exports provide useful
