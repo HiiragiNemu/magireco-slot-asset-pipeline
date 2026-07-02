@@ -316,6 +316,49 @@ that output while the final voice/subtitle tail continues.
 This still is not exact pixel proof: no clean-layer texture hash, framebuffer,
 or CRI frame index after frame 338 has been captured.
 
+## Renderer texture-state follow-up
+
+Detailed report:
+
+```text
+docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md
+```
+
+New metadata-only tools:
+
+```text
+tools/frida_runtime_probe/runtime_symbol_survey.js
+tools/frida_runtime_probe/cri_video_texture_probe.js
+tools/frida_runtime_probe/summarize_cri_video_texture_probe.py
+```
+
+Important combined capture after app restart and Gadget reinjection:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v5_combined_after_restart_20260702
+```
+
+This capture put the main story payload and renderer-path activity in the same
+run:
+
+- `cri_set_data` at 119 ms loaded `1e31c4fa`, size 1955904;
+- `cri_movie_info` for that receiver reported 512x288, 30 fps, 338 frames;
+- `sprite_renderer_check_bind_texture_states` continued through:
+  - 9.000-11.000 s: 8 samples;
+  - 11.267-13.050 s: 6 samples;
+  - 14.000-20.000 s: 23 samples;
+- all three windows used the same tuple:
+  `renderer=0x72b10b97f910`, `texture_state=0x72af3cccff78`, flag `1`.
+
+The earlier GL probe series also found that normal GL texture allocation/bind
+events occurred only near the event start and the 6.7 s LP switch, not in the
+voice-tail window.
+
+Interpretation: the renderer path remains active through the final voice tail
+with a stable texture-state object after the 338-frame main movie boundary.
+This strengthens the `hold_last_frame` mechanism evidence, but it still is not
+an exact clean-layer framebuffer/pixel hash.
+
 ## Current interpretation
 
 The combined evidence is now stronger than the previous state:
@@ -330,6 +373,10 @@ The combined evidence is now stronger than the previous state:
 5. v16 proves the main CRI receiver is the 338-frame story movie, is updated
    only through about 11.134 s, and remains resident while the higher animation
    object continues.
+6. The renderer texture-state follow-up proves the same sprite renderer
+   texture-state tuple continues to be checked/bound through the
+   11.267-13.05 s tail in a run that also captured the official main story
+   `1e31c4fa` payload.
 
 Therefore, for mechanism-validation renders, `hold_last_frame` for the clean
 main story after 11.267 s is now runtime-supported for `ac7116_001`.  This is

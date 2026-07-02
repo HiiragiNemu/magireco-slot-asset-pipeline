@@ -555,6 +555,50 @@ main CRI reaches the end near the source duration, then the animation/compositor
 layer holds its output while the final voice continues.  It still is not a
 clean-layer texture/pixel hash after frame 338.
 
+2026-07-02 renderer texture-state follow-up:
+
+```text
+docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md
+tools/frida_runtime_probe/runtime_symbol_survey.js
+tools/frida_runtime_probe/gl_texture_probe.js
+tools/frida_runtime_probe/summarize_gl_texture_probe.py
+tools/frida_runtime_probe/cri_video_texture_probe.js
+tools/frida_runtime_probe/summarize_cri_video_texture_probe.py
+```
+
+Important captures:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gl_texture_probe_ac7116_v5_bind_timeline_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\runtime_symbol_survey_renderer_cri_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v5_combined_after_restart_20260702
+```
+
+Findings:
+
+- the original GLES global-export hooks were blind; after hooking all GLES/EGL
+  module exports and `eglGetProcAddress`, the game showed 512x288
+  `libGLESv1_CM.so` texture allocation/bind/delete only around event start and
+  the 6.7 s LP switch;
+- no normal GL texture upload/bind/delete/draw/sync/swap was observed in the
+  11.267-13.05 s voice tail;
+- full-module symbol survey found better renderer candidates in
+  `split_config.arm64_v8a.apk`, especially
+  `RendererImplGL::checkAndBindTextureStates`;
+- the combined after-restart run captured main story `1e31c4fa`/1955904 with
+  512x288, 30 fps, 338 frames, and the same renderer/texture-state tuple
+  continued in all key windows:
+
+| Window | `sprite_renderer_check_bind_texture_states` count | tuple |
+| --- | ---: | --- |
+| 9.000-11.000 s | 8 | `0x72b10b97f910` + `0x72af3cccff78` + flag `1` |
+| 11.267-13.050 s | 6 | `0x72b10b97f910` + `0x72af3cccff78` + flag `1` |
+| 14.000-20.000 s | 23 | `0x72b10b97f910` + `0x72af3cccff78` + flag `1` |
+
+This strengthens ac7116 hold evidence from animation-object/CRI-lifecycle
+support to renderer-path support.  It still is not an exact clean-layer
+framebuffer or pixel hash.
+
 Full ac7114-16 receiver summary:
 
 ```text
@@ -578,18 +622,22 @@ Recommended next visual proof route for the ac7116 tail:
 
 1. Start from a known-good recovered Gadget state; if 27043 times out, restart
    app and reinject Gadget before forcing the event.
-2. Hook `CSlotBody::NotifyMovieStart` and `CDirMngListener::NotifyStartAnim` to
+2. Read
+   `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`; do not
+   repeat blind `GLtask_display1/2` work.
+3. Hook `CSlotBody::NotifyMovieStart` and `CDirMngListener::NotifyStartAnim` to
    identify which movie/animation object is active.  v6 did not see those calls,
    so a lower-level call site or different hook point may be needed.
-3. Passively intercept `CriManaWrapper::GetFrameInfo` / `IsFrameReady` /
+4. Passively intercept `CriManaWrapper::GetFrameInfo` / `IsFrameReady` /
    `ExecuteVideoProcess` during the 10-13.5 s window to see whether the movie
    decoder has ended or is still producing frames.  Do not call those CRI
    methods from a Frida `NativeFunction` inside hot hooks.
-4. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
+5. Hook `DirGetFrame` and `CScreenObjectMng::setLockFrame/checkLock/draw` to
    determine whether the game explicitly locks/holds a frame.
-5. If those hooks still do not fire, move to throttled GL/texture metadata for
-   the 10-13.5 s window.  The goal is to prove the clean/story layer state, not
-   to generate a replacement movie from screenrecord.
+6. If more visual proof is needed, target a clean-layer texture/pixel hash or a
+   narrower `TextureStateGL`/primitive field read for the tuple already found in
+   `cri_video_texture_ac7116_v5_combined_after_restart_20260702`; the goal is
+   clean/story layer state, not another full-machine screenrecord.
 
 If the live game locks the final main-story frame while the voice tail plays,
 the current hold is acceptable.  If the game switches to another visual layer or
@@ -616,6 +664,11 @@ tools/frida_runtime_probe/summarize_runtime_audio_capture.py
 tools/frida_runtime_probe/decode_csl_audio_queue_dump.py
 tools/frida_runtime_probe/summarize_animation_state_samples.py
 tools/frida_runtime_probe/summarize_cri_receiver_samples.py
+tools/frida_runtime_probe/runtime_symbol_survey.js
+tools/frida_runtime_probe/gl_texture_probe.js
+tools/frida_runtime_probe/summarize_gl_texture_probe.py
+tools/frida_runtime_probe/cri_video_texture_probe.js
+tools/frida_runtime_probe/summarize_cri_video_texture_probe.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
 tools/frida_runtime_probe/reinject_gadget.py
 ```

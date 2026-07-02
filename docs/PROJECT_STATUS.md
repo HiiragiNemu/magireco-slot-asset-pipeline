@@ -16,6 +16,27 @@
 
 最新新增：
 
+- 2026-07-02 ac7116 renderer texture-state 探针已新增：
+  `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`。
+  新工具包括 `runtime_symbol_survey.js`、`cri_video_texture_probe.js` 和
+  `summarize_cri_video_texture_probe.py`。全模块符号 survey 找到比
+  `GLtask_display1/2` 更贴近实际路径的内部 renderer 符号：
+  `RendererImplGL::checkAndBindTextureStates`、`TextureStateGL::bind`、
+  `CScreenObjectMng::draw/calcFrameControl` 以及
+  `CriVideo::GFDirectionRenderer::*`。GL export/eglGetProcAddress/OES draw
+  探针只看到 0.074-0.080 s 与 6.707-6.715 s 的 512x288 texture
+  allocation/bind/delete；11.267-13.05 s 语音尾段没有普通 GL texture upload、
+  bind/delete、draw/sync/swap 证据。重启 app 并 reinject Gadget 后的 combined run
+  位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\cri_video_texture_ac7116_v5_combined_after_restart_20260702`：
+  同一 run 中捕获主故事 `1e31c4fa`/1955904/512x288/30fps/338 帧，以及
+  `sprite_renderer_check_bind_texture_states` 在 9-11 s、11.267-13.05 s、
+  14-20 s 继续触发，且三段窗口均为同一 renderer/texture-state tuple
+  `0x72b10b97f910` + `0x72af3cccff78` + flag `1`。该证据把
+  `ac7116_001` 的 hold 从“动画对象/CRI receiver 支持”提升为“renderer path
+  仍持续活动且状态稳定”支持；但仍不是 framebuffer/clean-layer pixel hash，最终
+  B站投稿仍需 clean-layer pixel/texture proof 或明确接受该机制证据，outer-flow BGM
+  门禁也仍未解除。
 - 2026-07-02 ac7116 animation-state sampler 已新增：
   `docs/research/2026-07-02-ac7116-animation-state-sampler.md`。
   新版 `event_scene_probe.js` 在 forced event context 活跃时每约 250 ms 输出

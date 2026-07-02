@@ -21,6 +21,10 @@ after v6/v7 plus the 2026-07-02 animation-state sampler follow-up is:
 - the 2026-07-02 sampler proved `C_AnmMain+0x350` continues to render the same
   selected animation object through 16.817 s, including the 11.267-13.027 s
   voice/subtitle tail;
+- the 2026-07-02 renderer texture-state probe proved that the same
+  `RendererImplGL::checkAndBindTextureStates` renderer/texture-state tuple
+  continues through the 11.267-13.05 s voice tail in a run that also captured
+  the official main story `1e31c4fa` payload;
 - the clean main-story tail hold is runtime-supported for mechanism-validation
   renders, but final publication still needs exact clean/story compositor pixel
   proof after the main CRI movie reaches its last frame.
@@ -460,8 +464,8 @@ gameplay flow could not add BGM.
   edition;
 - the main-story source identity and duration are now runtime-proven;
 - the clean tail hold is now runtime-supported by the 2026-07-02
-  animation-state sampler and CRI receiver v16 sampler, but still not exact
-  clean-layer pixel proven;
+  animation-state sampler, CRI receiver v16 sampler, and renderer texture-state
+  probe, but still not exact clean-layer pixel proven;
 - forced-event audio queue contains bed/foreground SE/voice only; additional
   outer-state BGM remains unproven absent.
 
@@ -477,20 +481,22 @@ Use the least invasive route first:
 2. Use `summarize_animation_state_samples.py` and
    `summarize_cri_receiver_samples.py` for machine-readable summaries; do not
    hand-parse future JSONL captures.
-3. Re-run `visual_tail_probe.js` from a known-good restarted/reinjected game
+3. Read the renderer texture-state follow-up before adding more GL hooks:
+   `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`.
+4. Re-run `visual_tail_probe.js` from a known-good restarted/reinjected game
    state if main CRI `1e31c4fa` must be recaptured.
-4. Keep passive lifecycle/metadata hooks enabled: `SetData`, `SetLoop`,
+5. Keep passive lifecycle/metadata hooks enabled: `SetData`, `SetLoop`,
    `Start`, `Stop`, `GetStatus`, `GetMovieInfo`, `GetFrameInfo`,
    `NotifyMovieStart`, `NotifyStartAnim`, `DirGetFrame`, and
    `CScreenObjectMng` lock/draw helpers.
-5. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
+6. Add lower-level, throttled compositor/texture metadata for the 10-13.5 s
    window.  The proof target is not another full-machine screenrecord; it is the
    clean/story layer state after the main CRI movie reaches frame 338.
-6. Treat passive frame extraction hooks as experimental until a run proves they
+7. Treat passive frame extraction hooks as experimental until a run proves they
    do not interfere.
-7. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
+8. For audio, the forced-event CSL queue is now known.  The remaining BGM proof
    must come from full outer gameplay flow capture or a direct game-produced
    recording, not another forced-event-only run.
-8. Only after the runtime state is understood should the renderer decide
+9. Only after the runtime state is understood should the renderer decide
    between `hold_last_frame`, a real visual continuation layer, a loop, or a
    cut/black transition.
