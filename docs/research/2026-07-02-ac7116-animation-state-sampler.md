@@ -57,6 +57,18 @@ The sample records pointers and metadata only:
 
 It does not dump media frames, audio data, textures, or APK/game assets.
 
+Follow-up numeric probing added after v10:
+
+- `numeric_probe.selected_object` and `numeric_probe.frame_animation_object`
+  sample 4-byte-aligned u32/float candidates in the first 0x500 bytes of the
+  selected/frame animation objects.
+- This is intentionally small and metadata-only.  It is meant to identify
+  possible frame/time/lock fields before adding more specific hooks.
+- A broad pointer-field scan was tried as v12 and proved too invasive: Frida
+  `create_script` timed out afterward and Gadget had to be reinjected.  The
+  pointer scan is therefore left disabled by default in code and should not be
+  enabled for normal captures without narrowing the offset list first.
+
 Smoke test:
 
 ```powershell
@@ -154,6 +166,51 @@ to run during and after the 11.267 s source-video duration.  The game did not
 destroy the scene at the end of the main USM and then leave only an external
 renderer-side still frame.
 
+## Numeric field follow-up
+
+v11 first tested the numeric probe:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v11_20260702
+```
+
+v11 found one selected-object field that changed every sample:
+
+| Object | Offset | Type | First | Last | 9-11 s | 11.3-13.2 s | 14-16.85 s | Direction |
+| --- | ---: | --- | ---: | ---: | --- | --- | --- | --- |
+| selected object | `0x350` | u32 | 1352 | 1856 | 1623-1675 | 1690-1743 | 1773-1856 | monotonic + |
+
+The value increased by 504 over about 16.8 s, matching about 30 fps.  It kept
+increasing during the 11.267-13.027 s voice/subtitle tail.
+
+v12 attempted broad pointer-field scanning and hung the capture path.  Recovery
+evidence:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_after_v12_timeout_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_after_v12_timeout_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\capture_state_after_v12_reinject_20260702
+```
+
+After disabling pointer scanning by default and reinjecting Gadget, v13
+validated the safe default:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702
+```
+
+v13 again captured 68 samples through 16.813 s.  The only varying numeric field
+in the selected object was again `+0x350`:
+
+| Object | Offset | Type | First | Last | 9-11 s | 11.3-13.2 s | 14-16.85 s | Direction |
+| --- | ---: | --- | ---: | ---: | --- | --- | --- | --- |
+| selected object | `0x350` | u32 | 2163 | 2665 | 2432-2485 | 2507-2553 | 2583-2665 | monotonic + |
+
+Interpretation: `selected+0x350` is probably an animation-object frame/time
+clock, not the CRI movie frame index.  It proves the active story animation
+object continues ticking at frame rate through the voice tail.  It does not by
+itself prove whether the clean main movie texture is held, replaced, or masked.
+
 ## Current interpretation
 
 The combined evidence is now stronger than the previous state:
@@ -171,10 +228,10 @@ main story after 11.267 s is now runtime-supported for `ac7116_001`.  This is
 not merely a blind external concat artifact.
 
 The remaining limitation is exact clean-layer pixel proof: this run still did
-not capture the clean compositor texture/pixels after frame 338.  That matters
-for final publication QA, especially if foreground/title/slot layers might
-cover or alter the machine presentation while the clean story layer itself is
-held.
+not capture the clean compositor texture/pixels or the CRI movie frame index
+after frame 338.  That matters for final publication QA, especially if
+foreground/title/slot layers might cover or alter the machine presentation while
+the clean story layer itself is held.
 
 ## Delivery decision
 

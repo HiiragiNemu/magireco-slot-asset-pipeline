@@ -507,6 +507,19 @@ mechanism-validation renders.  It is still not exact clean-layer pixel proof,
 so final publication remains gated on compositor/pixel evidence and BGM/full
 outer-flow evidence.
 
+v11/v13 numeric follow-up:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v11_20260702
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_numeric_sampler_ac7116_v13_default_after_reinject_20260702
+```
+
+Both runs found selected-object offset `+0x350` increasing monotonically at
+about 30 fps through the 11.267-13.027 s tail.  Treat this as the active
+animation object's clock, not as the CRI movie frame index.  A broad pointer
+scan was attempted in v12 and caused capture timeout/Gadget reinjection; leave
+`includePointerProbe=false` unless the offset list is narrowed first.
+
 Recommended next visual proof route for the ac7116 tail:
 
 1. Start from a known-good recovered Gadget state; if 27043 times out, restart

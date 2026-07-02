@@ -16,6 +16,7 @@ let activeForcedEvent = null;
 let hooksInstalled = false;
 let animationStateSamplerStarted = false;
 const animationStateSampleIntervalMs = 250;
+const includePointerProbe = false;
 
 function emit(kind, fields) {
   const eventFields =
@@ -383,15 +384,99 @@ function compactObjectDescription(description) {
   };
 }
 
+function sampleObjectNumericFields(description) {
+  if (
+    description === null ||
+    description === undefined ||
+    !description.readable ||
+    description.pointer === null ||
+    description.pointer === undefined
+  ) {
+    return null;
+  }
+  const base = ptr(description.pointer);
+  const fields = [];
+  const errors = [];
+  const maxOffset = 0x500;
+  for (let offset = 0; offset < maxOffset; offset += 4) {
+    const address = base.add(offset);
+    try {
+      const u32 = address.readU32();
+      const f32 = address.readFloat();
+      const item = { offset: "0x" + offset.toString(16) };
+      let keep = false;
+      if (u32 > 0 && u32 < 1000000) {
+        item.u32 = u32;
+        keep = true;
+      }
+      if (Number.isFinite(f32) && Math.abs(f32) >= 0.0001 && Math.abs(f32) < 100000) {
+        item.f32 = Number(f32.toFixed(6));
+        keep = true;
+      }
+      if (keep) {
+        fields.push(item);
+      }
+    } catch (error) {
+      if (errors.length < 4) {
+        errors.push({ offset: "0x" + offset.toString(16), error: String(error) });
+      }
+    }
+  }
+  return { max_offset: "0x" + maxOffset.toString(16), fields, errors };
+}
+
+function sampleObjectPointerFields(description) {
+  if (
+    description === null ||
+    description === undefined ||
+    !description.readable ||
+    description.pointer === null ||
+    description.pointer === undefined
+  ) {
+    return null;
+  }
+  const base = ptr(description.pointer);
+  const fields = [];
+  const errors = [];
+  const maxOffset = 0x600;
+  for (let offset = 0; offset < maxOffset; offset += Process.pointerSize) {
+    const address = base.add(offset);
+    try {
+      const candidate = address.readPointer();
+      if (candidate.isNull()) {
+        continue;
+      }
+      const target = describeObject(candidate);
+      if (target.readable && target.vtable_module !== null) {
+        fields.push({
+          offset: "0x" + offset.toString(16),
+          pointer: candidate.toString(),
+          vtable: target.vtable,
+          vtable_module: target.vtable_module,
+          vtable_module_offset: target.vtable_module_offset,
+        });
+      }
+    } catch (error) {
+      if (errors.length < 4) {
+        errors.push({ offset: "0x" + offset.toString(16), error: String(error) });
+      }
+    }
+  }
+  return { max_offset: "0x" + maxOffset.toString(16), fields, errors };
+}
+
 function compactAnimationState(state) {
   const lastFrame = state.last_animation_frame || null;
+  const selectedObject = compactObjectDescription(state.selected_object);
+  const frameObject = compactObjectDescription(state.frame_animation_object);
+  const activeChild = compactObjectDescription(state.active_animation_child);
   return {
     current_task_id: state.current_task_id,
     old_task_id: state.old_task_id,
     selected_source: state.selected_source,
-    selected_object: compactObjectDescription(state.selected_object),
-    frame_animation_object: compactObjectDescription(state.frame_animation_object),
-    active_animation_child: compactObjectDescription(state.active_animation_child),
+    selected_object: selectedObject,
+    frame_animation_object: frameObject,
+    active_animation_child: activeChild,
     last_animation_frame:
       lastFrame === null
         ? null
@@ -400,6 +485,14 @@ function compactAnimationState(state) {
             unix_ms: lastFrame.unix_ms,
             age_ms: Date.now() - lastFrame.unix_ms,
           },
+    numeric_probe: {
+      selected_object: sampleObjectNumericFields(selectedObject),
+      frame_animation_object: sampleObjectNumericFields(frameObject),
+    },
+    pointer_probe: {
+      selected_object: includePointerProbe ? sampleObjectPointerFields(selectedObject) : null,
+      frame_animation_object: includePointerProbe ? sampleObjectPointerFields(frameObject) : null,
+    },
     errors: state.errors,
   };
 }

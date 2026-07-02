@@ -27,8 +27,12 @@
   保持几十毫秒。这证明官方动画系统在主 USM 338 帧结束后仍持续渲染同一故事动画对象；
   结合 v6 的主 USM 时长证据，`ac7116_001` 的 clean `hold_last_frame`
   现在可视为 runtime-supported mechanism-validation 行为，而不是纯外部拼接猜测。
-  但仍未捕获 clean/story layer 的逐帧像素/texture，所以最终 B站投稿仍受
-  clean-layer compositor proof 与 outer-flow BGM proof 门禁限制。
+  v11/v13 数值采样进一步发现 selected object `+0x350` 按约 30fps 单调递增，
+  11.267-13.027 s 尾段不停止；该字段应视为动画对象时钟，不是 CRI movie frame
+  index。v12 的宽泛 pointer scan 会导致 Frida/Gadget capture timeout，已将
+  `includePointerProbe=false` 作为默认。仍未捕获 clean/story layer 的逐帧
+  像素/texture 或 CRI frame index，所以最终 B站投稿仍受 clean-layer compositor
+  proof 与 outer-flow BGM proof 门禁限制。
 - 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于
