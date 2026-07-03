@@ -452,8 +452,93 @@ hits both:
    (`1e31c4fa`, 1955904 bytes, 512x288, 338 frames), and
 2. the Z2D 512x288 / end-frame-337 / texture-id-151 object in the same run.
 
-Do not repeat the high-level frame-lock route as the primary proof path; the Z2D
-movie-layer functions are the currently productive route.
+This closure was captured in v2 below.  Do not repeat the high-level frame-lock
+route as the primary proof path; the Z2D movie-layer functions are the
+currently productive route.
+
+### Same-run closure v2
+
+After force-stopping the app, restarting
+`com.universal777.magireco/.SlotMainActivity`, reinjecting the arm64 Gadget, and
+using the title-flow taps, the same Z2D probe was rerun:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_z2d_same_run_closure_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703\summary_v2\z2d_movie_layer_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703\summary_v2\z2d_movie_layer_events.csv
+```
+
+Capture status:
+
+```text
+event_exit_code=0
+runtime_exit_code=0
+diagnose verdict=runtime_capture_ready_via_arm64_gadget
+```
+
+The v2 JSONL captured the main story `SetData` in the same run:
+
+| Event-relative ms | Receiver | Size | FNV | Interpretation |
+| ---: | --- | ---: | --- | --- |
+| 121 | `0x72af8ba9c090` | 1955904 | `1e31c4fa` | `ac7116_AT_SP_story5_01.usm`, 512x288, 338-frame main clean story |
+| 137 | `0x72af8bcedf40` | 1507616 | `c8fd6fe7` | gold-frame add foreground |
+| 148 | `0x72af8bcef2c0` | 2159168 | `72e6f81c` | gold-frame foreground |
+| 6740 | `0x72af8bcef140` | 1483776 | `c9cc7d28` | LP gold-frame add foreground |
+| 6750 | `0x72af8bceed80` | 2157056 | `f32a4a6b` | LP gold-frame foreground |
+
+The same run named the clean story Z2D movie object:
+
+| Field | Value |
+| --- | --- |
+| `play_movie_pointer` | `0x72affb9c0ae8` |
+| `elem_movie_pointer` | `0x72affb9c0a98` |
+| captured text/name | `ac7116_AT_SP_story5_01.dgm` |
+| width/height | 512x288 |
+| start/end frame | 0 / 337 |
+| input/decode frame range | 0-337, ending and holding at 337 |
+| `CZ2DElemMovie::IsDrawTime` | always returns 1 for this element |
+| texture-like field | `+0x20 = 153`, constant |
+| renderer primitive correlation | primitive `0x72af4e66e168`, texture id `153` |
+
+Tail-window counts for v2:
+
+| Window | `ExecPlayMovie` | `IsDrawTime` | `GetDecodeFrame` | `DecodeMovie` | `drawCall` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 11.267-13.05 s | 42 | 168 | 168 | 28 | 20 |
+
+Direct post-11.267 s rows for the named clean story object include:
+
+```text
+rel_ms=11302 IsDrawTime elem=0x72affb9c0a98 input=337 return=1
+rel_ms=11302 GetDecodeFrame elem=0x72affb9c0a98 input=337 return=337
+rel_ms=11331 ExecPlayMovie play=0x72affb9c0ae8 +0x4=337 +0x20=153 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11331 GetStartTime elem=0x72affb9c0a98 return=0
+rel_ms=11331 GetEndTime elem=0x72affb9c0a98 return=337
+rel_ms=11331 DecodeMovie play=0x72affb9c0ae8 +0x4=337 +0x20=153 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11465 drawCall primitive=0x72af4e66e168
+```
+
+The same pattern repeats past the final voice endpoint.  First/last observed
+times for the correlated clean story object:
+
+| Kind | First ms | Last ms |
+| --- | ---: | ---: |
+| `z2d_play_movie_get_movie_name` | 70 | 70 |
+| `z2d_player_exec_play_movie` | 115 | 25931 |
+| `z2d_elem_movie_get_end_time` | 115 | 25931 |
+| `z2d_elem_movie_get_decode_frame` | 116 | 25932 |
+| `z2d_elem_movie_is_draw_time` | 126 | 25931 |
+| `z2d_hard_decode_movie` | 126 | 25932 |
+| `sprite_renderer_draw_call` for primitive `0x72af4e66e168` / texture id `153` | -1453 | 25832 |
+
+Conclusion for `ac7116_001`: the clean story visual tail hold is now
+runtime-proven at mechanism level.  In the same official forced-event run, the
+game loads `ac7116_AT_SP_story5_01.usm` (`1e31c4fa`) and keeps the named
+`ac7116_AT_SP_story5_01.dgm` Z2D movie element drawable at final frame 337 while
+the voice/subtitle tail continues.  A framebuffer or texture-byte hash is still
+a stronger pixel-level proof, but it is no longer required to explain why the
+current clean render holds the final frame for `ac7116_001`.
 
 ## Interpretation
 
@@ -478,14 +563,15 @@ The combined evidence now supports this mechanism:
 This is stronger than the earlier animation-object-only proof: the renderer
 path itself remains active through the voice tail with stable texture-state and
 drawCall primitive state after the 338-frame movie boundary, and the Z2D movie
-layer now explains why the last clean frame is held.
+layer now explains why the last clean frame is held.  The v2 same-run closure
+links the main `1e31c4fa` load, the named `ac7116_AT_SP_story5_01.dgm` movie
+element, and the post-boundary final-frame draw behavior in one capture.
 
 It is still not exact clean-layer pixel proof.  No framebuffer hash, clean layer
 texture hash, or decoded post-frame-338 pixel was captured.  For final Bilibili
-publication, the remaining visual question is whether this mechanism evidence
-is accepted as sufficient for `ac7116_001`, or whether a fresh same-run Z2D
-capture with `1e31c4fa` plus the end-frame-337 object is required as final
-closure.  For other events, the project still needs either:
+publication, `ac7116_001` visual-tail hold should now be treated as
+runtime-mechanism proven unless a stricter pixel-hash gate is explicitly
+required.  For other events, the project still needs either:
 
 - a clean-layer texture/pixel proof, or
 - an explicit acceptance decision that the current runtime mechanism evidence

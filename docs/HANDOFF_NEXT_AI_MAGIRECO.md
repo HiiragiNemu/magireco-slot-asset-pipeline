@@ -839,7 +839,7 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_dir
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\movie_layer_symbol_candidates_20260703.jsonl
 ```
 
-Useful capture:
+Useful v1 capture:
 
 ```text
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703
@@ -868,16 +868,52 @@ is now strongly supported by the game's own Z2D movie-layer mechanism.  The
 game appears to keep the clean 512x288 movie element drawable at final frame 337
 while audio/subtitle tail continues.
 
-Caveat: v1 did not recapture the main story `1e31c4fa` `CriManaWrapper::SetData`
-in the same run; it only recaptured foreground/gold-frame CRIs.  For final
-closure, run a fresh app/reinject capture and prove both in one JSONL:
+v1 caveat: v1 did not recapture the main story `1e31c4fa`
+`CriManaWrapper::SetData` in the same run; it only recaptured
+foreground/gold-frame CRIs.  That caveat was closed by v2.
+
+Useful v2 same-run closure capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\gadget_reinject_z2d_same_run_closure_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703\summary_v2\z2d_movie_layer_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703\summary_v2\z2d_movie_layer_events.csv
+```
+
+v2 was captured after force-stop/start, arm64 Gadget reinjection, and the known
+title-flow taps.  Event and runtime exit codes were both 0.  It captured both
+required facts in one JSONL:
 
 1. main story `ac7116_AT_SP_story5_01.usm` / `1e31c4fa` / 1955904 bytes /
-   512x288 / 338 frames; and
-2. the Z2D 512x288 / end-frame-337 / texture-id-151 object above.
+   512x288 / 338 frames at 121 ms; and
+2. named Z2D movie object `ac7116_AT_SP_story5_01.dgm`:
+   `play_movie_pointer=0x72affb9c0ae8`,
+   `elem_movie_pointer=0x72affb9c0a98`, 512x288, start/end frame 0/337,
+   texture-like id `153`, renderer primitive `0x72af4e66e168` / texture id
+   `153`.
 
-If that same-run closure is captured, `ac7116_001` visual-tail hold can be
-treated as runtime-proven.  The separate BGM/outer-flow gate remains open.
+In the 11.267-13.05 s voice/subtitle tail, v2 shows the named clean story object
+holding frame 337:
+
+```text
+rel_ms=11302 IsDrawTime elem=0x72affb9c0a98 input=337 return=1
+rel_ms=11302 GetDecodeFrame elem=0x72affb9c0a98 input=337 return=337
+rel_ms=11331 ExecPlayMovie play=0x72affb9c0ae8 +0x4=337 +0x20=153 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11331 GetEndTime elem=0x72affb9c0a98 return=337
+rel_ms=11331 DecodeMovie play=0x72affb9c0ae8 +0x4=337 +0x20=153 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11465 drawCall primitive=0x72af4e66e168
+```
+
+The same object is observed through about 25.93 s.  Therefore `ac7116_001`
+visual-tail hold is now runtime-mechanism proven: the game itself keeps the
+named clean story movie element drawable at final frame 337 while the voice tail
+continues.  A framebuffer/texture-byte hash would be stricter pixel proof, but
+it is no longer necessary to explain the external render's final-frame hold for
+`ac7116_001`.
+
+The separate BGM/outer-flow gate remains open.  Do not mark the Bilibili long
+scene final until BGM/bed presence is proven or proven absent.
 
 ## Current important tools
 
@@ -1060,10 +1096,9 @@ Current strategy result:
 
 1. Prove or reject the visual tail-hold for `ac7114_001`, `ac7115_001`, and
    `ac7116_001`.
-   - For `ac7116_001`, use the new Z2D movie-layer route first.  The current
-     v1 evidence strongly supports native final-frame hold, but final closure
-     should recapture main `1e31c4fa` `SetData` and the Z2D end-frame-337
-     object in the same run.
+   - For `ac7116_001`, visual-tail hold is now runtime-mechanism proven by
+     `z2d_movie_layer_ac7116_v2_same_run_closure_20260703`.  Do not spend more
+     time here unless a stricter pixel/hash proof is explicitly required.
    - For `ac7114_001` and `ac7115_001`, repeat the productive Z2D route rather
      than the old high-level frame-lock hooks.
    - The key question is whether clean main-story output should hold the final

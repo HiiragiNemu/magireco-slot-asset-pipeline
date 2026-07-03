@@ -74,9 +74,16 @@
   primitive `0x72af405bd168` / texture id `151` 对应，并在 11.267-13.05 s
   语音/字幕尾段继续 `ExecPlayMovie`、`GetDecodeFrame`、`DecodeMovie` 和
   `drawCall`。这把 `ac7116_001` 尾帧 hold 从“renderer stable primitive”提升为
-  “Z2D movie-layer 以 end frame 337 原生持帧”强证据。v1 没在同一次 run 中重新捕获主故事
-  `1e31c4fa` `SetData`，所以最终闭环仍建议重启/reinject 后同时捕获主故事
-  `SetData` 与该 Z2D end-frame-337 对象；不要再把旧高层 frame-lock hook 作为主路线。
+  “Z2D movie-layer 以 end frame 337 原生持帧”强证据。随后按 force-stop/start/
+  reinject/title-flow taps 重跑 v2，路径为
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v2_same_run_closure_20260703`：
+  同一 run 在 121 ms 捕获主故事 `1e31c4fa`/1955904/512x288/338 帧，并命名
+  `ac7116_AT_SP_story5_01.dgm` 的 Z2D 对象 `0x72affb9c0ae8` /
+  `0x72affb9c0a98`，start/end frame 0/337，尾段 `IsDrawTime(337)=1`、
+  `GetDecodeFrame(337)=337`，texture-like id `153`，renderer primitive
+  `0x72af4e66e168` / texture id `153` 持续 drawCall 到 25.8 s。`ac7116_001`
+  视觉尾帧 hold 现在应视为 runtime-mechanism 级闭环证明；BGM/outer-flow 门禁仍未解除，
+  ac7114/ac7115 仍需同路线扩展。不要再把旧高层 frame-lock hook 作为主路线。
 - 2026-07-03 `visual_tail_probe.js` 以已恢复 Gadget 状态重跑 frame-lock 路线，结果位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703`。
   事件与 runtime 两侧均 exit 0，`summary_animation` 显示 88 个样本从 18 ms 覆盖到
