@@ -12,6 +12,7 @@ const moduleName = "libGameProc.so";
 
 let moduleValue = null;
 let sdGmCallback = null;
+let pioTaskSearchCallback = null;
 let lastPlayStart = null;
 let eventCountByKind = {};
 let lastEmitMsByKind = {};
@@ -235,7 +236,14 @@ function attachEnterLeave(symbol, kind, callbacks) {
     Interceptor.attach(address, {
       onEnter(args) {
         this.fields = callbacks && callbacks.onEnter ? callbacks.onEnter(args) : {};
-        emit(kind + "_enter", Object.assign({ symbol, address: address.toString() }, this.fields));
+        emit(
+          kind + "_enter",
+          Object.assign(
+            { symbol, address: address.toString() },
+            describeReturnAddress(this.returnAddress),
+            this.fields
+          )
+        );
       },
       onLeave(retval) {
         if (callbacks && callbacks.onLeave) {
@@ -249,6 +257,86 @@ function attachEnterLeave(symbol, kind, callbacks) {
   }
   emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
   return address;
+}
+
+function describeReturnAddress(returnAddress) {
+  const result = {
+    return_address: returnAddress === null ? "0x0" : returnAddress.toString(),
+    return_module: "",
+    return_module_offset: null,
+    return_symbol: "",
+  };
+  if (returnAddress === null) {
+    return result;
+  }
+  try {
+    const moduleValue = Process.findModuleByAddress(returnAddress);
+    if (moduleValue !== null) {
+      result.return_module = moduleValue.name;
+      result.return_module_offset = returnAddress.sub(moduleValue.base).toString();
+    }
+  } catch (_) {
+  }
+  try {
+    const debugSymbol = DebugSymbol.fromAddress(returnAddress);
+    if (debugSymbol !== null && debugSymbol.name) {
+      result.return_symbol = debugSymbol.name;
+    }
+  } catch (_) {
+  }
+  return result;
+}
+
+function describePointer(prefix, pointerValue) {
+  const result = {};
+  result[prefix] = pointerValue === null || pointerValue.isNull() ? "0x0" : pointerValue.toString();
+  result[prefix + "_symbol"] = "";
+  result[prefix + "_module"] = "";
+  result[prefix + "_module_offset"] = null;
+  if (pointerValue === null || pointerValue.isNull()) {
+    return result;
+  }
+  try {
+    const pointerModule = Process.findModuleByAddress(pointerValue);
+    if (pointerModule !== null) {
+      result[prefix + "_module"] = pointerModule.name;
+      result[prefix + "_module_offset"] = pointerValue.sub(pointerModule.base).toString();
+    }
+  } catch (_) {
+  }
+  try {
+    const debugSymbol = DebugSymbol.fromAddress(pointerValue);
+    if (debugSymbol !== null && debugSymbol.name) {
+      result[prefix + "_symbol"] = debugSymbol.name;
+    }
+  } catch (_) {
+  }
+  return result;
+}
+
+function describeID401TaskEntry(packetId) {
+  const result = {
+    id401_packet_id: packetId,
+    id401_task_entry: "0x0",
+  };
+  if (pioTaskSearchCallback === null) {
+    result.id401_task_error = "fnPioTaskTbl_SearchTblApp unavailable";
+    return result;
+  }
+  try {
+    const entry = pioTaskSearchCallback(packetId);
+    result.id401_task_entry = entry === null || entry.isNull() ? "0x0" : entry.toString();
+    if (entry === null || entry.isNull()) {
+      return result;
+    }
+    for (let index = 0; index < 4; index += 1) {
+      const callbackPointer = readPointerSafe(entry, 0x8 + index * 0x8);
+      Object.assign(result, describePointer("id401_callback" + index, callbackPointer || ptr(0)));
+    }
+  } catch (error) {
+    result.id401_task_error = String(error);
+  }
+  return result;
 }
 
 function attachSignal(symbol, kind, callback, options) {
@@ -268,7 +356,14 @@ function attachSignal(symbol, kind, callback, options) {
           }
           lastEmitMsByKind[kind] = now;
         }
-        emit(kind, Object.assign({ symbol, address: address.toString() }, callback ? callback(args) : {}));
+        emit(
+          kind,
+          Object.assign(
+            { symbol, address: address.toString() },
+            describeReturnAddress(this.returnAddress),
+            callback ? callback(args) : {}
+          )
+        );
       },
     });
   } catch (error) {
@@ -328,6 +423,17 @@ function installSlotInputHooks() {
 }
 
 function installStoryHooks() {
+  attachSignal("_ZN5ID40116accessSubProcessEPh", "id401_access_subprocess", (args) => {
+    const fields = {
+      id401_packet_pointer: args[0].toString(),
+    };
+    for (let index = 0; index < 8; index += 1) {
+      fields["id401_raw_packet_u8_at_" + index] = readU8Safe(args[0], index);
+    }
+    const packetId = (fields.id401_raw_packet_u8_at_0 || 0) & 0x7f;
+    Object.assign(fields, describeID401TaskEntry(packetId));
+    return fields;
+  });
   attachEnterLeave("fnLotDirGmStart", "lot_dir_gm_start", {
     onEnter() {
       return describeSdGmData();
@@ -546,6 +652,7 @@ setImmediate(function () {
     return;
   }
   const sdGmAddress = findExport("fnGetAddrSdGmData");
+  const pioTaskSearchAddress = findExport("_ZN5ID40125fnPioTaskTbl_SearchTblAppEh");
   if (sdGmAddress !== null) {
     try {
       sdGmCallback = new NativeFunction(sdGmAddress, "pointer", []);
@@ -558,12 +665,25 @@ setImmediate(function () {
       });
     }
   }
+  if (pioTaskSearchAddress !== null) {
+    try {
+      pioTaskSearchCallback = new NativeFunction(pioTaskSearchAddress, "pointer", ["int"]);
+    } catch (error) {
+      emit("hook_attach_error", {
+        hook_kind: "pio_task_search_callback",
+        symbol: "_ZN5ID40125fnPioTaskTbl_SearchTblAppEh",
+        address: pioTaskSearchAddress.toString(),
+        error: String(error),
+      });
+    }
+  }
   emit("probe_start", {
     architecture: Process.arch,
     platform: Process.platform,
     module_name: moduleValue.name,
     module_base: moduleValue.base.toString(),
     sdgm_callback: sdGmAddress === null ? null : sdGmAddress.toString(),
+    pio_task_search_callback: pioTaskSearchAddress === null ? null : pioTaskSearchAddress.toString(),
   });
   installSlotInputHooks();
   installStoryHooks();

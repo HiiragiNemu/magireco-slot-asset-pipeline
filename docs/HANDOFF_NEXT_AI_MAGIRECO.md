@@ -1831,6 +1831,49 @@ It observed `fnRxComDirInfo3 payload=[29,1,1,0,0,8,0,19]`.  Because
 `payload[6]=0`, the `+0x130 -> +0x0a8 -> +0x184 -> +0x358` chain stayed zero.
 The `8` at `payload[5]` is not the lottery-dispatch field.
 
+Latest ID401 dispatcher closure:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704\summary_light_id401_task_entry.json
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_access_subprocess_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_pio_task_table_20260704
+```
+
+`ID401::accessSubProcess(unsigned char*)` reads `packet[0] & 0x7f`, looks up a
+runtime PIO task-table entry through `fnPioTaskTbl_SearchTblApp`, `rev64`s the
+first eight packet bytes, then passes that reversed 8-byte stack buffer to the
+`fnRxCom*` callbacks.  This means the `fnRxComDirInfo3 payload` logged by the
+callback hook is not the original raw packet order.
+
+The current real-input packet for `fnRxComDirInfo3` was:
+
+```text
+raw packet        = [19, 0, 8, 0, 0, 1, 1, 29]
+packet_id         = 19
+callback0         = fnRxComDirInfo3
+callback payload  = [29, 1, 1, 0, 0, 8, 0, 19]
+caller            = CSlotBody::analysPacket()+0x2b4
+```
+
+Therefore the natural route condition should now be written as either:
+
+```text
+fnRxComDirInfo3 callback payload[6] = 8
+```
+
+or, more precisely at the upstream packet level:
+
+```text
+ID401 packet id 19 with raw_packet[1] = 8
+```
+
+The observed ordinary packet had `raw_packet[1]=0`; its `8` was at raw byte 2
+and only becomes callback `payload[5]`, which is not this lottery-dispatch
+field.  The next reverse-engineering target is the producer feeding
+`CSlotBody::analysPacket()` / `ID401::accessSubProcess()` with packet id 19,
+not another broad `ac` or force-kind scan.
+
 Important static-analysis warning: raw offset scans for `0x358` are polluted by
 other structures such as `C_ObjStageAT_SP_Story+0x358` event-code fields.  A
 candidate `+0x358` write is not a `SdGmData+0x358` write unless the base register
@@ -1883,6 +1926,10 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet
    - The new lottery-dispatch route proves `SdGmData+0x358=8` is sufficient to
      reach `SdGmData+0x13be=16` and story kind/character lottery, but the
      natural condition for `fnRxComDirInfo3 payload[6]=8` is still unknown.
+   - Because `ID401::accessSubProcess` byte-reverses the raw packet before
+     callback dispatch, the upstream producer condition is packet id 19 with
+     `raw_packet[1]=8`, not the ordinary observed packet where the value `8`
+     sat at raw byte 2 / callback `payload[5]`.
    - Use the expanded lightweight probe hooks around `fnRxComGmStart`,
      `fnInitGmData_GmStart`, `fnKndCalLot_Start/PreMdl`, and
      `fnKndCalUsr_SetGR_DirPrmCopy` plus `fnRxComDirInfo3` to find when

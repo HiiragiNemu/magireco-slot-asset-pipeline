@@ -2075,9 +2075,40 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_diri
 `payload[6]=0`，所以 `+0x358` 仍为 0；`payload[5]=8` 不是这条 lottery
 dispatch 字段。
 
+后续 ID401 dispatcher 取证进一步澄清 payload 顺序：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704\summary_light_id401_task_entry.json
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_access_subprocess_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_pio_task_table_20260704
+```
+
+`ID401::accessSubProcess(unsigned char*)` 读取 `packet[0] & 0x7f`，通过
+`fnPioTaskTbl_SearchTblApp` 查 runtime PIO task table，然后对原始 8 字节执行
+`rev64` 再派发给 `fnRxCom*` callback。因此 Frida 在 `fnRxComDirInfo3`
+hook 里看到的是 byte-reversed callback payload，不是原始 packet。当前真实输入
+观察到：
+
+```text
+raw packet        = [19, 0, 8, 0, 0, 1, 1, 29]
+packet_id         = 19
+callback0         = fnRxComDirInfo3
+callback payload  = [29, 1, 1, 0, 0, 8, 0, 19]
+caller            = CSlotBody::analysPacket()+0x2b4
+```
+
+所以 `fnRxComDirInfo3 callback payload[6]=8` 等价于更上游的
+`ID401 packet id 19 raw_packet[1]=8`。当前普通包是 `raw_packet[1]=0`，其
+`8` 位于 raw byte 2 / callback `payload[5]`，不会触发这条
+`SdGmData+0x130 -> +0x358` lottery route。下一步应追
+`CSlotBody::analysPacket()` / `ID401::accessSubProcess()` 上游 packet producer，
+而不是继续扩大 force kind 或按 ac 后缀猜测。
+
 仍未闭合：
 
 - 自然运行时什么条件产生 `fnRxComDirInfo3 payload[6]=8`；
+- 等价地，什么上游 producer 产生 `packet_id=19 && raw_packet[1]=8`；
 - lottery 输出如何继续创建具体 SP Story object 和目标 ac；
 - ac7114/ac7115/ac7116 的额外 BGM/bed 是否存在；
 - 渲染尾帧 hold 是否完全等同游戏原生行为。

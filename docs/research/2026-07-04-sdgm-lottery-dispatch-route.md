@@ -226,6 +226,72 @@ dispatch field for this chain.
 The run did not reach `fnLotDirGmStart`; treat it as an upstream DirInfo3
 payload observation only.
 
+### ID401 dispatcher and raw packet mapping
+
+Evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_task_entry_real_input_20260704\summary_light_id401_task_entry.json
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_access_subprocess_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_pio_task_table_20260704
+```
+
+`ID401::accessSubProcess(unsigned char*)` is the generic packet dispatcher for
+the `fnRxComDirInfo*` callbacks.  Static disassembly shows:
+
+```text
+packet_id = packet[0] & 0x7f
+task_entry = ID401::fnPioTaskTbl_SearchTblApp(packet_id)
+load first 8 packet bytes
+rev64 those bytes
+pass the reversed 8-byte stack buffer to the callback(s)
+```
+
+`ID401::fnPioTaskTbl_SearchTblApp` masks the id to one byte, accepts ids up to
+`0x2f`, then returns an entry from the runtime-initialized task table at
+`0x4b8e2c0`.
+
+The latest real-input run installed 38 hooks and observed 13
+`id401_access_subprocess` packets.  The important packet is:
+
+```text
+raw packet        = [19, 0, 8, 0, 0, 1, 1, 29]
+packet_id         = 19
+callback0         = fnRxComDirInfo3
+callback payload  = [29, 1, 1, 0, 0, 8, 0, 19]  # after rev64
+return caller     = CSlotBody::analysPacket()+0x2b4
+```
+
+Therefore the earlier natural observation is not contradictory.  The Frida
+`fnRxComDirInfo3 payload` fields are the callback view after `rev64`, not the
+wire/original packet bytes.  For the proved lottery path:
+
+```text
+fnRxComDirInfo3 callback payload[6] = 8
+```
+
+the equivalent original packet condition is:
+
+```text
+packet_id 19 raw_packet[1] = 8
+```
+
+The current ordinary real-input packet had `raw_packet[1]=0`; its `8` was at
+`raw_packet[2]`, which becomes callback `payload[5]` and does not feed this
+`SdGmData+0x130 -> +0x358` lottery-dispatch chain.
+
+The next upstream target is therefore not `fnRxComDirInfo3` itself, but the code
+feeding `CSlotBody::analysPacket()` / `ID401::accessSubProcess()` with packet id
+19 and a nonzero byte 1.  A natural target run needs to capture a packet:
+
+```text
+raw packet[0] & 0x7f == 19
+raw packet[1] == 8
+```
+
+then confirm the downstream chain in the same JSONL.
+
 ## Tooling changes
 
 `tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now also snapshots
@@ -240,6 +306,11 @@ fnKndCalLot_Start
 fnKndCalLot_PreMdl
 fnKndCalUsr_SetGR_DirPrmCopy
 ```
+
+It also records `ID401::accessSubProcess` raw packet bytes, packet id,
+runtime PIO task callback entries, and return-address metadata.  This is needed
+because `fnRxComDirInfo3` receives a byte-reversed callback buffer, not the raw
+packet as stored at the `ID401::accessSubProcess` entry point.
 
 `tools/frida_runtime_probe/sdgm_state_control_probe.js` adds the one-shot
 control action:
@@ -259,6 +330,8 @@ and dynamically.
 Still open:
 
 - the natural game condition that produces `fnRxComDirInfo3 payload[6]=8`;
+- equivalently, the natural packet producer that emits ID401 packet id 19 with
+  `raw_packet[1]=8`;
 - how the lottery outputs become concrete SP Story object stage/selector values;
 - whether target ac7114/ac7115/ac7116 scenes have extra BGM/bed beyond current
   voice/event audio;
