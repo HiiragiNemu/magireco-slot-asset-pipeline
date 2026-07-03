@@ -340,6 +340,121 @@ not yet identify which submitted primitive is the clean main layer versus
 foreground/slot layers, and the 512x416 `89802b19` receiver must not be treated
 as story continuation.
 
+## 2026-07-03 Z2D movie-layer probe
+
+The static symbol survey found a more direct Z2D movie-layer route than the
+earlier `CScreenObjectMng`/frame-lock hooks:
+
+```text
+zg::CZ2DPlayer::ExecPlayMovie(zg::CZ2DPlayMovie*)
+zg::CZ2DPlayer::DrawMovieLayer(...)
+zg::CZ2DPlayer::GetMoviePrim(...)
+zg::CZ2DHardPlayer::DecodeMovie(zg::CZ2DPlayMovie*)
+zg::CZ2DHardPlayer::DrawMovie(zg::CZ2DPlayPrim*)
+zg::CZ2DHardPlayer::GetMovieTexture(zg::CZ2DPlayMovie*)
+zg::CZ2DPlayMovie::{GetMovieName,GetMovieState,GetMovieStartTime,GetMovieEndTime,ChangeMovieState}
+zg::CZ2DElemMovie::{GetMovieName,GetMovieOriginalName,GetStartTime,GetEndTime,GetDecodeFrame,GetTimeRemapFrame,IsDrawTime}
+CriVideo::GFDirectionCriPlayer::{LoadUSM,Update,Render,GetCurrentFrameData,GetStatus,GetNativeHandle}
+```
+
+The survey artifacts are:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\renderer_symbol_candidates_20260703.txt
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_direction_symbol_candidates_20260703.txt
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\movie_layer_symbol_candidates_20260703.jsonl
+```
+
+New metadata-only tools:
+
+```text
+tools/frida_runtime_probe/z2d_movie_layer_probe.js
+tools/frida_runtime_probe/summarize_z2d_movie_layer_probe.py
+```
+
+These tools record pointers, names, movie info, small numeric fields, renderer
+primitive metadata, and 4 KiB FNV hashes.  They do not dump framebuffers,
+texture bytes, decoded frames, PCM, or game media payloads.
+
+The first useful forced `ac7116_001` capture is:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703\summary_v2\z2d_movie_layer_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703\summary_v2\z2d_movie_layer_events.csv
+```
+
+The v1 run did not recapture the main story `1e31c4fa` `SetData`; it only
+recaptured foreground/gold-frame CRIs in `CriManaWrapper::SetData`.  However,
+it did capture an already-active 512x288 Z2D movie object that matches the
+expected clean main-story end frame and renderer texture id:
+
+| Field | Value |
+| --- | --- |
+| `play_movie_pointer` | `0x72affba2cae8` |
+| `elem_movie_pointer` | `0x72affba2ca98` |
+| width/height | 512x288 |
+| start/end frame | 0 / 337 |
+| input/decode frame | 337 / 337, constant |
+| `CZ2DElemMovie::IsDrawTime(337)` | returns 1 |
+| texture-like field | `+0x20 = 151`, constant |
+| renderer primitive correlation | primitive `0x72af405bd168`, texture id `151` |
+
+That same object remains active well into the voice/subtitle tail.  For the
+11.267-13.05 s user-reported freeze/voice-tail window, the summary reports:
+
+| Kind | Tail-window count |
+| --- | ---: |
+| `z2d_player_exec_play_movie` | 42 |
+| `z2d_elem_movie_get_start_time` | 42 |
+| `z2d_elem_movie_get_end_time` | 42 |
+| `z2d_play_movie_get_movie_state` | 42 |
+| `z2d_elem_movie_is_draw_time` | 166 |
+| `z2d_elem_movie_get_decode_frame` | 166 |
+| `z2d_hard_decode_movie` | 26 |
+| `z2d_hard_draw_movie` | 28 |
+| `gf_cri_update` / `gf_cri_get_status` / `gf_cri_get_current_frame_data` | 20 each |
+| `sprite_renderer_check_bind_texture_states` | 21 |
+| `sprite_renderer_draw_call` | 21 |
+
+Direct extraction of the 512x288 / texture-id-151 object shows repeated
+post-11.267 s records such as:
+
+```text
+rel_ms=11300 ExecPlayMovie play=0x72affba2cae8 +0x4=337 +0x20=151 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11301 IsDrawTime elem=0x72affba2ca98 input=337 return=1
+rel_ms=11301 GetDecodeFrame elem=0x72affba2ca98 input=337 return=337
+rel_ms=11304 DecodeMovie play=0x72affba2cae8 +0x4=337 +0x20=151 +0x28=337 +0x38=512 +0x40=288
+rel_ms=11360 drawCall primitive=0x72af405bd168
+```
+
+The same pattern repeats through and beyond the voice tail; first/last observed
+times for the correlated object were approximately:
+
+| Kind | First ms | Last ms |
+| --- | ---: | ---: |
+| `z2d_player_exec_play_movie` | -1478 | 25960 |
+| `z2d_elem_movie_get_decode_frame` | -1477 | 25961 |
+| `z2d_hard_decode_movie` | -1476 | 25961 |
+| `sprite_renderer_draw_call` for primitive `0x72af405bd168` / texture id `151` | -1475 | 25927 |
+
+Interpretation: for `ac7116_001`, the game's own Z2D movie-layer path continues
+to schedule and draw a 512x288 movie element after the 338-frame main movie
+boundary, with frame/decode fields held at 337 and `IsDrawTime(337)=1`.  This is
+strong runtime-mechanism evidence that the clean story tail should hold the
+final main-story frame while voice/subtitle audio continues.
+
+Caveat: because v1 did not recapture the main story `1e31c4fa` `SetData` in the
+same run, the final closure proof should be a fresh-app/reinject capture that
+hits both:
+
+1. main story `CriManaWrapper::SetData` for `ac7116_AT_SP_story5_01.usm`
+   (`1e31c4fa`, 1955904 bytes, 512x288, 338 frames), and
+2. the Z2D 512x288 / end-frame-337 / texture-id-151 object in the same run.
+
+Do not repeat the high-level frame-lock route as the primary proof path; the Z2D
+movie-layer functions are the currently productive route.
+
 ## Interpretation
 
 The combined evidence now supports this mechanism:
@@ -351,18 +466,26 @@ The combined evidence now supports this mechanism:
    texture-state objects continue to be checked/bound.
 4. The 2026-07-03 drawCall primitive sampler shows that the renderer continues
    submitting stable single-texture quad primitives in the same tail window.
-5. No ordinary GL texture upload/draw continuation was observed in that tail.
-6. The 2026-07-03 field sampler shows that the active TextureStateGL numeric
+5. The 2026-07-03 Z2D movie-layer probe identifies a 512x288 movie element
+   whose end frame is 337, whose decode frame is held at 337, whose draw-time
+   predicate remains true, and whose texture-like field correlates with
+   renderer texture id 151 through the voice tail.
+6. No ordinary GL texture upload/draw continuation was observed in that tail.
+7. The 2026-07-03 field sampler shows that the active TextureStateGL numeric
    fields are stable through the tail window, strengthening the hold/steady
    compositor interpretation.
 
 This is stronger than the earlier animation-object-only proof: the renderer
 path itself remains active through the voice tail with stable texture-state and
-drawCall primitive state after the 338-frame movie boundary.
+drawCall primitive state after the 338-frame movie boundary, and the Z2D movie
+layer now explains why the last clean frame is held.
 
 It is still not exact clean-layer pixel proof.  No framebuffer hash, clean layer
 texture hash, or decoded post-frame-338 pixel was captured.  For final Bilibili
-publication, the project still needs either:
+publication, the remaining visual question is whether this mechanism evidence
+is accepted as sufficient for `ac7116_001`, or whether a fresh same-run Z2D
+capture with `1e31c4fa` plus the end-frame-337 object is required as final
+closure.  For other events, the project still needs either:
 
 - a clean-layer texture/pixel proof, or
 - an explicit acceptance decision that the current runtime mechanism evidence

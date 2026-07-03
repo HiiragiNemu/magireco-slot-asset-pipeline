@@ -818,6 +818,67 @@ If the live game locks the final main-story frame while the voice tail plays,
 the current hold is acceptable.  If the game switches to another visual layer or
 state, the external render must reproduce that instead of holding a still.
 
+### 2026-07-03 Z2D movie-layer proof update
+
+Do not continue spending time on the old high-level frame-lock hook set as the
+primary ac7116 visual-tail route.  The useful route is now the Z2D movie-layer
+path.
+
+New metadata-only tools:
+
+```text
+tools/frida_runtime_probe/z2d_movie_layer_probe.js
+tools/frida_runtime_probe/summarize_z2d_movie_layer_probe.py
+```
+
+Static symbol survey artifacts:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\renderer_symbol_candidates_20260703.txt
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\animation_direction_symbol_candidates_20260703.txt
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\movie_layer_symbol_candidates_20260703.jsonl
+```
+
+Useful capture:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703\summary_v2\z2d_movie_layer_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703\summary_v2\z2d_movie_layer_events.csv
+```
+
+Key facts for `ac7116_001`:
+
+- The probe found an active Z2D movie object:
+  `play_movie_pointer=0x72affba2cae8`,
+  `elem_movie_pointer=0x72affba2ca98`.
+- That object is 512x288, start/end frame 0/337, and its frame/decode fields
+  remain fixed at 337.
+- `CZ2DElemMovie::IsDrawTime(337)` returns 1 in the voice tail.
+- Its texture-like field is constant `151`, matching renderer primitive
+  `0x72af405bd168` / texture id `151`.
+- In 11.267-13.05 s, the game continues `ExecPlayMovie`, `GetDecodeFrame`,
+  `DecodeMovie`, and `drawCall` for this object/primitive.
+- First/last observed times for the correlated object cover roughly -1.48 s to
+  25.96 s relative to the forced event start, well past the 13.027 s final voice
+  endpoint.
+
+Interpretation: for `ac7116_001`, the current external `hold_last_frame` policy
+is now strongly supported by the game's own Z2D movie-layer mechanism.  The
+game appears to keep the clean 512x288 movie element drawable at final frame 337
+while audio/subtitle tail continues.
+
+Caveat: v1 did not recapture the main story `1e31c4fa` `CriManaWrapper::SetData`
+in the same run; it only recaptured foreground/gold-frame CRIs.  For final
+closure, run a fresh app/reinject capture and prove both in one JSONL:
+
+1. main story `ac7116_AT_SP_story5_01.usm` / `1e31c4fa` / 1955904 bytes /
+   512x288 / 338 frames; and
+2. the Z2D 512x288 / end-frame-337 / texture-id-151 object above.
+
+If that same-run closure is captured, `ac7116_001` visual-tail hold can be
+treated as runtime-proven.  The separate BGM/outer-flow gate remains open.
+
 ## Current important tools
 
 Read these before changing pipeline behavior:
@@ -844,6 +905,8 @@ tools/frida_runtime_probe/gl_texture_probe.js
 tools/frida_runtime_probe/summarize_gl_texture_probe.py
 tools/frida_runtime_probe/cri_video_texture_probe.js
 tools/frida_runtime_probe/summarize_cri_video_texture_probe.py
+tools/frida_runtime_probe/z2d_movie_layer_probe.js
+tools/frida_runtime_probe/summarize_z2d_movie_layer_probe.py
 tools/frida_runtime_probe/package_runtime_evidence_capture.py
 tools/frida_runtime_probe/reinject_gadget.py
 ```
@@ -997,12 +1060,17 @@ Current strategy result:
 
 1. Prove or reject the visual tail-hold for `ac7114_001`, `ac7115_001`, and
    `ac7116_001`.
-   - Capture live game screen video or hook the compositor/frame submission
-     around the final seconds.
+   - For `ac7116_001`, use the new Z2D movie-layer route first.  The current
+     v1 evidence strongly supports native final-frame hold, but final closure
+     should recapture main `1e31c4fa` `SetData` and the Z2D end-frame-337
+     object in the same run.
+   - For `ac7114_001` and `ac7115_001`, repeat the productive Z2D route rather
+     than the old high-level frame-lock hooks.
    - The key question is whether clean main-story output should hold the final
      frame while voice continues, or whether another visual layer/state should
      be shown.
-   - Until proven, keep the v19 long scene as review-only.
+   - Until visual-tail and BGM gates are both settled, keep the v19 long scene
+     as review-only.
 
 2. Prove whether the ac7114-16 scene has additional BGM.
    - Do not remove `420xx_SPストーリー...`; it is current bed/base-scene audio.

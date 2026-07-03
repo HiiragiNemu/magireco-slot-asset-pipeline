@@ -60,6 +60,23 @@
   `summary_fine_windows`，确认三组稳定 primitive 在 0.5-6.6 s 主段、6.6-7.2 s
   LP 切换、7.2-11.0 s 中段、11.267-13.05 s 尾段和 14-20 s 后段均持续出现；
   该细分 summary 用于后续 layer correlation，仍不能直接命名 clean story primitive。
+- 2026-07-03 继续从 static symbol survey 转向更直接的 Z2D movie-layer 路线：
+  新增 `tools/frida_runtime_probe/z2d_movie_layer_probe.js` 与
+  `tools/frida_runtime_probe/summarize_z2d_movie_layer_probe.py`，报告补充在
+  `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`。符号调查确认
+  `zg::CZ2DPlayer::ExecPlayMovie`、`CZ2DHardPlayer::DecodeMovie/DrawMovie`、
+  `CZ2DPlayMovie::*`、`CZ2DElemMovie::*` 与
+  `CriVideo::GFDirectionCriPlayer::*` 是比旧 frame-lock hooks 更接近实际 movie
+  调度的路径。forced `ac7116_001` v1 捕获位于
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7116_v1_20260703`，
+  `summary_v2` 识别到一个 512x288、start/end frame 0/337、decode frame 固定
+  337、`IsDrawTime(337)=1`、texture-like id `151` 的 Z2D movie 对象；它与 renderer
+  primitive `0x72af405bd168` / texture id `151` 对应，并在 11.267-13.05 s
+  语音/字幕尾段继续 `ExecPlayMovie`、`GetDecodeFrame`、`DecodeMovie` 和
+  `drawCall`。这把 `ac7116_001` 尾帧 hold 从“renderer stable primitive”提升为
+  “Z2D movie-layer 以 end frame 337 原生持帧”强证据。v1 没在同一次 run 中重新捕获主故事
+  `1e31c4fa` `SetData`，所以最终闭环仍建议重启/reinject 后同时捕获主故事
+  `SetData` 与该 Z2D end-frame-337 对象；不要再把旧高层 frame-lock hook 作为主路线。
 - 2026-07-03 `visual_tail_probe.js` 以已恢复 Gadget 状态重跑 frame-lock 路线，结果位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703`。
   事件与 runtime 两侧均 exit 0，`summary_animation` 显示 88 个样本从 18 ms 覆盖到
