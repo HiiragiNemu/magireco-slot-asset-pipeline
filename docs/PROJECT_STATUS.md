@@ -66,6 +66,15 @@
   入口线索。`csl_audio_queue_probe.js` 已新增
   `rxcom_dirinfo8_*`、`rxcom_pre_mdl_*`、`lot_dir_pre_mdl_*` hook，
   `summarize_runtime_audio_capture.py` 新增 `runtime_rxcom_dir_flow.csv`。
+  live smoke 位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_hook_smoke_20260703`
+  和
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_probe_20260703`：
+  新 hook 安装成功；单 kind 8 诊断触发 `rxcom_dir_flow_count=10`，但
+  `sp_story_state_count=0`，`fnRxComDirInfo8 payload[4]/[5]` 均为 0，所有
+  RxCom/SdGm stage/selector 字段保持 0，仍是非目标普通 route。
+  `run_force_kind_scan.py` 已把 RxCom 计数和 payload/source stage/selector
+  唯一值加入 `candidate_summary.json`。
 - 2026-07-03 SP Story/force-routing 机制报告已新增：
   `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
   新工具 `tools/frida_runtime_probe/extract_sp_story_event_codes.py` 从

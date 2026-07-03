@@ -781,6 +781,31 @@ runtime_rxcom_dir_flow.csv
 
 and includes the new `SdGmData` fields in `runtime_gr_dir_prm_copy.csv`.
 
+Live validation:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_hook_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_probe_20260703
+```
+
+Results:
+
+- idle smoke installed `rxcom_dirinfo8`, `rxcom_pre_mdl`, and
+  `lot_dir_pre_mdl` hooks successfully; no RxCom flow was expected or observed
+  in 3 s idle.
+- single-candidate kind 8 diagnostic produced:
+  - `rxcom_dir_flow_count=10`;
+  - `rxcom_dirinfo8_enter/leave=3/3`;
+  - `rxcom_pre_mdl_enter/leave=1/1`;
+  - `lot_dir_pre_mdl_enter/leave=1/1`;
+  - `sp_story_state_count=0`.
+- In that non-target kind 8 run, `fnRxComDirInfo8` payload byte `4` and byte
+  `5` were both `0`, and all observed RxCom/SdGm stage/selector fields stayed
+  `0`.  This explains the ordinary-event result and validates the new evidence
+  path, but it does not reach any target SP Story row.
+- `run_force_kind_scan.py` now includes RxCom count and unique payload/source
+  stage/selector values in `candidate_summary.json`.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

@@ -458,6 +458,19 @@ state.
 Runtime probe update: `csl_audio_queue_probe.js` now hooks
 `fnRxComDirInfo8`, `fnRxComPreMdl`, and `fnLotDirPreMdl`, and
 `summarize_runtime_audio_capture.py` writes `runtime_rxcom_dir_flow.csv`.
+Live validation:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_hook_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_probe_20260703
+```
+
+The hooks installed successfully.  A single kind 8 diagnostic produced
+`rxcom_dir_flow_count=10` but remained a non-target ordinary route:
+`sp_story_state_count=0`, `fnRxComDirInfo8` payload byte `4` and byte `5` were
+both `0`, and all observed RxCom/SdGm stage/selector fields stayed `0`.
+`run_force_kind_scan.py` now carries RxCom counts and unique payload/source
+stage/selector values in `candidate_summary.json`.
 
 Important evidence files:
 

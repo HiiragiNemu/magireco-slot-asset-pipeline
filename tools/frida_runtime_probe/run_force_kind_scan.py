@@ -369,6 +369,7 @@ def summarize_candidate(
     force_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_force_calls.csv")
     sp_story_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_sp_story_state.csv")
     gr_dir_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_gr_dir_prm_copy.csv")
+    rxcom_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_rxcom_dir_flow.csv")
     queue_rows = read_csv_rows(kind_dir / "summary_v1" / "csl_queue_chunks.csv")
 
     event_codes = sorted(
@@ -415,6 +416,34 @@ def summarize_candidate(
             if row.get("mst_source_story_no_u16_at_0x2378")
         }
     )
+    rxcom_source_stage_numbers = sorted(
+        {
+            row.get("sdgm_rx_source_stage_u16_at_0x170") or ""
+            for row in rxcom_rows
+            if row.get("sdgm_rx_source_stage_u16_at_0x170")
+        }
+    )
+    rxcom_source_selector_numbers = sorted(
+        {
+            row.get("sdgm_rx_source_selector_u16_at_0x16e") or ""
+            for row in rxcom_rows
+            if row.get("sdgm_rx_source_selector_u16_at_0x16e")
+        }
+    )
+    rxcom_payload_stage_numbers = sorted(
+        {
+            row.get("rxcom_dirinfo8_stage_from_payload_u8_at_4") or ""
+            for row in rxcom_rows
+            if row.get("rxcom_dirinfo8_stage_from_payload_u8_at_4")
+        }
+    )
+    rxcom_payload_selector_numbers = sorted(
+        {
+            row.get("rxcom_dirinfo8_selector_from_payload_u8_at_5") or ""
+            for row in rxcom_rows
+            if row.get("rxcom_dirinfo8_selector_from_payload_u8_at_5")
+        }
+    )
     return {
         "kind": kind,
         "path": str(kind_dir),
@@ -425,8 +454,13 @@ def summarize_candidate(
         "hit_target_event": bool((set(event_codes) | set(sp_base_codes)) & target_codes),
         "sp_story_state_count": runtime.get("sp_story_state_count", 0),
         "gr_dir_prm_copy_count": runtime.get("gr_dir_prm_copy_count", 0),
+        "rxcom_dir_flow_count": runtime.get("rxcom_dir_flow_count", 0),
         "gr_copy_sdgm_source_story_numbers": gr_sdgm_source_story_numbers,
         "gr_copy_mst_source_story_numbers": gr_mst_source_story_numbers,
+        "rxcom_source_stage_numbers": rxcom_source_stage_numbers,
+        "rxcom_source_selector_numbers": rxcom_source_selector_numbers,
+        "rxcom_payload_stage_numbers": rxcom_payload_stage_numbers,
+        "rxcom_payload_selector_numbers": rxcom_payload_selector_numbers,
         "force_call_count": runtime.get("force_call_count", 0),
         "csl_queue_chunk_count": csl.get("queue_chunk_count", 0),
         "observed_sound_ids": observed_sound_ids,
