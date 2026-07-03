@@ -1729,3 +1729,48 @@ python tools\frida_runtime_probe\runtime_probe_host.py `
 或后续找到的真实 stage/selector 入口，并在同一 JSONL 中检查
 `runtime_rxcom_dir_flow.csv`、`runtime_anm_dir_data.csv`、
 `runtime_bgm_calls.csv` 和最终 CSL queue。
+
+### 2026-07-03 静态 RxCom payload -> SP Story selector 链闭合
+
+断电恢复后的静态扫描新增证据目录：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_chain_0ec_0ee_20260703
+```
+
+关键结论：
+
+- `fnRxComDirInfo8` 从 RxCom payload 写入 SdGmData：
+  - `payload[5] -> SdGmData+0x16e`
+  - `payload[4] -> SdGmData+0x170`
+- `fnRxComPreMdl` 继续复制：
+  - `SdGmData+0x16e -> SdGmData+0xee`
+  - `SdGmData+0x170 -> SdGmData+0xec`
+  - `SdGmData+0xec -> SdGmData+0x318`
+  - `SdGmData+0xee -> SdGmData+0x31a`
+- `C_AnmBase::fnDataSetDir_DIR()` 再把
+  `MSTCOMCBK()+0x2376/+0x2378` 复制到 `C_AnmBase+0x318/+0x31a`。
+
+精确反汇编证据：
+
+```text
+fnRxComDirInfo8:
+0x4486220  strh w20, [x0, #0x16e]  ; payload[5]
+0x448622c  strh w20, [x0, #0x170]  ; payload[4]
+
+fnRxComPreMdl:
+0x44817fc  ldrh w19, [x0, #0x16e]
+0x4481804  strh w19, [x0, #0xee]
+0x448180c  ldrh w19, [x0, #0x170]
+0x4481814  strh w19, [x0, #0xec]
+0x4481d1c  ldrh w19, [x0, #0xec]
+0x4481d24  strh w19, [x0, #0x318]
+0x4481d2c  ldrh w19, [x0, #0xee]
+0x4481d34  strh w19, [x0, #0x31a]
+```
+
+这进一步证明目标不是 `ac` 后缀数字、不是 CRI index，也不是继续盲扫
+`body_force_main`。需要找的是让 `fnRxComDirInfo8` 收到目标 payload 的外层
+调度路径：`payload[4]` 应产生 stage kind `11/12/13`，`payload[5]`
+应产生 selector `1/2/3/4/13/14`。下一步 runtime backtrace 应优先抓
+`fnRxComDirInfo8` 的 caller/dispatch，而不是扩大 force kind 范围。

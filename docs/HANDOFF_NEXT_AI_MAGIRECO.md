@@ -1506,6 +1506,47 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\single_session_for
 These document transport/injection failures.  Do not treat them as route
 negatives or no-BGM evidence.
 
+Static RxCom chain closure after the same-session work:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_chain_0ec_0ee_20260703
+```
+
+The target selector path is now statically narrowed to RxCom payload bytes:
+
+```text
+fnRxComDirInfo8:
+payload[5] -> SdGmData+0x16e
+payload[4] -> SdGmData+0x170
+
+fnRxComPreMdl:
+SdGmData+0x16e -> SdGmData+0xee
+SdGmData+0x170 -> SdGmData+0xec
+SdGmData+0xec  -> SdGmData+0x318
+SdGmData+0xee  -> SdGmData+0x31a
+```
+
+Relevant addresses:
+
+```text
+0x4486220  strh w20, [x0, #0x16e]
+0x448622c  strh w20, [x0, #0x170]
+0x44817fc  ldrh w19, [x0, #0x16e]
+0x4481804  strh w19, [x0, #0xee]
+0x448180c  ldrh w19, [x0, #0x170]
+0x4481814  strh w19, [x0, #0xec]
+0x4481d1c  ldrh w19, [x0, #0xec]
+0x4481d24  strh w19, [x0, #0x318]
+0x4481d2c  ldrh w19, [x0, #0xee]
+0x4481d34  strh w19, [x0, #0x31a]
+```
+
+This means the next high-value runtime proof is a backtrace/caller capture for
+`fnRxComDirInfo8` with nonzero payload bytes.  For the decoded target rows,
+`payload[4]` must become stage kind `11/12/13` and `payload[5]` must become
+selector `1/2/3/4/13/14`.  Do not spend time blindly expanding
+`body_force_main` scans until this dispatcher is understood.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

@@ -876,6 +876,63 @@ This captured final OpenSL queue chunks with sound ids `8993` and `8998`, but
 still see final audio queue chunks after reinjection.  It does not prove target
 SP Story has no outer-flow BGM.
 
+## Static RxCom payload chain closure
+
+New static scan output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_chain_0ec_0ee_20260703
+```
+
+The previous static lead is now closed one step further.  `fnRxComDirInfo8`
+loads bytes from its payload pointer and writes them into `SdGmData`:
+
+```text
+0x448620c  ldrb w20, [x19, #0x6]  -> 0x4486214 strh w20, [x0, #0x16c]
+0x4486218  ldrb w20, [x19, #0x5]  -> 0x4486220 strh w20, [x0, #0x16e]
+0x4486224  ldrb w20, [x19, #0x4]  -> 0x448622c strh w20, [x0, #0x170]
+```
+
+`fnRxComPreMdl` then copies these fields into the direction source fields:
+
+```text
+0x44817fc  ldrh w19, [x0, #0x16e]
+0x4481804  strh w19, [x0, #0xee]
+0x448180c  ldrh w19, [x0, #0x170]
+0x4481814  strh w19, [x0, #0xec]
+```
+
+Later in the same function, it copies those source fields to the fields that
+the SP Story route work has been tracking:
+
+```text
+0x4481d1c  ldrh w19, [x0, #0xec]
+0x4481d24  strh w19, [x0, #0x318]
+0x4481d2c  ldrh w19, [x0, #0xee]
+0x4481d34  strh w19, [x0, #0x31a]
+```
+
+Therefore the best current model is:
+
+```text
+payload[4] -> SdGmData+0x170 -> SdGmData+0xec -> SdGmData+0x318
+payload[5] -> SdGmData+0x16e -> SdGmData+0xee -> SdGmData+0x31a
+```
+
+For the resolved SP Story target rows, the sought payload values are:
+
+```text
+ac7114_001: payload[4]=11, payload[5]=1 or 2
+ac7115_001: payload[4]=12, payload[5]=1..4
+ac7115_013: payload[4]=12, payload[5]=13 or 14
+ac7116_001: payload[4]=13, payload[5]=1 or 2
+```
+
+This does not yet identify the dispatcher/caller that supplies the payload to
+`fnRxComDirInfo8`.  It does rule out treating the `ac` suffix, CRI index, or
+blind `body_force_main` kind as the target selector.  The next runtime capture
+should prioritize `fnRxComDirInfo8` backtraces and payload bytes.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:
