@@ -189,3 +189,19 @@ Continue from the lightweight route, not the heavy full observer:
 4. only then decide whether the current no-extra-BGM forced renders can be
    promoted to final long-video material.
 
+## Follow-up: SdGmData+0x358 dispatch proof
+
+The next same-day checkpoint is:
+
+```text
+docs/research/2026-07-04-sdgm-lottery-dispatch-route.md
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_lotdirstart_real_input_20260704
+```
+
+Key result: forcing `SdGmData+0x358=8` exactly at `fnLotDirGmStart` entry is
+sufficient for native code to set `SdGmData+0x13be=16` and call
+`fnLot_OT_AT_StryKnd` plus `fnLot_OT_AT_StryChara`.
+
+This proves the internal lottery-dispatch path.  It does not yet prove the
+natural writer of `+0x358`, target SP Story object creation, or target-scene BGM
+state.

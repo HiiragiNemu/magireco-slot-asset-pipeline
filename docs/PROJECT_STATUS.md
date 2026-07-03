@@ -2031,3 +2031,42 @@ BET candidate:    约 620,2475 到 620,2520
 ```
 
 旧 stop `y=2860` 在按钮下方，不要继续使用。
+
+### 2026-07-04 SdGmData story-lottery dispatch proof
+
+新增机制报告：
+
+```text
+docs/research/2026-07-04-sdgm-lottery-dispatch-route.md
+```
+
+新增可审计证据：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_mem_offsets_sdgm_lottery_source_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_sdgm_lottery_source_candidates_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_lotdirstart_real_input_20260704
+```
+
+当前闭合结论：
+
+- `fnLotDirGmStart` 读取 `SdGmData+0x358`。
+- 当 `SdGmData+0x358=8` 时，`fnLotDirGmStart` 写
+  `SdGmData+0x13be=16`。
+- `fnLotOther_AfterGetParam` 在 `+0x13be=16` 分支调用
+  `fnLot_OT_AT_StryKnd`、`fnLot_OT_AT_SpStryKnd` 和
+  `fnLot_OT_AT_StryChara`。
+- 运行时 one-shot 测试在 `fnLotDirGmStart` 入口写 `+0x358=8` 后，实际观测
+  到 `+0x13be=16`，并触发 `lot_ot_at_stryknd` 与
+  `lot_ot_at_strychara` hook。
+
+仍未闭合：
+
+- 自然运行时谁把 `SdGmData+0x358` 置为 8；
+- lottery 输出如何继续创建具体 SP Story object 和目标 ac；
+- ac7114/ac7115/ac7116 的额外 BGM/bed 是否存在；
+- 渲染尾帧 hold 是否完全等同游戏原生行为。
+
+注意：全局 raw `+0x358` offset 扫描会混入
+`C_ObjStageAT_SP_Story+0x358` 这类非 SdGmData 字段。不要把 raw write hit
+当成 SdGmData 写入源，除非基址被证明来自 `fnGetAddrSdGmData()`。

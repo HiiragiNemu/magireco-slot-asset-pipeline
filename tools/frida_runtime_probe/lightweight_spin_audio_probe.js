@@ -166,7 +166,26 @@ function describeSdGmData() {
       sdgm_rx_pre_stage_u16_at_0x0ec: readU16Safe(sdGmPointer, 0x0ec),
       sdgm_rx_copy_stage_u16_at_0x318: readU16Safe(sdGmPointer, 0x318),
       sdgm_rx_copy_selector_u16_at_0x31a: readU16Safe(sdGmPointer, 0x31a),
+      sdgm_lot_dir_case_u16_at_0x358: readU16Safe(sdGmPointer, 0x358),
+      sdgm_lot_dir_aux_u16_at_0x400: readU16Safe(sdGmPointer, 0x400),
+      sdgm_lot_dir_aux_u16_at_0x41e: readU16Safe(sdGmPointer, 0x41e),
+      sdgm_lot_dir_flag_u8_at_0x4c8: readU8Safe(sdGmPointer, 0x4c8),
+      sdgm_lot_dir_flag_u8_at_0x4c9: readU8Safe(sdGmPointer, 0x4c9),
+      sdgm_lot_dir_flag_u8_at_0x4ca: readU8Safe(sdGmPointer, 0x4ca),
+      sdgm_lot_dir_flag_u8_at_0x4ce: readU8Safe(sdGmPointer, 0x4ce),
       sdgm_source_story_no_u16_at_0x788: readU16Safe(sdGmPointer, 0x788),
+      sdgm_lot_stage_u16_at_0x1354: readU16Safe(sdGmPointer, 0x1354),
+      sdgm_lot_substage_u16_at_0x1358: readU16Safe(sdGmPointer, 0x1358),
+      sdgm_lot_mode_u8_at_0x135e: readU8Safe(sdGmPointer, 0x135e),
+      sdgm_lot_dispatch_u16_at_0x13be: readU16Safe(sdGmPointer, 0x13be),
+      sdgm_lot_dispatch_prev0_u16_at_0x13c0: readU16Safe(sdGmPointer, 0x13c0),
+      sdgm_lot_dispatch_prev1_u16_at_0x13c2: readU16Safe(sdGmPointer, 0x13c2),
+      sdgm_lot_dispatch_prev2_u16_at_0x13c4: readU16Safe(sdGmPointer, 0x13c4),
+      sdgm_lot_start_gate_u16_at_0x14cc: readU16Safe(sdGmPointer, 0x14cc),
+      sdgm_lot_stage_gate_u16_at_0x14e2: readU16Safe(sdGmPointer, 0x14e2),
+      sdgm_lot_stage_gate_u16_at_0x14e4: readU16Safe(sdGmPointer, 0x14e4),
+      sdgm_lot_gate_u16_at_0x15a4: readU16Safe(sdGmPointer, 0x15a4),
+      sdgm_lot_gate_u8_at_0x1676: readU8Safe(sdGmPointer, 0x1676),
       sdgm_ot_at_stryknd_pool0_u16_at_0x1f72: readU16Safe(sdGmPointer, 0x1f72),
       sdgm_ot_at_stryknd_pool1_u16_at_0x1f74: readU16Safe(sdGmPointer, 0x1f74),
       sdgm_ot_at_stryknd_pool2_u16_at_0x1f76: readU16Safe(sdGmPointer, 0x1f76),
@@ -306,6 +325,87 @@ function installSlotInputHooks() {
 }
 
 function installStoryHooks() {
+  attachEnterLeave("fnLotDirGmStart", "lot_dir_gm_start", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnLotOther_AfterGetParam", "lot_other_after_get_param", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnLotOther_AfterKndCal_ST", "lot_other_after_kndcal_st", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnInitGmData_GmStart", "init_gmdata_gmstart", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnInitGmData_PowerOn", "init_gmdata_poweron", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnKndCalLot_Start", "kndcal_lot_start", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnKndCalLot_PreMdl", "kndcal_lot_pre_mdl", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnKndCalUsr_SetGR_DirPrmCopy", "kndcal_usr_set_gr_dir_prm_copy", {
+    onEnter(args) {
+      const fields = describeSdGmData();
+      fields.arg0 = args[0].toString();
+      fields.arg1 = args[1].toString();
+      fields.arg2 = args[2].toString();
+      return fields;
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnRxComGmStart", "rxcom_gm_start", {
+    onEnter(args) {
+      const fields = describeSdGmData();
+      fields.rxcom_payload_pointer = args[0].toString();
+      for (let index = 0; index < 8; index += 1) {
+        fields["rxcom_payload_u8_at_" + index] = readU8Safe(args[0], index);
+      }
+      return fields;
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
   attachEnterLeave("fnLot_OT_AT_StryKnd", "lot_ot_at_stryknd", {
     onEnter() {
       return describeSdGmData();

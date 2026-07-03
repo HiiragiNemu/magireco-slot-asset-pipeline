@@ -1325,3 +1325,25 @@ BET:          about 620,2475 to 620,2520
 
 The old stop-button `y=2860` was below the visible buttons and should not be
 reused.
+
+## 2026-07-04 SdGmData lottery-dispatch addendum
+
+Follow-up report:
+
+```text
+docs/research/2026-07-04-sdgm-lottery-dispatch-route.md
+```
+
+New conclusion: `SdGmData+0x358=8` at `fnLotDirGmStart` entry is sufficient for
+native code to write `SdGmData+0x13be=16`.  The `+0x13be=16` branch in
+`fnLotOther_AfterGetParam` calls `fnLot_OT_AT_StryKnd(0)`,
+`fnLot_OT_AT_SpStryKnd()`, and `fnLot_OT_AT_StryChara()`.
+
+Runtime evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_lotdirstart_real_input_20260704
+```
+
+This is a mechanism proof only.  It did not observe `C_ObjStageAT_SP_Story::*`
+object hooks and did not prove the natural writer of `SdGmData+0x358`.

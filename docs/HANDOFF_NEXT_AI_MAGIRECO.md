@@ -1775,6 +1775,51 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\recover_after_natu
 D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natural_spin_reinject_20260703
 ```
 
+## 2026-07-04 SdGmData lottery-dispatch checkpoint
+
+Read this report before doing more SP Story force or render work:
+
+```text
+docs/research/2026-07-04-sdgm-lottery-dispatch-route.md
+```
+
+Evidence roots:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_mem_offsets_sdgm_lottery_source_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_sdgm_lottery_source_candidates_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_lotdirstart_real_input_20260704
+```
+
+The dispatch chain now proved:
+
+```text
+SdGmData+0x358 = 8
+  -> fnLotDirGmStart writes SdGmData+0x13be = 16
+  -> fnLotOther_AfterGetParam calls:
+       fnLot_OT_AT_StryKnd(0)
+       fnLot_OT_AT_SpStryKnd()
+       fnLot_OT_AT_StryChara()
+```
+
+This was proved two ways:
+
+- statically, from `fnLotDirGmStart` and `fnLotOther_AfterGetParam`
+  disassembly;
+- dynamically, by a one-shot `fnLotDirGmStart` entry write of
+  `SdGmData+0x358=8`, which produced `SdGmData+0x13be=16` and triggered
+  `lot_ot_at_stryknd` / `lot_ot_at_strychara` hooks.
+
+Do not overclaim this.  The same run did not observe
+`C_ObjStageAT_SP_Story::*` object hooks, and it did not prove the natural writer
+of `SdGmData+0x358`.  The force-on-entry control is a mechanism proof only, not
+final production evidence and not enough to promote Bilibili-facing videos.
+
+Important static-analysis warning: raw offset scans for `0x358` are polluted by
+other structures such as `C_ObjStageAT_SP_Story+0x358` event-code fields.  A
+candidate `+0x358` write is not a `SdGmData+0x358` write unless the base register
+is proven to come from `fnGetAddrSdGmData()`.
+
 ## Immediate next tasks
 
 0. Keep evidence durable after the RAM-disk loss.
@@ -1819,6 +1864,12 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet
 
 2. Find the real SP Story selector before more force-kind scanning.
    - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
+   - The new lottery-dispatch route proves `SdGmData+0x358=8` is sufficient to
+     reach `SdGmData+0x13be=16` and story kind/character lottery, but the
+     natural writer of `+0x358` is still unknown.
+   - Use the expanded lightweight probe hooks around `fnRxComGmStart`,
+     `fnInitGmData_GmStart`, `fnKndCalLot_Start/PreMdl`, and
+     `fnKndCalUsr_SetGR_DirPrmCopy` to find where `+0x358` is set or cleared.
    - The current static route is
      `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` plus
      `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
