@@ -31,6 +31,7 @@ ACTIONS = {
     "body-force-main": ("set_body_force_main", None),
     "body-force-sub": ("set_body_force_sub", None),
     "body-force-param": ("set_body_force_param", None),
+    "body-force-next-lever": ("body_force_next_lever", None),
     "body-reel-start": ("body_reel_start", 1),
     "body-bet": ("body_bet", 1),
     "body-lever": ("body_lever", 1),
@@ -68,6 +69,7 @@ def main() -> int:
         "body-force-main",
         "body-force-sub",
         "body-force-param",
+        "body-force-next-lever",
     }
     if args.action in index_actions and args.index is None:
         raise SystemExit(f"--index is required for {args.action}")

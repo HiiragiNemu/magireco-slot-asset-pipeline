@@ -1528,11 +1528,45 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 
 - 正确分支：`codex/corrected-runtime-pipeline`
 - 已推送提交：`3d15644 Record SP story force routing evidence`
+- 已推送断电恢复提交：`4ce6992 Record force recovery probes after power loss`
 - 该提交保存了 SP Story event-code 静态提取器、force routing 研究记录、ac7114/ac7115/ac7116 运行时结论和交接状态。
-- 本地后续改动增加了 `force_flag_*` observer、`body-reel-start` 诊断 action 和 `runtime_force_calls.csv` 汇总输出。它们用于继续证明外层调度/force 消费，而不是直接批准任何成片。
+- `4ce6992` 已保存 `force_flag_*` observer、`body-reel-start` 诊断 action 和 `runtime_force_calls.csv` 汇总输出。它们用于继续证明外层调度/force 消费，而不是直接批准任何成片。
 
 关键限制：
 
 - `body-force-main=8` 的旧直接输入尝试不能算 index 8 映射成功或失败；它只说明直接调用 `touch_Lever/touch_Reel` 没有消费 force flag。
 - 后续 index mapping 必须在同一运行中捕获独立观察者的 `force_flag_set` 或等价真实游戏消费证据，再看 `runtime_sp_story_state.csv` / event code / CSL queue。
 - ac7114-16 的最终 Bilibili 长片仍需关闭 BGM/bed 证据门：证明存在额外外层 BGM并加入，或证明官方外层对该 SP Story 无额外 BGM。
+
+### 2026-07-03 断电恢复后的 force mapping 结果
+
+ARM64 Gadget 已恢复，步骤为 root x86 frida-server、`reinject_gadget.py`、再 `adb forward tcp:27043 tcp:27043`。恢复后的可审计证据根：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+已完成：
+
+- 自然一转基线：`natural_baseline_one_spin_after_recovery_20260703`
+  - 捕获普通一转音频、BGM helper、event-code 请求；
+  - 未设置 force 时没有 `force_flag_set`。
+- `body-force-main` 直接写入失败原因已明确：
+  - 一转必须从 `body_state=1/body_mode=1` ready 状态开始；
+  - `CSlotBody::START` 早期清理会清掉预先写入的 `body_force_main`。
+- 新增 post-clear 诊断 action：
+
+```powershell
+python tools\frida_runtime_probe\force_selector_host.py body-force-next-lever --index <kind>
+```
+
+它用于 force kind 映射，不是最终投稿输出的批准机制。
+
+验证结果：
+
+- `force_index0_postclear_chain_20260703` 捕获到独立 observer 的
+  `force_flag_set arg0=0`，证明诊断链路有效。
+- `force_index8_postclear_probe_20260703` 捕获到
+  `force_flag_set arg0=8 return=1`，并映射到 `ac0922_001`
+  (`0x31434e5a38404764`，声音 `31043`-`31061`)；没有
+  `C_ObjStageAT_SP_Story` 事件，所以 kind 8 不是 ac7114/ac7115/ac7116 目标。

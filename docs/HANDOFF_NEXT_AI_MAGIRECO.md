@@ -1181,9 +1181,11 @@ delivery decisions.
 Correct repository state after recovery:
 
 - branch: `codex/corrected-runtime-pipeline`
-- latest pushed commit currently confirmed: `3d15644 Record SP story force routing evidence`
-- A later local diff adds force-routing observers, `body-reel-start`, and
-  `runtime_force_calls.csv`; commit it after syntax checks and handoff updates.
+- latest pushed commit before continuing recovery work:
+  `4ce6992 Record force recovery probes after power loss`
+- The next local diff adds the post-clear force diagnostic action
+  `body-force-next-lever`; commit it after syntax checks and documentation
+  updates.
 
 Current facts:
 
@@ -1222,6 +1224,41 @@ For each index, capture combined CSL/BGM/SP Story JSONL, then inspect
 `runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and
 `csl_queue_chunks.csv`.  Stop as soon as a target SP Story event code appears;
 do not spend credits/tokens brute-forcing broad renders.
+
+Additional 2026-07-03 recovery results:
+
+- Gadget recovery after the power loss required:
+  - root x86 frida-server on `127.0.0.1:27042`;
+  - `reinject_gadget.py`;
+  - explicit `adb forward tcp:27043 tcp:27043`.
+- Durable evidence root:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+- Natural one-spin baseline after recovery:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_baseline_one_spin_after_recovery_20260703
+```
+
+- Naive `body-force-main` before lever is not reliable because early
+  `CSlotBody::START` cleanup can clear the field before `fnSetForceFlag`.
+- New diagnostic action:
+
+```powershell
+python tools\frida_runtime_probe\force_selector_host.py body-force-next-lever --index <kind>
+```
+
+It injects the force kind after `ID401::fnClrForceFlag()` and before
+`fnSetForceFlag`.  This is for force-kind mapping only; it is not a final
+render approval mechanism.
+- `force_index0_postclear_chain_20260703` validated the diagnostic route:
+  independent observer captured `force_flag_set arg0=0`.
+- `force_index8_postclear_probe_20260703` mapped force kind 8 to
+  `ac0922_001` (`0x31434e5a38404764`, voices `31043`-`31061`), with no
+  `C_ObjStageAT_SP_Story` runtime event.  Kind 8 is not ac7114-16.
 
 ## Immediate next tasks
 

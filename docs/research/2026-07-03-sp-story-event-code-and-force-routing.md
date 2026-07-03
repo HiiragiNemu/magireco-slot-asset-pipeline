@@ -268,6 +268,150 @@ Do not count the old `body-force-main=8` direct-input attempt as an index-8
 mapping result.  It only proved that direct `touch_Lever/touch_Reel` input did
 not consume the force flag.
 
+## Power-loss recovery continuation
+
+After the A: RAM disk loss, the runtime path was restored on 2026-07-03 using
+the durable D: evidence root:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+Recovery facts:
+
+- ADB target restored with `adb connect 127.0.0.1:16384`.
+- The app was already foregrounded as
+  `com.universal777.magireco/.SlotMainActivity`.
+- x86 frida-server had to be restarted as root:
+
+```powershell
+adb -s 127.0.0.1:16384 forward tcp:27042 tcp:27042
+adb -s 127.0.0.1:16384 shell "su -c 'nohup /data/local/tmp/frida-server -l 0.0.0.0:27042 >/data/local/tmp/frida-server.log 2>&1 &'"
+python tools\frida_runtime_probe\reinject_gadget.py --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_root_frida_20260703
+adb -s 127.0.0.1:16384 forward tcp:27043 tcp:27043
+```
+
+The first `reinject_gadget.py` summary after root frida showed
+`gadget_loaded` and device-side listen on `127.0.0.1:27043`; host-side Gadget
+use required the explicit `adb forward tcp:27043 tcp:27043`.
+
+Confirmed status after forward:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\frida_gadget_status_after_forward_20260703.jsonl
+```
+
+Key state: `architecture=arm64`, `_ZN8CScnSlot4CalcEv` resolved, `slot_input_enabled=1`,
+`body_credit=50` initially.  `body_force_main` was reset to `-1` before further
+tests:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_body_main_reset_after_recovery_20260703.jsonl
+```
+
+### Natural one-spin baseline after recovery
+
+Evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_baseline_one_spin_after_recovery_20260703
+```
+
+Result:
+
+- `body-bet` successfully prepared the slot (`body_bet=3`).
+- Natural lever/stop via game input produced `CSlotBody::START` and
+  `CSlotBody::STOP` traces.
+- Independent CSL observer captured normal gameplay sound flow:
+  - `force_flag_clear=1`
+  - `force_flag_get_kind=1`
+  - no `force_flag_set`
+  - `ctrl_snd_req_event_code=4`
+  - `queue_enqueue_chunk=10`
+  - observed sound ids: `60`, `61`, `291`, `1764`, `1765`, `1772`, `6717`, `6720`
+
+This is the post-recovery baseline for an unforced spin.
+
+### Why naive body-force-main is insufficient
+
+Evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index0_chain_check_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index0_chain_check_v2_20260703
+```
+
+Findings:
+
+- A spin must start from `body_state=1`, `body_mode=1`; having `body_bet=3` is
+  not sufficient if the state is still `0/0`.
+- Writing `body_force_main` before lever is still not robust.  In v2,
+  `CSlotBody::START` entered with `body_force_main=0`, but no independent
+  `force_flag_set` appeared and the field was cleared to `-1` during the early
+  start path.
+
+Interpretation: the game has an early start/init cleanup path before the force
+check.  A valid diagnostic mapping must inject after that cleanup or reach the
+same timing through the real force selector path.
+
+### Post-clear force diagnostic
+
+New diagnostic action:
+
+```powershell
+python tools\frida_runtime_probe\force_selector_host.py body-force-next-lever --index <kind>
+```
+
+This action arms one pending force kind, presses lever, and writes
+`[CSlotBody+0x520]` immediately after `ID401::fnClrForceFlag()` returns.  It is
+a diagnostic route for mapping `ID401::fnSetForceFlag(kind, parameter)` behavior.
+It is not the same as user-visible force UI and must not by itself approve final
+Bilibili renders.
+
+Validation:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index0_postclear_chain_20260703
+```
+
+The independent observer captured:
+
+- `force_flag_clear=1`
+- `force_flag_set arg0_u16=0 arg1_u16=0`
+- `force_flag_set_return retval_i32=0`
+
+Therefore the diagnostic can make the game-owned
+`START -> fnSetForceFlag -> mReelStart` chain observable.
+
+### Force kind 8 maps to ac0922_001, not ac7114-16
+
+Evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postclear_probe_20260703
+```
+
+Observer summary:
+
+- `force_flag_set arg0_u16=8 arg1_u16=0`
+- `force_flag_set_return retval_i32=1`
+- `force_flag_get_kind_return retval_i32=4`
+- event code `0x31434e5a38404764`
+- sound requests include `31043` through `31061`
+- observed sound ids include `6895`, `6907`, and `7865`-`7883`
+- no `C_ObjStageAT_SP_Story` runtime event fired.
+
+The restored manifest identifies `0x31434e5a38404764` as:
+
+```text
+ac0922_001
+```
+
+`subtitle_voice_v4/subtitle_voice_catalog.csv` maps the observed voice range to
+`ac0922_001` lines such as `cap0922_freeze_nem_001` and
+`cap0922_freeze_tou_014`.  Therefore kind 8 is a valid mapped force route, but
+it is not the ac7114/ac7115/ac7116 SP Story target.
+
 ## Next work
 
 1. Recreate any A:-only 2026-07-03 evidence under the durable root:
@@ -280,8 +424,8 @@ Use A: only for disposable high-frequency scratch.
 2. Run a small, auditable index-mapping experiment:
    - set `body-force-main` to one candidate index;
    - capture combined CSL/BGM/SP Story JSONL with an independent observer;
-   - perform exactly one natural lever/stop cycle or a traced game-owned start
-     path that actually emits `force_flag_set`;
+   - perform exactly one natural lever/stop cycle or the explicitly documented
+     post-clear diagnostic path that actually emits `force_flag_set`;
    - summarize to `summary_v1`;
    - inspect `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
      `runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and

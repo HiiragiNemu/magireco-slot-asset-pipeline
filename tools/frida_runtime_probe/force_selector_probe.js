@@ -36,6 +36,7 @@ let gatDriveFramesRemaining = 0;
 let gatDriveFramesRequested = 0;
 let gatDriveFramesCompleted = 0;
 let gatDriveActive = false;
+let pendingForceAfterClear = null;
 
 function emit(kind, fields) {
   send(
@@ -236,6 +237,54 @@ function callBodyReelStartExec() {
   });
 }
 
+function validateForceKind(value) {
+  const numberValue = Number(value);
+  if (!Number.isInteger(numberValue) || numberValue < 0 || numberValue > 65535) {
+    throw new Error("force kind must be an integer from 0 through 65535");
+  }
+  return numberValue;
+}
+
+function armBodyForceAfterClearAndLever(value) {
+  if (slotBodyPointer === null || slotBodyPointer.isNull()) {
+    throw new Error("CSlotBody instance has not been observed");
+  }
+  const kind = validateForceKind(value);
+  const parameter = readS32(slotBodyPointer.add(0x528)) || 0;
+  pendingForceAfterClear = { kind, parameter };
+  emit("force_after_clear_armed", {
+    kind,
+    parameter,
+    state_before: snapshot(),
+  });
+  pressBodyInput("body_lever");
+}
+
+function injectPendingForceAfterClear() {
+  if (pendingForceAfterClear === null) {
+    return null;
+  }
+  const force = pendingForceAfterClear;
+  pendingForceAfterClear = null;
+  if (slotBodyPointer === null || slotBodyPointer.isNull()) {
+    emit("force_after_clear_inject_error", {
+      error: "CSlotBody instance has not been observed",
+      kind: force.kind,
+      parameter: force.parameter,
+    });
+    return null;
+  }
+  slotBodyPointer.add(0x520).writeS32(force.kind);
+  slotBodyPointer.add(0x528).writeS32(force.parameter);
+  const stateAfter = snapshot();
+  emit("force_after_clear_injected", {
+    kind: force.kind,
+    parameter: force.parameter,
+    state_after: stateAfter,
+  });
+  return stateAfter;
+}
+
 function runPendingRelease(source) {
   if (pendingRelease === null || source !== "Calc") {
     return;
@@ -313,6 +362,8 @@ function executeAction(action) {
       pressBodyInput(name);
     } else if (Object.prototype.hasOwnProperty.call(bodyForceSetterSymbols, name)) {
       setBodyForceValue(name, value);
+    } else if (name === "body_force_next_lever") {
+      armBodyForceAfterClearAndLever(value);
     } else if (name === "body_reel_start") {
       callBodyReelStartExec();
     } else if (name === "set_manager_gate") {
@@ -730,6 +781,17 @@ setImmediate(function () {
           return {
             slot_body_pointer: args[0].toString(),
             index: args[1].toInt32(),
+          };
+        },
+      }
+    ),
+    fn_clear_force_flag: attachSimpleTrace(
+      "_ZN5ID40114fnClrForceFlagEv",
+      "fn_clear_force_flag",
+      {
+        onLeave() {
+          return {
+            injected_state_after: injectPendingForceAfterClear(),
           };
         },
       }
