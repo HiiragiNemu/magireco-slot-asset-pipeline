@@ -16,6 +16,26 @@
 
 最新新增：
 
+- 2026-07-03 断电恢复后，稳定工作进度根改为
+  `D:\magia\MyProducts\casino`；A: 只作为 RAM-disk scratch/2026-06-29 备份恢复源。
+  `body_force_main` post-clear force kinds `0..19` 已完成有效扫描：kind 8 映射到
+  `ac0922_001`，其余命中普通 slot/gameplay 事件，没有任何一个进入
+  `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001` 的
+  `C_ObjStageAT_SP_Story` 路线。新的静态证据显示 SP Story 选择器链是
+  `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`，
+  而不是 `ac` 后缀或简单 force kind。新增
+  `tools/frida_runtime_probe/survey_aarch64_xrefs.py` 用于自包含 ELF64/AArch64
+  xref 调查；`csl_audio_queue_probe.js` 已新增
+  `anm_base_data_set_dir_enter/leave`，`summarize_runtime_audio_capture.py` 会导出
+  `runtime_anm_dir_data.csv`。稳定静态输出位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703`。
+  2 秒 smoke 位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\selector_hook_smoke_v2_20260703`：
+  新 hook 已安装并生成 2253 条 selector rows，当前 idle selector 为 0；这只证明
+  hook 可用，不证明 ac7114-16 route。为避免后续输出刷屏/丢后段 selector，
+  `runtime_probe_host.py` 新增 `--quiet`，`run_force_kind_scan.py` 已使用它，selector
+  hook 上限提升到每 kind 20000。
+  下一步应跑窄 runtime selector probe，不能继续盲目扩大 force kind 扫描。
 - 2026-07-03 SP Story/force-routing 机制报告已新增：
   `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
   新工具 `tools/frida_runtime_probe/extract_sp_story_event_codes.py` 从
@@ -29,9 +49,9 @@
   `C_ObjStageAT_SP_Story`，不能解除 ac7114-16 BGM 门禁。可见 force UI 当前会被
   アドオン購入 门拦截；已新增 `force_selector_host.py body-force-main/body-force-sub/
   body-force-param` 直接写内部 `CSlotBody` force 状态，并验证
-  `body-force-main --index 0` 可写入、`--index -1` 可复位，不触发购买 UI。下一步是
-  小批量映射 0..19 force index，必须以 runtime event-code/SP-state/CSL 证据为准，
-  不能按 ac 后缀或画面相似度推断。
+  `body-force-main --index 0` 可写入、`--index -1` 可复位，不触发购买 UI。该路线
+  随后已用 post-clear diagnostic 完成 `0..19` 有效扫描，未命中 ac7114-16；当前
+  下一步已改为 `MSTCOMCBK()+0x2378` / `C_AnmBase+0x31a` selector probe。
 - 2026-07-02 ac7116 renderer texture-state 探针已新增：
   `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`。
   新工具包括 `runtime_symbol_survey.js`、`cri_video_texture_probe.js` 和

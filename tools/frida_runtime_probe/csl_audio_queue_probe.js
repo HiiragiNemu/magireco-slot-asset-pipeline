@@ -28,6 +28,13 @@ const maxDumpTotalBytes = 96 * 1024 * 1024;
 const maxBytesPerChunk = 0x800000;
 const previewBytes = 0x80;
 const maxHighLevelEmitsPerKind = 1000;
+const highLevelEmitLimitsByKind = {
+  // C_AnmBase::fnDataSetDir_DIR can fire hundreds of times in a short idle
+  // window.  Keep enough rows to survive a full force-scan capture without
+  // losing the later non-zero SP Story selector values.
+  anm_base_data_set_dir_enter: 20000,
+  anm_base_data_set_dir_leave: 20000,
+};
 
 let dumpedChunks = 0;
 let dumpedBytes = 0;
@@ -64,7 +71,8 @@ function emit(kind, fields, data) {
 function emitHighLevel(kind, fields) {
   const previous = highLevelEmitCounts[kind] || 0;
   highLevelEmitCounts[kind] = previous + 1;
-  if (previous < maxHighLevelEmitsPerKind) {
+  const limit = highLevelEmitLimitsByKind[kind] || maxHighLevelEmitsPerKind;
+  if (previous < limit) {
     emit(
       kind,
       Object.assign(
@@ -80,7 +88,7 @@ function emitHighLevel(kind, fields) {
     highLevelSuppressions[kind] = true;
     emit("high_level_audio_hook_suppressed", {
       suppressed_kind: kind,
-      max_emits_per_kind: maxHighLevelEmitsPerKind,
+      max_emits_per_kind: limit,
     });
   }
 }
@@ -147,6 +155,17 @@ function readU16Safe(pointerValue, offset) {
   }
   try {
     return pointerValue.add(offset).readU16();
+  } catch (_) {
+    return null;
+  }
+}
+
+function readU8Safe(pointerValue, offset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return null;
+  }
+  try {
+    return pointerValue.add(offset).readU8();
   } catch (_) {
     return null;
   }
@@ -403,6 +422,123 @@ function describeSpStoryObject(thisPointer) {
     next_event_code_hex_at_0x368: readU64HexSafe(thisPointer, 0x368),
     previous_next_event_code_hex_at_0x370: readU64HexSafe(thisPointer, 0x370),
   };
+}
+
+function describeAnmBaseDirObject(thisPointer) {
+  if (thisPointer === null || thisPointer.isNull()) {
+    return { anm_base_this: "0x0" };
+  }
+  return {
+    anm_base_this: thisPointer.toString(),
+    stage_kind_u16_at_0x318: readU16Safe(thisPointer, 0x318),
+    source_story_no_u16_at_0x31a: readU16Safe(thisPointer, 0x31a),
+    dir_special_flag_u8_at_0x31c: readU8Safe(thisPointer, 0x31c),
+    dir_extra_u16_at_0x31e: readU16Safe(thisPointer, 0x31e),
+    dir_scene_u16_at_0x322: readU16Safe(thisPointer, 0x322),
+    active_story_no_u16_at_0x34a: readU16Safe(thisPointer, 0x34a),
+    dir_no_u16_at_0x34c: readU16Safe(thisPointer, 0x34c),
+    base_event_code_hex_at_0x358: readU64HexSafe(thisPointer, 0x358),
+    previous_base_event_code_hex_at_0x360: readU64HexSafe(thisPointer, 0x360),
+    next_event_code_hex_at_0x368: readU64HexSafe(thisPointer, 0x368),
+    previous_next_event_code_hex_at_0x370: readU64HexSafe(thisPointer, 0x370),
+  };
+}
+
+function describeMstComDirData(mstComCallback) {
+  if (mstComCallback === null) {
+    return {
+      mstcom_pointer: "0x0",
+      mstcom_error: "MSTCOMCBK export missing",
+    };
+  }
+  try {
+    const mstComPointer = mstComCallback();
+    if (mstComPointer === null || mstComPointer.isNull()) {
+      return {
+        mstcom_pointer: "0x0",
+        mstcom_error: "MSTCOMCBK returned null",
+      };
+    }
+    return {
+      mstcom_pointer: mstComPointer.toString(),
+      mst_stage_kind_u16_at_0x2376: readU16Safe(mstComPointer, 0x2376),
+      mst_source_story_no_u16_at_0x2378: readU16Safe(mstComPointer, 0x2378),
+      mst_extra_u16_at_0x238a: readU16Safe(mstComPointer, 0x238a),
+      mst_scene_u16_at_0x23be: readU16Safe(mstComPointer, 0x23be),
+      mstcom_error: "",
+    };
+  } catch (error) {
+    return {
+      mstcom_pointer: "0x0",
+      mstcom_error: String(error),
+    };
+  }
+}
+
+function hookAnmBaseDirData(moduleValue) {
+  const symbol = "_ZN9C_AnmBase16fnDataSetDir_DIREv";
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+
+  const mstComAddress = findExport(moduleValue, "_Z9MSTCOMCBKv");
+  let mstComCallback = null;
+  if (mstComAddress !== null) {
+    try {
+      mstComCallback = new NativeFunction(mstComAddress, "pointer", []);
+    } catch (error) {
+      emit("hook_attach_error", {
+        hook_kind: "anm_base_data_set_dir_mstcom_callback",
+        symbol: "_Z9MSTCOMCBKv",
+        address: mstComAddress.toString(),
+        error: String(error),
+      });
+    }
+  }
+
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        this.thisPointer = args[0];
+        emitHighLevel(
+          "anm_base_data_set_dir_enter",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+            },
+            describeAnmBaseDirObject(args[0]),
+            describeMstComDirData(mstComCallback)
+          )
+        );
+      },
+      onLeave(retval) {
+        emitHighLevel(
+          "anm_base_data_set_dir_leave",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              retval_pointer: retval.toString(),
+              retval_i32: toI32(retval),
+            },
+            describeAnmBaseDirObject(this.thisPointer),
+            describeMstComDirData(mstComCallback)
+          )
+        );
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: "anm_base_data_set_dir",
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: "anm_base_data_set_dir", symbol, address: address.toString() });
 }
 
 function hookSpStoryMethod(moduleValue, symbol, kind, argCount, emitLeave) {
@@ -796,6 +932,7 @@ function installHooks(moduleValue) {
 }
 
 function installHighLevelAudioHooks(moduleValue) {
+  hookAnmBaseDirData(moduleValue);
   hookSpStoryMethod(
     moduleValue,
     "_ZN21C_ObjStageAT_SP_Story3preEv",

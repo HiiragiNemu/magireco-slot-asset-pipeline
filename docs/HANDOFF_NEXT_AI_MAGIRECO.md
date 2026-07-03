@@ -65,14 +65,18 @@ C:\Users\cryne\Downloads\MagiaRe\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSf
 A:\magireco_installed_pull_20260603
 A:\magireco_corrected_research_20260612
 A:\magireco_bili_fulltest_20260603
+D:\magia\MyProducts\casino
 D:\MagiReco_Reverse
 ```
 
 Space policy:
 
-- A: current working/research outputs while space remains.
+- A: RAM-disk scratch/current working outputs.  After the 2026-07-03 power loss,
+  A: may only contain the restored 2026-06-29 backup plus disposable scratch.
 - C: fast P5801X scratch for many small files if A is tight.
-- D: repository and final verified long/review collections.
+- D: repository, durable recovery evidence, final verified long/review
+  collections, and the replacement progress root
+  `D:\magia\MyProducts\casino` for data that must survive another power loss.
 
 ## Current repo state at handoff
 
@@ -317,6 +321,52 @@ GBoss/event code
   -> OpenSL ES audible queue
 ```
 
+2026-07-03 selector update:
+
+- `body_force_main` post-clear force kinds `0..19` were validly scanned, but
+  none reached `ac7114_001`, `ac7115_001`, `ac7115_013`, or `ac7116_001`.
+- Do not extend that scan blindly.  Static analysis now shows the SP Story
+  selector chain:
+
+```text
+MSTCOMCBK()+0x2378
+  -> C_AnmBase::fnDataSetDir_DIR() writes C_AnmBase+0x31a
+  -> C_ObjStageAT_SP_Story::pre()/fnSetData() copies +0x31a to +0x34a
+  -> C_ObjStageAT_SP_Story::fnSetEventCode() uses +0x34a for event-code setup
+```
+
+- New durable static evidence root:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703
+```
+
+- New runtime evidence hook in
+  `tools/frida_runtime_probe/csl_audio_queue_probe.js`:
+  `anm_base_data_set_dir_enter` / `anm_base_data_set_dir_leave`.
+- New summarizer output:
+
+```text
+runtime_anm_dir_data.csv
+```
+
+Smoke evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\selector_hook_smoke_v2_20260703
+```
+
+The hook installed and emitted 2253 selector rows in a 2 s idle capture without
+suppression after raising the selector hook cap to 20000 rows per kind.  Idle
+state still showed selector value `0`, so this is only a hook-validation smoke,
+not an ac7114-16 route proof.
+
+Use that CSV with `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
+`runtime_bgm_calls.csv`, and final CSL queue CSVs to identify the real outer
+SP Story route.  This is the current highest-value path toward Bilibili-ready
+long videos because it attacks the scheduling problem instead of guessing
+individual `ac` families.
+
 Important evidence files:
 
 ```text
@@ -327,6 +377,7 @@ docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md
 docs/research/2026-06-27-runtime-av-recapture-report.md
 docs/research/2026-06-27-runtime-bgm-gap-report.md
 docs/research/2026-06-27-runtime-av-trust-correction.md
+docs/research/2026-07-03-sp-story-event-code-and-force-routing.md
 ```
 
 Critical audio correction:
@@ -1181,11 +1232,12 @@ delivery decisions.
 Correct repository state after recovery:
 
 - branch: `codex/corrected-runtime-pipeline`
-- latest pushed commit before the automated force-kind scan:
-  `109f3b6 Record post-clear force mapping evidence`
-- The next local diff adds `run_force_kind_scan.py` and documents the
-  automated 0..19 post-clear force-kind scan; commit it after syntax checks and
-  handoff/status updates.
+- force-kind recovery commits through
+  `6af86e8 Add auditable force kind scan` were pushed before the selector
+  tracing work.
+- The current local diff adds static xref survey support, the
+  `C_AnmBase::fnDataSetDir_DIR` runtime hook, `runtime_anm_dir_data.csv`
+  summarization, and updated handoff/status notes.
 
 Current facts:
 
@@ -1216,14 +1268,14 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\force_body_ma
 A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\force_body_main_reset_minus1_20260703c.jsonl
 ```
 
-Next recommended experiment: map `body-force-main` index 0..19 in small,
-auditable one-spin captures, but only count a run as valid if an independent
-observer captures `force_flag_set` or equivalent real game force consumption.
-For each index, capture combined CSL/BGM/SP Story JSONL, then inspect
+Historical note: the next experiment was previously to map `body-force-main`
+index `0..19`.  That work is now done via the post-clear diagnostic route and
+did not reach ac7114-16.  Do not repeat or extend it blindly.  The recommended
+next experiment is now a narrow selector capture using
+`anm_base_data_set_dir_enter/leave`, `runtime_anm_dir_data.csv`,
 `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
-`runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and
-`csl_queue_chunks.csv`.  Stop as soon as a target SP Story event code appears;
-do not spend credits/tokens brute-forcing broad renders.
+`runtime_bgm_calls.csv`, `runtime_sound_code_calls.csv`, and final CSL queue
+CSVs in the same run.
 
 Additional 2026-07-03 recovery results:
 
@@ -1288,9 +1340,10 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
   - no tested `0..19` kind reached any target code for `ac7114_001`,
     `ac7115_001`, `ac7115_013`, or `ac7116_001`.
 - Do not blindly extend the force-kind scan above 19.  Next useful work is
-  static caller/selector analysis around
-  `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`, especially the state or table
-  selecting SP Story numbers 3/4/5.
+  the selector route now identified statically:
+  `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
+  The new `anm_base_data_set_dir_*` runtime events should be used to observe it
+  live.
 
 ## Immediate next tasks
 
@@ -1307,9 +1360,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
 
 2. Find the real SP Story selector before more force-kind scanning.
    - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
-   - Inspect static xrefs to `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`.
-   - Locate the caller/table/field that chooses SP Story 3/4/5 and then add a
-     narrow runtime probe/action for that path.
+   - The current static candidate is
+     `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
+   - Run the combined CSL/BGM/SP Story probe and inspect
+     `runtime_anm_dir_data.csv` to observe which selector values correspond to
+     SP Story numbers 3/4/5.
 
 3. Generalize the mechanism instead of manually processing every `ac` family.
    - Use runtime event-code dispatch, GDB/Z2D/DGM timing, sound-code/request

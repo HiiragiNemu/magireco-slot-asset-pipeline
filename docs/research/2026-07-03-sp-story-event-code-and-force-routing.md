@@ -459,6 +459,11 @@ Summary:
   - `0x5773382374447854` / `ac7115_001`;
   - `0x4c792a5a74447854` / `ac7115_013`;
   - `0x2476304366614152` / `ac7116_001`.
+- Static selector tracing now shows why broad `body_force_main` scanning is the
+  wrong next step: SP Story event selection is driven by
+  `C_AnmBase::fnDataSetDir_DIR()` copying a `MSTCOMCBK()` global selector into
+  `C_AnmBase+0x31a`, which `C_ObjStageAT_SP_Story` later copies to
+  `+0x34a` before setting event codes.
 
 Representative valid mapping table:
 
@@ -491,6 +496,94 @@ range tested here.  The next useful work is static caller analysis around
 `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` and the state that selects story
 numbers 3/4/5, then a narrow runtime probe for that exact selector.
 
+## Static SP Story selector source
+
+New static survey tool:
+
+```powershell
+python tools\frida_runtime_probe\survey_aarch64_xrefs.py --lib D:\magia\MyProducts\casino\magireco_corrected_research_20260612\native_analysis\libGameProc.so --target sp_pre=0x43dc260 --target sp_set_data=0x43dc30c --target sp_set_event_code=0x43dc33c --target sp_play_anm=0x43dc378 --target sp_set_base=0x43dc3e8 --target sp_set_next=0x43dcbbc --target plt_set_base=0x449f060 --target plt_set_next=0x449f070 --target anm_data_set_dir=0x43891d0 --target mstcom_cbk_plt=0x4492190 --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703
+```
+
+Stable output root:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703
+```
+
+Important static facts from `libGameProc.so`:
+
+- `_ZN9C_AnmBase16fnDataSetDir_DIREv` starts at `0x4387f90`.
+- It calls `MSTCOMCBK()` and reads:
+  - `MSTCOMCBK()+0x2376` -> stores to `[this+0x318]`;
+  - `MSTCOMCBK()+0x2378` -> stores to `[this+0x31a]`;
+  - `MSTCOMCBK()+0x238a` -> stores to `[this+0x31e]`;
+  - `MSTCOMCBK()+0x23be` -> stores to `[this+0x322]`.
+- `C_ObjStageAT_SP_Story::pre()` loads `[this+0x31a]` and stores it to
+  `[this+0x34a]`, then passes `[this+0x34a]` to `fnSetEvCdBase` and
+  `fnSetEvCdNext`.
+- `C_ObjStageAT_SP_Story::fnSetData()` performs the same
+  `[this+0x31a] -> [this+0x34a]` copy.
+- `C_ObjStageAT_SP_Story::fnSetEventCode()` uses `[this+0x34a]` as the event
+  selector argument.
+
+Therefore the next runtime target is the `MSTCOMCBK()+0x2378` selector and the
+`C_AnmBase+0x31a` / `C_ObjStageAT_SP_Story+0x34a` copy chain, not another blind
+force-kind range.
+
+`csl_audio_queue_probe.js` now also hooks:
+
+```text
+C_AnmBase::fnDataSetDir_DIR()
+```
+
+and emits:
+
+```text
+anm_base_data_set_dir_enter
+anm_base_data_set_dir_leave
+```
+
+with the object fields at `+0x318`, `+0x31a`, `+0x31c`, `+0x31e`, `+0x322`,
+`+0x34a`, `+0x34c`, `+0x358`, `+0x368`, plus the current `MSTCOMCBK()` values
+at `+0x2376`, `+0x2378`, `+0x238a`, and `+0x23be`.
+
+`summarize_runtime_audio_capture.py` now writes:
+
+```text
+runtime_anm_dir_data.csv
+```
+
+This CSV is the next join table for proving which global selector value leads
+to SP Story numbers 3/4/5 and then to `ac7114_001`, `ac7115_001`, and
+`ac7116_001`.
+
+Smoke evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\selector_hook_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\selector_hook_smoke_v2_20260703
+```
+
+Results:
+
+- the new `anm_base_data_set_dir` hook installed at runtime;
+- smoke v1 hit the old per-kind cap of 1000 rows in an 8 s idle capture, proving
+  the hook is hot enough that the default cap could drop later target selectors;
+- `csl_audio_queue_probe.js` now gives `anm_base_data_set_dir_enter/leave` a
+  per-kind cap of 20000 rows;
+- smoke v2 captured 1127 enter rows and 1126 leave rows in 2 s with no
+  suppression;
+- current idle selector values were still zero:
+  `unique_anm_dir_source_story_numbers=["0"]` and
+  `unique_mst_source_story_numbers=["0"]`.
+
+This validates the probe mechanism only.  It does not prove the target
+ac7114-16 route yet.
+
+`runtime_probe_host.py` now has `--quiet` to avoid echoing every hook event to
+the terminal.  `run_force_kind_scan.py` uses `--quiet`; JSONL/CSV evidence is
+unchanged.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:
@@ -501,12 +594,12 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 
 Use A: only for disposable high-frequency scratch.
 2. Do not continue blind `body_force_main` scanning just because `0..19` missed.
-   First identify the SP Story caller/selector statically:
-   - xrefs to `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`;
-   - story-number/state fields that choose SP Story 3/4/5;
-   - any parameter table separate from `CSlotBody+0x520` kind.
-3. After static candidates exist, add a narrow runtime probe/action for that
-   selector and capture combined CSL/BGM/SP Story JSONL.
+   The static selector source is now identified:
+   `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
+3. Run a narrow runtime probe with the new `anm_base_data_set_dir_*` events and
+   capture combined CSL/BGM/SP Story JSONL.  The first target is to observe the
+   selector values that correspond to ordinary scenes versus SP Story numbers
+   3/4/5.
 4. Only after a target SP Story is reached through the native outer path can the
    ac7114-16 BGM gate be closed.
 

@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--script", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--duration", type=float, default=120.0)
+    parser.add_argument("--quiet", action="store_true", help="write JSONL only; do not echo every hook event")
     return parser.parse_args()
 
 
@@ -54,18 +55,19 @@ def main() -> int:
                 record["data_base64"] = base64.b64encode(data).decode("ascii")
             output.write(json.dumps(record, ensure_ascii=False) + "\n")
             payload = message.get("payload", {})
-            print(
-                json.dumps(
-                    {
-                        "kind": payload.get("kind", message.get("type")),
-                        "text": payload.get("text_utf8", ""),
-                        "request_id": payload.get("request_id"),
-                        "return_u32": payload.get("return_u32"),
-                    },
-                    ensure_ascii=False,
-                ),
-                flush=True,
-            )
+            if not args.quiet:
+                print(
+                    json.dumps(
+                        {
+                            "kind": payload.get("kind", message.get("type")),
+                            "text": payload.get("text_utf8", ""),
+                            "request_id": payload.get("request_id"),
+                            "return_u32": payload.get("return_u32"),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    flush=True,
+                )
 
         script.on("message", on_message)
         script.load()
