@@ -912,6 +912,36 @@ continues.  A framebuffer/texture-byte hash would be stricter pixel proof, but
 it is no longer necessary to explain the external render's final-frame hold for
 `ac7116_001`.
 
+The same Z2D route was then extended to the other two events in the same scene:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7114_v1_20260703\summary_v1\z2d_movie_layer_summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\z2d_movie_layer_ac7115_v1_20260703\summary_v1\z2d_movie_layer_summary.json
+docs/research/2026-07-02-ac7114-16-cri-receiver-tail-sampler.md
+```
+
+Additional results:
+
+- `ac7114_001`: same run captured main story `a5b2c906` / 1903456 bytes /
+  512x288 / 275 frames and named Z2D movie
+  `ac7114_AT_SP_story3_01.dgm`; play `0x72affba47728`,
+  elem `0x72affba476d8`, end frame 274, texture-like id `165`, renderer
+  primitive `0x72af4e66e168` / texture id `165`.  Tail rows show
+  `IsDrawTime(274)=1`, `GetDecodeFrame(274)=274`, and continued drawCall.
+- `ac7115_001`: same run captured main story `4ad69770` / 3940544 bytes /
+  512x288 / 636 frames and named Z2D movie
+  `ac7115_AT_SP_story4_01.dgm`; play `0x72affb9d0c28`,
+  elem `0x72affb9d0bd8`, end frame 635, texture-like id `197`, renderer
+  primitive `0x72af4e66e168` / texture id `197`.  Tail rows show
+  `IsDrawTime(635)=1`, `GetDecodeFrame(635)=635`, and continued drawCall.
+  The same run also saw small CRIs `7fc38d87` and `400d7791`; they are
+  transition/follow-up CRIs and must not replace the named clean story DGM.
+
+Current visual-tail conclusion: the clean story `hold_last_frame` policy for
+`ac7114_001 + ac7115_001 + ac7116_001` is now runtime-mechanism proven.  Do not
+spend more work on this gate unless a stricter framebuffer/texture-byte hash is
+explicitly required.
+
 The separate BGM/outer-flow gate remains open.  Do not mark the Bilibili long
 scene final until BGM/bed presence is proven or proven absent.
 
@@ -1094,47 +1124,39 @@ Current strategy result:
 
 ## Immediate next tasks
 
-1. Prove or reject the visual tail-hold for `ac7114_001`, `ac7115_001`, and
-   `ac7116_001`.
-   - For `ac7116_001`, visual-tail hold is now runtime-mechanism proven by
-     `z2d_movie_layer_ac7116_v2_same_run_closure_20260703`.  Do not spend more
-     time here unless a stricter pixel/hash proof is explicitly required.
-   - For `ac7114_001` and `ac7115_001`, repeat the productive Z2D route rather
-     than the old high-level frame-lock hooks.
-   - The key question is whether clean main-story output should hold the final
-     frame while voice continues, or whether another visual layer/state should
-     be shown.
-   - Until visual-tail and BGM gates are both settled, keep the v19 long scene
-     as review-only.
-
-2. Prove whether the ac7114-16 scene has additional BGM.
+1. Prove whether the ac7114-16 scene has additional BGM.
+   - The visual-tail gate for `ac7114_001`, `ac7115_001`, and `ac7116_001` is
+     now runtime-mechanism proven by the 2026-07-03 Z2D captures.
    - Do not remove `420xx_SPストーリー...`; it is current bed/base-scene audio.
    - Capture the outer state and `CSLAndroidSimpleBufferQueue::Enqueue` queue
      while the scene is reached normally if possible.
-   - Use high-level BGM hooks in `runtime_probe.js` in the same run.
+   - Use high-level BGM hooks in `runtime_probe.js` or the combined CSL+BGM
+     probe in the same run.
+   - Until BGM/bed presence is proven or proven absent, keep the v19 long scene
+     as review-only.
 
-3. Generalize the mechanism instead of manually processing every `ac` family.
+2. Generalize the mechanism instead of manually processing every `ac` family.
    - Use runtime event-code dispatch, GDB/Z2D/DGM timing, sound-code/request
      resolution, and final queue evidence.
    - The target is a pipeline that can decide: normal story animation, same
      scene continuation, gameplay/material, foreground-only, or blocked pending
      evidence.
 
-4. Re-audit known-good v15 families for long-edition delivery.
+3. Re-audit known-good v15 families for long-edition delivery.
    - `ac1102`, `ac1103`, `ac1104`, and food/restaurant samples are likely
      high-value because the user already found them acceptable.
    - Keep original per-event files.
    - Build same-scene/family long versions only after current AV trust gates
      pass.
 
-5. Keep material collections separate.
+4. Keep material collections separate.
    - Small Kyubey / black-screen / CHANCE / PUSH / reel / gold-frame / particle
      effects can be combined into material videos.
    - If role voice appears, it is not pure material and must be handled as
      animation or gameplay-with-role-voice, not silently thrown into a material
      collection.
 
-6. Preserve auditability.
+5. Preserve auditability.
    - Every new output needs manifest, source hash, event index, cumulative
      timeline, subtitle source, audio source, and QA report.
    - Broad batch work should begin with dry-run or small-batch validation.

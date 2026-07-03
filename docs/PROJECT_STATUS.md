@@ -84,6 +84,18 @@
   `0x72af4e66e168` / texture id `153` 持续 drawCall 到 25.8 s。`ac7116_001`
   视觉尾帧 hold 现在应视为 runtime-mechanism 级闭环证明；BGM/outer-flow 门禁仍未解除，
   ac7114/ac7115 仍需同路线扩展。不要再把旧高层 frame-lock hook 作为主路线。
+  随后同一 Z2D route 已扩展到 `ac7114_001` 与 `ac7115_001`，报告记录在
+  `docs/research/2026-07-02-ac7114-16-cri-receiver-tail-sampler.md`。`ac7114`
+  同 run 命中主故事 `a5b2c906`/1903456/512x288/275 帧与
+  `ac7114_AT_SP_story3_01.dgm`，Z2D 对象 `0x72affba47728` /
+  `0x72affba476d8` 在尾段 `IsDrawTime(274)=1`、`GetDecodeFrame(274)=274`，
+  primitive `0x72af4e66e168` / texture id `165` 持续 draw。`ac7115` 同 run
+  命中主故事 `4ad69770`/3940544/512x288/636 帧与
+  `ac7115_AT_SP_story4_01.dgm`，Z2D 对象 `0x72affb9d0c28` /
+  `0x72affb9d0bd8` 在尾段 `IsDrawTime(635)=1`、`GetDecodeFrame(635)=635`，
+  primitive `0x72af4e66e168` / texture id `197` 持续 draw。至此
+  `ac7114_001 + ac7115_001 + ac7116_001` clean story 的 visual tail-hold gate
+  在 runtime-mechanism 级别已解决；下一关键门禁是 BGM/outer-flow audio proof。
 - 2026-07-03 `visual_tail_probe.js` 以已恢复 Gadget 状态重跑 frame-lock 路线，结果位于
   `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\visual_tail_lock_ac7116_v10_20260703`。
   事件与 runtime 两侧均 exit 0，`summary_animation` 显示 88 个样本从 18 ms 覆盖到
