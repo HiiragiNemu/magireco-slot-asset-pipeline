@@ -292,6 +292,59 @@ raw packet[1] == 8
 
 then confirm the downstream chain in the same JSONL.
 
+### Upstream command-buffer source
+
+Follow-up static/runtime work moved one layer above `accessSubProcess()`.  See:
+
+```text
+docs/research/2026-07-04-id401-command-buffer-source.md
+```
+
+New static outputs:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_slotbody_analys_packet_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_cmd_buffer_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_id401_bank_cmd_queue_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_xref_id401_user_label_work_plt_20260704
+```
+
+Current chain:
+
+```text
+LC701A_SLOT staging buffer at this+0xf298
+  -> LC701A_SLOT queued command buffer at this+0x200ee
+  -> ID401::getCmdBuf(dst, 0xc00)
+  -> CSlotBody::analysPacket() 8-byte packet loop
+  -> ID401::accessSubProcess(packet)
+  -> rev64 callback payload
+  -> fnRxComDirInfo3
+```
+
+The command queue flag is at `LC701A_SLOT+0x200ed`, the queue buffer is at
+`+0x200ee`, the queue tail/counter-like field is at `+0x20cee`, the staging
+buffer is at `+0xf298`, and the pending length is at `+0xf0fe`.
+`LC701A_SLOT::USER_LABEL_WORK()` and `LC701A_SLOT::SET_BANKBUFFER()` enqueue
+staging packets into the command buffer; `USER_LABEL_WORK()` is called from
+`LC701A_SLOT::_USER_FC_CALL()` at `0x43f2f74`.
+
+Runtime evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_real_input_20260704
+```
+
+That short run copied only a `fnRxComMedalIN` packet:
+
+```text
+raw packet = [4, 3, 3, 156, 240, 0, 0, 150]
+```
+
+It did not capture the target `packet_id=19 && raw_packet[1]=8`.  This is only
+an instrumentation proof; the next useful capture should start from or progress
+through STOP/result state and watch the LC701A queue until a `DirInfo3` packet is
+produced.
+
 ## Tooling changes
 
 `tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now also snapshots
@@ -311,6 +364,12 @@ It also records `ID401::accessSubProcess` raw packet bytes, packet id,
 runtime PIO task callback entries, and return-address metadata.  This is needed
 because `fnRxComDirInfo3` receives a byte-reversed callback buffer, not the raw
 packet as stored at the `ID401::accessSubProcess` entry point.
+
+The same lightweight probe now records `ID401::getCmdBuf`,
+`LC701A_SLOT::mn_getCmdBuf`, `LC701A_SLOT::USER_LABEL_WORK`, and
+`LC701A_SLOT::SET_BANKBUFFER` command-buffer state.  It marks any copied packet
+with `packet_id == 19 && raw_packet[1] == 8` as a
+`is_dirinfo3_lottery_dispatch_candidate`.
 
 `tools/frida_runtime_probe/sdgm_state_control_probe.js` adds the one-shot
 control action:
@@ -335,7 +394,7 @@ Still open:
 - how the lottery outputs become concrete SP Story object stage/selector values;
 - whether target ac7114/ac7115/ac7116 scenes have extra BGM/bed beyond current
   voice/event audio;
-- whether visual tail-hold in rendered outputs matches native runtime behavior.
+- natural outer-flow BGM/audio state for Bilibili-facing long scenes.
 
 Do not generate or promote Bilibili-facing long videos from this force-route
 alone.  The next useful work is to find the native condition that produces

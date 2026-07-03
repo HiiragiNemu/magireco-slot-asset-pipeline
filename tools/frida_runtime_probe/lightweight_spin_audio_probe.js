@@ -226,6 +226,90 @@ function describeSpStoryObject(thisPointer) {
   };
 }
 
+function readU8VectorSafe(base, offset, length) {
+  const values = [];
+  if (base === null || base.isNull()) {
+    return values;
+  }
+  for (let index = 0; index < length; index += 1) {
+    values.push(readU8Safe(base, offset + index));
+  }
+  return values;
+}
+
+function describeID401CommandRecord(raw, offset) {
+  const first = raw.length > 0 && raw[0] !== null ? raw[0] : 0;
+  const packetId = first & 0x7f;
+  const record = {
+    offset,
+    raw,
+    packet_id: packetId,
+    is_dirinfo3_lottery_dispatch_candidate: packetId === 19 && raw.length > 1 && raw[1] === 8,
+  };
+  try {
+    const taskEntry = describeID401TaskEntry(packetId);
+    record.callback0_symbol = taskEntry.id401_callback0_symbol || "";
+    record.callback1_symbol = taskEntry.id401_callback1_symbol || "";
+  } catch (_) {
+  }
+  return record;
+}
+
+function readID401CommandRecords(base, maxBytes, maxRecords) {
+  const records = [];
+  if (base === null || base.isNull()) {
+    return records;
+  }
+  const limit = Math.max(0, Math.min(maxBytes, 0xc00));
+  for (let offset = 0; offset + 8 <= limit && records.length < maxRecords; offset += 8) {
+    const raw = readU8VectorSafe(base, offset, 8);
+    if (raw.length !== 8) {
+      continue;
+    }
+    let hasNonZero = false;
+    for (let index = 0; index < raw.length; index += 1) {
+      if (raw[index] !== null && raw[index] !== 0) {
+        hasNonZero = true;
+        break;
+      }
+    }
+    if (!hasNonZero || raw[0] === 0) {
+      continue;
+    }
+    records.push(describeID401CommandRecord(raw, offset));
+  }
+  return records;
+}
+
+function describeID401CommandState(thisPointer) {
+  if (thisPointer === null || thisPointer.isNull()) {
+    return { id401_lc701a_this: "0x0" };
+  }
+  const pendingLen = readU8Safe(thisPointer, 0xf0fe);
+  const stagingBytes = pendingLen === null ? 0x100 : Math.max(8, Math.min(pendingLen, 0x100));
+  return {
+    id401_lc701a_this: thisPointer.toString(),
+    id401_pc_u16_at_0x20: readU16Safe(thisPointer, 0x20),
+    id401_command_queue_flag_u8_at_0x200ed: readU8Safe(thisPointer, 0x200ed),
+    id401_command_queue_tail_u16_at_0x20cee: readU16Safe(thisPointer, 0x20cee),
+    id401_pending_len_u8_at_0xf0fe: pendingLen,
+    id401_staging_packets_at_0xf298: readID401CommandRecords(thisPointer.add(0xf298), stagingBytes, 8),
+    id401_queue_packets_at_0x200ee: readID401CommandRecords(thisPointer.add(0x200ee), 0xc00, 16),
+  };
+}
+
+function describeID401CopiedCommandBuffer(bufferPointer, lengthValue) {
+  if (bufferPointer === null || bufferPointer.isNull()) {
+    return { id401_command_buffer_pointer: "0x0", id401_command_buffer_packets: [] };
+  }
+  const lengthLimit = lengthValue === null ? 0xc00 : Math.max(0, Math.min(lengthValue, 0xc00));
+  return {
+    id401_command_buffer_pointer: bufferPointer.toString(),
+    id401_command_buffer_length: lengthLimit,
+    id401_command_buffer_packets: readID401CommandRecords(bufferPointer, lengthLimit, 32),
+  };
+}
+
 function attachEnterLeave(symbol, kind, callbacks) {
   const address = findExport(symbol);
   if (address === null) {
@@ -423,6 +507,63 @@ function installSlotInputHooks() {
 }
 
 function installStoryHooks() {
+  attachEnterLeave("_ZN5ID4019getCmdBufEPhi", "id401_get_cmd_buf", {
+    onEnter(args) {
+      return {
+        id401_get_cmd_buf_dest: args[0].toString(),
+        id401_get_cmd_buf_len: toI32(args[1]),
+      };
+    },
+    onLeave(_retval, fields) {
+      return describeID401CopiedCommandBuffer(
+        ptr(fields.id401_get_cmd_buf_dest || "0x0"),
+        fields.id401_get_cmd_buf_len
+      );
+    },
+  });
+  attachEnterLeave("_ZN5ID40111LC701A_SLOT12mn_getCmdBufEPhi", "id401_mn_get_cmd_buf", {
+    onEnter(args) {
+      return {
+        id401_mn_get_cmd_buf_dest: args[1].toString(),
+        id401_mn_get_cmd_buf_len: toI32(args[2]),
+        state_before: describeID401CommandState(args[0]),
+      };
+    },
+    onLeave(_retval, fields) {
+      return {
+        state_after: fields && fields.state_before ? describeID401CommandState(ptr(fields.state_before.id401_lc701a_this)) : {},
+        copied_buffer: describeID401CopiedCommandBuffer(
+          ptr(fields.id401_mn_get_cmd_buf_dest || "0x0"),
+          fields.id401_mn_get_cmd_buf_len
+        ),
+      };
+    },
+  });
+  attachEnterLeave("_ZN5ID40111LC701A_SLOT16_USER_LABEL_WORKEv", "id401_user_label_work", {
+    onEnter(args) {
+      return {
+        state_before: describeID401CommandState(args[0]),
+      };
+    },
+    onLeave(retval, fields) {
+      return {
+        retval_i32: toI32(retval),
+        state_after: fields && fields.state_before ? describeID401CommandState(ptr(fields.state_before.id401_lc701a_this)) : {},
+      };
+    },
+  });
+  attachEnterLeave("_ZN5ID40111LC701A_SLOT14SET_BANKBUFFEREv", "id401_set_bankbuffer", {
+    onEnter(args) {
+      return {
+        state_before: describeID401CommandState(args[0]),
+      };
+    },
+    onLeave(_retval, fields) {
+      return {
+        state_after: fields && fields.state_before ? describeID401CommandState(ptr(fields.state_before.id401_lc701a_this)) : {},
+      };
+    },
+  });
   attachSignal("_ZN5ID40116accessSubProcessEPh", "id401_access_subprocess", (args) => {
     const fields = {
       id401_packet_pointer: args[0].toString(),

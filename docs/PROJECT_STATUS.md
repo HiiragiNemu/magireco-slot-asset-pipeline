@@ -16,6 +16,23 @@
 
 最新新增：
 
+- 2026-07-04 继续补齐 ID401 packet producer 机制：新增
+  `docs/research/2026-07-04-id401-command-buffer-source.md`。静态证据表明
+  `CSlotBody::analysPacket()` 先调用 `ID401::getCmdBuf(dst, 0xc00)`，再以
+  8 字节记录循环调用 `ID401::accessSubProcess(packet)`；更上游是
+  `LC701A_SLOT` 的 staging/queue 结构：`+0xf298` staging buffer、
+  `+0xf0fe` pending length、`+0x200ed` queue flag、`+0x200ee` queue buffer、
+  `+0x20cee` queue tail/counter-like field。`LC701A_SLOT::USER_LABEL_WORK()`
+  和 `SET_BANKBUFFER()` 会把 staging packet 入队，`USER_LABEL_WORK()` 由
+  `_USER_FC_CALL()` 调用。`lightweight_spin_audio_probe.js` 已新增
+  `ID401::getCmdBuf`、`LC701A_SLOT::mn_getCmdBuf`、`USER_LABEL_WORK`、
+  `SET_BANKBUFFER` command-buffer state hooks，并标记
+  `packet_id=19 && raw_packet[1]=8` 作为 `fnRxComDirInfo3 payload[6]=8`
+  的上游 lottery-dispatch candidate。最新真实输入短捕获位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_real_input_20260704`，
+  只复制到 `fnRxComMedalIN` 包 `[4,3,3,156,240,0,0,150]`，未命中目标
+  DirInfo3；这只是 instrumentation proof，不是机制负证据。后续应从
+  STOP/result 状态延长捕获 LC701A queue，而不是继续逐个 ac 手工猜测。
 - 2026-07-04 断电/恢复后，当前 durable 即时工作根继续改为
   `D:\magia\MyProducts\casino`；A: 视为 2026-06-29 备份恢复源和可删除
   RAM-disk scratch，不再作为唯一证据保存位置。新增轻量真实输入探针：
@@ -2110,8 +2127,7 @@ caller            = CSlotBody::analysPacket()+0x2b4
 - 自然运行时什么条件产生 `fnRxComDirInfo3 payload[6]=8`；
 - 等价地，什么上游 producer 产生 `packet_id=19 && raw_packet[1]=8`；
 - lottery 输出如何继续创建具体 SP Story object 和目标 ac；
-- ac7114/ac7115/ac7116 的额外 BGM/bed 是否存在；
-- 渲染尾帧 hold 是否完全等同游戏原生行为。
+- ac7114/ac7115/ac7116 的自然 outer-flow 额外 BGM/bed 是否存在。
 
 注意：全局 raw `+0x358` offset 扫描会混入
 `C_ObjStageAT_SP_Story+0x358` 这类非 SdGmData 字段。不要把 raw write hit

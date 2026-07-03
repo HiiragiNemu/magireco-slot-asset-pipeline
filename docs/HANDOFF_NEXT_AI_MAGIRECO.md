@@ -80,6 +80,53 @@ Space policy:
 
 ## Current repo state at handoff
 
+2026-07-04 recovery checkpoint:
+
+- A: lost newer temporary data during the power outage.  Treat A: as restored
+  2026-06-29 backup plus disposable scratch only.
+- Durable immediate progress root is now:
+
+```text
+D:\magia\MyProducts\casino
+```
+
+- Current authoritative branch is still:
+
+```text
+codex/corrected-runtime-pipeline
+```
+
+- Latest mechanism direction is not per-`ac` manual sorting.  It is the generic
+  ID401/LC701A packet scheduler:
+
+```text
+LC701A_SLOT staging/queue
+  -> ID401::getCmdBuf(dst, 0xc00)
+  -> CSlotBody::analysPacket() 8-byte packet loop
+  -> ID401::accessSubProcess(packet)
+  -> rev64 callback payload
+  -> fnRxComDirInfo3 payload[6]
+  -> SdGmData story-lottery route
+```
+
+Read these first for the latest runtime/scheduler state:
+
+```text
+docs/research/2026-07-04-sdgm-lottery-dispatch-route.md
+docs/research/2026-07-04-id401-command-buffer-source.md
+```
+
+The target upstream packet for the currently proved story-lottery route is:
+
+```text
+packet_id == 19
+raw_packet[1] == 8
+```
+
+because `ID401::accessSubProcess()` reverses the 8 raw bytes before
+`fnRxComDirInfo3` sees them.  Do not search by `ac` suffix number or by visual
+contact-sheet similarity.
+
 Before this handoff update, the branch was clean at:
 
 ```text
@@ -121,6 +168,12 @@ User feedback:
 Do not ignore this feedback.  The v19 audio/subtitle correctness is progress,
 but the visual-tail and BGM/bed completeness questions remain open delivery
 gates.
+
+2026-07-04 correction: the visual-tail gate for
+`ac7114_001 + ac7115_001 + ac7116_001` now has runtime-mechanism evidence from
+the Z2D movie-layer / CRI receiver route recorded in the project status and
+research docs.  Treat the remaining hard gate as natural outer-flow BGM/audio
+and full scheduler proof, not as a need to manually remove the hold tail.
 
 ## ac7114/ac7115/ac7116 current audit
 
