@@ -1794,7 +1794,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_
 The dispatch chain now proved:
 
 ```text
-SdGmData+0x358 = 8
+fnRxComDirInfo3 payload[6] = 8
+  -> SdGmData+0x130
+  -> fnRxComPreMdl copies +0x130 to +0x0a8
+  -> fnRxComPreMdl copies +0x0a8 to +0x184
+  -> fnRxComPreMdl copies +0x184 to +0x358
   -> fnLotDirGmStart writes SdGmData+0x13be = 16
   -> fnLotOther_AfterGetParam calls:
        fnLot_OT_AT_StryKnd(0)
@@ -1809,11 +1813,23 @@ This was proved two ways:
 - dynamically, by a one-shot `fnLotDirGmStart` entry write of
   `SdGmData+0x358=8`, which produced `SdGmData+0x13be=16` and triggered
   `lot_ot_at_stryknd` / `lot_ot_at_strychara` hooks.
+- statically upstream, by base-aware SdGmData scanning:
+  `fnRxComDirInfo3 payload[6] -> +0x130 -> +0x0a8 -> +0x184 -> +0x358`.
 
 Do not overclaim this.  The same run did not observe
 `C_ObjStageAT_SP_Story::*` object hooks, and it did not prove the natural writer
 of `SdGmData+0x358`.  The force-on-entry control is a mechanism proof only, not
 final production evidence and not enough to promote Bilibili-facing videos.
+
+Latest natural observation:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_dirinfo3_chain_real_input_20260704
+```
+
+It observed `fnRxComDirInfo3 payload=[29,1,1,0,0,8,0,19]`.  Because
+`payload[6]=0`, the `+0x130 -> +0x0a8 -> +0x184 -> +0x358` chain stayed zero.
+The `8` at `payload[5]` is not the lottery-dispatch field.
 
 Important static-analysis warning: raw offset scans for `0x358` are polluted by
 other structures such as `C_ObjStageAT_SP_Story+0x358` event-code fields.  A
@@ -1866,10 +1882,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet
    - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
    - The new lottery-dispatch route proves `SdGmData+0x358=8` is sufficient to
      reach `SdGmData+0x13be=16` and story kind/character lottery, but the
-     natural writer of `+0x358` is still unknown.
+     natural condition for `fnRxComDirInfo3 payload[6]=8` is still unknown.
    - Use the expanded lightweight probe hooks around `fnRxComGmStart`,
      `fnInitGmData_GmStart`, `fnKndCalLot_Start/PreMdl`, and
-     `fnKndCalUsr_SetGR_DirPrmCopy` to find where `+0x358` is set or cleared.
+     `fnKndCalUsr_SetGR_DirPrmCopy` plus `fnRxComDirInfo3` to find when
+     `payload[6]` becomes `8`.
    - The current static route is
      `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` plus
      `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->

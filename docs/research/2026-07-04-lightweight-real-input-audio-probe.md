@@ -205,3 +205,23 @@ sufficient for native code to set `SdGmData+0x13be=16` and call
 This proves the internal lottery-dispatch path.  It does not yet prove the
 natural writer of `+0x358`, target SP Story object creation, or target-scene BGM
 state.
+
+Follow-up static/runtime work narrows the upstream source:
+
+```text
+fnRxComDirInfo3 payload[6]
+  -> SdGmData+0x130
+  -> +0x0a8
+  -> +0x184
+  -> +0x358
+```
+
+Natural observation:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_dirinfo3_chain_real_input_20260704
+```
+
+That run saw `fnRxComDirInfo3 payload=[29,1,1,0,0,8,0,19]`; because
+`payload[6]=0`, the `+0x358` chain stayed zero.  The `8` at `payload[5]` is not
+the dispatch field for this route.

@@ -162,6 +162,9 @@ function describeSdGmData() {
       sdgm_pointer: sdGmPointer.toString(),
       sdgm_rx_source_selector_u16_at_0x16e: readU16Safe(sdGmPointer, 0x16e),
       sdgm_rx_source_stage_u16_at_0x170: readU16Safe(sdGmPointer, 0x170),
+      sdgm_rx_dirinfo3_payload6_copy_u16_at_0x130: readU16Safe(sdGmPointer, 0x130),
+      sdgm_rx_dirinfo3_payload6_premdl_copy_u16_at_0x0a8: readU16Safe(sdGmPointer, 0x0a8),
+      sdgm_rx_dirinfo3_payload6_premdl_copy_u16_at_0x184: readU16Safe(sdGmPointer, 0x184),
       sdgm_rx_pre_selector_u16_at_0x0ee: readU16Safe(sdGmPointer, 0x0ee),
       sdgm_rx_pre_stage_u16_at_0x0ec: readU16Safe(sdGmPointer, 0x0ec),
       sdgm_rx_copy_stage_u16_at_0x318: readU16Safe(sdGmPointer, 0x318),
@@ -423,6 +426,19 @@ function installStoryHooks() {
     },
   });
   attachEnterLeave("fnRxComDirInfo8", "rxcom_dirinfo8", {
+    onEnter(args) {
+      const fields = describeSdGmData();
+      fields.rxcom_payload_pointer = args[0].toString();
+      for (let index = 0; index < 8; index += 1) {
+        fields["rxcom_payload_u8_at_" + index] = readU8Safe(args[0], index);
+      }
+      return fields;
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
+  attachEnterLeave("fnRxComDirInfo3", "rxcom_dirinfo3", {
     onEnter(args) {
       const fields = describeSdGmData();
       fields.rxcom_payload_pointer = args[0].toString();

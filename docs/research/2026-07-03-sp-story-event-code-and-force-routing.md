@@ -1339,11 +1339,24 @@ native code to write `SdGmData+0x13be=16`.  The `+0x13be=16` branch in
 `fnLotOther_AfterGetParam` calls `fnLot_OT_AT_StryKnd(0)`,
 `fnLot_OT_AT_SpStryKnd()`, and `fnLot_OT_AT_StryChara()`.
 
+Base-aware static follow-up identifies the upstream source:
+
+```text
+fnRxComDirInfo3 payload[6]
+  -> SdGmData+0x130
+  -> fnRxComPreMdl copies +0x130 to +0x0a8
+  -> fnRxComPreMdl copies +0x0a8 to +0x184
+  -> fnRxComPreMdl copies +0x184 to +0x358
+```
+
 Runtime evidence:
 
 ```text
 D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_lotdirstart_real_input_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_dirinfo3_chain_real_input_20260704
 ```
 
 This is a mechanism proof only.  It did not observe `C_ObjStageAT_SP_Story::*`
-object hooks and did not prove the natural writer of `SdGmData+0x358`.
+object hooks.  The natural observation saw
+`fnRxComDirInfo3 payload=[29,1,1,0,0,8,0,19]`, so `payload[6]=0` and the
+`+0x358` chain stayed zero.

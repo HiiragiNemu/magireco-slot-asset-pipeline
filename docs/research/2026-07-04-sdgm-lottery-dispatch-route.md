@@ -79,6 +79,54 @@ example, `C_ObjStageAT_SP_Story+0x358` is an event-code field, not
 `SdGmData+0x358`.  Do not treat raw `+0x358` write hits as SdGmData writes
 unless the base register is proven to come from `fnGetAddrSdGmData()`.
 
+## Base-aware upstream source
+
+After the first dispatch proof, a base-aware static scanner was added:
+
+```text
+tools/frida_runtime_probe/scan_aarch64_sdgm_refs.py
+```
+
+It only records field references whose base register is locally traced back to
+`fnGetAddrSdGmData()`.  This avoids the raw `+0x358` false-positive problem.
+
+Output directories:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_upstream_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_upstream_a8_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_upstream_130_20260704
+```
+
+The upstream chain for `SdGmData+0x358` is now:
+
+```text
+fnRxComDirInfo3 payload[6]
+  -> SdGmData+0x130
+  -> fnRxComPreMdl copies +0x130 to +0x0a8
+  -> fnRxComPreMdl copies +0x0a8 to +0x184
+  -> fnRxComPreMdl copies +0x184 to +0x358
+  -> fnLotDirGmStart maps +0x358=8 to +0x13be=16
+  -> fnLotOther_AfterGetParam enters story lottery calls
+```
+
+Static proof points:
+
+```text
+fnRxComDirInfo3:
+  payload[6] -> SdGmData+0x130 at 0x448600c
+
+fnRxComPreMdl:
+  SdGmData+0x130 -> +0x0a8 at 0x4481604
+  SdGmData+0x0a8 -> +0x184 at 0x44818b4
+  SdGmData+0x184 -> +0x358 at 0x448317c
+```
+
+Therefore the direct natural condition for the proved lottery route is currently
+`fnRxComDirInfo3 payload[6]=8`, not `fnRxComDirInfo8 payload[4]/[5]` and not
+the `ac` filename suffix.
+
 ## Runtime evidence
 
 ### Immediate write before input is insufficient
@@ -150,12 +198,41 @@ Runtime result from `summary_light_force358_on_lotdirstart.json`:
 }
 ```
 
+### Natural DirInfo3 chain observation
+
+Evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_dirinfo3_chain_real_input_20260704
+```
+
+Useful files:
+
+```text
+observer_light_natural_dirinfo3_chain.jsonl
+summary_light_natural_dirinfo3_chain.json
+```
+
+The run observed:
+
+```text
+fnRxComDirInfo3 payload = [29, 1, 1, 0, 0, 8, 0, 19]
+```
+
+Here `payload[6]` was `0`, so `SdGmData+0x130`, `+0x0a8`, `+0x184`, and
+`+0x358` remained `0`.  The value `8` at `payload[5]` is not the lottery
+dispatch field for this chain.
+
+The run did not reach `fnLotDirGmStart`; treat it as an upstream DirInfo3
+payload observation only.
+
 ## Tooling changes
 
 `tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now also snapshots
 the SdGmData story-dispatch fields at:
 
 ```text
+fnRxComDirInfo3
 fnRxComGmStart
 fnInitGmData_GmStart
 fnInitGmData_PowerOn
@@ -181,13 +258,13 @@ and dynamically.
 
 Still open:
 
-- the natural writer/source that sets `SdGmData+0x358=8`;
+- the natural game condition that produces `fnRxComDirInfo3 payload[6]=8`;
 - how the lottery outputs become concrete SP Story object stage/selector values;
 - whether target ac7114/ac7115/ac7116 scenes have extra BGM/bed beyond current
   voice/event audio;
 - whether visual tail-hold in rendered outputs matches native runtime behavior.
 
 Do not generate or promote Bilibili-facing long videos from this force-route
-alone.  The next useful work is to trace the natural writer of `SdGmData+0x358`
-and then capture final sound queues and SP Story object hooks in the same run.
-
+alone.  The next useful work is to find the native condition that produces
+`fnRxComDirInfo3 payload[6]=8`, then capture final sound queues and SP Story
+object hooks in the same run.

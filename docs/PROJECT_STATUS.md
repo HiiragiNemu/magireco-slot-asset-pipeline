@@ -2059,10 +2059,25 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_force358_on_
 - 运行时 one-shot 测试在 `fnLotDirGmStart` 入口写 `+0x358=8` 后，实际观测
   到 `+0x13be=16`，并触发 `lot_ot_at_stryknd` 与
   `lot_ot_at_strychara` hook。
+- 基址感知扫描进一步证明 `+0x358` 的上游链是
+  `fnRxComDirInfo3 payload[6] -> SdGmData+0x130 -> +0x0a8 -> +0x184 ->
+  +0x358`。因此当前应寻找能让 `fnRxComDirInfo3 payload[6]=8` 的自然条件。
+
+新增上游证据：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_sdgm_base_refs_lottery_source_upstream_130_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_natural_dirinfo3_chain_real_input_20260704
+```
+
+普通观测 run 中 `fnRxComDirInfo3 payload=[29,1,1,0,0,8,0,19]`，其中
+`payload[6]=0`，所以 `+0x358` 仍为 0；`payload[5]=8` 不是这条 lottery
+dispatch 字段。
 
 仍未闭合：
 
-- 自然运行时谁把 `SdGmData+0x358` 置为 8；
+- 自然运行时什么条件产生 `fnRxComDirInfo3 payload[6]=8`；
 - lottery 输出如何继续创建具体 SP Story object 和目标 ac；
 - ac7114/ac7115/ac7116 的额外 BGM/bed 是否存在；
 - 渲染尾帧 hold 是否完全等同游戏原生行为。
