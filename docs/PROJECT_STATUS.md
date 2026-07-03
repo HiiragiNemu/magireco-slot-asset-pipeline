@@ -50,6 +50,22 @@
   `ac7115_013` = stage `12` selector `13/14`；
   `ac7116_001` = stage `13` selector `1/2`。下一步应跑窄 runtime
   stage/selector probe，不能继续盲目扩大 force kind 扫描。
+- 同日后续静态推进：新增
+  `tools/frida_runtime_probe/scan_aarch64_memory_offsets.py`，可按 AArch64
+  内存偏移和短距离寄存器常量索引扫描 load/store。稳定输出：
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_register_index_v2_20260703`、
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_stage_source_20260703`、
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_rxcom_dirinfo_20260703`。
+  新结论：`MSTCOMCBK()+0x2376` 只有 `C_AnmBase::fnDataSetDir_DIR()` 的读点，
+  暂未发现 direct writer；`fnKndCalUsr_SetGR_DirPrmCopy()` 写
+  `MSTCOM+0x2370` 的 64-bit 零扩展值，会清掉包含 `+0x2376` 的高字节，
+  不能当作 stage writer。更强上游线索是
+  `fnRxComDirInfo8 payload[5] -> SdGmData+0x16e -> +0xee -> +0x31a`，
+  `payload[4] -> SdGmData+0x170 -> +0xec -> +0x318`。这还不是最终
+  `C_AnmBase+0x318/0x31a` 闭环证明，但已是当前最有价值的 stage/selector
+  入口线索。`csl_audio_queue_probe.js` 已新增
+  `rxcom_dirinfo8_*`、`rxcom_pre_mdl_*`、`lot_dir_pre_mdl_*` hook，
+  `summarize_runtime_audio_capture.py` 新增 `runtime_rxcom_dir_flow.csv`。
 - 2026-07-03 SP Story/force-routing 机制报告已新增：
   `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
   新工具 `tools/frida_runtime_probe/extract_sp_story_event_codes.py` 从
@@ -1638,5 +1654,7 @@ python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --
   C_ObjStageAT_SP_Story+0x34a`。目标已由 route-table 解码为
   `ac7114_001` stage `11` selector `1/2`、`ac7115_001` stage `12`
   selector `1/2/3/4`、`ac7115_013` stage `12` selector `13/14`、
-  `ac7116_001` stage `13` selector `1/2`；下一步应找谁写 stage kind 与
-  selector，再做窄范围 runtime probe。
+  `ac7116_001` stage `13` selector `1/2`；下一步应优先查
+  `runtime_rxcom_dir_flow.csv`，再结合 `runtime_gr_dir_prm_copy.csv` 和
+  `runtime_anm_dir_data.csv` 找谁写 stage kind 与 selector，再做窄范围
+  runtime probe。

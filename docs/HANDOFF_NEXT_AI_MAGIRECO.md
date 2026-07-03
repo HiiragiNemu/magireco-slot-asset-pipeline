@@ -420,6 +420,45 @@ SP Story route.  This is the current highest-value path toward Bilibili-ready
 long videos because it attacks the scheduling problem instead of guessing
 individual `ac` families.
 
+2026-07-03 later static lead:
+
+- New offset scanner:
+
+```text
+tools/frida_runtime_probe/scan_aarch64_memory_offsets.py
+```
+
+- Durable static outputs:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_register_index_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_stage_source_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_rxcom_dirinfo_20260703
+```
+
+- `MSTCOMCBK()+0x2376` has a decoded read in
+  `C_AnmBase::fnDataSetDir_DIR()` but no decoded direct writer.
+- `fnKndCalUsr_SetGR_DirPrmCopy()` should not be treated as the stage writer:
+  its `str x21, [x0,#0x2370]` comes from zero-extended `ldrh SdGmData+0x786`
+  and therefore clears the high bytes containing `MSTCOMCBK()+0x2376`.
+- Stronger upstream lead: `fnRxComDirInfo8()` writes payload byte `5` to
+  `SdGmData+0x16e` and byte `4` to `SdGmData+0x170`; then
+  `fnRxComPreMdl()` copies:
+
+```text
+SdGmData+0x16e -> SdGmData+0x0ee -> SdGmData+0x31a
+SdGmData+0x170 -> SdGmData+0x0ec -> SdGmData+0x318
+```
+
+This is not yet a closed proof that `SdGmData+0x318/0x31a` equals the final
+`C_AnmBase+0x318/0x31a` path for SP Story objects, but it is the current best
+lead for where the target `(stage kind, selector)` pair enters the runtime
+state.
+
+Runtime probe update: `csl_audio_queue_probe.js` now hooks
+`fnRxComDirInfo8`, `fnRxComPreMdl`, and `fnLotDirPreMdl`, and
+`summarize_runtime_audio_capture.py` writes `runtime_rxcom_dir_flow.csv`.
+
 Important evidence files:
 
 ```text
@@ -1423,8 +1462,9 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
      `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
      C_ObjStageAT_SP_Story+0x34a`.
    - Run the combined CSL/BGM/SP Story probe and inspect
-     `runtime_gr_dir_prm_copy.csv` and `runtime_anm_dir_data.csv` to observe
-     which stage/selector values correspond to the decoded target rows:
+     `runtime_rxcom_dir_flow.csv`, `runtime_gr_dir_prm_copy.csv`, and
+     `runtime_anm_dir_data.csv` to observe which stage/selector values
+     correspond to the decoded target rows:
      stage `11`/`12`/`13` with selectors `1`/`2`/`3`/`4`/`13`/`14`.
 
 3. Generalize the mechanism instead of manually processing every `ac` family.

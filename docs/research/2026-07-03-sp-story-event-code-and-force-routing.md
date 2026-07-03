@@ -714,6 +714,73 @@ stage kind.  The next target is now the code path that sets both
 `SdGmData+0x788 -> MSTCOMCBK()+0x2378` to one of the target route pairs before
 `C_ObjStageAT_SP_Story::fnSetEventCode()` runs.
 
+## Static RxCom stage/selector source
+
+New static offset scanner:
+
+```text
+tools/frida_runtime_probe/scan_aarch64_memory_offsets.py
+```
+
+It scans AArch64 load/store memory operands by structure offset and now also
+tracks short-range register-index constants such as:
+
+```text
+mov w8, #0x2376
+ldrh w8, [x0, x8]
+```
+
+Durable outputs:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_register_index_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_mem_offsets_rx_stage_source_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_rxcom_dirinfo_20260703
+```
+
+Important findings:
+
+- `MSTCOMCBK()+0x2376` has one decoded read in
+  `C_AnmBase::fnDataSetDir_DIR()` and no direct decoded write.
+- `MSTCOMCBK()+0x2378` has one decoded read in
+  `C_AnmBase::fnDataSetDir_DIR()` and one write in
+  `fnKndCalUsr_SetGR_DirPrmCopy()`.
+- `fnKndCalUsr_SetGR_DirPrmCopy()` writes `MSTCOMCBK()+0x2370` with a 64-bit
+  `str x21` where `x21` is zero-extended from `ldrh SdGmData+0x786`; therefore
+  this copy clears the high bytes that include `MSTCOMCBK()+0x2376`.  It should
+  not be treated as the target stage-kind writer.
+- `fnRxComDirInfo8()` is a likely upstream RxCom route parameter ingress:
+  it copies payload byte `5` to `SdGmData+0x16e` and payload byte `4` to
+  `SdGmData+0x170`.
+- `fnRxComPreMdl()` then copies:
+
+```text
+SdGmData+0x16e -> SdGmData+0x0ee -> SdGmData+0x31a
+SdGmData+0x170 -> SdGmData+0x0ec -> SdGmData+0x318
+```
+
+This is not yet a closed proof that `SdGmData+0x318/0x31a` is the same path as
+`C_AnmBase+0x318/0x31a` for SP Story playback.  It is the current best static
+lead for where the `(stage kind, selector)` pair enters the game-owned runtime
+state before animation/event-code dispatch.
+
+Runtime probe updates:
+
+- `csl_audio_queue_probe.js` now hooks:
+  - `fnRxComDirInfo8`;
+  - `fnRxComPreMdl`;
+  - `fnLotDirPreMdl`.
+- `describeSdGmDirData()` now records:
+  - `SdGmData+0x16e`, `+0x170`, `+0x0ee`, `+0x0ec`, `+0x318`, `+0x31a`;
+  - existing `+0x782..+0x79a` GR direction slots.
+- `summarize_runtime_audio_capture.py` now writes:
+
+```text
+runtime_rxcom_dir_flow.csv
+```
+
+and includes the new `SdGmData` fields in `runtime_gr_dir_prm_copy.csv`.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:
@@ -729,9 +796,9 @@ Use A: only for disposable high-frequency scratch.
    `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
    C_ObjStageAT_SP_Story+0x34a`.
 3. Run a narrow runtime probe with the new `anm_base_data_set_dir_*` events and
-   `gr_dir_prm_copy_*` events and capture combined CSL/BGM/SP Story JSONL.  The
-   first target is to identify who sets stage kinds `11`/`12`/`13` and selectors
-   `1`/`2`/`3`/`4`/`13`/`14` for the resolved target rows.
+   `gr_dir_prm_copy_*` / `rxcom_*` events and capture combined CSL/BGM/SP Story
+   JSONL.  The first target is to identify who sets stage kinds `11`/`12`/`13`
+   and selectors `1`/`2`/`3`/`4`/`13`/`14` for the resolved target rows.
 4. Only after a target SP Story is reached through the native outer path can the
    ac7114-16 BGM gate be closed.
 

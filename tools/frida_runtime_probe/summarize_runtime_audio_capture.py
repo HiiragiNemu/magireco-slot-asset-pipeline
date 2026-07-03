@@ -111,6 +111,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
     sp_story_state: list[dict[str, Any]] = []
     anm_dir_data: list[dict[str, Any]] = []
     gr_dir_prm_copy: list[dict[str, Any]] = []
+    rxcom_dir_flow: list[dict[str, Any]] = []
     force_calls: list[dict[str, Any]] = []
 
     for _, record in iter_jsonl(path):
@@ -252,6 +253,24 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "time_s": t,
                     "kind": kind,
                     "sdgm_pointer": payload.get("sdgm_pointer"),
+                    "sdgm_rx_source_selector_u16_at_0x16e": payload.get(
+                        "sdgm_rx_source_selector_u16_at_0x16e"
+                    ),
+                    "sdgm_rx_source_stage_u16_at_0x170": payload.get(
+                        "sdgm_rx_source_stage_u16_at_0x170"
+                    ),
+                    "sdgm_rx_pre_selector_u16_at_0x0ee": payload.get(
+                        "sdgm_rx_pre_selector_u16_at_0x0ee"
+                    ),
+                    "sdgm_rx_pre_stage_u16_at_0x0ec": payload.get(
+                        "sdgm_rx_pre_stage_u16_at_0x0ec"
+                    ),
+                    "sdgm_rx_copy_stage_u16_at_0x318": payload.get(
+                        "sdgm_rx_copy_stage_u16_at_0x318"
+                    ),
+                    "sdgm_rx_copy_selector_u16_at_0x31a": payload.get(
+                        "sdgm_rx_copy_selector_u16_at_0x31a"
+                    ),
                     "sdgm_dir_slot_u16_at_0x782": payload.get("sdgm_dir_slot_u16_at_0x782"),
                     "sdgm_dir_slot_u16_at_0x784": payload.get("sdgm_dir_slot_u16_at_0x784"),
                     "sdgm_dir_slot_u16_at_0x786": payload.get("sdgm_dir_slot_u16_at_0x786"),
@@ -276,6 +295,61 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "mst_extra_u16_at_0x238a": payload.get("mst_extra_u16_at_0x238a"),
                     "mst_scene_u16_at_0x23be": payload.get("mst_scene_u16_at_0x23be"),
                     "mstcom_error": payload.get("mstcom_error"),
+                    "retval_i32": payload.get("retval_i32"),
+                    "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
+                }
+            )
+        elif (
+            kind.startswith("rxcom_dirinfo8_")
+            or kind.startswith("rxcom_pre_mdl_")
+            or kind.startswith("lot_dir_pre_mdl_")
+        ):
+            rxcom_dir_flow.append(
+                {
+                    "time_s": t,
+                    "kind": kind,
+                    "symbol": payload.get("symbol"),
+                    "address": payload.get("address"),
+                    "arg0_pointer": payload.get("arg0_pointer"),
+                    "rxcom_payload_pointer": payload.get("rxcom_payload_pointer"),
+                    "rxcom_payload_u8_at_0": payload.get("rxcom_payload_u8_at_0"),
+                    "rxcom_payload_u8_at_1": payload.get("rxcom_payload_u8_at_1"),
+                    "rxcom_payload_u8_at_2": payload.get("rxcom_payload_u8_at_2"),
+                    "rxcom_payload_u8_at_3": payload.get("rxcom_payload_u8_at_3"),
+                    "rxcom_payload_u8_at_4": payload.get("rxcom_payload_u8_at_4"),
+                    "rxcom_payload_u8_at_5": payload.get("rxcom_payload_u8_at_5"),
+                    "rxcom_payload_u8_at_6": payload.get("rxcom_payload_u8_at_6"),
+                    "rxcom_payload_u8_at_7": payload.get("rxcom_payload_u8_at_7"),
+                    "rxcom_dirinfo8_stage_from_payload_u8_at_4": payload.get(
+                        "rxcom_dirinfo8_stage_from_payload_u8_at_4"
+                    ),
+                    "rxcom_dirinfo8_selector_from_payload_u8_at_5": payload.get(
+                        "rxcom_dirinfo8_selector_from_payload_u8_at_5"
+                    ),
+                    "sdgm_pointer": payload.get("sdgm_pointer"),
+                    "sdgm_rx_source_selector_u16_at_0x16e": payload.get(
+                        "sdgm_rx_source_selector_u16_at_0x16e"
+                    ),
+                    "sdgm_rx_source_stage_u16_at_0x170": payload.get(
+                        "sdgm_rx_source_stage_u16_at_0x170"
+                    ),
+                    "sdgm_rx_pre_selector_u16_at_0x0ee": payload.get(
+                        "sdgm_rx_pre_selector_u16_at_0x0ee"
+                    ),
+                    "sdgm_rx_pre_stage_u16_at_0x0ec": payload.get(
+                        "sdgm_rx_pre_stage_u16_at_0x0ec"
+                    ),
+                    "sdgm_rx_copy_stage_u16_at_0x318": payload.get(
+                        "sdgm_rx_copy_stage_u16_at_0x318"
+                    ),
+                    "sdgm_rx_copy_selector_u16_at_0x31a": payload.get(
+                        "sdgm_rx_copy_selector_u16_at_0x31a"
+                    ),
+                    "sdgm_dir_slot_u16_at_0x786": payload.get("sdgm_dir_slot_u16_at_0x786"),
+                    "sdgm_source_story_no_u16_at_0x788": payload.get(
+                        "sdgm_source_story_no_u16_at_0x788"
+                    ),
+                    "sdgm_error": payload.get("sdgm_error"),
                     "retval_i32": payload.get("retval_i32"),
                     "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
                 }
@@ -308,6 +382,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "sp_story_state_count": len(sp_story_state),
         "anm_dir_data_count": len(anm_dir_data),
         "gr_dir_prm_copy_count": len(gr_dir_prm_copy),
+        "rxcom_dir_flow_count": len(rxcom_dir_flow),
         "force_call_count": len(force_calls),
         "unique_event_codes": sorted({str(row["event_code"]) for row in event_codes if row.get("event_code")}),
         "unique_sound_codes": sorted({str(row["code_string"]) for row in sound_codes if row.get("code_string")}),
@@ -353,6 +428,20 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                 if row.get("mst_source_story_no_u16_at_0x2378") is not None
             }
         ),
+        "unique_rxcom_source_stage_numbers": sorted(
+            {
+                str(row["sdgm_rx_source_stage_u16_at_0x170"])
+                for row in rxcom_dir_flow
+                if row.get("sdgm_rx_source_stage_u16_at_0x170") is not None
+            }
+        ),
+        "unique_rxcom_source_selector_numbers": sorted(
+            {
+                str(row["sdgm_rx_source_selector_u16_at_0x16e"])
+                for row in rxcom_dir_flow
+                if row.get("sdgm_rx_source_selector_u16_at_0x16e") is not None
+            }
+        ),
     }
     tables = {
         "runtime_event_codes": event_codes,
@@ -364,6 +453,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "runtime_sp_story_state": sp_story_state,
         "runtime_anm_dir_data": anm_dir_data,
         "runtime_gr_dir_prm_copy": gr_dir_prm_copy,
+        "runtime_rxcom_dir_flow": rxcom_dir_flow,
         "runtime_force_calls": force_calls,
     }
     return summary, tables
@@ -644,6 +734,12 @@ def main() -> int:
                 "time_s",
                 "kind",
                 "sdgm_pointer",
+                "sdgm_rx_source_selector_u16_at_0x16e",
+                "sdgm_rx_source_stage_u16_at_0x170",
+                "sdgm_rx_pre_selector_u16_at_0x0ee",
+                "sdgm_rx_pre_stage_u16_at_0x0ec",
+                "sdgm_rx_copy_stage_u16_at_0x318",
+                "sdgm_rx_copy_selector_u16_at_0x31a",
                 "sdgm_dir_slot_u16_at_0x782",
                 "sdgm_dir_slot_u16_at_0x784",
                 "sdgm_dir_slot_u16_at_0x786",
@@ -664,6 +760,40 @@ def main() -> int:
                 "mst_extra_u16_at_0x238a",
                 "mst_scene_u16_at_0x23be",
                 "mstcom_error",
+                "retval_i32",
+                "high_level_call_count_for_kind",
+            ],
+        )
+        write_csv(
+            args.out_dir / "runtime_rxcom_dir_flow.csv",
+            runtime_tables["runtime_rxcom_dir_flow"],
+            [
+                "time_s",
+                "kind",
+                "symbol",
+                "address",
+                "arg0_pointer",
+                "rxcom_payload_pointer",
+                "rxcom_payload_u8_at_0",
+                "rxcom_payload_u8_at_1",
+                "rxcom_payload_u8_at_2",
+                "rxcom_payload_u8_at_3",
+                "rxcom_payload_u8_at_4",
+                "rxcom_payload_u8_at_5",
+                "rxcom_payload_u8_at_6",
+                "rxcom_payload_u8_at_7",
+                "rxcom_dirinfo8_stage_from_payload_u8_at_4",
+                "rxcom_dirinfo8_selector_from_payload_u8_at_5",
+                "sdgm_pointer",
+                "sdgm_rx_source_selector_u16_at_0x16e",
+                "sdgm_rx_source_stage_u16_at_0x170",
+                "sdgm_rx_pre_selector_u16_at_0x0ee",
+                "sdgm_rx_pre_stage_u16_at_0x0ec",
+                "sdgm_rx_copy_stage_u16_at_0x318",
+                "sdgm_rx_copy_selector_u16_at_0x31a",
+                "sdgm_dir_slot_u16_at_0x786",
+                "sdgm_source_story_no_u16_at_0x788",
+                "sdgm_error",
                 "retval_i32",
                 "high_level_call_count_for_kind",
             ],

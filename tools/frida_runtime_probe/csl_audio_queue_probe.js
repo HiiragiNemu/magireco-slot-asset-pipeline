@@ -34,6 +34,12 @@ const highLevelEmitLimitsByKind = {
   // losing the later non-zero SP Story selector values.
   anm_base_data_set_dir_enter: 20000,
   anm_base_data_set_dir_leave: 20000,
+  rxcom_dirinfo8_enter: 5000,
+  rxcom_dirinfo8_leave: 5000,
+  rxcom_pre_mdl_enter: 5000,
+  rxcom_pre_mdl_leave: 5000,
+  lot_dir_pre_mdl_enter: 5000,
+  lot_dir_pre_mdl_leave: 5000,
 };
 
 let dumpedChunks = 0;
@@ -492,6 +498,12 @@ function describeSdGmDirData(sdGmCallback) {
     }
     return {
       sdgm_pointer: sdGmPointer.toString(),
+      sdgm_rx_source_selector_u16_at_0x16e: readU16Safe(sdGmPointer, 0x16e),
+      sdgm_rx_source_stage_u16_at_0x170: readU16Safe(sdGmPointer, 0x170),
+      sdgm_rx_pre_selector_u16_at_0x0ee: readU16Safe(sdGmPointer, 0x0ee),
+      sdgm_rx_pre_stage_u16_at_0x0ec: readU16Safe(sdGmPointer, 0x0ec),
+      sdgm_rx_copy_stage_u16_at_0x318: readU16Safe(sdGmPointer, 0x318),
+      sdgm_rx_copy_selector_u16_at_0x31a: readU16Safe(sdGmPointer, 0x31a),
       sdgm_dir_slot_u16_at_0x782: readU16Safe(sdGmPointer, 0x782),
       sdgm_dir_slot_u16_at_0x784: readU16Safe(sdGmPointer, 0x784),
       sdgm_dir_slot_u16_at_0x786: readU16Safe(sdGmPointer, 0x786),
@@ -513,6 +525,142 @@ function describeSdGmDirData(sdGmCallback) {
       sdgm_error: String(error),
     };
   }
+}
+
+function describeRxComDirInfoPayload(payloadPointer) {
+  if (payloadPointer === null || payloadPointer.isNull()) {
+    return {
+      rxcom_payload_pointer: "0x0",
+      rxcom_payload_error: "null pointer",
+    };
+  }
+  const fields = {
+    rxcom_payload_pointer: payloadPointer.toString(),
+    rxcom_payload_error: "",
+  };
+  for (let index = 0; index < 8; index += 1) {
+    fields["rxcom_payload_u8_at_" + index] = readU8Safe(payloadPointer, index);
+  }
+  fields.rxcom_dirinfo8_selector_from_payload_u8_at_5 = readU8Safe(payloadPointer, 5);
+  fields.rxcom_dirinfo8_stage_from_payload_u8_at_4 = readU8Safe(payloadPointer, 4);
+  return fields;
+}
+
+function makeSdGmCallback(moduleValue, hookKind) {
+  const sdGmAddress = findExport(moduleValue, "fnGetAddrSdGmData");
+  if (sdGmAddress === null) {
+    return null;
+  }
+  try {
+    return new NativeFunction(sdGmAddress, "pointer", []);
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: hookKind + "_sdgm_callback",
+      symbol: "fnGetAddrSdGmData",
+      address: sdGmAddress.toString(),
+      error: String(error),
+    });
+    return null;
+  }
+}
+
+function hookRxComDirInfo8(moduleValue) {
+  const symbol = "fnRxComDirInfo8";
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  const sdGmCallback = makeSdGmCallback(moduleValue, "rxcom_dirinfo8");
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        this.payloadPointer = args[0];
+        emitHighLevel(
+          "rxcom_dirinfo8_enter",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+            },
+            describeRxComDirInfoPayload(args[0]),
+            describeSdGmDirData(sdGmCallback)
+          )
+        );
+      },
+      onLeave(retval) {
+        emitHighLevel(
+          "rxcom_dirinfo8_leave",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              retval_pointer: retval.toString(),
+              retval_i32: toI32(retval),
+            },
+            describeRxComDirInfoPayload(this.payloadPointer),
+            describeSdGmDirData(sdGmCallback)
+          )
+        );
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: "rxcom_dirinfo8",
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: "rxcom_dirinfo8", symbol, address: address.toString() });
+}
+
+function hookSdGmStateFunction(moduleValue, symbol, kind) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  const sdGmCallback = makeSdGmCallback(moduleValue, kind);
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        emitHighLevel(
+          kind + "_enter",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              arg0_pointer: args[0] ? args[0].toString() : "",
+            },
+            describeSdGmDirData(sdGmCallback)
+          )
+        );
+      },
+      onLeave(retval) {
+        emitHighLevel(
+          kind + "_leave",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              retval_pointer: retval.toString(),
+              retval_i32: toI32(retval),
+            },
+            describeSdGmDirData(sdGmCallback)
+          )
+        );
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
 }
 
 function hookGrDirPrmCopy(moduleValue) {
@@ -1052,6 +1200,9 @@ function installHooks(moduleValue) {
 }
 
 function installHighLevelAudioHooks(moduleValue) {
+  hookRxComDirInfo8(moduleValue);
+  hookSdGmStateFunction(moduleValue, "fnRxComPreMdl", "rxcom_pre_mdl");
+  hookSdGmStateFunction(moduleValue, "fnLotDirPreMdl", "lot_dir_pre_mdl");
   hookGrDirPrmCopy(moduleValue);
   hookAnmBaseDirData(moduleValue);
   hookSpStoryMethod(
