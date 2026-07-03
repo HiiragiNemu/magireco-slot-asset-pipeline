@@ -335,19 +335,36 @@ MSTCOMCBK()+0x2378
   -> C_ObjStageAT_SP_Story::fnSetEventCode() uses +0x34a for event-code setup
 ```
 
+The writer side is now also identified:
+
+```text
+SdGmData+0x788
+  -> fnKndCalUsr_SetGR_DirPrmCopy()
+  -> MSTCOMCBK()+0x2378
+```
+
+`fnKndCalUsr_SetGR_DirPrmCopy` is called through PLT `0x449fec0` from the
+KndCal lot state functions including `fnKndCalLot_Start`,
+`fnKndCalLot_RlStart`, `fnKndCalLot_Prize`, `fnKndCalLot_Demo`, and related
+state handlers.
+
 - New durable static evidence root:
 
 ```text
 D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_set_gr_dir_prm_copy_plt_20260703
 ```
 
 - New runtime evidence hook in
   `tools/frida_runtime_probe/csl_audio_queue_probe.js`:
   `anm_base_data_set_dir_enter` / `anm_base_data_set_dir_leave`.
+- New upstream copy hook:
+  `gr_dir_prm_copy_enter` / `gr_dir_prm_copy_leave`.
 - New summarizer output:
 
 ```text
 runtime_anm_dir_data.csv
+runtime_gr_dir_prm_copy.csv
 ```
 
 Smoke evidence:
@@ -360,6 +377,17 @@ The hook installed and emitted 2253 selector rows in a 2 s idle capture without
 suppression after raising the selector hook cap to 20000 rows per kind.  Idle
 state still showed selector value `0`, so this is only a hook-validation smoke,
 not an ac7114-16 route proof.
+
+Upstream-copy calibration:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_force_kind8_v1_20260703
+```
+
+This non-target force-kind run emitted six `gr_dir_prm_copy_enter/leave` pairs,
+but `SdGmData+0x788`, `MSTCOMCBK()+0x2378`, and `C_AnmBase+0x31a` stayed `0`.
+It reached ordinary events only, not SP Story.  Therefore the next unknown is
+the state/table write that makes `SdGmData+0x788` become SP Story number 3/4/5.
 
 Use that CSV with `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
 `runtime_bgm_calls.csv`, and final CSL queue CSVs to identify the real outer
@@ -1310,7 +1338,10 @@ render approval mechanism.
   independent observer captured `force_flag_set arg0=0`.
 - `force_index8_postclear_probe_20260703` mapped force kind 8 to
   `ac0922_001` (`0x31434e5a38404764`, voices `31043`-`31061`), with no
-  `C_ObjStageAT_SP_Story` runtime event.  Kind 8 is not ac7114-16.
+  `C_ObjStageAT_SP_Story` runtime event.  Later selector-calibration runs with
+  kind 8 reached ordinary `ac0101`/`ac0102`/`ac9071`/`ac9920` routes instead.
+  Treat kind 8 as a non-target diagnostic route, not a stable ac0922 selector
+  and not ac7114-16.
 - `run_force_kind_scan.py` now automates clean restart/title-entry/ready-state
   force-kind mapping.  Current MuMu input coordinates are physical `2160x3840`:
   title `シミュレーション` is `1080 3000`, `ゲームスタート` is `600 2670`,
@@ -1335,15 +1366,16 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
   - force kinds `1..7` and `9..19` each emitted real
     `force_flag_set(kind, 0)` but mapped to ordinary slot/gameplay event-code
     groups, with `sp_story_state_count=0`;
-  - force kind `8` maps to `ac0922_001` / Episode Bonus, not ac7114-16;
+  - force kind `8` is non-target; it has produced one `ac0922_001` / Episode
+    Bonus run and later ordinary-route calibration runs, but no SP Story target;
   - force kind `0` validated the diagnostic route but did not reach the target;
   - no tested `0..19` kind reached any target code for `ac7114_001`,
     `ac7115_001`, `ac7115_013`, or `ac7116_001`.
 - Do not blindly extend the force-kind scan above 19.  Next useful work is
   the selector route now identified statically:
-  `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
-  The new `anm_base_data_set_dir_*` runtime events should be used to observe it
-  live.
+  `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
+  C_ObjStageAT_SP_Story+0x34a`.  The new `gr_dir_prm_copy_*` and
+  `anm_base_data_set_dir_*` runtime events should be used to observe it live.
 
 ## Immediate next tasks
 
@@ -1361,10 +1393,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
 2. Find the real SP Story selector before more force-kind scanning.
    - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
    - The current static candidate is
-     `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
+     `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
+     C_ObjStageAT_SP_Story+0x34a`.
    - Run the combined CSL/BGM/SP Story probe and inspect
-     `runtime_anm_dir_data.csv` to observe which selector values correspond to
-     SP Story numbers 3/4/5.
+     `runtime_gr_dir_prm_copy.csv` and `runtime_anm_dir_data.csv` to observe
+     which selector values correspond to SP Story numbers 3/4/5.
 
 3. Generalize the mechanism instead of manually processing every `ac` family.
    - Use runtime event-code dispatch, GDB/Z2D/DGM timing, sound-code/request

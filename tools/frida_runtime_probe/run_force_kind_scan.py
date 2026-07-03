@@ -368,6 +368,7 @@ def summarize_candidate(
     event_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_event_codes.csv")
     force_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_force_calls.csv")
     sp_story_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_sp_story_state.csv")
+    gr_dir_rows = read_csv_rows(kind_dir / "summary_v1" / "runtime_gr_dir_prm_copy.csv")
     queue_rows = read_csv_rows(kind_dir / "summary_v1" / "csl_queue_chunks.csv")
 
     event_codes = sorted(
@@ -400,6 +401,20 @@ def summarize_candidate(
         for row in force_rows
         if row.get("kind") in {"force_flag_set", "force_flag_set_return", "force_flag_get_kind_return"}
     ]
+    gr_sdgm_source_story_numbers = sorted(
+        {
+            row.get("sdgm_source_story_no_u16_at_0x788") or ""
+            for row in gr_dir_rows
+            if row.get("sdgm_source_story_no_u16_at_0x788")
+        }
+    )
+    gr_mst_source_story_numbers = sorted(
+        {
+            row.get("mst_source_story_no_u16_at_0x2378") or ""
+            for row in gr_dir_rows
+            if row.get("mst_source_story_no_u16_at_0x2378")
+        }
+    )
     return {
         "kind": kind,
         "path": str(kind_dir),
@@ -409,6 +424,9 @@ def summarize_candidate(
         "mapped_event_codes": mapped_event_codes,
         "hit_target_event": bool((set(event_codes) | set(sp_base_codes)) & target_codes),
         "sp_story_state_count": runtime.get("sp_story_state_count", 0),
+        "gr_dir_prm_copy_count": runtime.get("gr_dir_prm_copy_count", 0),
+        "gr_copy_sdgm_source_story_numbers": gr_sdgm_source_story_numbers,
+        "gr_copy_mst_source_story_numbers": gr_mst_source_story_numbers,
         "force_call_count": runtime.get("force_call_count", 0),
         "csl_queue_chunk_count": csl.get("queue_chunk_count", 0),
         "observed_sound_ids": observed_sound_ids,
@@ -562,6 +580,9 @@ def write_overall(out_dir: Path, rows: list[dict[str, Any]]) -> None:
             "error",
             "hit_target_event",
             "sp_story_state_count",
+            "gr_dir_prm_copy_count",
+            "gr_copy_sdgm_source_story_numbers",
+            "gr_copy_mst_source_story_numbers",
             "event_codes",
             "mapped_event_codes",
             "observed_sound_ids",
@@ -580,6 +601,13 @@ def write_overall(out_dir: Path, rows: list[dict[str, Any]]) -> None:
                     "error": row.get("error", ""),
                     "hit_target_event": row.get("hit_target_event"),
                     "sp_story_state_count": row.get("sp_story_state_count"),
+                    "gr_dir_prm_copy_count": row.get("gr_dir_prm_copy_count"),
+                    "gr_copy_sdgm_source_story_numbers": ";".join(
+                        row.get("gr_copy_sdgm_source_story_numbers") or []
+                    ),
+                    "gr_copy_mst_source_story_numbers": ";".join(
+                        row.get("gr_copy_mst_source_story_numbers") or []
+                    ),
                     "event_codes": ";".join(row.get("event_codes") or []),
                     "mapped_event_codes": json.dumps(row.get("mapped_event_codes") or {}, ensure_ascii=False),
                     "observed_sound_ids": ";".join(str(value) for value in row.get("observed_sound_ids") or []),

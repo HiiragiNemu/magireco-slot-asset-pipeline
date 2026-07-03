@@ -383,9 +383,9 @@ The independent observer captured:
 Therefore the diagnostic can make the game-owned
 `START -> fnSetForceFlag -> mReelStart` chain observable.
 
-### Force kind 8 maps to ac0922_001, not ac7114-16
+### Force kind 8 has non-target mappings, including one ac0922_001 run
 
-Evidence:
+Initial evidence:
 
 ```text
 D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postclear_probe_20260703
@@ -409,8 +409,13 @@ ac0922_001
 
 `subtitle_voice_v4/subtitle_voice_catalog.csv` maps the observed voice range to
 `ac0922_001` lines such as `cap0922_freeze_nem_001` and
-`cap0922_freeze_tou_014`.  Therefore kind 8 is a valid mapped force route, but
-it is not the ac7114/ac7115/ac7116 SP Story target.
+`cap0922_freeze_tou_014`.
+
+Later selector-calibration runs with kind 8 did not reproduce `ac0922_001`;
+they reached ordinary routes such as `ac0101`, `ac0102`, `ac9071`, and
+`ac9920`.  Therefore kind 8 should be treated as a non-target diagnostic route,
+not as a stable ac0922 selector and not as the ac7114/ac7115/ac7116 SP Story
+target.
 
 ### Automated post-clear force-kind scan
 
@@ -450,7 +455,9 @@ Summary:
 
 - force kind 0 validated the post-clear route but returned `0`; it did not
   reach the target SP Story path.
-- force kind 8 maps to `ac0922_001` and enters a long Episode Bonus outer flow.
+- force kind 8 produced a valid non-target route; one run mapped to
+  `ac0922_001` / Episode Bonus, later selector-calibration runs mapped to
+  ordinary `ac0101`/`ac0102`/`ac9071`/`ac9920` routes.
 - force kinds 1 through 7 and 9 through 19 all emitted real
   `force_flag_set(kind, 0)` evidence, produced ordinary slot/gameplay event-code
   requests, and had `sp_story_state_count=0`.
@@ -476,7 +483,7 @@ Representative valid mapping table:
 | 5 | `ac0904_055`, `ac9071`, `ac9920` | no |
 | 6 | `ac0905`, `ac0912`, `ac9071`, `ac9920` | no |
 | 7 | `ac0911`, `ac9071`, `ac9920` | no |
-| 8 | `ac0922_001`, voices `31043`-`31061`, Episode Bonus outer flow | no |
+| 8 | non-target; observed as `ac0922_001` in one run and ordinary `ac0101`/`ac0102`/`ac9071`/`ac9920` in later calibration | no |
 | 9 | `ac0901`, `ac9071`, `ac9920` | no |
 | 10 | `ac0902_277`, `ac0906_001`, `ac9071`, `ac9920` | no |
 | 11 | `ac0103`, `ac0902_126`, `ac9071`, `ac9920` | no |
@@ -584,6 +591,79 @@ ac7114-16 route yet.
 the terminal.  `run_force_kind_scan.py` uses `--quiet`; JSONL/CSV evidence is
 unchanged.
 
+## Static SP Story selector writer
+
+The reader side above still left the question "who writes
+`MSTCOMCBK()+0x2378`?".  Static disassembly found the writer:
+
+```text
+fnKndCalUsr_SetGR_DirPrmCopy
+```
+
+Important static facts:
+
+- `fnKndCalUsr_SetGR_DirPrmCopy` starts at `0x443fa64`.
+- It calls `fnGetAddrSdGmData()` through PLT `0x4490390`.
+- It reads `SdGmData+0x788` and stores it to `MSTCOMCBK()+0x2378` at
+  `0x443fd20`.
+- The PLT stub for `fnKndCalUsr_SetGR_DirPrmCopy` is `0x449fec0`.
+- Direct callers of that PLT stub are:
+  - `fnKndCalLot_PowerOn`;
+  - `fnKndCalLot_Demo`;
+  - `fnKndCalLot_SetChg`;
+  - `fnKndCalLot_Start`;
+  - `fnKndCalLot_GijiStart`;
+  - `fnKndCalLot_RlStart`;
+  - `fnKndCalLot_Prize`;
+  - `fnKndCalLot_CcDirStt`;
+  - `fnLotDirDummy`.
+
+Stable static output roots:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_set_gr_dir_prm_copy_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_set_gr_dir_prm_copy_entry_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_set_gr_dir_prm_copy_plt_20260703
+```
+
+`csl_audio_queue_probe.js` now hooks `fnKndCalUsr_SetGR_DirPrmCopy` and emits:
+
+```text
+gr_dir_prm_copy_enter
+gr_dir_prm_copy_leave
+```
+
+`summarize_runtime_audio_capture.py` now writes:
+
+```text
+runtime_gr_dir_prm_copy.csv
+```
+
+with `SdGmData+0x788`, `MSTCOMCBK()+0x2378`, neighboring direction slots, and
+the same MSTCOM selector fields used by `runtime_anm_dir_data.csv`.
+
+Runtime calibration:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_hook_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_force_kind8_v1_20260703
+```
+
+Results:
+
+- idle smoke installed the hook but did not call the copy function, which is
+  expected;
+- force kind 8 calibration called `gr_dir_prm_copy_enter/leave` six times each;
+- in that run, `SdGmData+0x788`, `MSTCOMCBK()+0x2378`, and
+  `C_AnmBase+0x31a` were all still `0`;
+- the run produced normal/ordinary event codes such as `ac0101`, `ac0102`,
+  `ac9071`, and `ac9920`, with `sp_story_state_count=0`.
+
+Interpretation: the upstream copy hook works, but the tested ordinary force
+route still does not populate the SP Story selector.  The next target is now
+the code path that sets `SdGmData+0x788` to SP Story numbers 3/4/5 before
+`fnKndCalUsr_SetGR_DirPrmCopy` runs.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:
@@ -595,10 +675,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 Use A: only for disposable high-frequency scratch.
 2. Do not continue blind `body_force_main` scanning just because `0..19` missed.
    The static selector source is now identified:
-   `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`.
+   `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
+   C_ObjStageAT_SP_Story+0x34a`.
 3. Run a narrow runtime probe with the new `anm_base_data_set_dir_*` events and
-   capture combined CSL/BGM/SP Story JSONL.  The first target is to observe the
-   selector values that correspond to ordinary scenes versus SP Story numbers
+   `gr_dir_prm_copy_*` events and capture combined CSL/BGM/SP Story JSONL.  The
+   first target is to identify who sets `SdGmData+0x788` to SP Story numbers
    3/4/5.
 4. Only after a target SP Story is reached through the native outer path can the
    ac7114-16 BGM gate be closed.

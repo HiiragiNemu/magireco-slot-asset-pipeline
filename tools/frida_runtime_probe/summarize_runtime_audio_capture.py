@@ -110,6 +110,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
     bgm_calls: list[dict[str, Any]] = []
     sp_story_state: list[dict[str, Any]] = []
     anm_dir_data: list[dict[str, Any]] = []
+    gr_dir_prm_copy: list[dict[str, Any]] = []
     force_calls: list[dict[str, Any]] = []
 
     for _, record in iter_jsonl(path):
@@ -245,6 +246,40 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
                 }
             )
+        elif kind.startswith("gr_dir_prm_copy_"):
+            gr_dir_prm_copy.append(
+                {
+                    "time_s": t,
+                    "kind": kind,
+                    "sdgm_pointer": payload.get("sdgm_pointer"),
+                    "sdgm_dir_slot_u16_at_0x782": payload.get("sdgm_dir_slot_u16_at_0x782"),
+                    "sdgm_dir_slot_u16_at_0x784": payload.get("sdgm_dir_slot_u16_at_0x784"),
+                    "sdgm_dir_slot_u16_at_0x786": payload.get("sdgm_dir_slot_u16_at_0x786"),
+                    "sdgm_source_story_no_u16_at_0x788": payload.get(
+                        "sdgm_source_story_no_u16_at_0x788"
+                    ),
+                    "sdgm_dir_slot_u16_at_0x78a": payload.get("sdgm_dir_slot_u16_at_0x78a"),
+                    "sdgm_dir_slot_u16_at_0x78c": payload.get("sdgm_dir_slot_u16_at_0x78c"),
+                    "sdgm_dir_slot_u16_at_0x78e": payload.get("sdgm_dir_slot_u16_at_0x78e"),
+                    "sdgm_dir_slot_u16_at_0x790": payload.get("sdgm_dir_slot_u16_at_0x790"),
+                    "sdgm_dir_slot_u16_at_0x792": payload.get("sdgm_dir_slot_u16_at_0x792"),
+                    "sdgm_dir_slot_u16_at_0x794": payload.get("sdgm_dir_slot_u16_at_0x794"),
+                    "sdgm_dir_slot_u16_at_0x796": payload.get("sdgm_dir_slot_u16_at_0x796"),
+                    "sdgm_dir_slot_u16_at_0x798": payload.get("sdgm_dir_slot_u16_at_0x798"),
+                    "sdgm_dir_slot_u16_at_0x79a": payload.get("sdgm_dir_slot_u16_at_0x79a"),
+                    "sdgm_error": payload.get("sdgm_error"),
+                    "mstcom_pointer": payload.get("mstcom_pointer"),
+                    "mst_stage_kind_u16_at_0x2376": payload.get("mst_stage_kind_u16_at_0x2376"),
+                    "mst_source_story_no_u16_at_0x2378": payload.get(
+                        "mst_source_story_no_u16_at_0x2378"
+                    ),
+                    "mst_extra_u16_at_0x238a": payload.get("mst_extra_u16_at_0x238a"),
+                    "mst_scene_u16_at_0x23be": payload.get("mst_scene_u16_at_0x23be"),
+                    "mstcom_error": payload.get("mstcom_error"),
+                    "retval_i32": payload.get("retval_i32"),
+                    "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
+                }
+            )
         elif kind.startswith("force_"):
             force_calls.append(
                 {
@@ -272,6 +307,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "bgm_call_count": len(bgm_calls),
         "sp_story_state_count": len(sp_story_state),
         "anm_dir_data_count": len(anm_dir_data),
+        "gr_dir_prm_copy_count": len(gr_dir_prm_copy),
         "force_call_count": len(force_calls),
         "unique_event_codes": sorted({str(row["event_code"]) for row in event_codes if row.get("event_code")}),
         "unique_sound_codes": sorted({str(row["code_string"]) for row in sound_codes if row.get("code_string")}),
@@ -303,6 +339,20 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                 if row.get("mst_source_story_no_u16_at_0x2378") is not None
             }
         ),
+        "unique_gr_copy_sdgm_source_story_numbers": sorted(
+            {
+                str(row["sdgm_source_story_no_u16_at_0x788"])
+                for row in gr_dir_prm_copy
+                if row.get("sdgm_source_story_no_u16_at_0x788") is not None
+            }
+        ),
+        "unique_gr_copy_mst_source_story_numbers": sorted(
+            {
+                str(row["mst_source_story_no_u16_at_0x2378"])
+                for row in gr_dir_prm_copy
+                if row.get("mst_source_story_no_u16_at_0x2378") is not None
+            }
+        ),
     }
     tables = {
         "runtime_event_codes": event_codes,
@@ -313,6 +363,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "runtime_bgm_calls": bgm_calls,
         "runtime_sp_story_state": sp_story_state,
         "runtime_anm_dir_data": anm_dir_data,
+        "runtime_gr_dir_prm_copy": gr_dir_prm_copy,
         "runtime_force_calls": force_calls,
     }
     return summary, tables
@@ -583,6 +634,37 @@ def main() -> int:
                 "mst_extra_u16_at_0x238a",
                 "mst_scene_u16_at_0x23be",
                 "mstcom_error",
+                "high_level_call_count_for_kind",
+            ],
+        )
+        write_csv(
+            args.out_dir / "runtime_gr_dir_prm_copy.csv",
+            runtime_tables["runtime_gr_dir_prm_copy"],
+            [
+                "time_s",
+                "kind",
+                "sdgm_pointer",
+                "sdgm_dir_slot_u16_at_0x782",
+                "sdgm_dir_slot_u16_at_0x784",
+                "sdgm_dir_slot_u16_at_0x786",
+                "sdgm_source_story_no_u16_at_0x788",
+                "sdgm_dir_slot_u16_at_0x78a",
+                "sdgm_dir_slot_u16_at_0x78c",
+                "sdgm_dir_slot_u16_at_0x78e",
+                "sdgm_dir_slot_u16_at_0x790",
+                "sdgm_dir_slot_u16_at_0x792",
+                "sdgm_dir_slot_u16_at_0x794",
+                "sdgm_dir_slot_u16_at_0x796",
+                "sdgm_dir_slot_u16_at_0x798",
+                "sdgm_dir_slot_u16_at_0x79a",
+                "sdgm_error",
+                "mstcom_pointer",
+                "mst_stage_kind_u16_at_0x2376",
+                "mst_source_story_no_u16_at_0x2378",
+                "mst_extra_u16_at_0x238a",
+                "mst_scene_u16_at_0x23be",
+                "mstcom_error",
+                "retval_i32",
                 "high_level_call_count_for_kind",
             ],
         )

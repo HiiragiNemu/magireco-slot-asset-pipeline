@@ -475,6 +475,126 @@ function describeMstComDirData(mstComCallback) {
   }
 }
 
+function describeSdGmDirData(sdGmCallback) {
+  if (sdGmCallback === null) {
+    return {
+      sdgm_pointer: "0x0",
+      sdgm_error: "fnGetAddrSdGmData export missing",
+    };
+  }
+  try {
+    const sdGmPointer = sdGmCallback();
+    if (sdGmPointer === null || sdGmPointer.isNull()) {
+      return {
+        sdgm_pointer: "0x0",
+        sdgm_error: "fnGetAddrSdGmData returned null",
+      };
+    }
+    return {
+      sdgm_pointer: sdGmPointer.toString(),
+      sdgm_dir_slot_u16_at_0x782: readU16Safe(sdGmPointer, 0x782),
+      sdgm_dir_slot_u16_at_0x784: readU16Safe(sdGmPointer, 0x784),
+      sdgm_dir_slot_u16_at_0x786: readU16Safe(sdGmPointer, 0x786),
+      sdgm_source_story_no_u16_at_0x788: readU16Safe(sdGmPointer, 0x788),
+      sdgm_dir_slot_u16_at_0x78a: readU16Safe(sdGmPointer, 0x78a),
+      sdgm_dir_slot_u16_at_0x78c: readU16Safe(sdGmPointer, 0x78c),
+      sdgm_dir_slot_u16_at_0x78e: readU16Safe(sdGmPointer, 0x78e),
+      sdgm_dir_slot_u16_at_0x790: readU16Safe(sdGmPointer, 0x790),
+      sdgm_dir_slot_u16_at_0x792: readU16Safe(sdGmPointer, 0x792),
+      sdgm_dir_slot_u16_at_0x794: readU16Safe(sdGmPointer, 0x794),
+      sdgm_dir_slot_u16_at_0x796: readU16Safe(sdGmPointer, 0x796),
+      sdgm_dir_slot_u16_at_0x798: readU16Safe(sdGmPointer, 0x798),
+      sdgm_dir_slot_u16_at_0x79a: readU16Safe(sdGmPointer, 0x79a),
+      sdgm_error: "",
+    };
+  } catch (error) {
+    return {
+      sdgm_pointer: "0x0",
+      sdgm_error: String(error),
+    };
+  }
+}
+
+function hookGrDirPrmCopy(moduleValue) {
+  const symbol = "fnKndCalUsr_SetGR_DirPrmCopy";
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+
+  const mstComAddress = findExport(moduleValue, "_Z9MSTCOMCBKv");
+  let mstComCallback = null;
+  if (mstComAddress !== null) {
+    try {
+      mstComCallback = new NativeFunction(mstComAddress, "pointer", []);
+    } catch (error) {
+      emit("hook_attach_error", {
+        hook_kind: "gr_dir_prm_copy_mstcom_callback",
+        symbol: "_Z9MSTCOMCBKv",
+        address: mstComAddress.toString(),
+        error: String(error),
+      });
+    }
+  }
+
+  const sdGmAddress = findExport(moduleValue, "fnGetAddrSdGmData");
+  let sdGmCallback = null;
+  if (sdGmAddress !== null) {
+    try {
+      sdGmCallback = new NativeFunction(sdGmAddress, "pointer", []);
+    } catch (error) {
+      emit("hook_attach_error", {
+        hook_kind: "gr_dir_prm_copy_sdgm_callback",
+        symbol: "fnGetAddrSdGmData",
+        address: sdGmAddress.toString(),
+        error: String(error),
+      });
+    }
+  }
+
+  try {
+    Interceptor.attach(address, {
+      onEnter() {
+        emitHighLevel(
+          "gr_dir_prm_copy_enter",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+            },
+            describeSdGmDirData(sdGmCallback),
+            describeMstComDirData(mstComCallback)
+          )
+        );
+      },
+      onLeave(retval) {
+        emitHighLevel(
+          "gr_dir_prm_copy_leave",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              retval_pointer: retval.toString(),
+              retval_i32: toI32(retval),
+            },
+            describeSdGmDirData(sdGmCallback),
+            describeMstComDirData(mstComCallback)
+          )
+        );
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: "gr_dir_prm_copy",
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: "gr_dir_prm_copy", symbol, address: address.toString() });
+}
+
 function hookAnmBaseDirData(moduleValue) {
   const symbol = "_ZN9C_AnmBase16fnDataSetDir_DIREv";
   const address = findExport(moduleValue, symbol);
@@ -932,6 +1052,7 @@ function installHooks(moduleValue) {
 }
 
 function installHighLevelAudioHooks(moduleValue) {
+  hookGrDirPrmCopy(moduleValue);
   hookAnmBaseDirData(moduleValue);
   hookSpStoryMethod(
     moduleValue,

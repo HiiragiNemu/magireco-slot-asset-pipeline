@@ -18,23 +18,29 @@
 
 - 2026-07-03 断电恢复后，稳定工作进度根改为
   `D:\magia\MyProducts\casino`；A: 只作为 RAM-disk scratch/2026-06-29 备份恢复源。
-  `body_force_main` post-clear force kinds `0..19` 已完成有效扫描：kind 8 映射到
-  `ac0922_001`，其余命中普通 slot/gameplay 事件，没有任何一个进入
+  `body_force_main` post-clear force kinds `0..19` 已完成有效扫描：旧 kind 8 曾映射到
+  `ac0922_001`，新校准中 kind 8 可进入普通 `ac0101`/`ac0102`/`ac9071`/`ac9920`
+  等路线；无论哪种结果，都没有任何一个进入
   `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001` 的
   `C_ObjStageAT_SP_Story` 路线。新的静态证据显示 SP Story 选择器链是
-  `MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a`，
+  `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
+  C_ObjStageAT_SP_Story+0x34a`，
   而不是 `ac` 后缀或简单 force kind。新增
   `tools/frida_runtime_probe/survey_aarch64_xrefs.py` 用于自包含 ELF64/AArch64
   xref 调查；`csl_audio_queue_probe.js` 已新增
-  `anm_base_data_set_dir_enter/leave`，`summarize_runtime_audio_capture.py` 会导出
-  `runtime_anm_dir_data.csv`。稳定静态输出位于
+  `anm_base_data_set_dir_enter/leave` 与 `gr_dir_prm_copy_enter/leave`，
+  `summarize_runtime_audio_capture.py` 会导出 `runtime_anm_dir_data.csv` 和
+  `runtime_gr_dir_prm_copy.csv`。稳定静态输出位于
   `D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_sp_story_selector_20260703`。
   2 秒 smoke 位于
   `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\selector_hook_smoke_v2_20260703`：
   新 hook 已安装并生成 2253 条 selector rows，当前 idle selector 为 0；这只证明
   hook 可用，不证明 ac7114-16 route。为避免后续输出刷屏/丢后段 selector，
   `runtime_probe_host.py` 新增 `--quiet`，`run_force_kind_scan.py` 已使用它，selector
-  hook 上限提升到每 kind 20000。
+  hook 上限提升到每 kind 20000。上游复制器校准位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_force_kind8_v1_20260703`：
+  `fnKndCalUsr_SetGR_DirPrmCopy` 真实触发 6 对 enter/leave，但
+  `SdGmData+0x788`、`MSTCOMCBK()+0x2378` 和 `C_AnmBase+0x31a` 均为 0。
   下一步应跑窄 runtime selector probe，不能继续盲目扩大 force kind 扫描。
 - 2026-07-03 SP Story/force-routing 机制报告已新增：
   `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
@@ -1589,9 +1595,11 @@ python tools\frida_runtime_probe\force_selector_host.py body-force-next-lever --
 - `force_index0_postclear_chain_20260703` 捕获到独立 observer 的
   `force_flag_set arg0=0`，证明诊断链路有效。
 - `force_index8_postclear_probe_20260703` 捕获到
-  `force_flag_set arg0=8 return=1`，并映射到 `ac0922_001`
-  (`0x31434e5a38404764`，声音 `31043`-`31061`)；没有
-  `C_ObjStageAT_SP_Story` 事件，所以 kind 8 不是 ac7114/ac7115/ac7116 目标。
+  `force_flag_set arg0=8 return=1`，并在该次运行映射到 `ac0922_001`
+  (`0x31434e5a38404764`，声音 `31043`-`31061`)；后续 selector 校准中 kind 8
+  进入普通 `ac0101`/`ac0102`/`ac9071`/`ac9920` 路线。两类结果都没有
+  `C_ObjStageAT_SP_Story` 事件，所以 kind 8 只能作为非目标诊断路线，不能当成
+  稳定 ac0922 selector，更不是 ac7114/ac7115/ac7116 目标。
 
 新增自动扫描结论：
 
@@ -1612,9 +1620,11 @@ python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --
   - `force_kind_scan_smoke_20260703`：kind 1 有效，非目标；
   - `force_kind_scan_smoke_kind2_v3_20260703`：kind 2 有效，非目标；
   - `force_kind_scan_3_7_9_19_v2_20260703`：kind 3-7、9-19 有效，均非目标；
-  - `force_index8_postclear_probe_20260703`：kind 8 -> `ac0922_001`，非目标。
+  - `force_index8_postclear_probe_20260703`：kind 8 曾命中 `ac0922_001`，后续校准
+    又命中普通路线；均非目标。
 - 结论：post-clear `body_force_main` kind `0..19` 没有一个进入
   `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001`，且有效扫描中的
-  `sp_story_state_count=0`。不要继续盲扫更大 kind 范围；下一步应静态分析
-  `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` 的 caller/selector，找到选择 SP Story
-  3/4/5 的状态或参数表，再做窄范围 runtime probe。
+  `sp_story_state_count=0`。不要继续盲扫更大 kind 范围；当前 selector 链已推进为
+  `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
+  C_ObjStageAT_SP_Story+0x34a`，下一步应找谁写 `SdGmData+0x788` 为 SP Story
+  3/4/5，再做窄范围 runtime probe。
