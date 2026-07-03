@@ -163,6 +163,18 @@ function readU32Safe(pointerValue, offset) {
   }
 }
 
+function readU64HexSafe(pointerValue, offset) {
+  if (pointerValue === null || pointerValue.isNull()) {
+    return null;
+  }
+  try {
+    const value = pointerValue.add(offset).readU64();
+    return "0x" + value.toString(16).padStart(16, "0");
+  } catch (_) {
+    return null;
+  }
+}
+
 function readPointerSafe(pointerValue, offset) {
   if (pointerValue === null || pointerValue.isNull()) {
     return ptr(0);
@@ -362,6 +374,77 @@ function hookIntCall(moduleValue, symbol, kind, argCount) {
           fields["arg" + index + "_pointer"] = args[index].toString();
         }
         emitHighLevel(kind, fields);
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
+}
+
+function describeSpStoryObject(thisPointer) {
+  if (thisPointer === null || thisPointer.isNull()) {
+    return { sp_story_this: "0x0" };
+  }
+  return {
+    sp_story_this: thisPointer.toString(),
+    stage_kind_u16_at_0x318: readU16Safe(thisPointer, 0x318),
+    source_story_no_u16_at_0x31a: readU16Safe(thisPointer, 0x31a),
+    active_story_no_u16_at_0x34a: readU16Safe(thisPointer, 0x34a),
+    dir_no_u16_at_0x34c: readU16Safe(thisPointer, 0x34c),
+    base_event_code_hex_at_0x358: readU64HexSafe(thisPointer, 0x358),
+    previous_base_event_code_hex_at_0x360: readU64HexSafe(thisPointer, 0x360),
+    next_event_code_hex_at_0x368: readU64HexSafe(thisPointer, 0x368),
+    previous_next_event_code_hex_at_0x370: readU64HexSafe(thisPointer, 0x370),
+  };
+}
+
+function hookSpStoryMethod(moduleValue, symbol, kind, argCount, emitLeave) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        this.thisPointer = args[0];
+        const fields = Object.assign(
+          {
+            symbol,
+            address: address.toString(),
+          },
+          describeSpStoryObject(args[0])
+        );
+        for (let index = 1; index < argCount; index += 1) {
+          const u32Value = toU32(args[index]);
+          fields["arg" + index + "_u16"] = u32Value === null ? null : u32Value & 0xffff;
+          fields["arg" + index + "_i32"] = toI32(args[index]);
+          fields["arg" + index + "_pointer"] = args[index].toString();
+        }
+        emitHighLevel(kind, fields);
+      },
+      onLeave(retval) {
+        if (!emitLeave) {
+          return;
+        }
+        emitHighLevel(
+          kind + "_leave",
+          Object.assign(
+            {
+              symbol,
+              address: address.toString(),
+              retval_pointer: retval.toString(),
+              retval_i32: toI32(retval),
+            },
+            describeSpStoryObject(this.thisPointer)
+          )
+        );
       },
     });
   } catch (error) {
@@ -669,6 +752,48 @@ function installHooks(moduleValue) {
 }
 
 function installHighLevelAudioHooks(moduleValue) {
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story3preEv",
+    "sp_story_pre",
+    1,
+    true
+  );
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story9fnSetDataEv",
+    "sp_story_set_data",
+    1,
+    true
+  );
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story14fnSetEventCodeEv",
+    "sp_story_set_event_code",
+    1,
+    true
+  );
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story13fnSetEvCdBaseEt",
+    "sp_story_set_evcd_base",
+    2,
+    true
+  );
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story13fnSetEvCdNextEt",
+    "sp_story_set_evcd_next",
+    2,
+    true
+  );
+  hookSpStoryMethod(
+    moduleValue,
+    "_ZN21C_ObjStageAT_SP_Story9fnPlayAnmEv",
+    "sp_story_play_anm",
+    1,
+    false
+  );
   hookIntCall(moduleValue, "_ZN8SoundMng4playEii", "sound_mng_play", 2);
   hookCStringAndInts(
     moduleValue,

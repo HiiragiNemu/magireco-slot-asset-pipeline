@@ -16,6 +16,22 @@
 
 最新新增：
 
+- 2026-07-03 SP Story/force-routing 机制报告已新增：
+  `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
+  新工具 `tools/frida_runtime_probe/extract_sp_story_event_codes.py` 从
+  `libGameProc.so` 的 `C_ObjStageAT_SP_Story::fnSetEvCdBase` 静态表提取 72 条
+  base event-code 候选，并解析到 `ac7114_001`、`ac7115_001`、`ac7115_013`、
+  `ac7116_001` 四条已 resolved manifest。`csl_audio_queue_probe.js` 已补充
+  `sp_story_*` runtime hooks，`summarize_runtime_audio_capture.py` 会导出
+  `runtime_sp_story_state.csv`。两次自然输入捕获
+  `natural_slot_csl_bgm_input_v1_20260703` / `natural_slot_sp_story_audio_v2_20260703`
+  证明普通老虎机外层能触发 BGM helper 与最终 CSL queue，但这两次均未进入
+  `C_ObjStageAT_SP_Story`，不能解除 ac7114-16 BGM 门禁。可见 force UI 当前会被
+  アドオン購入 门拦截；已新增 `force_selector_host.py body-force-main/body-force-sub/
+  body-force-param` 直接写内部 `CSlotBody` force 状态，并验证
+  `body-force-main --index 0` 可写入、`--index -1` 可复位，不触发购买 UI。下一步是
+  小批量映射 0..19 force index，必须以 runtime event-code/SP-state/CSL 证据为准，
+  不能按 ac 后缀或画面相似度推断。
 - 2026-07-02 ac7116 renderer texture-state 探针已新增：
   `docs/research/2026-07-02-ac7116-renderer-texture-state-probe.md`。
   新工具包括 `runtime_symbol_survey.js`、`cri_video_texture_probe.js` 和

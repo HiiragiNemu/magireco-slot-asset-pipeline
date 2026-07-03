@@ -108,6 +108,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
     play_requests: list[dict[str, Any]] = []
     sound_code_calls: list[dict[str, Any]] = []
     bgm_calls: list[dict[str, Any]] = []
+    sp_story_state: list[dict[str, Any]] = []
 
     for _, record in iter_jsonl(path):
         if first_ms is None and record.get("host_unix_ms") is not None:
@@ -187,6 +188,29 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "arg1_pointer": payload.get("arg1_pointer"),
                 }
             )
+        elif kind.startswith("sp_story_"):
+            sp_story_state.append(
+                {
+                    "time_s": t,
+                    "kind": kind,
+                    "sp_story_this": payload.get("sp_story_this"),
+                    "stage_kind_u16_at_0x318": payload.get("stage_kind_u16_at_0x318"),
+                    "source_story_no_u16_at_0x31a": payload.get("source_story_no_u16_at_0x31a"),
+                    "active_story_no_u16_at_0x34a": payload.get("active_story_no_u16_at_0x34a"),
+                    "dir_no_u16_at_0x34c": payload.get("dir_no_u16_at_0x34c"),
+                    "base_event_code_hex_at_0x358": payload.get("base_event_code_hex_at_0x358"),
+                    "previous_base_event_code_hex_at_0x360": payload.get(
+                        "previous_base_event_code_hex_at_0x360"
+                    ),
+                    "next_event_code_hex_at_0x368": payload.get("next_event_code_hex_at_0x368"),
+                    "previous_next_event_code_hex_at_0x370": payload.get(
+                        "previous_next_event_code_hex_at_0x370"
+                    ),
+                    "arg1_u16": payload.get("arg1_u16"),
+                    "arg1_i32": payload.get("arg1_i32"),
+                    "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
+                }
+            )
 
     summary = {
         "source": str(path),
@@ -197,8 +221,23 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "sound_mng_play_request_count": len(play_requests),
         "sound_code_call_count": len(sound_code_calls),
         "bgm_call_count": len(bgm_calls),
+        "sp_story_state_count": len(sp_story_state),
         "unique_event_codes": sorted({str(row["event_code"]) for row in event_codes if row.get("event_code")}),
         "unique_sound_codes": sorted({str(row["code_string"]) for row in sound_codes if row.get("code_string")}),
+        "unique_sp_story_base_event_codes": sorted(
+            {
+                str(row["base_event_code_hex_at_0x358"])
+                for row in sp_story_state
+                if row.get("base_event_code_hex_at_0x358")
+            }
+        ),
+        "unique_sp_story_next_event_codes": sorted(
+            {
+                str(row["next_event_code_hex_at_0x368"])
+                for row in sp_story_state
+                if row.get("next_event_code_hex_at_0x368")
+            }
+        ),
     }
     tables = {
         "runtime_event_codes": event_codes,
@@ -207,6 +246,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "runtime_play_requests": play_requests,
         "runtime_sound_code_calls": sound_code_calls,
         "runtime_bgm_calls": bgm_calls,
+        "runtime_sp_story_state": sp_story_state,
     }
     return summary, tables
 
@@ -308,6 +348,59 @@ def summarize_csl(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, 
     return summary, tables
 
 
+def csl_summary_has_rows(summary: dict[str, Any]) -> bool:
+    return any(
+        int(summary.get(key) or 0) > 0
+        for key in (
+            "request_count",
+            "play_start_count",
+            "queue_chunk_count",
+            "queue_metadata_count",
+        )
+    )
+
+
+def write_csl_outputs(out_dir: Path, csl_tables: dict[str, list[dict[str, Any]]]) -> None:
+    write_csv(
+        out_dir / "csl_requests.csv",
+        csl_tables["csl_requests"],
+        ["time_s", "request_id", "arg2_i32", "thread_id"],
+    )
+    write_csv(
+        out_dir / "csl_play_starts.csv",
+        csl_tables["csl_play_starts"],
+        ["time_s", "play_index", "sound_id_u16_at_0x2", "sound_data", "thread_id"],
+    )
+    write_csv(
+        out_dir / "csl_queue_chunks.csv",
+        csl_tables["csl_queue_chunks"],
+        [
+            "time_s",
+            "chunk_index",
+            "sound_id_u16_at_0x2",
+            "buffer_bytes",
+            "play_start_index",
+            "request_id",
+            "queue_object",
+            "dumped",
+        ],
+    )
+    write_csv(
+        out_dir / "csl_queue_metadata.csv",
+        csl_tables["csl_queue_metadata"],
+        [
+            "time_s",
+            "sound_id_u16_at_0x2",
+            "buffer_bytes",
+            "play_start_index",
+            "request_id",
+            "queue_object",
+            "dumped",
+            "dumped_bytes_so_far",
+        ],
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtime-jsonl", type=Path)
@@ -379,48 +472,35 @@ def main() -> int:
                 "arg1_pointer",
             ],
         )
+        write_csv(
+            args.out_dir / "runtime_sp_story_state.csv",
+            runtime_tables["runtime_sp_story_state"],
+            [
+                "time_s",
+                "kind",
+                "sp_story_this",
+                "stage_kind_u16_at_0x318",
+                "source_story_no_u16_at_0x31a",
+                "active_story_no_u16_at_0x34a",
+                "dir_no_u16_at_0x34c",
+                "base_event_code_hex_at_0x358",
+                "previous_base_event_code_hex_at_0x360",
+                "next_event_code_hex_at_0x368",
+                "previous_next_event_code_hex_at_0x370",
+                "arg1_u16",
+                "arg1_i32",
+                "high_level_call_count_for_kind",
+            ],
+        )
+        embedded_csl_summary, embedded_csl_tables = summarize_csl(args.runtime_jsonl)
+        if csl_summary_has_rows(embedded_csl_summary):
+            summary["runtime_embedded_csl"] = embedded_csl_summary
+            write_csl_outputs(args.out_dir, embedded_csl_tables)
 
     if args.csl_jsonl:
         csl_summary, csl_tables = summarize_csl(args.csl_jsonl)
         summary["csl"] = csl_summary
-        write_csv(
-            args.out_dir / "csl_requests.csv",
-            csl_tables["csl_requests"],
-            ["time_s", "request_id", "arg2_i32", "thread_id"],
-        )
-        write_csv(
-            args.out_dir / "csl_play_starts.csv",
-            csl_tables["csl_play_starts"],
-            ["time_s", "play_index", "sound_id_u16_at_0x2", "sound_data", "thread_id"],
-        )
-        write_csv(
-            args.out_dir / "csl_queue_chunks.csv",
-            csl_tables["csl_queue_chunks"],
-            [
-                "time_s",
-                "chunk_index",
-                "sound_id_u16_at_0x2",
-                "buffer_bytes",
-                "play_start_index",
-                "request_id",
-                "queue_object",
-                "dumped",
-            ],
-        )
-        write_csv(
-            args.out_dir / "csl_queue_metadata.csv",
-            csl_tables["csl_queue_metadata"],
-            [
-                "time_s",
-                "sound_id_u16_at_0x2",
-                "buffer_bytes",
-                "play_start_index",
-                "request_id",
-                "queue_object",
-                "dumped",
-                "dumped_bytes_so_far",
-            ],
-        )
+        write_csl_outputs(args.out_dir, csl_tables)
 
     with (args.out_dir / "summary.json").open("w", encoding="utf-8") as handle:
         json.dump(summary, handle, ensure_ascii=False, indent=2)

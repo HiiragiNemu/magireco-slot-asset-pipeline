@@ -28,6 +28,9 @@ ACTIONS = {
     "force-reset": ("reset_force_selection", 0),
     "force-select": ("select_force_index", None),
     "force-confirm": ("confirm_force_index", None),
+    "body-force-main": ("set_body_force_main", None),
+    "body-force-sub": ("set_body_force_sub", None),
+    "body-force-param": ("set_body_force_param", None),
     "body-bet": ("body_bet", 1),
     "body-lever": ("body_lever", 1),
     "body-left-reel": ("body_left_reel", 1),
@@ -58,7 +61,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if args.action in {"force-select", "force-confirm"} and args.index is None:
+    index_actions = {
+        "force-select",
+        "force-confirm",
+        "body-force-main",
+        "body-force-sub",
+        "body-force-param",
+    }
+    if args.action in index_actions and args.index is None:
         raise SystemExit(f"--index is required for {args.action}")
     if args.action == "gat-run" and args.frames is None:
         raise SystemExit("--frames is required for gat-run")
@@ -104,7 +114,7 @@ def main() -> int:
     action_spec = ACTIONS[args.action]
     if action_spec is not None:
         action_name, action_value = action_spec
-        if args.action in {"force-select", "force-confirm"}:
+        if args.action in index_actions:
             action_value = args.index
         elif args.action == "gat-run":
             action_value = args.frames

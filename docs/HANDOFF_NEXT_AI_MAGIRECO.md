@@ -1149,6 +1149,50 @@ Current strategy result:
 }
 ```
 
+## 2026-07-03 SP Story / force-routing update
+
+Read this detailed report before continuing the ac7114-16 BGM gate:
+
+```text
+docs/research/2026-07-03-sp-story-event-code-and-force-routing.md
+```
+
+Current facts:
+
+- `C_ObjStageAT_SP_Story::fnSetEvCdBase` statically contains the official
+  base event codes for `ac7114_001`, `ac7115_001`, and `ac7116_001`.
+- New extractor:
+  `tools/frida_runtime_probe/extract_sp_story_event_codes.py`.
+- New runtime state table from combined CSL/BGM captures:
+  `runtime_sp_story_state.csv`, emitted by
+  `tools/frida_runtime_probe/summarize_runtime_audio_capture.py`.
+- Natural slot input captures on 2026-07-03 proved ordinary gameplay can call
+  BGM helper paths, but the captures reached restaurant/ordinary slot flow, not
+  target SP Story.  They do not close the ac7114-16 BGM gate.
+- The visible force selector is currently blocked by the add-on purchase gate.
+  Do not use the purchase popup path as evidence.
+- Internal `CSlotBody` force state can now be written reproducibly:
+
+```powershell
+python tools\frida_runtime_probe\force_selector_host.py body-force-main --index <n>
+python tools\frida_runtime_probe\force_selector_host.py body-force-sub --index <n>
+python tools\frida_runtime_probe\force_selector_host.py body-force-param --index <n>
+```
+
+Validated evidence:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\force_body_main_write0_20260703c.jsonl
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\force_body_main_reset_minus1_20260703c.jsonl
+```
+
+Next recommended experiment: map `body-force-main` index 0..19 in small,
+auditable one-spin captures.  For each index, capture combined CSL/BGM/SP Story
+JSONL, then inspect `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
+`runtime_sound_code_calls.csv`, and `csl_queue_chunks.csv`.  Stop as soon as a
+target SP Story event code appears; do not spend credits/tokens brute-forcing
+broad renders.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

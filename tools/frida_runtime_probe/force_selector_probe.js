@@ -131,6 +131,7 @@ function snapshot() {
     result.body_input_mask = readS32(slotBodyPointer.add(0x408));
     result.body_touch_mask = readS32(slotBodyPointer.add(0x40c));
     result.body_force_main = readS32(slotBodyPointer.add(0x520));
+    result.body_force_sub = readS32(slotBodyPointer.add(0x524));
     result.body_force_parameter = readS32(slotBodyPointer.add(0x528));
     if (bodyState !== null && !bodyState.isNull()) {
       result.body_state = readS32(bodyState);
@@ -151,6 +152,21 @@ const bodyInputSymbols = {
   body_left_reel: "_ZN9CSlotBody11touch_LReelEi",
   body_center_reel: "_ZN9CSlotBody11touch_CReelEi",
   body_right_reel: "_ZN9CSlotBody11touch_RReelEi",
+};
+
+const bodyForceSetterSymbols = {
+  set_body_force_main: {
+    symbol: "_ZN9CSlotBody16setForceMainFlagEi",
+    snapshotKey: "body_force_main",
+  },
+  set_body_force_sub: {
+    symbol: "_ZN9CSlotBody15setForceSubFlagEi",
+    snapshotKey: "body_force_sub",
+  },
+  set_body_force_param: {
+    symbol: "_ZN9CSlotBody17setForceFlagPalamEi",
+    snapshotKey: "body_force_parameter",
+  },
 };
 
 function pressBodyInput(name) {
@@ -174,6 +190,31 @@ function pressBodyInput(name) {
     input: name,
     symbol,
     address: address.toString(),
+    state_after: snapshot(),
+  });
+}
+
+function setBodyForceValue(name, value) {
+  if (slotBodyPointer === null || slotBodyPointer.isNull()) {
+    throw new Error("CSlotBody instance has not been observed");
+  }
+  const spec = bodyForceSetterSymbols[name];
+  if (spec === undefined) {
+    throw new Error("unknown body force setter: " + name);
+  }
+  const numberValue = Number(value);
+  if (!Number.isInteger(numberValue) || numberValue < -1 || numberValue > 65535) {
+    throw new Error("body force value must be an integer from -1 through 65535");
+  }
+  const address = resolve(spec.symbol, 0);
+  const call = new NativeFunction(address, "void", ["pointer", "int"]);
+  call(slotBodyPointer, numberValue);
+  emit("body_force_set", {
+    action: name,
+    symbol: spec.symbol,
+    address: address.toString(),
+    value: numberValue,
+    snapshot_key: spec.snapshotKey,
     state_after: snapshot(),
   });
 }
@@ -253,6 +294,8 @@ function executeAction(action) {
 
     if (Object.prototype.hasOwnProperty.call(bodyInputSymbols, name)) {
       pressBodyInput(name);
+    } else if (Object.prototype.hasOwnProperty.call(bodyForceSetterSymbols, name)) {
+      setBodyForceValue(name, value);
     } else if (name === "set_manager_gate") {
     const manager = readPointer(slotPointer.add(0x308));
     if (manager === null || manager.isNull()) {
