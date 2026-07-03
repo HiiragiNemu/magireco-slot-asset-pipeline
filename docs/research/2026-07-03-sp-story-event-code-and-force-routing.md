@@ -933,6 +933,70 @@ This does not yet identify the dispatcher/caller that supplies the payload to
 blind `body_force_main` kind as the target selector.  The next runtime capture
 should prioritize `fnRxComDirInfo8` backtraces and payload bytes.
 
+## DirInfoTable / EventInfo generic event dispatch
+
+The event-code route is now proven to be generic table dispatch, not a
+per-family manual mapping problem.
+
+New xref output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_dirinfo_table_got_pc_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_eventinfo_got_pc_20260703
+```
+
+Tool update:
+
+- `survey_aarch64_xrefs.py` now scans simple AArch64 `ADRP+ADD/LDR`
+  PC-relative references in addition to direct branch and absolute data refs.
+
+Confirmed GOT consumers:
+
+```text
+DirInfoTable_GOT 0x4b8ffa0:
+0x43ccd7c  _ZN16C_DirInfoManager14fnGetEventCodeEtlt
+0x43cce44  _ZN16C_DirInfoManager14fnGetActiveTrgEtlt
+0x43ccf80  _ZN16C_DirInfoManager20fnGetActiveEventCodeEtlt
+
+EventInfo_GOT 0x4b8ffa8:
+0x43c22cc  _ZN25C_DirectionControllerBase16Macro_EVENT_PLAYE32tagDirectionControllerDeviceData
+0x43ccdbc  _ZN16C_DirInfoManager14fnGetEventCodeEtlt
+0x43cce7c  _ZN16C_DirInfoManager14fnGetActiveTrgEtlt
+0x43ccfe0  _ZN16C_DirInfoManager20fnGetActiveEventCodeEtlt
+```
+
+Decoded `fnGetEventCodeEtlt` shape:
+
+```text
+entry = DirInfoTable + kind * 16
+entry+0   = u16 grid pointer
+entry+8   = range/dimension check
+entry+0xa = range/dimension check
+grid[row, selector] = u16 EventInfo index
+EventInfo + index * 24 = final event-code record
+```
+
+The `DirInfoTable` dynamic symbol is 4640 bytes, so the table contains 290
+16-byte entries and covers kind `0..0x121`.  This matches the function's range
+check and provides a path to decode broad event routing without hand-processing
+every `ac` family.
+
+Current best model:
+
+```text
+fnRxComDirInfo8 payload bytes
+  -> SdGmData stage/selector fields
+  -> C_AnmBase / C_DirInfoManager kind+selector
+  -> DirInfoTable grid
+  -> EventInfo record
+  -> event code string/pointer
+```
+
+Next static task: implement a table decoder that dumps all valid
+`kind,row,selector -> EventInfo index -> event code` rows.  That dump should
+become the primary discovery source for scene grouping and Bilibili long-video
+candidate generation.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Survey direct AArch64 branch/call xrefs in an ELF64 binary.
+"""Survey direct AArch64 xrefs in an ELF64 binary.
 
 This is intentionally small and self-contained because the recovery environment
-does not always have objdump/readelf.  It finds direct ``B``/``BL`` references
-to named virtual addresses and writes both CSV rows and local disassembly
-windows for audit.
+does not always have objdump/readelf.  It finds direct ``B``/``BL`` references,
+absolute data references, and simple ``ADRP`` + ``ADD``/``LDR`` PC-relative
+references to named virtual addresses, then writes CSV rows and local
+disassembly windows for audit.
 """
 
 from __future__ import annotations
@@ -157,6 +158,117 @@ def decode_direct_branch(word: int, address: int) -> tuple[str, int] | None:
     return op, address + imm26 * 4
 
 
+def sign_extend(value: int, bits: int) -> int:
+    sign_bit = 1 << (bits - 1)
+    return (value ^ sign_bit) - sign_bit
+
+
+def decode_adrp(word: int, address: int) -> tuple[int, int] | None:
+    if (word & 0x9F000000) != 0x90000000:
+        return None
+    immlo = (word >> 29) & 0x3
+    immhi = (word >> 5) & 0x7FFFF
+    imm = sign_extend((immhi << 2) | immlo, 21) << 12
+    rd = word & 0x1F
+    page = (address & ~0xFFF) + imm
+    return rd, page
+
+
+def decode_add_immediate(word: int) -> tuple[int, int, int] | None:
+    if (word & 0x7F000000) != 0x11000000:
+        return None
+    if (word >> 29) & 0x1:
+        return None
+    rd = word & 0x1F
+    rn = (word >> 5) & 0x1F
+    imm = (word >> 10) & 0xFFF
+    shift = (word >> 22) & 0x3
+    if shift == 1:
+        imm <<= 12
+    elif shift != 0:
+        return None
+    return rd, rn, imm
+
+
+def decode_ldr_unsigned_immediate(word: int) -> tuple[int, int, int, str] | None:
+    patterns = (
+        (0xFFC00000, 0xF9400000, 8, "ldr_x"),
+        (0xFFC00000, 0xB9400000, 4, "ldr_w"),
+    )
+    for mask, value, scale, name in patterns:
+        if (word & mask) == value:
+            rt = word & 0x1F
+            rn = (word >> 5) & 0x1F
+            imm = ((word >> 10) & 0xFFF) * scale
+            return rt, rn, imm, name
+    return None
+
+
+def scan_pc_relative_refs(
+    blob: bytes,
+    sections: list[dict[str, Any]],
+    symbols: list[dict[str, Any]],
+    targets: dict[int, str],
+    lookahead: int = 8,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for section in sections:
+        if not (int(section["flags"]) & SHF_EXECINSTR):
+            continue
+        start = int(section["addr"])
+        data = blob[section["offset"] : section["offset"] + section["size"]]
+        words = [struct.unpack_from("<I", data, rel)[0] for rel in range(0, len(data) - 3, 4)]
+        for index, word in enumerate(words):
+            address = start + index * 4
+            adrp = decode_adrp(word, address)
+            if adrp is None:
+                continue
+            base_reg, page = adrp
+            for next_index in range(index + 1, min(len(words), index + lookahead + 1)):
+                next_word = words[next_index]
+                next_address = start + next_index * 4
+                add = decode_add_immediate(next_word)
+                ref_kind = ""
+                ref_address: int | None = None
+                dest_reg = -1
+                if add is not None:
+                    rd, rn, imm = add
+                    if rn == base_reg:
+                        ref_kind = "adrp_add"
+                        ref_address = page + imm
+                        dest_reg = rd
+                ldr = decode_ldr_unsigned_immediate(next_word)
+                if ldr is not None:
+                    rt, rn, imm, ldr_name = ldr
+                    if rn == base_reg:
+                        ref_kind = f"adrp_{ldr_name}"
+                        ref_address = page + imm
+                        dest_reg = rt
+                if ref_address is None:
+                    continue
+                if ref_address not in targets:
+                    continue
+                symbol = containing_symbol(symbols, next_address)
+                rows.append(
+                    {
+                        "xref_address": f"0x{next_address:x}",
+                        "adrp_address": f"0x{address:x}",
+                        "op": ref_kind,
+                        "target_address": f"0x{ref_address:x}",
+                        "target_name": targets[ref_address],
+                        "base_register": f"x{base_reg}",
+                        "dest_register": f"x{dest_reg}",
+                        "caller_symbol": symbol["name"] if symbol else "",
+                        "caller_symbol_address": f"0x{int(symbol['address']):x}" if symbol else "",
+                        "caller_symbol_size": int(symbol["size"]) if symbol else "",
+                        "section": section["name"],
+                        "adrp_word_hex": f"0x{word:08x}",
+                        "word_hex": f"0x{next_word:08x}",
+                    }
+                )
+    return rows
+
+
 def scan_direct_branches(
     blob: bytes,
     sections: list[dict[str, Any]],
@@ -276,6 +388,7 @@ def main() -> int:
     targets = parse_targets(args.target)
     branch_rows = scan_direct_branches(blob, sections, symbols, targets)
     data_rows = scan_absolute_data_refs(blob, sections, targets)
+    pc_relative_rows = scan_pc_relative_refs(blob, sections, symbols, targets)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     with (args.out_dir / "direct_branch_xrefs.csv").open("w", encoding="utf-8", newline="") as handle:
@@ -298,11 +411,30 @@ def main() -> int:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(data_rows)
+    with (args.out_dir / "pc_relative_refs.csv").open("w", encoding="utf-8", newline="") as handle:
+        fieldnames = [
+            "xref_address",
+            "adrp_address",
+            "op",
+            "target_address",
+            "target_name",
+            "base_register",
+            "dest_register",
+            "caller_symbol",
+            "caller_symbol_address",
+            "caller_symbol_size",
+            "section",
+            "adrp_word_hex",
+            "word_hex",
+        ]
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(pc_relative_rows)
 
     windows: dict[str, list[str]] = {}
-    for row in branch_rows:
+    for row in [*branch_rows, *pc_relative_rows]:
         address = parse_int(str(row["xref_address"]))
-        key = f"{row['target_name']}@0x{address:x}"
+        key = f"{row['target_name']}:{row['op']}@0x{address:x}"
         windows[key] = disassemble_window(
             blob,
             sections,
@@ -324,6 +456,7 @@ def main() -> int:
                 "targets": {f"0x{address:x}": name for address, name in targets.items()},
                 "direct_branch_xref_count": len(branch_rows),
                 "absolute_data_ref_count": len(data_rows),
+                "pc_relative_xref_count": len(pc_relative_rows),
                 "symbol_count": len(symbols),
                 "capstone_available": Cs is not None,
             },

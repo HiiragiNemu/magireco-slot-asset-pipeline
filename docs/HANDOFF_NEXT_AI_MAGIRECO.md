@@ -1547,6 +1547,58 @@ This means the next high-value runtime proof is a backtrace/caller capture for
 selector `1/2/3/4/13/14`.  Do not spend time blindly expanding
 `body_force_main` scans until this dispatcher is understood.
 
+## Generic DirInfoTable / EventInfo dispatch proof
+
+The project should now move away from manual per-`ac` family classification.
+Static evidence shows that the game uses a generic table-driven event dispatch:
+
+```text
+RxCom payload -> SdGmData -> kind/selector -> DirInfoTable -> EventInfo -> event code
+```
+
+New durable evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_dirinfo_table_got_pc_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_eventinfo_got_pc_20260703
+```
+
+`survey_aarch64_xrefs.py` now detects `ADRP+ADD/LDR` PC-relative references,
+which is required because `DirInfoTable` and `EventInfo` are reached through
+GOT loads instead of direct branches.
+
+Confirmed references:
+
+```text
+DirInfoTable_GOT 0x4b8ffa0:
+0x43ccd7c  C_DirInfoManager::fnGetEventCodeEtlt
+0x43cce44  C_DirInfoManager::fnGetActiveTrgEtlt
+0x43ccf80  C_DirInfoManager::fnGetActiveEventCodeEtlt
+
+EventInfo_GOT 0x4b8ffa8:
+0x43c22cc  C_DirectionControllerBase::Macro_EVENT_PLAY
+0x43ccdbc  C_DirInfoManager::fnGetEventCodeEtlt
+0x43cce7c  C_DirInfoManager::fnGetActiveTrgEtlt
+0x43ccfe0  C_DirInfoManager::fnGetActiveEventCodeEtlt
+```
+
+`DirInfoTable` is a 4640-byte object: 290 entries, 16 bytes per kind.  The
+decoded `fnGetEventCodeEtlt` shape is:
+
+```text
+entry = DirInfoTable + kind * 16
+entry+0     -> u16 index grid pointer
+entry+8     -> first range/dimension
+entry+0xa   -> second range/dimension
+grid[...]   -> u16 EventInfo index
+EventInfo + index * 24 -> final event code pointer
+```
+
+This is the strongest answer so far to the user's concern about token waste:
+the correct path is to decode these tables and use the game mechanism for
+scene/event discovery, then validate audio/subtitles/runtime timing.  Do not
+return to visual matching or `ac` suffix assumptions.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

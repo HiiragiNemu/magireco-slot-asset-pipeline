@@ -1774,3 +1774,32 @@ fnRxComPreMdl:
 调度路径：`payload[4]` 应产生 stage kind `11/12/13`，`payload[5]`
 应产生 selector `1/2/3/4/13/14`。下一步 runtime backtrace 应优先抓
 `fnRxComDirInfo8` 的 caller/dispatch，而不是扩大 force kind 范围。
+
+### 2026-07-03 DirInfoTable / EventInfo 通用事件机制
+
+`survey_aarch64_xrefs.py` 已扩展 `ADRP+ADD/LDR` PC-relative xref 扫描，
+用于定位 GOT/global table 使用者。新增静态输出：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_dirinfo_table_got_pc_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_eventinfo_got_pc_20260703
+```
+
+通用机制：
+
+- `DirInfoTable` 是 4640 字节 object，按 16 字节一项，对应 kind `0..0x121`。
+- `C_DirInfoManager::fnGetEventCodeEtlt`：
+  - 读取 `DirInfoTable`；
+  - `entry = DirInfoTable + kind * 16`；
+  - `entry+0` 指向 u16 网格；
+  - `entry+8/+0xa` 是范围/维度检查；
+  - 通过 `row` 与 `selector` 取 u16 `EventInfo` index；
+  - `EventInfo + index * 24` 取最终 event code 指针。
+- `C_DirInfoManager::fnGetActiveTrgEtlt` 与
+  `fnGetActiveEventCodeEtlt` 复用同一表。
+- `C_DirectionControllerBase::Macro_EVENT_PLAY` 也直接使用 `EventInfo`。
+
+这回答了当前机制问题：游戏并不靠人为逐个 `ac` family 分类处理。它使用
+`RxCom payload -> SdGmData -> kind/selector -> DirInfoTable -> EventInfo ->
+event code` 的表驱动机制。我们的 pipeline 也应转向解析/复刻这条机制，而
+不是视觉分类或手动逐个 family 处理。
