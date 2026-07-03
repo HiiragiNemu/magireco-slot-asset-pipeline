@@ -806,6 +806,76 @@ Results:
 - `run_force_kind_scan.py` now includes RxCom count and unique payload/source
   stage/selector values in `candidate_summary.json`.
 
+## Same-session observer/control probe update
+
+Further post-outage runtime work found a control-flow problem in the evidence
+harness itself: the ARM64 Gadget can close the connection when the combined CSL
+observer is already attached and a second host process tries to attach for
+`force_selector_host.py`.
+
+Failure evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\diagnose_gadget_after_transport_closed_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_backtrace_v2_20260703
+```
+
+`rxcom_force_kind8_backtrace_v2_20260703` had a valid ready state before
+trigger, but the trigger failed in `force_selector_host.py` at
+`device.enumerate_processes()` with `frida.TransportError: connection closed`.
+It produced no RxCom result and must not be counted as a route negative.
+
+Recovery evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_app_restart_20260703
+```
+
+This restored `gadget_arch=arm64` and `gadget_sees_libGameProc=true`.
+
+Tool changes:
+
+- `runtime_probe_host.py` can now load an optional `--control-script` into the
+  same Gadget session as the observer.
+- `--control-sequence` queues multiple RPC actions in order.
+- `--no-unload` skips explicit Frida unload/detach when Gadget cleanup blocks;
+  the output JSONL is already closed before process exit.
+- `csl_audio_queue_probe.js` now records backtrace fields for RxCom/SdGm route
+  hooks and BGM helper hooks.
+- `summarize_runtime_audio_capture.py` now emits BGM `symbol`, `address`,
+  argument, and backtrace fields in `runtime_bgm_calls.csv`.
+
+Working same-session proof:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\single_session_force_kind8_control_v1_20260703
+```
+
+This run wrote observer and control events into one JSONL and therefore avoided
+the second-connection failure.  However, the control initial state was not
+ready:
+
+```text
+body_state=0
+body_mode=0
+body_bet=0
+```
+
+It emitted event code `0x43454f646b32615a` but had
+`sp_story_state_count=0`, `rxcom_dir_flow_count=0`, `bgm_call_count=0`, and no
+CSL queue chunks.  Treat it as a tooling proof, not SP Story evidence.
+
+BGM smoke:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_bgm_backtrace_smoke_20260703
+```
+
+This captured final OpenSL queue chunks with sound ids `8993` and `8998`, but
+0 BGM helper rows in that 24 s window.  This only proves the combined probe can
+still see final audio queue chunks after reinjection.  It does not prove target
+SP Story has no outer-flow BGM.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

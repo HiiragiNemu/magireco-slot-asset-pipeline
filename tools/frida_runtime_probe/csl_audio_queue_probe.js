@@ -308,12 +308,13 @@ function findExport(moduleValue, symbol) {
   return address;
 }
 
-function hookRawCall(moduleValue, symbol, kind, argCount, cStringArgIndexes) {
+function hookRawCall(moduleValue, symbol, kind, argCount, cStringArgIndexes, options) {
   const address = findExport(moduleValue, symbol);
   if (address === null) {
     return;
   }
   const cStringIndexes = new Set(cStringArgIndexes || []);
+  const captureBacktrace = Boolean(options && options.captureBacktrace);
   try {
     Interceptor.attach(address, {
       onEnter(args) {
@@ -321,6 +322,9 @@ function hookRawCall(moduleValue, symbol, kind, argCount, cStringArgIndexes) {
           symbol,
           address: address.toString(),
         };
+        if (captureBacktrace) {
+          Object.assign(fields, describeBacktrace(this.context));
+        }
         for (let index = 0; index < argCount; index += 1) {
           fields["arg" + index + "_pointer"] = args[index].toString();
           fields["arg" + index + "_i32"] = toI32(args[index]);
@@ -546,6 +550,30 @@ function describeRxComDirInfoPayload(payloadPointer) {
   return fields;
 }
 
+function describeBacktrace(context) {
+  try {
+    const frames = Thread.backtrace(context, Backtracer.ACCURATE).slice(0, 16);
+    return {
+      backtrace_addresses: frames.map((address) => address.toString()).join(" "),
+      backtrace_symbols: frames
+        .map((address) => {
+          try {
+            return DebugSymbol.fromAddress(address).toString();
+          } catch (_) {
+            return address.toString();
+          }
+        })
+        .join(" | "),
+    };
+  } catch (error) {
+    return {
+      backtrace_addresses: "",
+      backtrace_symbols: "",
+      backtrace_error: String(error),
+    };
+  }
+}
+
 function makeSdGmCallback(moduleValue, hookKind) {
   const sdGmAddress = findExport(moduleValue, "fnGetAddrSdGmData");
   if (sdGmAddress === null) {
@@ -582,6 +610,7 @@ function hookRxComDirInfo8(moduleValue) {
               symbol,
               address: address.toString(),
             },
+            describeBacktrace(this.context),
             describeRxComDirInfoPayload(args[0]),
             describeSdGmDirData(sdGmCallback)
           )
@@ -632,6 +661,7 @@ function hookSdGmStateFunction(moduleValue, symbol, kind) {
               address: address.toString(),
               arg0_pointer: args[0] ? args[0].toString() : "",
             },
+            describeBacktrace(this.context),
             describeSdGmDirData(sdGmCallback)
           )
         );
@@ -1337,63 +1367,72 @@ function installHighLevelAudioHooks(moduleValue) {
     "_ZN8C_ObjNml25fnSndRequest_BGM_SEQUENCEEv",
     "obj_nml_snd_request_bgm_sequence",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml20fnSndRequest_BGM_DIREv",
     "obj_nml_snd_request_bgm_dir",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml20fnSndRequest_BGM_STGEv",
     "obj_nml_snd_request_bgm_stg",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml20fnSndRequest_BGM_ENDEv",
     "obj_nml_snd_request_bgm_end",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml25fnSndRequest_BGM_DIR_NEXTEv",
     "obj_nml_snd_request_bgm_dir_next",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml26fnSndRequest_BGM_FADE_NEXTEv",
     "obj_nml_snd_request_bgm_fade_next",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN8C_ObjNml21fnSndRequest_BGM_FADEEv",
     "obj_nml_snd_request_bgm_fade",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN25C_DirectionControllerBase18Macro_SND_BGM_PLAYE32tagDirectionControllerDeviceData",
     "direction_macro_snd_bgm_play",
     2,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,
     "_ZN14C_ObjSelectBNS15fnSndRequestBGMEv",
     "obj_select_bns_snd_request_bgm",
     1,
-    []
+    [],
+    { captureBacktrace: true }
   );
   hookRawCall(
     moduleValue,

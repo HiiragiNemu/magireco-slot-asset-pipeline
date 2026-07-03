@@ -1455,6 +1455,57 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
   C_ObjStageAT_SP_Story+0x34a`.  The new `gr_dir_prm_copy_*` and
   `anm_base_data_set_dir_*` runtime events should be used to observe it live.
 
+Additional same-session control update:
+
+- The 27043 ARM64 Gadget can become unstable when two host processes attach at
+  the same time.  In current runs, `runtime_probe_host.py` as observer plus a
+  second `force_selector_host.py` trigger can fail with
+  `frida.TransportError: connection closed` before the trigger is sent.
+- `runtime_probe_host.py` now supports loading both scripts in one Gadget
+  session:
+
+```powershell
+python tools\frida_runtime_probe\runtime_probe_host.py `
+  --script tools\frida_runtime_probe\csl_audio_queue_probe.js `
+  --control-script tools\frida_runtime_probe\force_selector_probe.js `
+  --control-sequence body_bet=1,body_bet=1,body_force_next_lever=8 `
+  --out D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\<run>\observer_control_csl.jsonl `
+  --duration 30 --quiet --no-unload
+```
+
+- `--no-unload` is intentional for fragile Gadget cleanup; the JSONL is closed
+  before the forced process exit.
+- `csl_audio_queue_probe.js` now captures RxCom/SdGm and BGM helper
+  backtraces.  `runtime_bgm_calls.csv` now contains `symbol`, `address`,
+  arguments, and backtrace fields.
+- Valid recovery evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_app_restart_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_bgm_backtrace_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\single_session_force_kind8_control_v1_20260703
+```
+
+- `natural_bgm_backtrace_smoke_20260703` only proves the combined probe still
+  sees final OpenSL queue chunks after reinjection: sound ids `8993` and
+  `8998`.  It had 0 BGM helper rows and is not target SP Story evidence.
+- `single_session_force_kind8_control_v1_20260703` proves observer + control
+  can share a JSONL in one Gadget session, but the initial control state was
+  not ready (`body_state=0`, `body_mode=0`, `body_bet=0`).  It emitted event
+  code `0x43454f646b32615a` with `sp_story_state_count=0`,
+  `rxcom_dir_flow_count=0`, and `bgm_call_count=0`.  Treat it as a tooling
+  proof only.
+- Failed evidence to avoid overclaiming:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\diagnose_gadget_after_transport_closed_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_backtrace_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\single_session_force_kind8_control_v2_20260703
+```
+
+These document transport/injection failures.  Do not treat them as route
+negatives or no-BGM evidence.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

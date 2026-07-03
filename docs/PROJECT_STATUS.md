@@ -1667,3 +1667,65 @@ python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --
   `runtime_rxcom_dir_flow.csv`，再结合 `runtime_gr_dir_prm_copy.csv` 和
   `runtime_anm_dir_data.csv` 找谁写 stage kind 与 selector，再做窄范围
   runtime probe。
+
+### 2026-07-03 后续 Gadget 恢复与单会话 control 更新
+
+后续 runtime 取证证明 27043 ARM64 Gadget 在当前 MuMu 状态下不适合让
+observer 和 trigger 两个 host 进程同时 attach。`run_force_kind_scan.py`
+先启动 combined CSL observer，再调用 `force_selector_host.py` 时，第二个连接
+可能在 `enumerate_processes()` 直接失败：
+
+```text
+frida.TransportError: connection closed
+```
+
+新增/更新的持久证据目录：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\diagnose_gadget_after_transport_closed_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_app_restart_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_bgm_backtrace_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\rxcom_force_kind8_backtrace_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\single_session_force_kind8_control_v1_20260703
+```
+
+工具变化：
+
+- `runtime_probe_host.py` 现在支持在同一 Gadget session 内同时加载 observer
+  script 和 control script：
+
+```powershell
+python tools\frida_runtime_probe\runtime_probe_host.py `
+  --script tools\frida_runtime_probe\csl_audio_queue_probe.js `
+  --control-script tools\frida_runtime_probe\force_selector_probe.js `
+  --control-sequence body_bet=1,body_bet=1,body_force_next_lever=8 `
+  --out D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\<run>\observer_control_csl.jsonl `
+  --duration 30 --quiet --no-unload
+```
+
+- `csl_audio_queue_probe.js` 已给 RxCom/SdGm route hook 和 BGM helper hook
+  增加 backtrace 字段。
+- `summarize_runtime_audio_capture.py` 已把 BGM `symbol`、`address`、参数和
+  backtrace 导出到 `runtime_bgm_calls.csv`。
+
+当前结果：
+
+- `gadget_reinject_after_app_restart_20260703` 成功恢复 ARM64 Gadget：
+  `ok=true`、`gadget_arch=arm64`、`gadget_sees_libGameProc=true`。
+- `natural_bgm_backtrace_smoke_20260703` 捕获到最终 OpenSL queue sound id
+  `8993` 和 `8998`，但 24 秒窗口内没有 BGM helper 行。这只是 smoke，
+  不能证明目标 SP Story 原生无 BGM。
+- `rxcom_force_kind8_backtrace_v2_20260703` 没有捕获 RxCom flow；该次 ready
+  state 有效，但第二个 Frida 连接在触发前失败，因此只能算环境/控制失败，
+  不能算 route 阴性。
+- `single_session_force_kind8_control_v1_20260703` 证明“同一 JSONL 内 observer
+  + control”可行，但 control 初始状态不是一转 ready：
+  `body_state=0`、`body_mode=0`、`body_bet=0`。该 run 仅见 event code
+  `0x43454f646b32615a`，`sp_story_state_count=0`、`rxcom_dir_flow_count=0`、
+  `bgm_call_count=0`。它是工具链证明，不是 SP Story 证据。
+
+下一步应在单会话 control run 内先证明状态达到
+`body_state=1/body_mode=1/body_bet=3`，再触发 `body_force_next_lever=8`
+或后续找到的真实 stage/selector 入口，并在同一 JSONL 中检查
+`runtime_rxcom_dir_flow.csv`、`runtime_anm_dir_data.csv`、
+`runtime_bgm_calls.csv` 和最终 CSL queue。
