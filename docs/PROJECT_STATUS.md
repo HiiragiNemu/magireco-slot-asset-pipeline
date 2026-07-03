@@ -1849,3 +1849,39 @@ ac7116 -> DirInfo kind 192
 first_row_index, first_selector_raw` 排序，可作为同 base_name 长片候选顺序。
 它只负责事件发现/排序；是否能进入 B 站投稿成片仍必须通过音频、字幕、BGM、
 尾帧 hold、素材层排除等 runtime QA gate。
+
+### 2026-07-03 断电后运行时恢复与 force190 负面验证
+
+断电恢复后，MuMu 目标 `127.0.0.1:16384` 的实际输入坐标系是
+`2160x3840`，截图会被拉成约 `1152x2048` 显示。因此标题页进入
+シミュレーション应使用物理坐标约 `1080,3000`，不是截图坐标。
+
+已恢复运行时：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_power_restore_20260703
+```
+
+结果：`gadget_arch=arm64`，`gadget_sees_libGameProc=true`。
+
+控制状态与音频 hook 已验证：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_bet3_20260703
+```
+
+3 次 bet 后状态达到 `body_state=1/body_mode=1/body_bet=3/credit=47`。
+同次采集观察到 high-level BGM helper、event-code request、`sound_id=9002`
+的最终 OpenSL queue chunk，说明断电后 runtime 音频链路和控制链路可用。
+
+负面验证：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_dirinfo_kind190_probe_20260703
+```
+
+把 `DirInfoTable kind 190` 直接作为 `body_force_main`/force kind 使用是错误路径。
+本次 `fnSetForceFlag(190,0)` 返回 `-1`，`fnGetForceFlagKind()` 返回 `0`，
+随后脚本销毁且游戏退回 launcher。结论：`dirinfo_kind=190` 能用于事件表
+发现/排序，但不能直接当 `body_force_main` force selector。该运行不是
+ac7114 route negative，只是排除一个错误控制假设。

@@ -1080,6 +1080,79 @@ This gives a general route-order solution for family/scene long-video
 candidates.  It does not by itself validate voice, subtitles, BGM, or final
 visual composition.
 
+## Post-power runtime recovery and direct force190 test
+
+After the power-loss recovery, the game had to be relaunched from the Android
+launcher.  The emulator input coordinate system is `2160x3840`; screenshots are
+displayed scaled down by Codex.  The title `シミュレーション` button was reached
+with physical coordinate `1080,3000`, and game start with about `600,2670`.
+
+Gadget recovery:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_power_restore_20260703
+```
+
+Result:
+
+```text
+ok=true
+pid=12589
+gadget_arch=arm64
+gadget_sees_libGameProc=true
+```
+
+Idle and control smokes:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_idle_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_main_idle_csl_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_control_status_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_bet3_20260703
+```
+
+`post_power_restore_bet3_20260703` is the useful positive control.  Three bet
+actions brought the body to:
+
+```text
+body_state=1
+body_mode=1
+body_bet=3
+body_credit=47
+```
+
+It also captured BGM helper hook activity, event-code requests, and final
+OpenSL queue output with `sound_id=9002`, so the post-power runtime audio and
+control toolchain is functioning.
+
+Direct force hypothesis tested:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_dirinfo_kind190_probe_20260703
+```
+
+Input state before lever:
+
+```text
+body_state=1
+body_mode=1
+body_bet=3
+```
+
+The control wrote `body_force_main=190` via `body_force_next_lever=190`.
+Observed native calls:
+
+```text
+fnSetForceFlag(kind_u16=190, parameter_u16=0) -> result -1
+fnGetForceFlagKind() -> 0
+fnGetForceFlagKind_AT(...) -> 0 for observed args
+```
+
+The script was then destroyed and the game returned to launcher.  Treat this as
+a negative for the direct-control hypothesis only: `dirinfo_kind=190` must not
+be used directly as `body_force_main`.  It is not evidence that ac7114 cannot be
+reached; it means the control selector is another mechanism.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

@@ -1652,6 +1652,49 @@ The decoded scene catalog is a discovery/order source, not an audiovisual trust
 proof.  A scene still needs runtime-backed audio/subtitle/BGM/tail evidence
 before becoming a final Bilibili-facing long edition.
 
+### Post-power runtime recovery note
+
+After the RAM disk loss/power recovery, the emulator was on Lawnchair.  The game
+was relaunched with:
+
+```text
+adb -s 127.0.0.1:16384 shell monkey -p com.universal777.magireco -c android.intent.category.LAUNCHER 1
+```
+
+The emulator input coordinate system is `2160x3840`; pulled screenshots may
+display smaller.  Use physical coordinates, e.g. title
+`シミュレーション` around `1080,3000` and game start around `600,2670`.
+
+Gadget recovery evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gadget_reinject_after_power_restore_20260703
+```
+
+`gadget_arch=arm64` and `gadget_sees_libGameProc=true`.
+
+Control/audio smoke:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\post_power_restore_bet3_20260703
+```
+
+This confirmed `body_state=1/body_mode=1/body_bet=3` after three bet actions and
+captured high-level BGM helper calls, event-code requests, and final OpenSL queue
+audio (`sound_id=9002`).  The post-power runtime toolchain is usable again.
+
+Do not use `DirInfoTable kind` directly as `body_force_main`: a targeted
+`body_force_next_lever=190` test is stored at:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_dirinfo_kind190_probe_20260703
+```
+
+It wrote `fnSetForceFlag(190,0)`, got return `-1`, then `fnGetForceFlagKind()`
+returned `0`; the script was destroyed and the game returned to launcher.  This
+does not disprove ac7114.  It only proves `dirinfo_kind=190` is not the force
+selector path.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.
