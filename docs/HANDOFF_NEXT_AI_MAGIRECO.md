@@ -1695,6 +1695,86 @@ returned `0`; the script was destroyed and the game returned to launcher.  This
 does not disprove ac7114.  It only proves `dirinfo_kind=190` is not the force
 selector path.
 
+## 2026-07-03 story lottery and BGM follow-up
+
+New reusable analysis helper:
+
+```text
+tools/frida_runtime_probe/disassemble_aarch64_functions.py
+```
+
+It dumps named AArch64 ELF functions plus direct branch targets.  The current
+story-dispatch disassembly output is:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_disasm_story_dispatch_20260703
+```
+
+Static findings:
+
+- `fnLot_OT_AT_StryKnd` reads a 19-record static table at `0x2f44406`.
+  Each record has eight u16 values and is copied into `SdGmData+0x1f72` through
+  `SdGmData+0x1f80`.
+- `fnLot_OT_AT_StryChara` reads a 23-record static table at `0x2f44536`.
+  Each record has five u16 values and is copied into `SdGmData+0x1f94` through
+  `SdGmData+0x1f9c`; `SdGmData+0x1f9e` is a related flag.
+- These functions are lottery/candidate-pool setup, not video rendering.
+
+The decoded tables are stored at:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_story_lottery_tables_20260703
+```
+
+Runtime probe update:
+
+- `tools/frida_runtime_probe/csl_audio_queue_probe.js` now records those
+  `SdGmData+0x1f72..0x1f80` and `+0x1f94..0x1f9e` fields.
+- It also hooks `fnLot_OT_AT_StryKnd` as `lot_ot_at_stryknd` and
+  `fnLot_OT_AT_StryChara` as `lot_ot_at_strychara`.
+- Hook installation was verified in:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\story_lottery_hook_smoke_20260703
+```
+
+Natural spin control test:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_spin_story_lottery_probe_20260703
+```
+
+This run used `set_debug=0, body_bet x3, body_lever`, with no force kind.  The
+game returned to launcher before reel-stop actions, so this is negative/control
+evidence only and must not be promoted as video correctness proof.
+
+Useful facts from its summary:
+
+- `lot_ot_at_stryknd/strychara` did not fire in this run.
+- `fnReqSndEventCode` fired 7 times and resolved through `EventInfo` to
+  `ac0001_001`, `ac9010_060`, `ac9071_001`, `ac9100_001`, `ac9902_001`,
+  `ac9903_001`, and `ac9920_001`.
+- BGM helper hooks did fire repeatedly:
+  `C_ObjNml::fnSndRequest_BGM_DIR_NEXTEv`,
+  `fnSndRequest_BGM_FADEEv`, `fnSndRequest_BGM_FADE_NEXTEv`,
+  `fnSndRequest_BGM_ENDEv`, `fnSndRequest_BGM_STGEv`, and
+  `fnSndRequest_BGM_DIREv` each appeared 76 times.
+- One OpenSL queue chunk was captured: `sound_id=9002`, 265884 bytes.
+
+Interpretation: the game runtime definitely has active BGM/sound queue
+activity.  The missing-BGM bug in previous rendered clips should be treated as a
+pipeline extraction/mixing issue unless a target scene is later proven to have
+no event-specific BGM.  Do not claim ac7114/ac7115/ac7116 have no BGM merely
+because prior renders lacked it.
+
+After this failed natural-control run, the game was restored to the slot main
+screen and Gadget was re-injected:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\recover_after_natural_spin_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natural_spin_reinject_20260703
+```
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

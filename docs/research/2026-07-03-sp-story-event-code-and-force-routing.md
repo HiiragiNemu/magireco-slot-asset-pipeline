@@ -1153,6 +1153,89 @@ a negative for the direct-control hypothesis only: `dirinfo_kind=190` must not
 be used directly as `body_force_main`.  It is not evidence that ac7114 cannot be
 reached; it means the control selector is another mechanism.
 
+## Story lottery tables and BGM follow-up
+
+Added reusable function dumper:
+
+```text
+tools/frida_runtime_probe/disassemble_aarch64_functions.py
+```
+
+Current output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_disasm_story_dispatch_20260703
+```
+
+`fnLot_OT_AT_StryKnd` at `0x445e220` copies eight u16 values from a static table
+into `SdGmData+0x1f72..0x1f80`.  Its table base is `0x2f44406`; there are 19
+records, each 16 bytes.  The fallback path writes `1,2,3,4,5,6,7,8`.
+
+`fnLot_OT_AT_StryChara` at `0x445e4e0` copies five u16 values from a static
+table into `SdGmData+0x1f94..0x1f9c` and uses `SdGmData+0x1f9e` as a related
+flag.  Its table base is `0x2f44536`; there are 23 records, each 10 bytes.
+
+Decoded tables:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_story_lottery_tables_20260703
+```
+
+These functions are native lottery/candidate-pool setup for story kind and
+character-like IDs.  They do not replace the DirInfo/EventInfo route decode, but
+they are likely upstream of the selector values that later reach SP Story.
+
+`tools/frida_runtime_probe/csl_audio_queue_probe.js` now records the
+`SdGmData+0x1f72..0x1f80`, `+0x1f94..0x1f9c`, and `+0x1f9e` fields and hooks:
+
+```text
+fnLot_OT_AT_StryKnd   -> lot_ot_at_stryknd
+fnLot_OT_AT_StryChara -> lot_ot_at_strychara
+```
+
+Hook installation was verified:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\story_lottery_hook_smoke_20260703
+```
+
+Natural control test:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_spin_story_lottery_probe_20260703
+```
+
+This run used only natural controls (`set_debug=0`, three bet actions, lever).
+No force kind was used.  The target returned to launcher after lever, before
+the reel-stop actions could complete, so this is not valid render evidence.
+
+Summary:
+
+- `lot_ot_at_stryknd/strychara` did not fire.
+- `fnReqSndEventCode` fired 7 times and resolved via `EventInfo` to:
+  `ac0001_001`, `ac9010_060`, `ac9071_001`, `ac9100_001`, `ac9902_001`,
+  `ac9903_001`, `ac9920_001`.
+- BGM helper hooks fired repeatedly:
+  `fnSndRequest_BGM_DIR_NEXTEv`, `fnSndRequest_BGM_FADEEv`,
+  `fnSndRequest_BGM_FADE_NEXTEv`, `fnSndRequest_BGM_ENDEv`,
+  `fnSndRequest_BGM_STGEv`, and `fnSndRequest_BGM_DIREv` each appeared 76
+  times.
+- One final audio queue chunk was captured: `sound_id=9002`, `265884` bytes.
+
+This changes the BGM assumption: runtime BGM/sound request activity is present.
+Earlier no-BGM renders are therefore suspect until proven otherwise.  They may
+have included only voice/event audio while dropping main/BGM queues.  For
+ac7114/ac7115/ac7116, event-specific BGM remains unresolved and must be checked
+on a real SP Story path before promotion.
+
+After the test, the game was restored to the slot main screen and Gadget was
+re-injected:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\recover_after_natural_spin_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natural_spin_reinject_20260703
+```
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

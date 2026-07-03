@@ -1885,3 +1885,69 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_dirinfo_kind
 随后脚本销毁且游戏退回 launcher。结论：`dirinfo_kind=190` 能用于事件表
 发现/排序，但不能直接当 `body_force_main` force selector。该运行不是
 ac7114 route negative，只是排除一个错误控制假设。
+
+### 2026-07-03 story lottery 静态表与 BGM 负面/正面线索
+
+新增工具：
+
+```text
+tools/frida_runtime_probe/disassemble_aarch64_functions.py
+```
+
+当前反汇编输出：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_disasm_story_dispatch_20260703
+```
+
+关键静态发现：
+
+- `fnLot_OT_AT_StryKnd` 使用 `0x2f44406` 的 19 组静态表；每组 8 个 u16，
+  写入 `SdGmData+0x1f72..0x1f80`。
+- `fnLot_OT_AT_StryChara` 使用 `0x2f44536` 的 23 组静态表；每组 5 个 u16，
+  写入 `SdGmData+0x1f94..0x1f9c`，并使用 `+0x1f9e` 标志。
+- 表导出目录：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\static_story_lottery_tables_20260703
+```
+
+`csl_audio_queue_probe.js` 已扩展记录上述字段，并 hook：
+
+```text
+fnLot_OT_AT_StryKnd   -> lot_ot_at_stryknd
+fnLot_OT_AT_StryChara -> lot_ot_at_strychara
+```
+
+hook 安装验证：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\story_lottery_hook_smoke_20260703
+```
+
+自然 spin 受控测试：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\natural_spin_story_lottery_probe_20260703
+```
+
+该测试没有使用 force kind，只执行 `set_debug=0`、3 次 bet、lever。结果：
+
+- 游戏在 lever 后退回 launcher，control 路径仍不可靠；
+- `lot_ot_at_stryknd/strychara` 本次没有触发；
+- `fnReqSndEventCode` 触发 7 次，解析为 `ac0001_001`、`ac9010_060`、
+  `ac9071_001`、`ac9100_001`、`ac9902_001`、`ac9903_001`、`ac9920_001`；
+- `C_ObjNml::fnSndRequest_BGM_*` 相关 hook 每类出现 76 次；
+- 最终捕获一个 OpenSL queue chunk：`sound_id=9002`，`265884` bytes。
+
+结论：运行时确有 BGM/声音队列活动。此前渲染输出没有 BGM，不能再解释成
+“游戏本身必然没有 BGM”；应优先视为抽音/混音/渲染 pipeline 丢失 BGM 或仅
+抽取 voice/event audio。目标场景是否存在 event-specific BGM 仍需通过真实
+SP Story 调度捕获证明。该自然 spin 测试是负面控制证据，不能用于成片验证。
+
+测试后已恢复游戏到主界面并重新注入 Gadget：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\recover_after_natural_spin_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natural_spin_reinject_20260703
+```

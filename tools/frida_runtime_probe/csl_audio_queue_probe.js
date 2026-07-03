@@ -521,6 +521,20 @@ function describeSdGmDirData(sdGmCallback) {
       sdgm_dir_slot_u16_at_0x796: readU16Safe(sdGmPointer, 0x796),
       sdgm_dir_slot_u16_at_0x798: readU16Safe(sdGmPointer, 0x798),
       sdgm_dir_slot_u16_at_0x79a: readU16Safe(sdGmPointer, 0x79a),
+      sdgm_ot_at_stryknd_pool0_u16_at_0x1f72: readU16Safe(sdGmPointer, 0x1f72),
+      sdgm_ot_at_stryknd_pool1_u16_at_0x1f74: readU16Safe(sdGmPointer, 0x1f74),
+      sdgm_ot_at_stryknd_pool2_u16_at_0x1f76: readU16Safe(sdGmPointer, 0x1f76),
+      sdgm_ot_at_stryknd_pool3_u16_at_0x1f78: readU16Safe(sdGmPointer, 0x1f78),
+      sdgm_ot_at_stryknd_pool4_u16_at_0x1f7a: readU16Safe(sdGmPointer, 0x1f7a),
+      sdgm_ot_at_stryknd_pool5_u16_at_0x1f7c: readU16Safe(sdGmPointer, 0x1f7c),
+      sdgm_ot_at_stryknd_pool6_u16_at_0x1f7e: readU16Safe(sdGmPointer, 0x1f7e),
+      sdgm_ot_at_stryknd_pool7_u16_at_0x1f80: readU16Safe(sdGmPointer, 0x1f80),
+      sdgm_ot_at_strychara_pool0_u16_at_0x1f94: readU16Safe(sdGmPointer, 0x1f94),
+      sdgm_ot_at_strychara_pool1_u16_at_0x1f96: readU16Safe(sdGmPointer, 0x1f96),
+      sdgm_ot_at_strychara_pool2_u16_at_0x1f98: readU16Safe(sdGmPointer, 0x1f98),
+      sdgm_ot_at_strychara_pool3_u16_at_0x1f9a: readU16Safe(sdGmPointer, 0x1f9a),
+      sdgm_ot_at_strychara_pool4_u16_at_0x1f9c: readU16Safe(sdGmPointer, 0x1f9c),
+      sdgm_ot_at_strychara_flag_u8_at_0x1f9e: readU8Safe(sdGmPointer, 0x1f9e),
       sdgm_error: "",
     };
   } catch (error) {
@@ -1233,6 +1247,8 @@ function installHighLevelAudioHooks(moduleValue) {
   hookRxComDirInfo8(moduleValue);
   hookSdGmStateFunction(moduleValue, "fnRxComPreMdl", "rxcom_pre_mdl");
   hookSdGmStateFunction(moduleValue, "fnLotDirPreMdl", "lot_dir_pre_mdl");
+  hookSdGmStateFunction(moduleValue, "fnLot_OT_AT_StryKnd", "lot_ot_at_stryknd");
+  hookSdGmStateFunction(moduleValue, "fnLot_OT_AT_StryChara", "lot_ot_at_strychara");
   hookGrDirPrmCopy(moduleValue);
   hookAnmBaseDirData(moduleValue);
   hookSpStoryMethod(
