@@ -22,10 +22,12 @@
   `ac0922_001`，新校准中 kind 8 可进入普通 `ac0101`/`ac0102`/`ac9071`/`ac9920`
   等路线；无论哪种结果，都没有任何一个进入
   `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001` 的
-  `C_ObjStageAT_SP_Story` 路线。新的静态证据显示 SP Story 选择器链是
+  `C_ObjStageAT_SP_Story` 路线。新的静态证据显示 SP Story 路由是
+  `(stage kind, selector)` 二元组：
+  `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` 加
   `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
   C_ObjStageAT_SP_Story+0x34a`，
-  而不是 `ac` 后缀或简单 force kind。新增
+  而不是 `ac` 后缀、单一 selector 或简单 force kind。新增
   `tools/frida_runtime_probe/survey_aarch64_xrefs.py` 用于自包含 ELF64/AArch64
   xref 调查；`csl_audio_queue_probe.js` 已新增
   `anm_base_data_set_dir_enter/leave` 与 `gr_dir_prm_copy_enter/leave`，
@@ -41,7 +43,13 @@
   `D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_force_kind8_v1_20260703`：
   `fnKndCalUsr_SetGR_DirPrmCopy` 真实触发 6 对 enter/leave，但
   `SdGmData+0x788`、`MSTCOMCBK()+0x2378` 和 `C_AnmBase+0x31a` 均为 0。
-  下一步应跑窄 runtime selector probe，不能继续盲目扩大 force kind 扫描。
+  新增 route-table 解码输出位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260703\sp_story_event_code_extract_routes_v2_20260703`：
+  `ac7114_001` = stage `11` selector `1/2`；
+  `ac7115_001` = stage `12` selector `1/2/3/4`；
+  `ac7115_013` = stage `12` selector `13/14`；
+  `ac7116_001` = stage `13` selector `1/2`。下一步应跑窄 runtime
+  stage/selector probe，不能继续盲目扩大 force kind 扫描。
 - 2026-07-03 SP Story/force-routing 机制报告已新增：
   `docs/research/2026-07-03-sp-story-event-code-and-force-routing.md`。
   新工具 `tools/frida_runtime_probe/extract_sp_story_event_codes.py` 从
@@ -1624,7 +1632,11 @@ python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --
     又命中普通路线；均非目标。
 - 结论：post-clear `body_force_main` kind `0..19` 没有一个进入
   `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001`，且有效扫描中的
-  `sp_story_state_count=0`。不要继续盲扫更大 kind 范围；当前 selector 链已推进为
+  `sp_story_state_count=0`。不要继续盲扫更大 kind 范围；当前 SP Story
+  route 已推进为 `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` 加
   `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
-  C_ObjStageAT_SP_Story+0x34a`，下一步应找谁写 `SdGmData+0x788` 为 SP Story
-  3/4/5，再做窄范围 runtime probe。
+  C_ObjStageAT_SP_Story+0x34a`。目标已由 route-table 解码为
+  `ac7114_001` stage `11` selector `1/2`、`ac7115_001` stage `12`
+  selector `1/2/3/4`、`ac7115_013` stage `12` selector `13/14`、
+  `ac7116_001` stage `13` selector `1/2`；下一步应找谁写 stage kind 与
+  selector，再做窄范围 runtime probe。

@@ -66,6 +66,54 @@ Result:
   - `0x4c792a5a74447854` -> `ac7115_013`
   - `0x2476304366614152` -> `ac7116_001`
 
+The extractor now also decodes the `fnSetEvCdBase` stage-kind jump tables and
+writes:
+
+```text
+sp_story_event_code_routes.csv
+sp_story_event_code_routes.json
+```
+
+Regenerated durable output after the RAM-disk loss:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\sp_story_event_code_extract_routes_v2_20260703
+```
+
+Route-table result:
+
+- `route_row_count`: 180
+- `route_resolved_count`: 10
+- resolved target route rows:
+
+| stage kind (`this+0x318`) | selector (`this+0x34a`) | jump target | code | resolved event |
+| --- | ---: | --- | --- | --- |
+| 11 | 1 | `0x43dcaa0` | `0x4f71466b3d723041` | `ac7114_001` |
+| 11 | 2 | `0x43dcaa0` | `0x4f71466b3d723041` | `ac7114_001` |
+| 12 | 1 | `0x43dc60c` | `0x5773382374447854` | `ac7115_001` |
+| 12 | 2 | `0x43dc60c` | `0x5773382374447854` | `ac7115_001` |
+| 12 | 3 | `0x43dc60c` | `0x5773382374447854` | `ac7115_001` |
+| 12 | 4 | `0x43dc60c` | `0x5773382374447854` | `ac7115_001` |
+| 12 | 13 | `0x43dc98c` | `0x4c792a5a74447854` | `ac7115_013` |
+| 12 | 14 | `0x43dc98c` | `0x4c792a5a74447854` | `ac7115_013` |
+| 13 | 1 | `0x43dca28` | `0x2476304366614152` | `ac7116_001` |
+| 13 | 2 | `0x43dca28` | `0x2476304366614152` | `ac7116_001` |
+
+Interpretation: target SP Story selection is a pair, not a suffix-derived
+number and not a selector alone.  Runtime work must observe or set both:
+
+```text
+MSTCOMCBK()+0x2376 -> C_AnmBase+0x318      # stage kind
+MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a
+```
+
+Known target pairs are:
+
+- `ac7114_001`: stage kind `11`, selector `1` or `2`;
+- `ac7115_001`: stage kind `12`, selector `1` through `4`;
+- `ac7115_013`: stage kind `12`, selector `13` or `14`;
+- `ac7116_001`: stage kind `13`, selector `1` or `2`.
+
 ## Runtime SP Story state hook
 
 `tools/frida_runtime_probe/csl_audio_queue_probe.js` now also hooks:
@@ -500,8 +548,9 @@ Interpretation: broad blind scanning above 19 is not the right next move.  The
 target ac7114/ac7115/ac7116 path is likely selected by a different SP Story
 state/caller/parameter path, not the simple `CSlotBody+0x520` main force kind
 range tested here.  The next useful work is static caller analysis around
-`C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` and the state that selects story
-numbers 3/4/5, then a narrow runtime probe for that exact selector.
+`C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` and the state that selects the
+target `(stage kind, selector)` pairs above, then a narrow runtime probe for
+those exact route values.
 
 ## Static SP Story selector source
 
@@ -533,9 +582,9 @@ Important static facts from `libGameProc.so`:
 - `C_ObjStageAT_SP_Story::fnSetEventCode()` uses `[this+0x34a]` as the event
   selector argument.
 
-Therefore the next runtime target is the `MSTCOMCBK()+0x2378` selector and the
-`C_AnmBase+0x31a` / `C_ObjStageAT_SP_Story+0x34a` copy chain, not another blind
-force-kind range.
+Therefore the next runtime targets are both the `MSTCOMCBK()+0x2376` stage kind
+and the `MSTCOMCBK()+0x2378` selector copied through `C_AnmBase+0x31a` /
+`C_ObjStageAT_SP_Story+0x34a`, not another blind force-kind range.
 
 `csl_audio_queue_probe.js` now also hooks:
 
@@ -560,9 +609,8 @@ at `+0x2376`, `+0x2378`, `+0x238a`, and `+0x23be`.
 runtime_anm_dir_data.csv
 ```
 
-This CSV is the next join table for proving which global selector value leads
-to SP Story numbers 3/4/5 and then to `ac7114_001`, `ac7115_001`, and
-`ac7116_001`.
+This CSV is the next join table for proving which global stage/selector values
+lead to `ac7114_001`, `ac7115_001`, `ac7115_013`, and `ac7116_001`.
 
 Smoke evidence:
 
@@ -659,10 +707,12 @@ Results:
 - the run produced normal/ordinary event codes such as `ac0101`, `ac0102`,
   `ac9071`, and `ac9920`, with `sp_story_state_count=0`.
 
-Interpretation: the upstream copy hook works, but the tested ordinary force
-route still does not populate the SP Story selector.  The next target is now
-the code path that sets `SdGmData+0x788` to SP Story numbers 3/4/5 before
-`fnKndCalUsr_SetGR_DirPrmCopy` runs.
+Interpretation: the upstream selector-copy hook works, but the tested ordinary
+force route still does not populate the SP Story selector and does not set the
+stage kind.  The next target is now the code path that sets both
+`MSTCOMCBK()+0x2376`/`C_AnmBase+0x318` and
+`SdGmData+0x788 -> MSTCOMCBK()+0x2378` to one of the target route pairs before
+`C_ObjStageAT_SP_Story::fnSetEventCode()` runs.
 
 ## Next work
 
@@ -674,13 +724,14 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 
 Use A: only for disposable high-frequency scratch.
 2. Do not continue blind `body_force_main` scanning just because `0..19` missed.
-   The static selector source is now identified:
+   The static event route is now identified as a `(stage kind, selector)` pair:
+   `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` plus
    `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
    C_ObjStageAT_SP_Story+0x34a`.
 3. Run a narrow runtime probe with the new `anm_base_data_set_dir_*` events and
    `gr_dir_prm_copy_*` events and capture combined CSL/BGM/SP Story JSONL.  The
-   first target is to identify who sets `SdGmData+0x788` to SP Story numbers
-   3/4/5.
+   first target is to identify who sets stage kinds `11`/`12`/`13` and selectors
+   `1`/`2`/`3`/`4`/`13`/`14` for the resolved target rows.
 4. Only after a target SP Story is reached through the native outer path can the
    ac7114-16 BGM gate be closed.
 

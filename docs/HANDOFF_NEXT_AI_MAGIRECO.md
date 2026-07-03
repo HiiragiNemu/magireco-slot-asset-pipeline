@@ -348,6 +348,30 @@ KndCal lot state functions including `fnKndCalLot_Start`,
 `fnKndCalLot_RlStart`, `fnKndCalLot_Prize`, `fnKndCalLot_Demo`, and related
 state handlers.
 
+Important correction from the route-table decoder: the target is not
+`SdGmData+0x788 = 3/4/5` and not any number inferred from the `ac` suffix.  The
+base SP Story route is selected by a pair:
+
+```text
+MSTCOMCBK()+0x2376 -> C_AnmBase+0x318      # stage kind
+MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a -> C_ObjStageAT_SP_Story+0x34a
+```
+
+Decoded target rows:
+
+| target | required route values |
+| --- | --- |
+| `ac7114_001` | stage kind `11`, selector `1` or `2` |
+| `ac7115_001` | stage kind `12`, selector `1` through `4` |
+| `ac7115_013` | stage kind `12`, selector `13` or `14` |
+| `ac7116_001` | stage kind `13`, selector `1` or `2` |
+
+Durable decoded output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\sp_story_event_code_extract_routes_v2_20260703
+```
+
 - New durable static evidence root:
 
 ```text
@@ -387,7 +411,8 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\gr_dir_copy_force_
 This non-target force-kind run emitted six `gr_dir_prm_copy_enter/leave` pairs,
 but `SdGmData+0x788`, `MSTCOMCBK()+0x2378`, and `C_AnmBase+0x31a` stayed `0`.
 It reached ordinary events only, not SP Story.  Therefore the next unknown is
-the state/table write that makes `SdGmData+0x788` become SP Story number 3/4/5.
+the state/table write that sets both stage kind and selector to one of the
+decoded target route pairs above.
 
 Use that CSV with `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
 `runtime_bgm_calls.csv`, and final CSL queue CSVs to identify the real outer
@@ -1372,7 +1397,8 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
   - no tested `0..19` kind reached any target code for `ac7114_001`,
     `ac7115_001`, `ac7115_013`, or `ac7116_001`.
 - Do not blindly extend the force-kind scan above 19.  Next useful work is
-  the selector route now identified statically:
+  the SP Story route now identified statically:
+  `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` plus
   `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
   C_ObjStageAT_SP_Story+0x34a`.  The new `gr_dir_prm_copy_*` and
   `anm_base_data_set_dir_*` runtime events should be used to observe it live.
@@ -1392,12 +1418,14 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postc
 
 2. Find the real SP Story selector before more force-kind scanning.
    - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
-   - The current static candidate is
+   - The current static route is
+     `MSTCOMCBK()+0x2376 -> C_AnmBase+0x318` plus
      `SdGmData+0x788 -> MSTCOMCBK()+0x2378 -> C_AnmBase+0x31a ->
      C_ObjStageAT_SP_Story+0x34a`.
    - Run the combined CSL/BGM/SP Story probe and inspect
      `runtime_gr_dir_prm_copy.csv` and `runtime_anm_dir_data.csv` to observe
-     which selector values correspond to SP Story numbers 3/4/5.
+     which stage/selector values correspond to the decoded target rows:
+     stage `11`/`12`/`13` with selectors `1`/`2`/`3`/`4`/`13`/`14`.
 
 3. Generalize the mechanism instead of manually processing every `ac` family.
    - Use runtime event-code dispatch, GDB/Z2D/DGM timing, sound-code/request

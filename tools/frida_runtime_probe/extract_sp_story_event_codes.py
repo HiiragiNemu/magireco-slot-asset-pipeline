@@ -24,6 +24,51 @@ DEFAULT_RANGES = {
     "C_ObjStageAT_SP_Story::fnSetEvCdNext": (0x43DCBBC, 0x43DCE50),
 }
 
+DEFAULT_BASE_JUMP_TABLES = [
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 9,
+        "jump_table_address": 0x1572920,
+        "case_base_address": 0x43DC4CC,
+        "selector_count": 30,
+    },
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 10,
+        "jump_table_address": 0x15728E4,
+        "case_base_address": 0x43DC56C,
+        "selector_count": 30,
+    },
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 11,
+        "jump_table_address": 0x15728A8,
+        "case_base_address": 0x43DC434,
+        "selector_count": 30,
+    },
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 12,
+        "jump_table_address": 0x157286C,
+        "case_base_address": 0x43DC508,
+        "selector_count": 30,
+    },
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 13,
+        "jump_table_address": 0x1572830,
+        "case_base_address": 0x43DC5AC,
+        "selector_count": 30,
+    },
+    {
+        "function": "C_ObjStageAT_SP_Story::fnSetEvCdBase",
+        "stage_kind_u16_at_0x318": 14,
+        "jump_table_address": 0x15727F4,
+        "case_base_address": 0x43DC48C,
+        "selector_count": 30,
+    },
+]
+
 
 def parse_int(value: str) -> int:
     return int(value, 0)
@@ -209,6 +254,116 @@ def extract_range(
     return rows
 
 
+def decode_constant_at(
+    blob: bytes,
+    sections: list[dict[str, Any]],
+    target: int,
+    function_start: int,
+    function_end: int,
+    max_instructions: int = 12,
+) -> dict[str, Any]:
+    current_value: int | None = None
+    current_start: int | None = None
+    last_move_address: int | None = None
+    for step in range(max_instructions):
+        address = target + step * 4
+        if address >= function_end:
+            break
+        word = struct.unpack_from("<I", blob, vaddr_to_file_offset(sections, address))[0]
+        move = decode_move_wide(word)
+        if move is not None:
+            op, rd, shift, imm16 = move
+            if rd == 8:
+                if op == "movz":
+                    current_value = imm16 << shift
+                    current_start = address
+                elif current_value is not None:
+                    current_value &= ~(0xFFFF << shift)
+                    current_value |= imm16 << shift
+                last_move_address = address
+                continue
+
+        if current_value is not None and last_move_address is not None:
+            store_address, this_offset = find_store_after(
+                blob,
+                sections,
+                last_move_address,
+                function_end,
+                max_instructions=8,
+            )
+            if store_address is not None:
+                return {
+                    "constant_address": f"0x{current_start:x}" if current_start else "",
+                    "store_address": f"0x{store_address:x}",
+                    "target_this_offset": f"0x{this_offset:x}",
+                    "code_hex": f"0x{current_value:016x}",
+                    "code_ascii_le": code_ascii_le(current_value),
+                    "decode_status": "ok",
+                }
+        branch_target = decode_unconditional_branch(word, address)
+        if (
+            branch_target is not None
+            and function_start <= branch_target < function_end
+            and branch_target != address
+        ):
+            branch_result = decode_constant_at(
+                blob,
+                sections,
+                branch_target,
+                function_start,
+                function_end,
+                max_instructions=max_instructions,
+            )
+            if branch_result.get("decode_status") == "ok":
+                return branch_result
+    return {
+        "constant_address": "",
+        "store_address": "",
+        "target_this_offset": "",
+        "code_hex": "",
+        "code_ascii_le": "",
+        "decode_status": f"no constant decoded at 0x{target:x}",
+    }
+
+
+def extract_base_jump_table_routes(
+    blob: bytes,
+    sections: list[dict[str, Any]],
+    tables: list[dict[str, Any]],
+    function_start: int,
+    function_end: int,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for table in tables:
+        table_address = int(table["jump_table_address"])
+        case_base = int(table["case_base_address"])
+        selector_count = int(table["selector_count"])
+        for index in range(selector_count):
+            selector = index + 1
+            entry_address = table_address + index * 2
+            entry_offset = struct.unpack_from(
+                "<H",
+                blob,
+                vaddr_to_file_offset(sections, entry_address),
+            )[0]
+            target = case_base + entry_offset * 4
+            decoded = decode_constant_at(blob, sections, target, function_start, function_end)
+            rows.append(
+                {
+                    "function": table["function"],
+                    "stage_kind_u16_at_0x318": int(table["stage_kind_u16_at_0x318"]),
+                    "selector_u16_at_0x34a": selector,
+                    "jump_table_address": f"0x{table_address:x}",
+                    "jump_table_entry_address": f"0x{entry_address:x}",
+                    "jump_table_entry_u16": entry_offset,
+                    "case_base_address": f"0x{case_base:x}",
+                    "jump_target_address": f"0x{target:x}",
+                    **decoded,
+                }
+            )
+    return rows
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--lib", required=True, type=Path)
@@ -240,6 +395,16 @@ def main() -> int:
     for name, (start, end) in ranges.items():
         rows.extend(extract_range(blob, sections, name, start, end))
     for row in rows:
+        row["resolved_event"] = resolved.get(str(row["code_hex"]).lower(), "")
+
+    route_rows = extract_base_jump_table_routes(
+        blob,
+        sections,
+        DEFAULT_BASE_JUMP_TABLES,
+        DEFAULT_RANGES["C_ObjStageAT_SP_Story::fnSetEvCdBase"][0],
+        DEFAULT_RANGES["C_ObjStageAT_SP_Story::fnSetEvCdBase"][1],
+    )
+    for row in route_rows:
         row["resolved_event"] = resolved.get(str(row["code_hex"]).lower(), "")
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -278,13 +443,64 @@ def main() -> int:
         )
         handle.write("\n")
 
+    routes_csv_path = args.out_dir / "sp_story_event_code_routes.csv"
+    with routes_csv_path.open("w", encoding="utf-8", newline="") as handle:
+        fieldnames = [
+            "function",
+            "stage_kind_u16_at_0x318",
+            "selector_u16_at_0x34a",
+            "jump_table_address",
+            "jump_table_entry_address",
+            "jump_table_entry_u16",
+            "case_base_address",
+            "jump_target_address",
+            "constant_address",
+            "store_address",
+            "target_this_offset",
+            "code_hex",
+            "code_ascii_le",
+            "decode_status",
+            "resolved_event",
+        ]
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(route_rows)
+
+    routes_json_path = args.out_dir / "sp_story_event_code_routes.json"
+    with routes_json_path.open("w", encoding="utf-8") as handle:
+        json.dump(
+            {
+                "lib": str(args.lib),
+                "resolved_root": str(args.resolved_root) if args.resolved_root else None,
+                "jump_tables": [
+                    {
+                        **table,
+                        "jump_table_address": f"0x{int(table['jump_table_address']):x}",
+                        "case_base_address": f"0x{int(table['case_base_address']):x}",
+                    }
+                    for table in DEFAULT_BASE_JUMP_TABLES
+                ],
+                "row_count": len(route_rows),
+                "resolved_count": sum(1 for row in route_rows if row.get("resolved_event")),
+                "rows": route_rows,
+            },
+            handle,
+            ensure_ascii=False,
+            indent=2,
+        )
+        handle.write("\n")
+
     print(
         json.dumps(
             {
                 "csv": str(csv_path),
                 "json": str(json_path),
+                "routes_csv": str(routes_csv_path),
+                "routes_json": str(routes_json_path),
                 "row_count": len(rows),
                 "resolved_count": sum(1 for row in rows if row.get("resolved_event")),
+                "route_row_count": len(route_rows),
+                "route_resolved_count": sum(1 for row in route_rows if row.get("resolved_event")),
             },
             ensure_ascii=False,
             indent=2,
