@@ -1181,11 +1181,11 @@ delivery decisions.
 Correct repository state after recovery:
 
 - branch: `codex/corrected-runtime-pipeline`
-- latest pushed commit before continuing recovery work:
-  `4ce6992 Record force recovery probes after power loss`
-- The next local diff adds the post-clear force diagnostic action
-  `body-force-next-lever`; commit it after syntax checks and documentation
-  updates.
+- latest pushed commit before the automated force-kind scan:
+  `109f3b6 Record post-clear force mapping evidence`
+- The next local diff adds `run_force_kind_scan.py` and documents the
+  automated 0..19 post-clear force-kind scan; commit it after syntax checks and
+  handoff/status updates.
 
 Current facts:
 
@@ -1259,6 +1259,38 @@ render approval mechanism.
 - `force_index8_postclear_probe_20260703` mapped force kind 8 to
   `ac0922_001` (`0x31434e5a38404764`, voices `31043`-`31061`), with no
   `C_ObjStageAT_SP_Story` runtime event.  Kind 8 is not ac7114-16.
+- `run_force_kind_scan.py` now automates clean restart/title-entry/ready-state
+  force-kind mapping.  Current MuMu input coordinates are physical `2160x3840`:
+  title `シミュレーション` is `1080 3000`, `ゲームスタート` is `600 2670`,
+  reel stops are `880/1160/1440 2860`.
+- Invalid samples before that coordinate/title-entry fix:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_2_7_9_19_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_kind2_v2_20260703
+```
+
+- Valid post-clear scan evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_kind2_v3_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_3_7_9_19_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postclear_probe_20260703
+```
+
+- Conclusion from valid evidence:
+  - force kinds `1..7` and `9..19` each emitted real
+    `force_flag_set(kind, 0)` but mapped to ordinary slot/gameplay event-code
+    groups, with `sp_story_state_count=0`;
+  - force kind `8` maps to `ac0922_001` / Episode Bonus, not ac7114-16;
+  - force kind `0` validated the diagnostic route but did not reach the target;
+  - no tested `0..19` kind reached any target code for `ac7114_001`,
+    `ac7115_001`, `ac7115_013`, or `ac7116_001`.
+- Do not blindly extend the force-kind scan above 19.  Next useful work is
+  static caller/selector analysis around
+  `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`, especially the state or table
+  selecting SP Story numbers 3/4/5.
 
 ## Immediate next tasks
 
@@ -1267,34 +1299,40 @@ render approval mechanism.
      now runtime-mechanism proven by the 2026-07-03 Z2D captures.
    - Do not remove `420xx_SPストーリー...`; it is current bed/base-scene audio.
    - Capture the outer state and `CSLAndroidSimpleBufferQueue::Enqueue` queue
-     while the scene is reached normally if possible.
+     while the scene is reached through the real SP Story selector if possible.
    - Use high-level BGM hooks in `runtime_probe.js` or the combined CSL+BGM
      probe in the same run.
    - Until BGM/bed presence is proven or proven absent, keep the v19 long scene
      as review-only.
 
-2. Generalize the mechanism instead of manually processing every `ac` family.
+2. Find the real SP Story selector before more force-kind scanning.
+   - `body_force_main` kinds `0..19` are now ruled out for ac7114-16.
+   - Inspect static xrefs to `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`.
+   - Locate the caller/table/field that chooses SP Story 3/4/5 and then add a
+     narrow runtime probe/action for that path.
+
+3. Generalize the mechanism instead of manually processing every `ac` family.
    - Use runtime event-code dispatch, GDB/Z2D/DGM timing, sound-code/request
      resolution, and final queue evidence.
    - The target is a pipeline that can decide: normal story animation, same
      scene continuation, gameplay/material, foreground-only, or blocked pending
      evidence.
 
-3. Re-audit known-good v15 families for long-edition delivery.
+4. Re-audit known-good v15 families for long-edition delivery.
    - `ac1102`, `ac1103`, `ac1104`, and food/restaurant samples are likely
      high-value because the user already found them acceptable.
    - Keep original per-event files.
    - Build same-scene/family long versions only after current AV trust gates
      pass.
 
-4. Keep material collections separate.
+5. Keep material collections separate.
    - Small Kyubey / black-screen / CHANCE / PUSH / reel / gold-frame / particle
      effects can be combined into material videos.
    - If role voice appears, it is not pure material and must be handled as
      animation or gameplay-with-role-voice, not silently thrown into a material
      collection.
 
-5. Preserve auditability.
+6. Preserve auditability.
    - Every new output needs manifest, source hash, event index, cumulative
      timeline, subtitle source, audio source, and QA report.
    - Broad batch work should begin with dry-run or small-batch validation.

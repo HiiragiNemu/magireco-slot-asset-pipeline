@@ -1529,8 +1529,10 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 - 正确分支：`codex/corrected-runtime-pipeline`
 - 已推送提交：`3d15644 Record SP story force routing evidence`
 - 已推送断电恢复提交：`4ce6992 Record force recovery probes after power loss`
+- 已推送 post-clear force 提交：`109f3b6 Record post-clear force mapping evidence`
 - 该提交保存了 SP Story event-code 静态提取器、force routing 研究记录、ac7114/ac7115/ac7116 运行时结论和交接状态。
 - `4ce6992` 已保存 `force_flag_*` observer、`body-reel-start` 诊断 action 和 `runtime_force_calls.csv` 汇总输出。它们用于继续证明外层调度/force 消费，而不是直接批准任何成片。
+- `109f3b6` 已保存 `body-force-next-lever` post-clear 诊断 action。当前后续本地改动新增 `run_force_kind_scan.py`，用于可复现 force-kind 小范围映射。
 
 关键限制：
 
@@ -1570,3 +1572,29 @@ python tools\frida_runtime_probe\force_selector_host.py body-force-next-lever --
   `force_flag_set arg0=8 return=1`，并映射到 `ac0922_001`
   (`0x31434e5a38404764`，声音 `31043`-`31061`)；没有
   `C_ObjStageAT_SP_Story` 事件，所以 kind 8 不是 ac7114/ac7115/ac7116 目标。
+
+新增自动扫描结论：
+
+- 当前 MuMu 输入坐标必须按物理 `2160x3840` 使用：
+  - 标题 `シミュレーション`：`1080 3000`
+  - `ゲームスタート`：`600 2670`
+  - 停轮：`880/1160/1440 2860`
+- 新工具：
+
+```powershell
+python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --restart-each --duration 40 --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_3_7_9_19_v2_20260703
+```
+
+- 无效样本目录：`force_kind_scan_2_7_9_19_20260703` 与
+  `force_kind_scan_smoke_kind2_v2_20260703`，原因是当时没有处理标题页进入机台，未观测到
+  `slot_pointer`/`slot_body_pointer`，不能作为阴性。
+- 有效 evidence：
+  - `force_kind_scan_smoke_20260703`：kind 1 有效，非目标；
+  - `force_kind_scan_smoke_kind2_v3_20260703`：kind 2 有效，非目标；
+  - `force_kind_scan_3_7_9_19_v2_20260703`：kind 3-7、9-19 有效，均非目标；
+  - `force_index8_postclear_probe_20260703`：kind 8 -> `ac0922_001`，非目标。
+- 结论：post-clear `body_force_main` kind `0..19` 没有一个进入
+  `ac7114_001` / `ac7115_001` / `ac7115_013` / `ac7116_001`，且有效扫描中的
+  `sp_story_state_count=0`。不要继续盲扫更大 kind 范围；下一步应静态分析
+  `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` 的 caller/selector，找到选择 SP Story
+  3/4/5 的状态或参数表，再做窄范围 runtime probe。

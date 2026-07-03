@@ -412,27 +412,101 @@ ac0922_001
 `cap0922_freeze_tou_014`.  Therefore kind 8 is a valid mapped force route, but
 it is not the ac7114/ac7115/ac7116 SP Story target.
 
+### Automated post-clear force-kind scan
+
+New reusable tool:
+
+```powershell
+python tools\frida_runtime_probe\run_force_kind_scan.py --candidates 3-7,9-19 --restart-each --duration 40 --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_3_7_9_19_v2_20260703
+```
+
+Important automation fixes:
+
+- MuMu input coordinates are physical `2160x3840`, not the scaled viewer size.
+- App restart lands on the title screen.  A clean scan must tap:
+  - `1080 3000` for `シミュレーション`;
+  - `600 2670` for `ゲームスタート`.
+- Reel stop taps are `880 2860`, `1160 2860`, `1440 2860`.
+- Samples without a valid `slot_pointer` and `slot_body_pointer` must be
+  treated as invalid setup, not as negative force-kind evidence.
+
+Invalid setup directories from before this fix:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_2_7_9_19_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_kind2_v2_20260703
+```
+
+Valid evidence roots:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_smoke_kind2_v3_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_kind_scan_3_7_9_19_v2_20260703
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\force_index8_postclear_probe_20260703
+```
+
+Summary:
+
+- force kind 0 validated the post-clear route but returned `0`; it did not
+  reach the target SP Story path.
+- force kind 8 maps to `ac0922_001` and enters a long Episode Bonus outer flow.
+- force kinds 1 through 7 and 9 through 19 all emitted real
+  `force_flag_set(kind, 0)` evidence, produced ordinary slot/gameplay event-code
+  requests, and had `sp_story_state_count=0`.
+- No tested kind in `0..19` emitted target event codes:
+  - `0x4f71466b3d723041` / `ac7114_001`;
+  - `0x5773382374447854` / `ac7115_001`;
+  - `0x4c792a5a74447854` / `ac7115_013`;
+  - `0x2476304366614152` / `ac7116_001`.
+
+Representative valid mapping table:
+
+| Force kind | Runtime mapping observed | Target SP Story? |
+| --- | --- | --- |
+| 1 | `ac0101`, `ac0907`, `ac9071`, `ac9920` | no |
+| 2 | `ac0902`, `ac0907`, `ac9071`, `ac9920` | no |
+| 3 | `ac0910`, `ac9071`, `ac9920` | no |
+| 4 | `ac0909`, `ac0910`, `ac9071`, `ac9920` | no |
+| 5 | `ac0904_055`, `ac9071`, `ac9920` | no |
+| 6 | `ac0905`, `ac0912`, `ac9071`, `ac9920` | no |
+| 7 | `ac0911`, `ac9071`, `ac9920` | no |
+| 8 | `ac0922_001`, voices `31043`-`31061`, Episode Bonus outer flow | no |
+| 9 | `ac0901`, `ac9071`, `ac9920` | no |
+| 10 | `ac0902_277`, `ac0906_001`, `ac9071`, `ac9920` | no |
+| 11 | `ac0103`, `ac0902_126`, `ac9071`, `ac9920` | no |
+| 12 | `ac0907`, `ac9071`, `ac9920` | no |
+| 13 | `ac0907`, `ac0915`, `ac9071`, `ac9920` | no |
+| 14 | `ac0103`, `ac0912`, `ac9071`, `ac9920` | no |
+| 15 | `ac0905`, `ac0917`, `ac9071`, `ac9920` | no |
+| 16 | `ac0910`, `ac0914`, `ac9071`, `ac9920` | no |
+| 17 | `ac0102`, `ac0907`, `ac9071`, `ac9920` | no |
+| 18 | `ac0904`, `ac0906_005`, `ac9071`, `ac9920` | no |
+| 19 | `ac0101`, `ac0904`, `ac9071`, `ac9920` | no |
+
+Interpretation: broad blind scanning above 19 is not the right next move.  The
+target ac7114/ac7115/ac7116 path is likely selected by a different SP Story
+state/caller/parameter path, not the simple `CSlotBody+0x520` main force kind
+range tested here.  The next useful work is static caller analysis around
+`C_ObjStageAT_SP_Story::fnSetEvCdBase/Next` and the state that selects story
+numbers 3/4/5, then a narrow runtime probe for that exact selector.
+
 ## Next work
 
-1. Recreate any A:-only 2026-07-03 evidence under the durable root:
+1. Keep the durable evidence root as the source of truth after the power loss:
 
 ```text
 D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
 ```
 
 Use A: only for disposable high-frequency scratch.
-2. Run a small, auditable index-mapping experiment:
-   - set `body-force-main` to one candidate index;
-   - capture combined CSL/BGM/SP Story JSONL with an independent observer;
-   - perform exactly one natural lever/stop cycle or the explicitly documented
-     post-clear diagnostic path that actually emits `force_flag_set`;
-   - summarize to `summary_v1`;
-   - inspect `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
-     `runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and
-     `csl_queue_chunks.csv`.
-3. If no SP Story state appears for body-force-main indices, add a separate
-   direct `ID401::fnSetForceFlag(kind, parameter)` action and test only with
-   documented kind/parameter candidates from the static table.
+2. Do not continue blind `body_force_main` scanning just because `0..19` missed.
+   First identify the SP Story caller/selector statically:
+   - xrefs to `C_ObjStageAT_SP_Story::fnSetEvCdBase/Next`;
+   - story-number/state fields that choose SP Story 3/4/5;
+   - any parameter table separate from `CSlotBody+0x520` kind.
+3. After static candidates exist, add a narrow runtime probe/action for that
+   selector and capture combined CSL/BGM/SP Story JSONL.
 4. Only after a target SP Story is reached through the native outer path can the
    ac7114-16 BGM gate be closed.
 
