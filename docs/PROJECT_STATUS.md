@@ -163,6 +163,15 @@
   / sound id `9544`、`31186_282_mihu_く…ぐ…` / sound id `8008` 三段。当前 live
   slot 状态 20 s 被动探针无 sound request、无 BGM helper、无 OpenSL enqueue。这强化
   forced ac7116 “无额外 BGM”结论，但仍不能解除自然 outer gameplay transition 门禁。
+  同一 combined CSL+BGM 探针随后补跑 `ac7114_001` 与 `ac7115_001` forced path：
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7114_v1_20260703`
+  显示 5 个 `SoundMng::sndPlayReq`、5 个最终 queue chunk、0 个 BGM helper，声音链为
+  `42040_SPストーリー3_01_2G`、`8040_シネスコ変化音_金帯 ` 和 3 条角色语音；
+  `A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7115_v1_20260703`
+  显示 10 个 `SoundMng::sndPlayReq`、10 个最终 queue chunk、0 个 BGM helper，声音链为
+  `42060_SPストーリー4_かえでドッペル_01`、`8040_シネスコ変化音_金帯 ` 和 8 条角色语音。
+  这补齐三段 forced official event path 的“无额外 BGM helper”证据；自然 outer-flow
+  BGM 门禁仍未解除。
 - 2026-06-28 ac7116 visual-tail 运行时探针报告已更新：
   `docs/research/2026-06-28-ac7116-visual-tail-runtime-probe.md`。
   v3 捕获位于

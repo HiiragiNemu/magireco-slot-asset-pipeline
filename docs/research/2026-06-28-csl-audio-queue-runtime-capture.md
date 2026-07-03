@@ -263,6 +263,37 @@ Interpretation: in the forced `ac7116_001` official event path, the retained
 final OpenSL queue.  No BGM helper call and no additional continuous queue
 chunk appeared in this run.
 
+Forced `ac7114_001` and `ac7115_001` were then captured with the same combined
+CSL+BGM probe:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7114_v1_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7114_v1_20260703\summary_v1\summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7115_v1_20260703
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7115_v1_20260703\summary_v1\summary.json
+```
+
+Both runs exited cleanly.  Summary:
+
+| Event | High-level sound-code rows | `SoundMng::sndPlayReq` rows | Final queue chunks | BGM helper rows |
+| --- | ---: | ---: | ---: | ---: |
+| `ac7114_001` | 27 | 5 | 5 | 0 |
+| `ac7115_001` | 62 | 10 | 10 | 0 |
+
+The observed forced-path sound-code chains include:
+
+| Event | Scene/base audio | Foreground SE | Role voices observed |
+| --- | --- | --- | --- |
+| `ac7114_001` | `42040_SPストーリー3_01_2G` | `8040_シネスコ変化音_金帯 ` | `30949_228_tur_鶴乃ちゃんハ、サイ`, `30950_229_iro_嘘ついちゃダメだよ`, `30951_230_yac_鶴乃…！` |
+| `ac7115_001` | `42060_SPストーリー4_かえでドッペル_01` | `8040_シネスコ変化音_金帯 ` | `30746_317_rena_！`, `30739_303_kuroe_！`, `30740_304_iro_かえでちゃん！？`, `30741_305_kuroe_あれは…！`, `30742_306_rena_かえで！しっかり`, `30743_307_kae_レナちゃん…ごめん`, `30744_310_rena_！…かえで！`, `30745_315_rena_…かえで！` |
+
+Interpretation: in forced official event paths, `ac7114_001`, `ac7115_001`, and
+`ac7116_001` all show the same audio model: scene/base audio, the gold-band
+foreground SE, and role voices reach the final queue; no BGM helper row appears.
+This strengthens the "no extra forced-path BGM" evidence for the three-event
+scene, but it still does not prove that a natural outer gameplay transition
+cannot start or carry additional BGM before the official event is forced.
+
 Current live slot-state smoke with the same combined probe:
 
 ```text

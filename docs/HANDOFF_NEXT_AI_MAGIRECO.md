@@ -405,6 +405,33 @@ continuous queue chunk.  The passive current-state run found no non-hook
 request or queue activity.  This is not a natural-trigger capture; keep the
 outer-flow BGM gate open.
 
+2026-07-03 follow-up forced CSL+BGM captures:
+
+```text
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7114_v1_20260703\summary_v1\summary.json
+A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\csl_bgm_ac7115_v1_20260703\summary_v1\summary.json
+docs/research/2026-06-28-csl-audio-queue-runtime-capture.md
+```
+
+Results:
+
+- `ac7114_001`: 5 `SoundMng::sndPlayReq` rows, 5 final queue chunks, 0 BGM
+  helper rows.  Observed sound-code chain:
+  `42040_SPストーリー3_01_2G`, `8040_シネスコ変化音_金帯 `, and role voices
+  `30949_228_tur_鶴乃ちゃんハ、サイ`,
+  `30950_229_iro_嘘ついちゃダメだよ`,
+  `30951_230_yac_鶴乃…！`.
+- `ac7115_001`: 10 `SoundMng::sndPlayReq` rows, 10 final queue chunks, 0 BGM
+  helper rows.  Observed sound-code chain:
+  `42060_SPストーリー4_かえでドッペル_01`, `8040_シネスコ変化音_金帯 `, and
+  role voices `30746`, `30739`, `30740`, `30741`, `30742`, `30743`, `30744`,
+  `30745`.
+
+Interpretation: all three forced official event paths now show no additional
+BGM helper row beyond the scene/base audio, gold-band SE, and role voices.  This
+does not prove natural outer-flow no-BGM; it only narrows the remaining BGM
+work to the natural transition/full-flow path.
+
 ## Visual tail/compositor hook candidates
 
 `libGameProc.so` has no normal symbol table, but dynamic exports provide useful
