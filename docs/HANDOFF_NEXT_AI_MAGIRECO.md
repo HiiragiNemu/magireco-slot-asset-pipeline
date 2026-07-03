@@ -1599,6 +1599,59 @@ the correct path is to decode these tables and use the game mechanism for
 scene/event discovery, then validate audio/subtitles/runtime timing.  Do not
 return to visual matching or `ac` suffix assumptions.
 
+### Decoded global table output
+
+New tool:
+
+```text
+tools/frida_runtime_probe/decode_dirinfo_event_tables.py
+```
+
+Latest durable output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\dirinfo_event_table_decode_v3_20260703
+```
+
+Summary:
+
+```text
+DirInfoTable entries: 290
+EventInfo records: 9732
+relocation values applied: 598516
+valid DirInfo grids: 290
+route_cell_total: 122028
+nonzero route rows: 37266
+manifest-mapped unique event codes: 926
+resolved route rows: 3908
+```
+
+Most useful files for the next AI:
+
+```text
+resolved_scene_catalog.csv   # de-duplicated, route-ordered scene candidates
+base_scene_summary.csv       # per-base_name grouping and counts
+resolved_dirinfo_event_routes.csv
+event_info_records.csv
+dirinfo_entries.csv
+```
+
+Important correction: `DirInfoTable kind` and SP Story `stage_kind` are not the
+same field.  The current target scenes decode as:
+
+```text
+DirInfo kind 190 -> ac7114 rows, including ac7114_001 at row 0 selector_raw 0
+DirInfo kind 191 -> ac7115 rows, including ac7115_001 at row 0 selector_raw 0
+DirInfo kind 192 -> ac7116 rows, including ac7116_001 at row 0 selector_raw 0
+```
+
+The earlier SP Story object route still uses stage kinds `11/12/13`.  Use names
+like `dirinfo_kind` and `sp_story_stage_kind` explicitly in new code and notes.
+
+The decoded scene catalog is a discovery/order source, not an audiovisual trust
+proof.  A scene still needs runtime-backed audio/subtitle/BGM/tail evidence
+before becoming a final Bilibili-facing long edition.
+
 ## Immediate next tasks
 
 1. Prove whether the ac7114-16 scene has additional BGM.

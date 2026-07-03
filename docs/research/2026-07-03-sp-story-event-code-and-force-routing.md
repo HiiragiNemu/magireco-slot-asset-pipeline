@@ -997,6 +997,89 @@ Next static task: implement a table decoder that dumps all valid
 become the primary discovery source for scene grouping and Bilibili long-video
 candidate generation.
 
+## DirInfoTable decode v3
+
+Implemented:
+
+```text
+tools/frida_runtime_probe/decode_dirinfo_event_tables.py
+```
+
+Run output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\dirinfo_event_table_decode_v3_20260703
+```
+
+The decoder applies ELF `.rela.dyn` values.  This is required because
+`DirInfoTable` entry qwords and `EventInfo` string fields are zero in the file
+image until relocation addends are applied.
+
+Summary:
+
+```text
+lib_sha256=5a0ae3ce7f25b89a3b9a13d11bf36aaa1de04faceb612357fa04f42426f17ebf
+DirInfoTable=0x44c0210 size=4640 entries=290
+EventInfo=0x44c1430 size=233568 records=9732
+relocation_value_count=598516
+dirinfo_valid_entry_count=290
+route_cell_total=122028
+route_row_count=37266
+manifest_code_count=926
+resolved_route_row_count=3908
+resolved_unique_event_code_count=926
+```
+
+New output files:
+
+```text
+event_info_records.csv
+dirinfo_entries.csv
+dirinfo_event_routes.csv
+resolved_dirinfo_event_routes.csv
+unique_event_codes.csv
+resolved_scene_catalog.csv
+base_scene_summary.csv
+summary.json
+```
+
+`resolved_scene_catalog.csv` is de-duplicated by event code and sorted by first
+game route (`first_base_name`, `first_kind`, `first_row_index`,
+`first_selector_raw`).  It is the current best static source for scene-family
+ordering before runtime audiovisual validation.
+
+Critical terminology correction:
+
+```text
+DirInfoTable kind 190 -> ac7114
+DirInfoTable kind 191 -> ac7115
+DirInfoTable kind 192 -> ac7116
+```
+
+These are not the same as the previously traced SP Story stage kinds
+`11/12/13`.  Future work must not call both simply "kind" without a qualifier.
+
+Sample target rows from `resolved_scene_catalog.csv`:
+
+```text
+ac7114_001: dirinfo_kind=190 row=0  selector_raw=0 code=0x4f71466b3d723041
+ac7115_001: dirinfo_kind=191 row=0  selector_raw=0 code=0x5773382374447854
+ac7115_013: dirinfo_kind=191 row=12 selector_raw=0 code=0x4c792a5a74447854
+ac7116_001: dirinfo_kind=192 row=0  selector_raw=0 code=0x2476304366614152
+```
+
+Known-good review families also line up in this table:
+
+```text
+ac1102 -> dirinfo_kind=54
+ac1103 -> dirinfo_kind=55
+ac1104 -> dirinfo_kind=56
+```
+
+This gives a general route-order solution for family/scene long-video
+candidates.  It does not by itself validate voice, subtitles, BGM, or final
+visual composition.
+
 ## Next work
 
 1. Keep the durable evidence root as the source of truth after the power loss:

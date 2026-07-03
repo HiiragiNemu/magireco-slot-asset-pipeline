@@ -1803,3 +1803,49 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\static_xref_eventinfo_got_p
 `RxCom payload -> SdGmData -> kind/selector -> DirInfoTable -> EventInfo ->
 event code` 的表驱动机制。我们的 pipeline 也应转向解析/复刻这条机制，而
 不是视觉分类或手动逐个 family 处理。
+
+### 2026-07-03 DirInfoTable / EventInfo 全局解码 v3
+
+新增工具：
+
+```text
+tools/frida_runtime_probe/decode_dirinfo_event_tables.py
+```
+
+输出：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\dirinfo_event_table_decode_v3_20260703
+```
+
+关键结果：
+
+- `DirInfoTable`: 290 entries。
+- `EventInfo`: 9732 records。
+- 应用 `.rela.dyn` 后所有 290 个 DirInfo grid pointer 均可解析。
+- `route_cell_total=122028`，非零 `route_row_count=37266`。
+- 已通过现有 manifest 反查 `926` 个 unique event code，覆盖 `3908` 条 route row。
+- 产物包括：
+  - `event_info_records.csv`
+  - `dirinfo_entries.csv`
+  - `dirinfo_event_routes.csv`
+  - `resolved_dirinfo_event_routes.csv`
+  - `resolved_scene_catalog.csv`
+  - `base_scene_summary.csv`
+
+重要命名修正：`DirInfoTable kind` 不是前面 SP Story 对象内的
+`stage_kind_u16_at_0x318`。例如：
+
+```text
+ac7114 -> DirInfo kind 190
+ac7115 -> DirInfo kind 191
+ac7116 -> DirInfo kind 192
+```
+
+而 SP Story 对象内先前解析的 stage kind 是 `11/12/13`。后续文档和代码必须
+显式区分 `dirinfo_kind` 与 `sp_story_stage_kind`，不能混用。
+
+`resolved_scene_catalog.csv` 已按 `first_base_name, first_kind,
+first_row_index, first_selector_raw` 排序，可作为同 base_name 长片候选顺序。
+它只负责事件发现/排序；是否能进入 B 站投稿成片仍必须通过音频、字幕、BGM、
+尾帧 hold、素材层排除等 runtime QA gate。
