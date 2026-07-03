@@ -109,6 +109,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
     sound_code_calls: list[dict[str, Any]] = []
     bgm_calls: list[dict[str, Any]] = []
     sp_story_state: list[dict[str, Any]] = []
+    force_calls: list[dict[str, Any]] = []
 
     for _, record in iter_jsonl(path):
         if first_ms is None and record.get("host_unix_ms") is not None:
@@ -211,6 +212,21 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
                     "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
                 }
             )
+        elif kind.startswith("force_"):
+            force_calls.append(
+                {
+                    "time_s": t,
+                    "kind": kind,
+                    "arg0_u16": payload.get("arg0_u16"),
+                    "arg0_i32": payload.get("arg0_i32"),
+                    "arg1_u16": payload.get("arg1_u16"),
+                    "arg1_i32": payload.get("arg1_i32"),
+                    "retval_i32": payload.get("retval_i32"),
+                    "active_event_code": payload.get("active_event_code"),
+                    "active_event_relative_ms": payload.get("active_event_relative_ms"),
+                    "high_level_call_count_for_kind": payload.get("high_level_call_count_for_kind"),
+                }
+            )
 
     summary = {
         "source": str(path),
@@ -222,6 +238,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "sound_code_call_count": len(sound_code_calls),
         "bgm_call_count": len(bgm_calls),
         "sp_story_state_count": len(sp_story_state),
+        "force_call_count": len(force_calls),
         "unique_event_codes": sorted({str(row["event_code"]) for row in event_codes if row.get("event_code")}),
         "unique_sound_codes": sorted({str(row["code_string"]) for row in sound_codes if row.get("code_string")}),
         "unique_sp_story_base_event_codes": sorted(
@@ -247,6 +264,7 @@ def summarize_runtime(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[s
         "runtime_sound_code_calls": sound_code_calls,
         "runtime_bgm_calls": bgm_calls,
         "runtime_sp_story_state": sp_story_state,
+        "runtime_force_calls": force_calls,
     }
     return summary, tables
 
@@ -489,6 +507,22 @@ def main() -> int:
                 "previous_next_event_code_hex_at_0x370",
                 "arg1_u16",
                 "arg1_i32",
+                "high_level_call_count_for_kind",
+            ],
+        )
+        write_csv(
+            args.out_dir / "runtime_force_calls.csv",
+            runtime_tables["runtime_force_calls"],
+            [
+                "time_s",
+                "kind",
+                "arg0_u16",
+                "arg0_i32",
+                "arg1_u16",
+                "arg1_i32",
+                "retval_i32",
+                "active_event_code",
+                "active_event_relative_ms",
                 "high_level_call_count_for_kind",
             ],
         )

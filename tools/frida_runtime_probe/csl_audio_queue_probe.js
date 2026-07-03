@@ -459,6 +459,50 @@ function hookSpStoryMethod(moduleValue, symbol, kind, argCount, emitLeave) {
   emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
 }
 
+function hookForceRouting(moduleValue, symbol, kind, argCount, emitReturn) {
+  const address = findExport(moduleValue, symbol);
+  if (address === null) {
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const fields = {
+          symbol,
+          address: address.toString(),
+        };
+        for (let index = 0; index < argCount; index += 1) {
+          const u32Value = toU32(args[index]);
+          fields["arg" + index + "_u16"] = u32Value === null ? null : u32Value & 0xffff;
+          fields["arg" + index + "_i32"] = toI32(args[index]);
+          fields["arg" + index + "_pointer"] = args[index].toString();
+        }
+        emitHighLevel(kind, fields);
+      },
+      onLeave(retval) {
+        if (!emitReturn) {
+          return;
+        }
+        emitHighLevel(kind + "_return", {
+          symbol,
+          address: address.toString(),
+          retval_i32: toI32(retval),
+          retval_pointer: retval.toString(),
+        });
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: kind,
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+    return;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString() });
+}
+
 function installSimpleEnterLeave(moduleValue, symbol, kind, onEnterExtra, onLeaveExtra) {
   const address = findExport(moduleValue, symbol);
   if (address === null) {
@@ -793,6 +837,55 @@ function installHighLevelAudioHooks(moduleValue) {
     "sp_story_play_anm",
     1,
     false
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40114fnClrForceFlagEv",
+    "force_flag_clear",
+    0,
+    false
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40114fnSetForceFlagEtt",
+    "force_flag_set",
+    2,
+    true
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40118fnGetForceFlagKindEv",
+    "force_flag_get_kind",
+    0,
+    true
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40121fnGetForceFlagKind_ATEh",
+    "force_flag_get_kind_at",
+    1,
+    true
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40111LC701A_SLOT12SetForceFlagEv",
+    "force_lc701a_set_force_flag",
+    1,
+    true
+  );
+  hookForceRouting(
+    moduleValue,
+    "_ZN5ID40121fnGameLot_SetEPBforceEi",
+    "force_game_lot_set_epb_force",
+    1,
+    false
+  );
+  hookForceRouting(
+    moduleValue,
+    "fnGameLot_GetEPBforce",
+    "force_game_lot_get_epb_force",
+    0,
+    true
   );
   hookIntCall(moduleValue, "_ZN8SoundMng4playEii", "sound_mng_play", 2);
   hookCStringAndInts(

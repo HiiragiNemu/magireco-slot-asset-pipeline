@@ -17,6 +17,11 @@ delivery gate.  It is not a final-output approval.
   close the ac7114-16 outer-flow BGM gate.
 - The public force UI is blocked by the add-on purchase gate.  The usable route
   is now internal force state, not the visible UI.
+- After the 2026-07-03 power loss, treat any A:-only 2026-07-03 capture path in
+  this note as potentially lost/non-authoritative unless it is present in the
+  restored filesystem or mirrored to Git/C/D.  The repository records the
+  mechanism findings and probe code; runtime JSONL evidence that lived only on
+  A: must be regenerated.
 
 ## Static SP Story event-code table
 
@@ -219,16 +224,68 @@ Important static points:
 Do not assume any of these values map to ac suffix numbers.  The next safe step
 is empirical index mapping with runtime event-code/SP-state capture.
 
+## Post-commit force-consumption refinement
+
+The first idea after the `3d15644` commit was to avoid the blocked force UI by
+writing `CSlotBody` internal force fields and then calling game-owned entry
+points.  The added probe support is intentionally narrow:
+
+```powershell
+python tools\frida_runtime_probe\force_selector_host.py body-reel-start
+```
+
+This calls `CSlotBody::reelStartExec()` through Frida and logs
+`body_reel_start_exec_call`; the force selector probe also traces
+`CSlotBody::reelStartExec()` when a natural game path calls it.
+
+Important refinement:
+
+- `touch_Lever()` only writes input/lever state.  It does not directly consume
+  `[body+0x520]` or call `ID401::fnSetForceFlag`.
+- `CSlotBody::START(int,int)` contains the force-consumption block, but in the
+  observed idle state it returns early because the body state initialization
+  gate is already set.
+- `CSlotBody::reelStartExec()` statically contains the force-consumption block:
+  it calls `ID401::fnClrForceFlag()`, checks `[body+0x520]`, and if non-negative
+  calls `ID401::fnSetForceFlag(kind, parameter)` before `ID401::mReelStart()`.
+- Directly calling `reelStartExec()` by `NativeFunction` is a diagnostic tool,
+  not a proof of the real outer gameplay route.  Frida does not guarantee that
+  another interceptor in the same control script will observe calls made by that
+  script, so force-consumption proof must come from an independent observer
+  script or from a natural path trace.
+
+Therefore an index test is only valid when its capture contains the evidence
+chain below in the same run:
+
+1. the requested force value is written (`body_force_main`/parameter snapshot);
+2. the native path invokes `CSlotBody::reelStartExec()` or the equivalent real
+   game start path;
+3. an independent observer captures `force_flag_set` with the requested kind;
+4. runtime event-code/SP-story state or CSL queue evidence proves what scene
+   actually played.
+
+Do not count the old `body-force-main=8` direct-input attempt as an index-8
+mapping result.  It only proved that direct `touch_Lever/touch_Reel` input did
+not consume the force flag.
+
 ## Next work
 
-1. Finish current spin and wait for `slot_input_enabled=1`.
+1. Recreate any A:-only 2026-07-03 evidence under the durable root:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+Use A: only for disposable high-frequency scratch.
 2. Run a small, auditable index-mapping experiment:
    - set `body-force-main` to one candidate index;
-   - capture combined CSL/BGM/SP Story JSONL;
-   - perform exactly one natural lever/stop cycle;
+   - capture combined CSL/BGM/SP Story JSONL with an independent observer;
+   - perform exactly one natural lever/stop cycle or a traced game-owned start
+     path that actually emits `force_flag_set`;
    - summarize to `summary_v1`;
    - inspect `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
-     `runtime_sound_code_calls.csv`, and `csl_queue_chunks.csv`.
+     `runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and
+     `csl_queue_chunks.csv`.
 3. If no SP Story state appears for body-force-main indices, add a separate
    direct `ID401::fnSetForceFlag(kind, parameter)` action and test only with
    documented kind/parameter candidates from the static table.

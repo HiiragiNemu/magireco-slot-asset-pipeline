@@ -31,6 +31,7 @@ ACTIONS = {
     "body-force-main": ("set_body_force_main", None),
     "body-force-sub": ("set_body_force_sub", None),
     "body-force-param": ("set_body_force_param", None),
+    "body-reel-start": ("body_reel_start", 1),
     "body-bet": ("body_bet", 1),
     "body-lever": ("body_lever", 1),
     "body-left-reel": ("body_left_reel", 1),

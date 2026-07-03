@@ -1504,3 +1504,35 @@ D:\MagiReco_Reverse\MagiaRe_RAMDISK_Research_20260605_motion_subtitle.7z
 | 压缩大小 | 14999419536 bytes |
 | Solid | yes |
 | `7z t` | Everything is Ok |
+
+## 2026-07-03 断电恢复与当前工作根
+
+断电后 A: RAM disk 上 2026-07-03 的临时运行捕获不可再视为可靠现存证据。用户已把 2026-06-29 备份恢复到 A:，并解压到新的持久工作目录：
+
+```text
+D:\magia\MyProducts\casino
+```
+
+当前策略：
+
+- Git 仓库和 C: worktree 作为脚本、研究记录、交接文档的主状态。
+- D: 用作断电后持久运行证据和即时工作进度：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+- A: 只用于可丢弃高频 scratch；需要进入 QA、manifest、交接 MD 或最终 Bilibili 交付判断的证据必须复制/生成到 Git/C/D。
+
+当前已恢复/确认的 2026-07-03 进度：
+
+- 正确分支：`codex/corrected-runtime-pipeline`
+- 已推送提交：`3d15644 Record SP story force routing evidence`
+- 该提交保存了 SP Story event-code 静态提取器、force routing 研究记录、ac7114/ac7115/ac7116 运行时结论和交接状态。
+- 本地后续改动增加了 `force_flag_*` observer、`body-reel-start` 诊断 action 和 `runtime_force_calls.csv` 汇总输出。它们用于继续证明外层调度/force 消费，而不是直接批准任何成片。
+
+关键限制：
+
+- `body-force-main=8` 的旧直接输入尝试不能算 index 8 映射成功或失败；它只说明直接调用 `touch_Lever/touch_Reel` 没有消费 force flag。
+- 后续 index mapping 必须在同一运行中捕获独立观察者的 `force_flag_set` 或等价真实游戏消费证据，再看 `runtime_sp_story_state.csv` / event code / CSL queue。
+- ac7114-16 的最终 Bilibili 长片仍需关闭 BGM/bed 证据门：证明存在额外外层 BGM并加入，或证明官方外层对该 SP Story 无额外 BGM。

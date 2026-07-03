@@ -219,6 +219,23 @@ function setBodyForceValue(name, value) {
   });
 }
 
+function callBodyReelStartExec() {
+  if (slotBodyPointer === null || slotBodyPointer.isNull()) {
+    throw new Error("CSlotBody instance has not been observed");
+  }
+  const symbol = "_ZN9CSlotBody13reelStartExecEv";
+  const address = resolve(symbol, 0);
+  const call = new NativeFunction(address, "void", ["pointer"]);
+  const stateBefore = snapshot();
+  call(slotBodyPointer);
+  emit("body_reel_start_exec_call", {
+    symbol,
+    address: address.toString(),
+    state_before: stateBefore,
+    state_after: snapshot(),
+  });
+}
+
 function runPendingRelease(source) {
   if (pendingRelease === null || source !== "Calc") {
     return;
@@ -296,6 +313,8 @@ function executeAction(action) {
       pressBodyInput(name);
     } else if (Object.prototype.hasOwnProperty.call(bodyForceSetterSymbols, name)) {
       setBodyForceValue(name, value);
+    } else if (name === "body_reel_start") {
+      callBodyReelStartExec();
     } else if (name === "set_manager_gate") {
     const manager = readPointer(slotPointer.add(0x308));
     if (manager === null || manager.isNull()) {
@@ -635,6 +654,19 @@ setImmediate(function () {
         },
         onLeave(retval) {
           return { result: retval.toInt32(), state_after: snapshot() };
+        },
+      }
+    ),
+    slot_body_reel_start_exec: attachSimpleTrace(
+      "_ZN9CSlotBody13reelStartExecEv",
+      "slot_body_reel_start_exec",
+      {
+        onEnter(args) {
+          observeSlotBody(args[0], "CSlotBody::reelStartExec");
+          return { state_before: snapshot() };
+        },
+        onLeave() {
+          return { state_after: snapshot() };
         },
       }
     ),

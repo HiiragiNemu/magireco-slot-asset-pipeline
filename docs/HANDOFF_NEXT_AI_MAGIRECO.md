@@ -1157,6 +1157,34 @@ Read this detailed report before continuing the ac7114-16 BGM gate:
 docs/research/2026-07-03-sp-story-event-code-and-force-routing.md
 ```
 
+## 2026-07-03 power-loss recovery note
+
+The RAM disk A: lost the 2026-07-03 transient captures after a power loss.  The
+user restored a 2026-06-29 backup to A: and also unpacked the same backup to:
+
+```text
+D:\magia\MyProducts\casino
+```
+
+Use the repository, GitHub branch, C: worktree, and D: as durable state.  Treat
+2026-07-03 A:-only runtime JSONL/screenshots as lost unless the file still
+exists after restore.  New durable runtime evidence should go under:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence
+```
+
+A: may still be used for disposable high-frequency scratch, but do not make it
+the only copy of evidence needed for the handoff, QA, manifests, or Bilibili
+delivery decisions.
+
+Correct repository state after recovery:
+
+- branch: `codex/corrected-runtime-pipeline`
+- latest pushed commit currently confirmed: `3d15644 Record SP story force routing evidence`
+- A later local diff adds force-routing observers, `body-reel-start`, and
+  `runtime_force_calls.csv`; commit it after syntax checks and handoff updates.
+
 Current facts:
 
 - `C_ObjStageAT_SP_Story::fnSetEvCdBase` statically contains the official
@@ -1187,11 +1215,13 @@ A:\magireco_corrected_research_20260612\runtime_av_repair_20260627\force_body_ma
 ```
 
 Next recommended experiment: map `body-force-main` index 0..19 in small,
-auditable one-spin captures.  For each index, capture combined CSL/BGM/SP Story
-JSONL, then inspect `runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
-`runtime_sound_code_calls.csv`, and `csl_queue_chunks.csv`.  Stop as soon as a
-target SP Story event code appears; do not spend credits/tokens brute-forcing
-broad renders.
+auditable one-spin captures, but only count a run as valid if an independent
+observer captures `force_flag_set` or equivalent real game force consumption.
+For each index, capture combined CSL/BGM/SP Story JSONL, then inspect
+`runtime_sp_story_state.csv`, `runtime_event_codes.csv`,
+`runtime_force_calls.csv`, `runtime_sound_code_calls.csv`, and
+`csl_queue_chunks.csv`.  Stop as soon as a target SP Story event code appears;
+do not spend credits/tokens brute-forcing broad renders.
 
 ## Immediate next tasks
 
