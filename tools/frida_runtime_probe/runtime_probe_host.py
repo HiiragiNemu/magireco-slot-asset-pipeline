@@ -179,9 +179,18 @@ def main() -> int:
     if args.no_unload:
         os._exit(0)
     if control_script is not None:
-        control_script.unload()
-    script.unload()
-    session.detach()
+        try:
+            control_script.unload()
+        except frida.InvalidOperationError:
+            pass
+    try:
+        script.unload()
+    except frida.InvalidOperationError:
+        pass
+    try:
+        session.detach()
+    except frida.InvalidOperationError:
+        pass
     return 0
 
 

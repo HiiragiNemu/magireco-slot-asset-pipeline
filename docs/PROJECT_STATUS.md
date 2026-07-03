@@ -1,6 +1,6 @@
 # Project Status
 
-更新时间：2026-07-03
+更新时间：2026-07-04
 
 ## 2026-06-26 v18 当前状态
 
@@ -16,6 +16,24 @@
 
 最新新增：
 
+- 2026-07-04 断电/恢复后，当前 durable 即时工作根继续改为
+  `D:\magia\MyProducts\casino`；A: 视为 2026-06-29 备份恢复源和可删除
+  RAM-disk scratch，不再作为唯一证据保存位置。新增轻量真实输入探针：
+  `tools/frida_runtime_probe/lightweight_spin_audio_probe.js`，用于替代会导致
+  MuMu/Frida 崩溃的重型 `csl_audio_queue_probe.js + force_selector_probe.js`
+  实时输入组合。稳定证据位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet_calibration_20260704`：
+  游戏保持前台，成功观察 `CSlotBody::START/STOP`、`fnRxComDirInfo8`、
+  `fnRxComPreMdl`、`fnLotDirPreMdl`、10 条 event-code request 和 5 条
+  `CSLMng::PlayStart`/final queue metadata；最终音频 queue 包括
+  `sound_id=9002/60/61`。本次 ordinary spin 的 `fnRxComDirInfo8`
+  payload `[4]/[5]/[6]` 全为 0，未触发 `fnLot_OT_AT_StryKnd/Chara` 或
+  `C_ObjStageAT_SP_Story`，因此不是 ac7114-16 目标场景证据，不能解除 BGM
+  门禁。失败的重型证据位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\physical_input_spin_observe_20260704`；
+  crash log 顶层在 `libmagireco_gadget.so!libfrida-gadget-raw.so`，应解释为
+  observer-induced instability，不是游戏机制负证据。详细报告：
+  `docs/research/2026-07-04-lightweight-real-input-audio-probe.md`。
 - 2026-07-03 断电恢复后，稳定工作进度根改为
   `D:\magia\MyProducts\casino`；A: 只作为 RAM-disk scratch/2026-06-29 备份恢复源。
   `body_force_main` post-clear force kinds `0..19` 已完成有效扫描：旧 kind 8 曾映射到
@@ -1951,3 +1969,65 @@ SP Story 调度捕获证明。该自然 spin 测试是负面控制证据，不�
 D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\recover_after_natural_spin_20260703
 D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natural_spin_reinject_20260703
 ```
+
+### 2026-07-04 轻量真实输入探针与 D 盘恢复策略
+
+断电后 A: 的 2026-07-03 临时文件不应再被当作唯一证据源。当前恢复策略：
+
+```text
+D:\magia\MyProducts\casino  # durable immediate work root
+A:\                         # RAM-disk scratch / restored 2026-06-29 backup
+```
+
+新增稳定 real-input observer：
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+```
+
+并修正 `runtime_probe_host.py`：当 Frida script 已经 detach/unload 时，host
+退出阶段的 `InvalidOperationError` 不再把可用 capture 标成失败。
+
+不要再用重型 full probe 做真实转动观测：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\physical_input_spin_observe_20260704
+```
+
+该 run 的 crash log 首帧在
+`libmagireco_gadget.so!libfrida-gadget-raw.so`，属于 hook/observer 诱发不稳定；
+不是游戏 SP Story route 的负证据。
+
+可继续使用的轻量成功 run：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet_calibration_20260704
+```
+
+结论：
+
+- lightweight probe 在真实 ADB tap 下稳定，游戏保持 foreground；
+- 成功观察 START/STOP、RxComDirInfo8、RxComPreMdl、LotDirPreMdl；
+- final queue 观察到 `sound_id=9002`、`60`、`61`；
+- `fnReqSndEventCode` 解析到 `FL_UNIV_001`、`ac0001_001`、`ac9902_001`、
+  `ac9010_060`、`ac9071_001`、`ac9100_001`、`ac9903_001`、`ac9920_001`
+  和 `ac9071_002`；
+- 本次普通转动没有触发 `fnLot_OT_AT_StryKnd/Chara` 或
+  `C_ObjStageAT_SP_Story`；
+- `fnRxComDirInfo8` payload `[4]`、`[5]`、`[6]` 仍为 0。
+
+因此该 run 证明的是“轻量观测路线可靠”和“运行时 audio queue 确实存在”，不是
+ac7114/ac7115/ac7116 BGM 或成片正确性证明。下一步仍是找到真实触发
+`payload[4]=11/12/13` 与 `payload[5]=1/2/3/4/13/14` 的上游调度。
+
+当前坐标校准：
+
+```text
+title simulation: 约 1080,3000
+game start:       约 600,2670
+lever:            约 300,2680
+stop buttons:     约 830,2700 / 1080,2700 / 1320,2700
+BET candidate:    约 620,2475 到 620,2520
+```
+
+旧 stop `y=2860` 在按钮下方，不要继续使用。

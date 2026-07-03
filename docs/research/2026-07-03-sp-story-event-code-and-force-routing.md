@@ -1259,3 +1259,69 @@ Use A: only for disposable high-frequency scratch.
 
 Final Bilibili upload editions remain blocked until the outer-flow BGM question
 is resolved or explicitly proven absent for the target scene.
+
+## 2026-07-04 lightweight real-input follow-up
+
+After another RAM-disk recovery, durable runtime evidence should be written to:
+
+```text
+D:\magia\MyProducts\casino
+```
+
+A: is restored 2026-06-29 data plus disposable scratch and must not be the only
+copy of new evidence.
+
+The heavy physical-input observer stored at:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\physical_input_spin_observe_20260704
+```
+
+is not reliable game-flow evidence.  It used heavy CSL/backtrace/selector hooks
+while driving real screen input, then crashed with the top native crash frame in
+`libmagireco_gadget.so!libfrida-gadget-raw.so`.  Treat it as observer-induced
+instability, not as evidence that the game cannot reach target SP Story scenes.
+
+New preferred observer:
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+```
+
+Stable real-input evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet_calibration_20260704
+```
+
+Key results:
+
+- the game stayed foreground after lever/stop taps;
+- `CSlotBody::START` fired twice and `CSlotBody::STOP` fired 114 times;
+- `fnRxComDirInfo8` fired twice, `fnRxComPreMdl` once, and `fnLotDirPreMdl`
+  once;
+- `fnReqSndEventCode` resolved to
+  `FL_UNIV_001`, `ac0001_001`, `ac9902_001`, `ac9010_060`, `ac9071_001`,
+  `ac9100_001`, `ac9903_001`, `ac9920_001`, and `ac9071_002`;
+- final audio queue metadata saw `sound_id=9002`, `60`, and `61`;
+- `fnRxComDirInfo8` payload bytes `[4]`, `[5]`, and `[6]` were all `0`;
+- `fnLot_OT_AT_StryKnd`, `fnLot_OT_AT_StryChara`, and SP Story hooks did not
+  fire.
+
+Therefore the 2026-07-04 light run proves that the lightweight observer can
+survive real input and that ordinary gameplay has concrete audio queue output.
+It does not prove anything about ac7114/ac7115/ac7116 BGM because it did not
+reach the target SP Story route.  Continue by searching for the upstream path
+that produces nonzero `fnRxComDirInfo8` payload values, especially
+`payload[4]=11/12/13` and `payload[5]=1/2/3/4/13/14`.
+
+Corrected physical tap coordinates for the current MuMu view:
+
+```text
+lever:        about 300,2680
+stop buttons: about 830,2700 / 1080,2700 / 1320,2700
+BET:          about 620,2475 to 620,2520
+```
+
+The old stop-button `y=2860` was below the visible buttons and should not be
+reused.

@@ -1777,6 +1777,30 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natu
 
 ## Immediate next tasks
 
+0. Keep evidence durable after the RAM-disk loss.
+   - Current durable immediate work root:
+     `D:\magia\MyProducts\casino`.
+   - A: is restored 2026-06-29 data plus disposable RAM-disk scratch.  Do not
+     make A: the only copy of new evidence.
+   - Read the 2026-07-04 lightweight-probe report before doing more runtime
+     input work:
+
+```text
+docs/research/2026-07-04-lightweight-real-input-audio-probe.md
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_physical_bet_calibration_20260704
+```
+
+   - Do not use the heavy full CSL/backtrace observer for real spin input.  The
+     run at
+     `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\physical_input_spin_observe_20260704`
+     crashed with the native stack top in Frida Gadget; treat it as
+     observer-induced instability, not as game-flow evidence.
+   - Preferred real-input observer:
+     `tools/frida_runtime_probe/lightweight_spin_audio_probe.js`.
+   - Corrected physical coordinates: lever about `300,2680`; stop buttons
+     about `830,2700`, `1080,2700`, `1320,2700`; BET candidate about
+     `620,2475` to `620,2520`.  Do not reuse old stop `y=2860`.
+
 1. Prove whether the ac7114-16 scene has additional BGM.
    - The visual-tail gate for `ac7114_001`, `ac7115_001`, and `ac7116_001` is
      now runtime-mechanism proven by the 2026-07-03 Z2D captures.
@@ -1785,6 +1809,11 @@ D:\magia\MyProducts\casino\runtime_recovery_20260703\evidence\restore_after_natu
      while the scene is reached through the real SP Story selector if possible.
    - Use high-level BGM hooks in `runtime_probe.js` or the combined CSL+BGM
      probe in the same run.
+   - The 2026-07-04 lightweight ordinary-spin run captured final queue
+     `sound_id=9002/60/61` and repeated BGM helper activity, but it did not
+     reach SP Story: `fnRxComDirInfo8` payload `[4]/[5]/[6]` stayed `0`, and
+     `fnLot_OT_AT_StryKnd/Chara` plus `C_ObjStageAT_SP_Story` hooks did not
+     fire.  Use it as instrumentation proof only.
    - Until BGM/bed presence is proven or proven absent, keep the v19 long scene
      as review-only.
 
