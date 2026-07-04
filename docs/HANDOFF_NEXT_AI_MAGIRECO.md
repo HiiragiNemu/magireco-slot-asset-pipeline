@@ -159,17 +159,17 @@ next full-spin observation, use one lightweight observer plus ADB physical taps,
 or patch the control host/script to wait for `action_complete` before sending
 the next action.
 
-Before this handoff update, the branch was clean at:
+Before the 2026-07-04 full-spin-summary update, the branch was clean at:
 
 ```text
-186ccef Add clean story audio gate and scene editions
+fa73d24 Record second outage recovery state
 ```
 
-After this handoff, expect a newer commit containing:
+After this update, expect a newer commit containing:
 
-- the new tail-hold risk gate in `tools/frida_runtime_probe/audit_runtime_av_trust.py`;
-- this handoff document;
-- updated project status.
+- `tools/frida_runtime_probe/summarize_lightweight_spin_probe.py`;
+- `docs/HUMAN_PROGRESS_REPORT_2026-07-04.md`;
+- updated project status and ID401/SdGmData research notes.
 
 Always start with:
 
@@ -2083,3 +2083,103 @@ voice timing, wrong subtitles, or wrong visual state.
 Continue from runtime evidence first, then render.  If a render looks good but
 the manifest cannot explain every voice, subtitle, bed/BGM, SE, visual layer,
 and tail extension, keep it out of final delivery.
+
+## 2026-07-04 full physical-spin summary update
+
+The latest durable post-outage evidence is:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704
+```
+
+It was captured with lightweight observer + ADB physical taps, not the unstable
+long `force_selector_probe --control-sequence` path.  MuMu/ADB state at the
+time of the update:
+
+```text
+device:     emulator-5554
+game PID:   4207
+resolution: 2160x3840
+ports:      127.0.0.1:27042 and 127.0.0.1:27043 listening
+```
+
+Use the new parser:
+
+```powershell
+python tools\frida_runtime_probe\summarize_lightweight_spin_probe.py `
+  D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\observer_light_id401_cmd_buffer_full_spin_adb_continuation.jsonl `
+  --prefix summary_lightweight_spin_probe_v2
+```
+
+Generated outputs in the same evidence directory:
+
+```text
+summary_lightweight_spin_probe_v2.json
+summary_lightweight_spin_probe_v2_packets.csv
+summary_lightweight_spin_probe_v2_rxcom.csv
+summary_lightweight_spin_probe_v2_lottery.csv
+summary_lightweight_spin_probe_v2_bgm.csv
+summary_lightweight_spin_probe_v2_queue.csv
+summary_lightweight_spin_probe_v2_event_codes.csv
+summary_lightweight_spin_probe_v2_play_start.csv
+```
+
+Key facts:
+
+- observer size: 6,232,052 bytes
+- packet observations: 9,660, including repeated LC701A staging snapshots
+- unique raw packet forms: 35
+- DirInfo3 packet observations: 768
+- target candidates: 0
+- RxCom rows: 6
+- lottery rows: 10
+- BGM helper rows: 162
+- final audio queue rows: 2
+- hook errors: 0
+- parse errors: 0
+
+The run reached real slot state changes:
+
+```text
+body_state/body_mode: 1, 2, 3
+credit:               50, 49, 48, 47
+bet:                  0, 1, 2, 3
+input masks:          0, 8, 32, 524288
+```
+
+The complete command buffer contained ordinary `fnRxComDirInfo3` packet:
+
+```text
+raw packet = [19, 0, 8, 0, 0, 1, 1, 29]
+```
+
+This is not the target route.  The target remains:
+
+```text
+packet_id == 19
+raw_packet[1] == 8
+```
+
+The ordinary run has `raw_packet[2]=8`.  After `ID401::accessSubProcess()` byte
+reversal, that becomes callback payload byte 5, not byte 6, so it does not feed
+the proved `SdGmData+0x358=8` story-dispatch path.  All sampled SdGmData
+story-dispatch fields stayed zero.
+
+The same run did see outer slot sound activity:
+
+```text
+BGM helper calls: 162
+final queue sound_id: 9002
+final queue sound_id: 60
+```
+
+This proves normal slot play can request BGM helpers and final queue chunks, but
+it is not target SP Story evidence.  Therefore the target-scene BGM/bed gate is
+still open.  Do not say ac7114/ac7115/ac7116 have no BGM merely because old
+renders or forced-path captures lacked a separate BGM stream.
+
+For a human-readable project-distance summary, read:
+
+```text
+docs/HUMAN_PROGRESS_REPORT_2026-07-04.md
+```

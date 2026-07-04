@@ -159,6 +159,89 @@ bet        = 3
 
 which is the STOP-side state that should be used for the next longer capture.
 
+### Full physical-input spin after second A: loss
+
+A later run used the stable route recommended above: one lightweight observer
+plus ADB physical taps for BET x3, lever, and three stops.  No long
+`force_selector_probe --control-sequence` was used.
+
+Runtime output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704
+```
+
+Reusable parser:
+
+```text
+tools/frida_runtime_probe/summarize_lightweight_spin_probe.py
+```
+
+Parser output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v2.json
+```
+
+Result:
+
+```text
+observer bytes:            6,232,052
+packet observations:       9,660
+unique raw packet forms:   35
+DirInfo3 packet rows:      768
+target candidates:         0
+RxCom rows:                6
+lottery rows:              10
+BGM helper rows:           162
+final audio queue rows:    2
+hook errors:               0
+parse errors:              0
+```
+
+The run reached real slot input/state transitions:
+
+```text
+body_state/body_mode: 1, 2, 3
+credit:               50 -> 47
+bet:                  0 -> 3
+input masks:          0, 8, 32, 524288
+```
+
+The complete command buffer included the ordinary DirInfo3 packet:
+
+```text
+raw packet = [19, 0, 8, 0, 0, 1, 1, 29]
+callback0  = fnRxComDirInfo3
+callback1  = fnRxSubDirInfo3
+```
+
+This is still not the target story-dispatch candidate.  The value `8` is at raw
+byte 2, not raw byte 1.  After `ID401::accessSubProcess()` byte reversal, raw
+byte 2 becomes callback payload byte 5, not payload byte 6.  All sampled
+SdGmData story-dispatch fields stayed at zero in this run, including:
+
+```text
+SdGmData+0x130 = 0
+SdGmData+0x0a8 = 0
+SdGmData+0x184 = 0
+SdGmData+0x358 = 0
+SdGmData+0x13be = 0
+```
+
+The same run did observe natural outer slot sound activity:
+
+```text
+BGM helper calls: 162
+final queue sound_id: 9002
+final queue sound_id: 60
+```
+
+This proves the outer slot runtime can issue BGM helper requests and final
+OpenSL queue chunks during real play, but it is not target SP Story evidence.
+It should be treated as a reason to keep the target-scene BGM/bed gate open,
+not as proof that `ac7114/ac7115/ac7116` require or do not require extra BGM.
+
 ## Tooling change
 
 `tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now records:
@@ -174,6 +257,12 @@ which is the STOP-side state that should be used for the next longer capture.
 is_dirinfo3_lottery_dispatch_candidate =
   packet_id == 19 && raw_packet[1] == 8
 ```
+
+`tools/frida_runtime_probe/summarize_lightweight_spin_probe.py` summarizes
+lightweight JSONL captures into auditable JSON and CSV tables for packet,
+RxCom, lottery, BGM helper, queue, event-code, play-start, and slot-state data.
+Use it to compare future natural runs against the `packet_id=19 &&
+raw_packet[1]=8` target condition without redoing ad-hoc parsing.
 
 Use this probe for narrow runtime mechanism captures.  Do not use it as a
 renderer or production-output proof by itself.

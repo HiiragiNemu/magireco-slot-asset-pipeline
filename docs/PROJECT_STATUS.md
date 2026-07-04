@@ -16,6 +16,25 @@
 
 最新新增：
 
+- 2026-07-04 第二次 A: 丢失后继续推进：新增人类可读进度报告
+  `docs/HUMAN_PROGRESS_REPORT_2026-07-04.md`，明确当前距离最终 Bilibili
+  长片目标的工程差距。新增
+  `tools/frida_runtime_probe/summarize_lightweight_spin_probe.py`，用于把
+  `lightweight_spin_audio_probe.js` JSONL 固化解析为 packet/RxCom/lottery/BGM/
+  queue/event-code/slot-state JSON+CSV。最新可靠完整一局物理输入捕获位于
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704`，
+  解析输出 `summary_lightweight_spin_probe_v2.json` 显示：JSONL 6,232,052
+  bytes；9,660 条 packet 观测（含 staging 重复采样）；35 种唯一 raw packet；
+  `candidate_count=0`；768 条 DirInfo3 packet 观测；6 条 RxCom rows；10 条
+  lottery rows；162 条 BGM helper rows；2 条最终 audio queue rows；0 hook
+  error；0 parse error。普通自然一局的完整 command buffer 中仍是
+  `DirInfo3 raw [19,0,8,0,0,1,1,29]`，即 `raw_packet[2]=8` 而不是目标
+  `raw_packet[1]=8`。因此普通完整 spin 仍未进入已证明的
+  `fnRxComDirInfo3 payload[6]=8 -> SdGmData+0x358=8` story-dispatch route。
+  但同一 run 证明外层普通 slot BGM helper 和 OpenSL queue 机制活跃，最终
+  queue sound id 包括 `9002` 和 `60`；不能把旧渲染缺 BGM 解释为“游戏一定无
+  BGM”。下一步应继续解 LC701A 上游如何写出 `packet_id=19 && raw_packet[1]=8`，
+  而不是继续逐个 `ac` 视觉分类。
 - 2026-07-04 二次断电恢复：A: 再次丢失，且这次未重新恢复 2026-06-29 备份；
   继续只把 A: 当可删除 scratch。D: 和 C: 保持安全，最新 durable evidence 仍在
   `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence`。MuMu 重启后

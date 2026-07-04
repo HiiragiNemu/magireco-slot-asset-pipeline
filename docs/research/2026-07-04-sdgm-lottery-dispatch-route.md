@@ -345,6 +345,28 @@ an instrumentation proof; the next useful capture should start from or progress
 through STOP/result state and watch the LC701A queue until a `DirInfo3` packet is
 produced.
 
+Follow-up full physical-input capture after the second A: loss:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v2.json
+```
+
+This was a real observer + ADB tap spin, not the unstable long control-sequence
+route.  It reached slot states/modes `1/2/3`, bet `0..3`, credit `50..47`,
+and observed 2 final OpenSL queue rows plus 162 BGM helper rows with zero
+hook/parse errors.  It also captured 768 DirInfo3 packet observations, but
+`candidate_count=0`.  The complete ordinary command buffer contained:
+
+```text
+raw packet = [19, 0, 8, 0, 0, 1, 1, 29]
+```
+
+Again, this has `raw_packet[2]=8`, not `raw_packet[1]=8`.  Therefore it maps to
+callback payload byte 5 and does not feed the proved
+`payload[6]=8 -> SdGmData+0x358=8` route.  All sampled story-dispatch fields
+stayed zero in this ordinary spin.
+
 ## Tooling changes
 
 `tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now also snapshots
@@ -370,6 +392,10 @@ The same lightweight probe now records `ID401::getCmdBuf`,
 `LC701A_SLOT::SET_BANKBUFFER` command-buffer state.  It marks any copied packet
 with `packet_id == 19 && raw_packet[1] == 8` as a
 `is_dirinfo3_lottery_dispatch_candidate`.
+
+`tools/frida_runtime_probe/summarize_lightweight_spin_probe.py` now parses
+these lightweight captures into JSON/CSV tables and should be used for future
+natural-spin comparisons.
 
 `tools/frida_runtime_probe/sdgm_state_control_probe.js` adds the one-shot
 control action:
