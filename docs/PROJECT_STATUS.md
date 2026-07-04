@@ -2495,3 +2495,92 @@ ASM_0x77 reg byte 149 -> dst 0xf217
 下一步应使用同一增强 probe 捕获包含 DirInfo3 的结果阶段，以确定
 `raw_packet[1]` 对应 staging `0xf211` 从哪个 VM source address 复制而来，
 并比较 ordinary `raw[1]=0` 与目标 `raw[1]=8` 的上游条件。
+
+## 2026-07-04 追加：DirInfo3 source address 已进入可追踪状态
+
+增强 source/destination probe 随后命中 ordinary DirInfo3：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_dirinfo3_try_20260704_02
+```
+
+摘要：
+
+```text
+observer_bytes=10755212
+packet_count=10034
+unique_packet_count=29
+dirinfo3_packet_count=815
+candidate_count=0
+hook_error_count=0
+bgm_event_count=402
+queue_event_count=1
+slot_event_count=3988
+command_state_change_count=37
+```
+
+普通 DirInfo3：
+
+```text
+raw packet       [19,0,6,0,0,1,0,26]
+callback payload [26,0,1,0,0,6,0,19]
+```
+
+source address 归因：
+
+```text
+raw[0] 19: ASM_0x7e staging 0xf240 <- source 0xffef
+raw[2]  6: ASM_0x7e staging 0xf242 <- source 0xfff1
+raw[5]  1: ASM_0x7e staging 0xf245 <- source 0xfff4
+raw[7] 26: ASM_0x77 staging 0xf247 <- register byte
+```
+
+`raw[1]` 没有出现在 change-only 表中，因为普通值为 `0`，写 0 到 0 不会改变
+staging signature。为解决这个盲区，`lightweight_spin_audio_probe.js` 现在新增
+显式 `*_staging_write` event：只要 `ASM_0x7e/0x77` 写入 command staging
+VM 范围，就输出一行，即便字节没有变化。
+
+`summarize_lightweight_spin_probe.py` 新增：
+
+```text
+summary_<run>_opcode_staging_writes.csv
+```
+
+并加入十六进制地址列：
+
+```text
+dst_addr_hex
+src_addr_hex
+packet_offset
+packet_byte_index
+is_dirinfo3_raw_byte1
+is_dirinfo3_raw_byte2
+```
+
+验证 run：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_01
+```
+
+该验证 run 未进入 DirInfo3，但 v2 CSV 已证明 staging write 表工作正常：
+
+```text
+0xf210 <- 0xfff3 byte 4
+0xf211 <- 0xfff4 byte 1
+0xf212 <- 0xfff5 byte 3
+0xf213 <- 0xfff6 byte 156
+0xf214 <- 0xfff7 byte 240
+0xf215 <- 0xfff8 byte 1
+0xf216 <- 0xfff9 byte 0
+0xf217 <- ASM_0x77 register byte
+```
+
+下一步目标更具体：
+
+```text
+再次捕获包含 DirInfo3 的 result window；
+在 opcode_staging_writes.csv 中过滤 is_dirinfo3_raw_byte1=True；
+确认 ordinary raw[1]=0 的 source address；
+再寻找什么状态使该 source byte 变成目标值 8。
+```

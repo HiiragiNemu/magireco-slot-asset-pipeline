@@ -2564,3 +2564,93 @@ Next run should aim for a longer result-window capture or a state where
 DirInfo3 is known to occur, using the same enhanced fields.  When DirInfo3
 appears, inspect whether packet slot `0xf211` / raw byte 1 is copied from a
 specific VM source address and why it remains `0` in ordinary runs.
+
+### 2026-07-04 latest: DirInfo3 source address found and zero-write logging added
+
+A longer result-window capture with the enhanced source/destination fields did
+reach ordinary DirInfo3:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_dirinfo3_try_20260704_02
+```
+
+Summary:
+
+```text
+observer bytes:                  10,755,212
+packet observations:             10,034
+unique raw packet forms:         29
+DirInfo3 packet observations:    815
+target candidates:               0
+hook errors:                     0
+BGM helper rows:                 402
+final queue rows:                1
+command-state-change rows:       37
+```
+
+The packet remained ordinary non-target:
+
+```text
+raw packet       = [19, 0, 6, 0, 0, 1, 0, 26]
+callback payload = [26, 0, 1, 0, 0, 6, 0, 19]
+```
+
+Important source-address attribution:
+
+```text
+line 6409: ASM_0x7e  staging 0xf240/raw[0] <- source 0xffef, byte 19
+line 6414: ASM_0x7e  staging 0xf242/raw[2] <- source 0xfff1, byte 6
+line 6421: ASM_0x7e  staging 0xf245/raw[5] <- source 0xfff4, byte 1
+line 6446: ASM_0x77  staging 0xf247/raw[7] <- register byte 26
+```
+
+Raw byte 1 did not appear in the change-only table because ordinary raw byte 1
+is `0` and writing `0` to an already-zero staging byte does not change the
+staging signature.  To close that gap, the probe now emits explicit
+`*_staging_write` rows for every `ASM_0x7e/0x77` write into the command staging
+VM range, even when the value does not change.
+
+New summarizer output:
+
+```text
+summary_<run>_opcode_staging_writes.csv
+```
+
+It includes:
+
+```text
+dst_addr_hex
+src_addr_hex
+packet_offset
+packet_byte_index
+src_byte_before / src_reg_byte_before
+dst_byte_before / dst_byte_after
+is_dirinfo3_raw_byte1
+is_dirinfo3_raw_byte2
+```
+
+Validation run for this new CSV:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_01
+```
+
+That validation run did not reach DirInfo3, but its v2 CSV shows the intended
+ordinary packet mapping:
+
+```text
+0xf210 <- 0xfff3 byte 4
+0xf211 <- 0xfff4 byte 1
+0xf212 <- 0xfff5 byte 3
+0xf213 <- 0xfff6 byte 156
+0xf214 <- 0xfff7 byte 240
+0xf215 <- 0xfff8 byte 1
+0xf216 <- 0xfff9 byte 0
+0xf217 <- ASM_0x77 register byte
+```
+
+Next highest-value action: run the new `*_staging_write` probe until DirInfo3
+appears again.  Then inspect the row where `is_dirinfo3_raw_byte1=True`.  This
+should identify the ordinary raw byte 1 source address and make the target
+condition (`raw[1]=8`) a concrete VM source-byte problem instead of a black-box
+packet problem.

@@ -9,6 +9,8 @@
 // observe what the game requests".
 
 const moduleName = "libGameProc.so";
+const lc701aCommandStagingVmBase = 0xf210;
+const lc701aCommandStagingVmEnd = lc701aCommandStagingVmBase + 0xc00;
 
 let moduleValue = null;
 let sdGmCallback = null;
@@ -316,6 +318,56 @@ function describeLC701AOpcodeRegisters(thisPointer) {
   };
 }
 
+function isLC701ACommandStagingAddress(addressValue) {
+  return (
+    addressValue !== null
+    && addressValue >= lc701aCommandStagingVmBase
+    && addressValue < lc701aCommandStagingVmEnd
+  );
+}
+
+function describeLC701AOpcodeStagingWrite(kind, thisPointer, stateBefore) {
+  if (thisPointer === null || thisPointer.isNull() || !stateBefore) {
+    return null;
+  }
+  let dstAddress = null;
+  const fields = {};
+  if (kind === "lc701a_opcode_0x7e") {
+    dstAddress = stateBefore.lc701a_asm_7e_dst_addr_u16_at_0x06;
+    if (!isLC701ACommandStagingAddress(dstAddress)) {
+      return null;
+    }
+    fields.lc701a_staging_write_opcode = "0x7e";
+    fields.lc701a_staging_write_src_addr = stateBefore.lc701a_asm_7e_src_addr_u16_at_0x08;
+    fields.lc701a_staging_write_src_byte_before = stateBefore.lc701a_asm_7e_src_byte;
+    fields.lc701a_staging_write_dst_byte_before = stateBefore.lc701a_asm_7e_dst_byte;
+    fields.lc701a_staging_write_count_before = stateBefore.lc701a_asm_7e_count_u8_at_0x05;
+  } else if (kind === "lc701a_opcode_0x77") {
+    dstAddress = stateBefore.lc701a_asm_77_dst_addr_u16_at_0x08;
+    if (!isLC701ACommandStagingAddress(dstAddress)) {
+      return null;
+    }
+    fields.lc701a_staging_write_opcode = "0x77";
+    fields.lc701a_staging_write_src_reg_byte_before = stateBefore.lc701a_asm_77_src_reg_u8_at_0x03;
+    fields.lc701a_staging_write_dst_byte_before = stateBefore.lc701a_asm_77_dst_byte;
+  } else {
+    return null;
+  }
+  const byteOffset = dstAddress - lc701aCommandStagingVmBase;
+  const packetOffset = Math.floor(byteOffset / 8) * 8;
+  const packetByteIndex = byteOffset % 8;
+  return Object.assign(fields, {
+    lc701a_staging_write_dst_addr: dstAddress,
+    lc701a_staging_write_byte_offset: byteOffset,
+    lc701a_staging_write_packet_offset: packetOffset,
+    lc701a_staging_write_packet_byte_index: packetByteIndex,
+    lc701a_staging_write_dst_byte_after: readLC701AVmByteSafe(thisPointer, dstAddress),
+    lc701a_staging_write_in_dirinfo3_packet_slot: packetOffset === 48,
+    lc701a_staging_write_is_dirinfo3_raw_byte1: packetOffset === 48 && packetByteIndex === 1,
+    lc701a_staging_write_is_dirinfo3_raw_byte2: packetOffset === 48 && packetByteIndex === 2,
+  });
+}
+
 function describeID401CommandState(thisPointer) {
   if (thisPointer === null || thisPointer.isNull()) {
     return { id401_lc701a_this: "0x0" };
@@ -375,6 +427,25 @@ function attachID401CommandStateChange(symbol, kind) {
       onLeave(retval) {
         const stateAfter = describeID401CommandState(this.thisPointer);
         const signatureAfter = id401CommandBufferSignature(stateAfter);
+        const stagingWrite = describeLC701AOpcodeStagingWrite(kind, this.thisPointer, this.stateBefore);
+        if (stagingWrite !== null) {
+          emit(
+            kind + "_staging_write",
+            Object.assign(
+              {
+                symbol,
+                address: address.toString(),
+                retval_i32: toI32(retval),
+                pc_before: this.stateBefore.id401_pc_u16_at_0x20,
+                pc_after: stateAfter.id401_pc_u16_at_0x20,
+                pending_len_before: this.stateBefore.id401_pending_len_u8_at_0xf0fe,
+                pending_len_after: stateAfter.id401_pending_len_u8_at_0xf0fe,
+              },
+              stagingWrite,
+              describeReturnAddress(this.returnAddressValue)
+            )
+          );
+        }
         if (signatureAfter !== this.signatureBefore) {
           emit(
             kind + "_command_state_change",

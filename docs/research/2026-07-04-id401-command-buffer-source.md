@@ -727,3 +727,135 @@ around `0xfff3`, while command staging begins at `0xf210`.  In future DirInfo3
 runs, the critical raw byte 1 is staging address `0xf211`.  The next concrete
 question is which source address feeds `0xf211` for packet id 19, and what game
 state changes that source byte from ordinary `0` to target `8`.
+
+## 2026-07-04 follow-up: DirInfo3 source address and zero-write gap
+
+The enhanced source/destination fields were next used in a run that did reach
+ordinary DirInfo3:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_dirinfo3_try_20260704_02
+```
+
+Summary:
+
+```text
+observer_bytes = 10,755,212
+packet_count = 10,034
+unique_packet_count = 29
+dirinfo3_packet_count = 815
+candidate_count = 0
+hook_error_count = 0
+bgm_event_count = 402
+queue_event_count = 1
+slot_event_count = 3,988
+command_state_change_count = 37
+```
+
+Observed ordinary DirInfo3:
+
+```text
+raw packet       = [19, 0, 6, 0, 0, 1, 0, 26]
+callback payload = [26, 0, 1, 0, 0, 6, 0, 19]
+```
+
+Opcode source attribution:
+
+```text
+line 6409:
+  ASM_0x7e
+  dst staging addr = 0xf240
+  src VM addr      = 0xffef
+  src byte         = 19
+  writes raw[0]
+
+line 6414:
+  ASM_0x7e
+  dst staging addr = 0xf242
+  src VM addr      = 0xfff1
+  src byte         = 6
+  writes raw[2]
+
+line 6421:
+  ASM_0x7e
+  dst staging addr = 0xf245
+  src VM addr      = 0xfff4
+  src byte         = 1
+  writes raw[5]
+
+line 6446:
+  ASM_0x77
+  dst staging addr = 0xf247
+  register byte    = 26
+  writes raw[7]
+```
+
+This run explains the ordinary variable byte `raw[2]=6` as a concrete VM source
+byte at `0xfff1`.  It also reveals a measurement gap: `raw[1]=0` is likely
+written by `ASM_0x7e`, but writing zero into an already-zero staging byte does
+not change the staging signature, so the change-only table omits it.
+
+To cover that gap, `lightweight_spin_audio_probe.js` now emits explicit
+staging-write events for every `ASM_0x7e` or `ASM_0x77` write whose destination
+VM address is in command staging range `0xf210..0xfe0f`, regardless of whether
+the resulting byte value changes.
+
+New event kinds:
+
+```text
+lc701a_opcode_0x7e_staging_write
+lc701a_opcode_0x77_staging_write
+```
+
+New summarizer table:
+
+```text
+summary_<run>_opcode_staging_writes.csv
+```
+
+Important columns:
+
+```text
+dst_addr_hex
+src_addr_hex
+byte_offset
+packet_offset
+packet_byte_index
+src_byte_before
+src_reg_byte_before
+dst_byte_before
+dst_byte_after
+is_dirinfo3_raw_byte1
+is_dirinfo3_raw_byte2
+```
+
+Validation run for the new staging-write table:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_01
+```
+
+This validation run did not reach DirInfo3, but
+`summary_light_lc701a_staging_write_dirinfo3_try_20260704_01_v2_opcode_staging_writes.csv`
+shows the new table works:
+
+```text
+0xf210 <- 0xfff3, byte 4
+0xf211 <- 0xfff4, byte 1
+0xf212 <- 0xfff5, byte 3
+0xf213 <- 0xfff6, byte 156
+0xf214 <- 0xfff7, byte 240
+0xf215 <- 0xfff8, byte 1
+0xf216 <- 0xfff9, byte 0
+0xf217 <- ASM_0x77 register byte
+```
+
+Next proof target:
+
+```text
+Capture a DirInfo3 result window with the staging-write table enabled.
+Filter opcode_staging_writes.csv for is_dirinfo3_raw_byte1=True.
+That row should expose the ordinary source address for raw[1]=0.
+Then search the LC701A source-state writer that can change that source byte to
+8, which is the target condition for the proved SP Story lottery dispatch.
+```

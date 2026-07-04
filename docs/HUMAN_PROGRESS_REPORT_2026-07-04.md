@@ -375,3 +375,31 @@ For a normal packet, `ASM_0x7e` copied bytes from source VM addresses
 `0xfff3..0xfff8` into command staging `0xf210..0xf215`, and `ASM_0x77` wrote
 the tail byte at `0xf217`.  The next target run should use this same enhanced
 probe and keep the run window around the result/DirInfo3 phase.
+
+The enhanced probe was then used on a longer result-window spin and did reach
+ordinary DirInfo3 again:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_dirinfo3_try_20260704_02
+```
+
+The ordinary packet stayed non-target:
+
+```text
+raw packet = [19, 0, 6, 0, 0, 1, 0, 26]
+```
+
+But the source address for the variable byte is now known:
+
+```text
+raw[0] 19: staging 0xf240 <- source 0xffef
+raw[2]  6: staging 0xf242 <- source 0xfff1
+raw[5]  1: staging 0xf245 <- source 0xfff4
+raw[7] 26: staging 0xf247 <- ASM_0x77 register byte
+```
+
+Because the previous change-only hook can still omit "write zero to already
+zero" events, the probe now also emits `*_staging_write` rows for every
+`ASM_0x7e/0x77` write into command staging.  The new
+`opcode_staging_writes.csv` includes hex source/destination addresses and can
+directly expose the ordinary raw byte 1 source even when its value remains 0.

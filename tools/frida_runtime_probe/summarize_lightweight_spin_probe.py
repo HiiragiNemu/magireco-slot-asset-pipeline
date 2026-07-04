@@ -292,6 +292,15 @@ def state_field(state: dict[str, Any] | None, key: str) -> Any:
     return state.get(key)
 
 
+def hex_int(value: Any) -> str:
+    if value in (None, ""):
+        return ""
+    try:
+        return f"0x{int(value):x}"
+    except (TypeError, ValueError):
+        return ""
+
+
 def payload_bytes(payload: dict[str, Any], prefix: str) -> list[int] | None:
     values: list[int] = []
     for idx in range(8):
@@ -328,6 +337,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
     play_start_rows: list[dict[str, Any]] = []
     slot_rows: list[dict[str, Any]] = []
     command_state_change_rows: list[dict[str, Any]] = []
+    opcode_staging_write_rows: list[dict[str, Any]] = []
     user_label_enters: dict[int, dict[str, Any]] = {}
     lc701a_transition_rows: list[dict[str, Any]] = []
     lc701a_enter_sequence_rows: list[dict[str, Any]] = []
@@ -563,6 +573,40 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
                 }
             )
 
+        if kind.endswith("_staging_write"):
+            dst_addr = payload.get("lc701a_staging_write_dst_addr")
+            src_addr = payload.get("lc701a_staging_write_src_addr")
+            opcode_staging_write_rows.append(
+                {
+                    "line": line,
+                    "rel_s": t,
+                    "kind": kind,
+                    "symbol": payload.get("symbol"),
+                    "return_symbol": payload.get("return_symbol"),
+                    "retval_i32": payload.get("retval_i32"),
+                    "pc_before": payload.get("pc_before"),
+                    "pc_after": payload.get("pc_after"),
+                    "pending_len_before": payload.get("pending_len_before"),
+                    "pending_len_after": payload.get("pending_len_after"),
+                    "opcode": payload.get("lc701a_staging_write_opcode"),
+                    "dst_addr": dst_addr,
+                    "dst_addr_hex": hex_int(dst_addr),
+                    "byte_offset": payload.get("lc701a_staging_write_byte_offset"),
+                    "packet_offset": payload.get("lc701a_staging_write_packet_offset"),
+                    "packet_byte_index": payload.get("lc701a_staging_write_packet_byte_index"),
+                    "src_addr": src_addr,
+                    "src_addr_hex": hex_int(src_addr),
+                    "src_byte_before": payload.get("lc701a_staging_write_src_byte_before"),
+                    "src_reg_byte_before": payload.get("lc701a_staging_write_src_reg_byte_before"),
+                    "dst_byte_before": payload.get("lc701a_staging_write_dst_byte_before"),
+                    "dst_byte_after": payload.get("lc701a_staging_write_dst_byte_after"),
+                    "count_before": payload.get("lc701a_staging_write_count_before"),
+                    "in_dirinfo3_packet_slot": payload.get("lc701a_staging_write_in_dirinfo3_packet_slot"),
+                    "is_dirinfo3_raw_byte1": payload.get("lc701a_staging_write_is_dirinfo3_raw_byte1"),
+                    "is_dirinfo3_raw_byte2": payload.get("lc701a_staging_write_is_dirinfo3_raw_byte2"),
+                }
+            )
+
         if kind == "id401_user_label_work_enter":
             call_count = payload.get("high_level_call_count_for_kind")
             if isinstance(call_count, int):
@@ -723,6 +767,17 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
             1 for row in command_state_change_rows if row.get("candidate_after")
         ),
         "command_state_change_first": small_sample(command_state_change_rows, 80),
+        "opcode_staging_write_count": len(opcode_staging_write_rows),
+        "opcode_staging_write_kind_counts": dict(
+            Counter(row["kind"] for row in opcode_staging_write_rows).most_common()
+        ),
+        "opcode_staging_write_dirinfo3_byte1_count": sum(
+            1 for row in opcode_staging_write_rows if row.get("is_dirinfo3_raw_byte1")
+        ),
+        "opcode_staging_write_dirinfo3_byte2_count": sum(
+            1 for row in opcode_staging_write_rows if row.get("is_dirinfo3_raw_byte2")
+        ),
+        "opcode_staging_write_first": small_sample(opcode_staging_write_rows, 80),
         "lc701a_transition_count": len(lc701a_transition_rows),
         "lc701a_transition_changed_count": sum(
             1 for row in lc701a_transition_rows if row.get("changed_bytes")
@@ -757,6 +812,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
         "play_start": play_start_rows,
         "slot": slot_rows,
         "command_state_changes": command_state_change_rows,
+        "opcode_staging_writes": opcode_staging_write_rows,
         "lc701a_transitions": lc701a_transition_rows,
         "lc701a_enter_sequence": lc701a_enter_sequence_rows,
     }
@@ -890,6 +946,38 @@ def main() -> None:
             "dirinfo3_byte1_after",
             "dirinfo3_byte2_after",
             "candidate_after",
+        ],
+    )
+    write_csv(
+        out_dir / f"{prefix}_opcode_staging_writes.csv",
+        tables["opcode_staging_writes"],
+        [
+            "line",
+            "rel_s",
+            "kind",
+            "symbol",
+            "return_symbol",
+            "retval_i32",
+            "pc_before",
+            "pc_after",
+            "pending_len_before",
+            "pending_len_after",
+            "opcode",
+            "dst_addr",
+            "dst_addr_hex",
+            "byte_offset",
+            "packet_offset",
+            "packet_byte_index",
+            "src_addr",
+            "src_addr_hex",
+            "src_byte_before",
+            "src_reg_byte_before",
+            "dst_byte_before",
+            "dst_byte_after",
+            "count_before",
+            "in_dirinfo3_packet_slot",
+            "is_dirinfo3_raw_byte1",
+            "is_dirinfo3_raw_byte2",
         ],
     )
     write_csv(
