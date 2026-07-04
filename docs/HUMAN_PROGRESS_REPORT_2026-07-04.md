@@ -194,3 +194,51 @@ is to decode the generic scheduler:
 4. In that same run, capture SP Story object state and final OpenSL queue rows.
 5. Only then render/promote Bilibili-facing long editions.
 
+## Same-day update: what improved after deeper LC701A tracing
+
+A new static/tooling pass reduced one important uncertainty: the command packet
+source is no longer being treated as an `ac` folder problem.  It is an LC701A
+VM / slot-firmware byte-builder problem.
+
+What changed:
+
+- The disassembly tooling now resolves AArch64 PLT imports correctly.  This
+  avoids wrong call labels and gives reliable helper names for the LC701A path.
+- The ID401 packet queue was traced one level further upstream:
+
+  ```text
+  LC701A VM/helper execution
+    -> staging bytes at LC701A_SLOT+0xf298
+    -> enqueue block in USER_LABEL_WORK/SET_BANKBUFFER
+    -> command queue at LC701A_SLOT+0x200ee
+    -> ID401::getCmdBuf
+    -> CSlotBody::analysPacket
+    -> ID401::accessSubProcess
+    -> fnRxComDirInfo3
+  ```
+
+- The ordinary non-target DirInfo3 packet was observed being built
+  byte-by-byte.  The trace method works; it just has not yet seen the target
+  packet where raw byte 1 is `8`.
+- A new Frida probe path now records only LC701A helper calls that actually
+  change the ID401 staging/queue signature.  This should reduce wasted output
+  and token cost on the next natural spin capture.
+
+Updated distance estimate:
+
+- Already solid: repo branch discipline, durable D:/C: evidence policy,
+  invalidation of bad v18 visual/audio matching, user-confirmed
+  ac7114/ac7115/ac7116 voice/subtitle correctness, and downstream
+  `DirInfo3 -> SdGmData -> story dispatch` proof.
+- Partially solved: generic scheduler.  We can see packet construction and
+  dispatch, but still need the natural condition that produces
+  `packet_id=19 && raw_packet[1]=8`.
+- Not solved enough for mass publication: final BGM/bed truth and same-scene
+  long-edition promotion for all families.
+
+Practical answer to "how far are we": the project is past basic recovery and
+past blind visual matching, but still before safe mass rendering.  The remaining
+work is one major mechanism closure plus a systematic re-audit/render pass.
+Once the natural scheduler/BGM gate is closed, producing Bilibili long videos is
+mainly batch pipeline work; before that, batch rendering risks creating more
+wrong but watchable files.

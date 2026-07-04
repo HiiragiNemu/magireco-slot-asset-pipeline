@@ -27,6 +27,7 @@ except ImportError:  # pragma: no cover - environment dependent
 
 SHF_EXECINSTR = 0x4
 SHT_SYMTAB = 2
+SHT_RELA = 4
 SHT_DYNSYM = 11
 STT_FUNC = 2
 
@@ -126,6 +127,54 @@ def load_symbols(blob: bytes, sections: list[dict[str, Any]]) -> list[dict[str, 
                 }
             )
     return sorted(symbols, key=lambda row: (int(row["address"]), int(row["size"])))
+
+
+def resolve_plt_imports(blob: bytes, sections: list[dict[str, Any]]) -> dict[int, str]:
+    """Return AArch64 PLT entry address -> imported symbol name.
+
+    The stripped MagiaReco binaries still carry dynamic relocation metadata, but
+    ordinary symbol-range lookup can mislabel PLT entries as the nearest earlier
+    `.text` symbol.  AArch64 PLT entries are 16 bytes after the initial resolver
+    header; `.rela.plt` entries appear in the same order.
+    """
+
+    by_name = {str(section["name"]): section for section in sections}
+    plt = by_name.get(".plt")
+    rela = by_name.get(".rela.plt")
+    if plt is None or rela is None or int(rela["type"]) != SHT_RELA:
+        return {}
+    dynsym = sections[int(rela["link"])]
+    if int(dynsym["type"]) != SHT_DYNSYM:
+        return {}
+    dynstr = sections[int(dynsym["link"])]
+    strings = blob[dynstr["offset"] : dynstr["offset"] + dynstr["size"]]
+    dynsym_entsize = int(dynsym["entsize"] or 24)
+    rela_entsize = int(rela["entsize"] or 24)
+    if dynsym_entsize <= 0 or rela_entsize <= 0:
+        return {}
+
+    def dynsym_name(index: int) -> str:
+        offset = int(dynsym["offset"]) + index * dynsym_entsize
+        if offset + 24 > len(blob):
+            return ""
+        st_name = struct.unpack_from("<I", blob, offset)[0]
+        if st_name >= len(strings):
+            return ""
+        return read_cstring(strings, st_name)
+
+    rows: dict[int, str] = {}
+    plt_entry = int(plt["addr"]) + 0x20
+    for index, offset in enumerate(
+        range(int(rela["offset"]), int(rela["offset"]) + int(rela["size"]), rela_entsize)
+    ):
+        if offset + 24 > len(blob):
+            break
+        _r_offset, r_info, _r_addend = struct.unpack_from("<QQq", blob, offset)
+        symbol_index = int(r_info >> 32)
+        name = dynsym_name(symbol_index)
+        if name:
+            rows[plt_entry + index * 0x10] = name
+    return rows
 
 
 def containing_symbol(symbols: list[dict[str, Any]], address: int) -> dict[str, Any] | None:

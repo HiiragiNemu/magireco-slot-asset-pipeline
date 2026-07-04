@@ -298,6 +298,75 @@ function describeID401CommandState(thisPointer) {
   };
 }
 
+function id401CommandPacketSignature(packets) {
+  if (!packets || !packets.length) {
+    return "";
+  }
+  const rows = [];
+  for (let index = 0; index < packets.length; index += 1) {
+    const packet = packets[index];
+    rows.push(String(packet.offset) + ":" + packet.raw.join(","));
+  }
+  return rows.join("|");
+}
+
+function id401CommandBufferSignature(state) {
+  if (!state) {
+    return "";
+  }
+  return [
+    state.id401_pending_len_u8_at_0xf0fe,
+    state.id401_command_queue_flag_u8_at_0x200ed,
+    state.id401_command_queue_tail_u16_at_0x20cee,
+    id401CommandPacketSignature(state.id401_staging_packets_at_0xf298 || []),
+    id401CommandPacketSignature(state.id401_queue_packets_at_0x200ee || []),
+  ].join("||");
+}
+
+function attachID401CommandStateChange(symbol, kind) {
+  const address = findExport(symbol);
+  if (address === null) {
+    emit("hook_unavailable", { hook_kind: kind, symbol });
+    return null;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        this.thisPointer = args[0];
+        this.returnAddressValue = this.returnAddress;
+        this.stateBefore = describeID401CommandState(args[0]);
+        this.signatureBefore = id401CommandBufferSignature(this.stateBefore);
+      },
+      onLeave(retval) {
+        const stateAfter = describeID401CommandState(this.thisPointer);
+        const signatureAfter = id401CommandBufferSignature(stateAfter);
+        if (signatureAfter !== this.signatureBefore) {
+          emit(
+            kind + "_command_state_change",
+            Object.assign(
+              {
+                symbol,
+                address: address.toString(),
+                retval_i32: toI32(retval),
+                command_signature_before: this.signatureBefore,
+                command_signature_after: signatureAfter,
+                state_before: this.stateBefore,
+                state_after: stateAfter,
+              },
+              describeReturnAddress(this.returnAddressValue)
+            )
+          );
+        }
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", { hook_kind: kind, symbol, address: address.toString(), error: String(error) });
+    return null;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString(), command_state_change_only: true });
+  return address;
+}
+
 function describeID401CopiedCommandBuffer(bufferPointer, lengthValue) {
   if (bufferPointer === null || bufferPointer.isNull()) {
     return { id401_command_buffer_pointer: "0x0", id401_command_buffer_packets: [] };
@@ -563,6 +632,23 @@ function installStoryHooks() {
         state_after: fields && fields.state_before ? describeID401CommandState(ptr(fields.state_before.id401_lc701a_this)) : {},
       };
     },
+  });
+  [
+    ["_ZN5ID4017CLC701A5_OUTIEib", "lc701a_outi"],
+    ["_ZN5ID4017CLC701A6_OUTICEib", "lc701a_outic"],
+    ["_ZN5ID4017CLC701A3_INEv", "lc701a_in"],
+    ["_ZN5ID4017CLC701A4_INIEib", "lc701a_ini"],
+    ["_ZN5ID4017CLC701A5_INICEib", "lc701a_inic"],
+    ["_ZN5ID4017CLC701A3_JPEt", "lc701a_jp"],
+    ["_ZN5ID4017CLC701A4_RETEv", "lc701a_ret"],
+    ["_ZN5ID4017CLC701A6_RETEXEv", "lc701a_retex"],
+    ["_ZN5ID4017CLC701A8ASM_0xA7Ev", "lc701a_asm_a7"],
+    ["_ZN5ID4017CLC701A8ASM_0xAFEv", "lc701a_asm_af"],
+    ["_ZN5ID4017CLC701A8ASM_0xF8Ev", "lc701a_asm_f8"],
+    ["_ZN5ID4017CLC701A15SET_ENC_SUBFUNCEv", "lc701a_set_enc_subfunc"],
+    ["_ZN5ID4017CLC701A17RESET_ENC_SUBFUNCEv", "lc701a_reset_enc_subfunc"],
+  ].forEach((entry) => {
+    attachID401CommandStateChange(entry[0], entry[1]);
   });
   attachSignal("_ZN5ID40116accessSubProcessEPh", "id401_access_subprocess", (args) => {
     const fields = {

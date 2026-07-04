@@ -2170,3 +2170,55 @@ caller            = CSlotBody::analysPacket()+0x2b4
 注意：全局 raw `+0x358` offset 扫描会混入
 `C_ObjStageAT_SP_Story+0x358` 这类非 SdGmData 字段。不要把 raw write hit
 当成 SdGmData 写入源，除非基址被证明来自 `fnGetAddrSdGmData()`。
+
+## 2026-07-04 追加：ID401/LC701A 上游 byte-builder 进展
+
+本轮在正确分支 `codex/corrected-runtime-pipeline` 上继续推进，不使用 A:
+作为证据源。新增结论写入：
+
+```text
+docs/research/2026-07-04-id401-command-buffer-source.md
+```
+
+关键变化：
+
+- 静态反汇编工具已修正 AArch64 PLT 解析。此前 nearest-symbol 方式会把
+  PLT 调用误标为无关符号；现在通过 `.rela.plt/.dynsym/.dynstr` 解析真实
+  import 名称。
+- `LC701A_SLOT::USER_LABEL_WORK()` 被确认是基于 `this+0x20` 的 LC701A PC
+  dispatch，不是按 ac 后缀或静态列表选择素材。
+- PC `0x58a`、`0x1156` 以及 `SET_BANKBUFFER()` 进入同一个 enqueue block：
+  从 `this+0xf298` / `this+0xf0fe` 把 staging command bytes 复制到
+  `this+0x200ee` queue，再清空 staging。
+- 重新汇总完整 spin JSONL 后，`USER_LABEL_WORK` enter/leave 内部没有
+  staging 变化；变化发生在连续 enter snapshot 之间，说明 packet 是由 LC701A
+  VM/helper 执行逐字节构建。
+- 普通 DirInfo3 包 `[19, 0, 8, 0, 0, 1, 1, 29]` 的构建已能定位到 byte
+  sequence：byte 48 开新包，byte 50 写入 `raw[2]=8`，后续 byte 53/54/55
+  写入 `1/1/29`。这仍然不是目标；目标仍是 `packet_id=19 &&
+  raw_packet[1]=8`。
+
+新增/更新工具：
+
+```text
+tools/frida_runtime_probe/survey_aarch64_xrefs.py
+tools/frida_runtime_probe/disassemble_aarch64_functions.py
+tools/frida_runtime_probe/summarize_lightweight_spin_probe.py
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+```
+
+新的 `lightweight_spin_audio_probe.js` 追加 LC701A command-state-change hook：
+只在 `_OUTI/_OUTIC/_IN/_INI/_INIC/_JP/_RET/_RETEX/ASM_0xA7/ASM_0xAF/ASM_0xF8/
+SET_ENC_SUBFUNC/RESET_ENC_SUBFUNC` 导致 ID401 staging 或 queue signature
+变化时输出事件。下一次自然 spin 应使用这个低噪声 hook 直接证明是谁写入
+DirInfo3 `raw_packet[1]` 或 `raw_packet[2]`。
+
+对最终目标的影响：
+
+- 人工逐个视觉分类不是可扩展路线，已继续转向游戏自身 packet/scheduler
+  机制。
+- 距离最终 Bilibili 长片仍差一层关键闭环：自然运行时从 LC701A packet
+  producer 到 SP Story stage/selector，再到最终 OpenSL 声音队列和可能的
+  BGM/bed。
+- 已通过用户听检的 ac7114/ac7115/ac7116 语音/字幕结果仍可保留为强样本，
+  但最终长片 promotion 仍需 BGM/outer-flow 证据门。

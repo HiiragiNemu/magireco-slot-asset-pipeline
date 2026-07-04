@@ -2183,3 +2183,69 @@ For a human-readable project-distance summary, read:
 ```text
 docs/HUMAN_PROGRESS_REPORT_2026-07-04.md
 ```
+
+### 2026-07-04 follow-up after PLT/static correction
+
+Do not trust old static disassembly labels that identify PLT calls by nearest
+containing symbol.  The tools now resolve AArch64 PLT imports from
+`.rela.plt/.dynsym/.dynstr`, and this changes the interpretation of the LC701A
+code path.  The important helper calls are:
+
+```text
+memset
+memcpy
+ID401::CLC701A::_JP(unsigned short)
+ID401::CLC701A::_RET()
+ID401::CLC701A::ASM_0xA7()
+ID401::CLC701A::ASM_0xF8()
+ID401::CLC701A::ASM_0xAF()
+ID401::CLC701A::SET_ENC_SUBFUNC()
+ID401::CLC701A::RESET_ENC_SUBFUNC()
+ID401::fnGameLot_Force_TPL_Request()
+ID401::fnGameLot_Force_TPL_Reset()
+```
+
+`USER_LABEL_WORK()` is a LC701A PC dispatch (`this+0x20`).  PC `0x58a`, PC
+`0x1156`, and `SET_BANKBUFFER()` copy staging bytes from `this+0xf298` /
+`this+0xf0fe` into queue `this+0x200ee`.  Therefore the remaining producer-side
+problem is inside the LC701A VM/helper execution before this copy, not in
+`CSlotBody::analysPacket()`.
+
+Re-run summary output:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v4.json
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v4_lc701a_enter_sequence.csv
+```
+
+Observed facts:
+
+- `USER_LABEL_WORK` enter-sequence rows: 2448
+- rows where staging changed: 32
+- enter/leave staging changes: 0
+- target candidate count: 0
+
+The ordinary DirInfo3 packet was built byte-by-byte between consecutive
+`USER_LABEL_WORK` enter snapshots:
+
+```text
+19 0 0 0 0 0 0 0
+19 0 8 0 0 0 0 0
+19 0 8 0 0 1 0 0
+19 0 8 0 0 1 1 0
+19 0 8 0 0 1 1 29
+```
+
+This proves the trace method works, but the target remains raw byte 1:
+
+```text
+packet_id == 19 && raw_packet[1] == 8
+```
+
+Next run should use the updated
+`tools/frida_runtime_probe/lightweight_spin_audio_probe.js`; it now has
+low-noise LC701A command-state-change hooks for `_OUTI/_OUTIC/_IN/_INI/_INIC`,
+`_JP/_RET/_RETEX`, `ASM_0xA7/0xAF/0xF8`, and enc-subfunc toggles.  These hooks
+only emit when the ID401 staging or queue signature changes.  Use them to find
+the exact helper responsible for writing DirInfo3 raw byte 1/2 during a natural
+spin.

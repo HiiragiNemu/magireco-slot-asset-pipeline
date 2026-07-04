@@ -30,6 +30,7 @@ from survey_aarch64_xrefs import (
     elf_sections,
     load_symbols,
     parse_int,
+    resolve_plt_imports,
     vaddr_to_file_offset,
 )
 
@@ -73,6 +74,7 @@ def disassemble_function(
     blob: bytes,
     sections: list[dict[str, Any]],
     symbols: list[dict[str, Any]],
+    plt_imports: dict[int, str],
     symbol: dict[str, Any],
     override_size: int | None,
 ) -> tuple[list[str], list[dict[str, Any]]]:
@@ -89,7 +91,7 @@ def disassemble_function(
         if branch is not None:
             op, target_address = branch
             target_symbol = containing_symbol(symbols, target_address)
-            target_name = str(target_symbol["name"]) if target_symbol else ""
+            target_name = plt_imports.get(target_address) or (str(target_symbol["name"]) if target_symbol else "")
             annotation = f" ; {op}->0x{target_address:x}"
             if target_name:
                 annotation += f" {target_name}"
@@ -102,6 +104,7 @@ def disassemble_function(
                     "target_symbol": target_name,
                     "target_symbol_address": f"0x{int(target_symbol['address']):x}" if target_symbol else "",
                     "target_symbol_size": int(target_symbol["size"]) if target_symbol else "",
+                    "target_plt_import": plt_imports.get(target_address, ""),
                     "word_hex": f"0x{raw_word:08x}",
                 }
             )
@@ -124,6 +127,7 @@ def main() -> int:
     blob = args.lib.read_bytes()
     sections = elf_sections(blob)
     symbols = load_symbols(blob, sections)
+    plt_imports = resolve_plt_imports(blob, sections)
     md = Cs(CS_ARCH_ARM64, CS_MODE_ARM)
     md.detail = False
 
@@ -135,7 +139,9 @@ def main() -> int:
     for value in args.symbol:
         name, override_size = parse_symbol_arg(value)
         symbol = find_symbol(symbols, name)
-        lines, branch_rows = disassemble_function(md, blob, sections, symbols, symbol, override_size)
+        lines, branch_rows = disassemble_function(
+            md, blob, sections, symbols, plt_imports, symbol, override_size
+        )
         if all_lines:
             all_lines.append("")
         all_lines.extend(lines)
@@ -160,6 +166,7 @@ def main() -> int:
             "target_symbol",
             "target_symbol_address",
             "target_symbol_size",
+            "target_plt_import",
             "word_hex",
         ]
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -171,6 +178,7 @@ def main() -> int:
         "lib_sha256": hashlib.sha256(blob).hexdigest(),
         "functions": function_summaries,
         "branch_target_count": len(all_branch_rows),
+        "plt_import_count": len(plt_imports),
     }
     (args.out_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n",

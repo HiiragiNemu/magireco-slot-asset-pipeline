@@ -295,3 +295,71 @@ Still open:
 Do not return to manual `ac` suffix guessing or visual-only matching.  The
 current path is a general packet/scheduler mechanism and should scale to the
 remaining scenes once the LC701A producer side is decoded.
+
+## 2026-07-04 follow-up: PLT correction and LC701A byte builder
+
+The earlier static disassembly labels for some branch targets were
+over-broad.  They used nearest containing-symbol lookup and could mislabel PLT
+entries as unrelated `.text` symbols.  The static tools now parse `.rela.plt`,
+`.dynsym`, and `.dynstr` so AArch64 PLT entries resolve to their imported
+symbol names.  This corrected the important LC701A helper calls:
+
+```text
+0x44902a0 memset
+0x44902f0 memcpy
+0x449f910 ID401::CLC701A::_JP(unsigned short)
+0x449f980 ID401::CLC701A::_RET()
+0x449f9d0 ID401::CLC701A::ASM_0xA7()
+0x449f9e0 ID401::CLC701A::ASM_0xF8()
+0x449faa0 ID401::CLC701A::SET_ENC_SUBFUNC()
+0x449fab0 ID401::fnGameLot_Force_TPL_Request()
+0x449fac0 ID401::CLC701A::_RETEX()
+0x449fad0 ID401::CLC701A::ASM_0xAF()
+0x449fae0 ID401::CLC701A::RESET_ENC_SUBFUNC()
+0x449faf0 ID401::fnGameLot_Force_TPL_Reset()
+```
+
+`LC701A_SLOT::USER_LABEL_WORK()` is a PC dispatch on `this+0x20`, not an `ac`
+table.  PCs `0x58a` and `0x1156`, and `SET_BANKBUFFER()`, enter the block that
+copies staging bytes from `this+0xf298` with length `this+0xf0fe` into the
+queued command buffer at `this+0x200ee`, then clears staging.  The byte source
+therefore sits inside the LC701A VM/slot-firmware execution before this enqueue
+block, not in `CSlotBody::analysPacket()`.
+
+The full-spin JSONL was re-summarized with the new LC701A enter-sequence table:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v4.json
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_id401_cmd_buffer_full_spin_adb_continuation_20260704\summary_lightweight_spin_probe_v4_lc701a_enter_sequence.csv
+```
+
+Important result:
+
+```text
+USER_LABEL_WORK enter sequence rows: 2448
+rows where staging changed:       32
+enter/leave staging changes:      0
+target packet candidates:         0
+```
+
+This proves the staging bytes are built between consecutive
+`USER_LABEL_WORK` calls, not during the hooked `USER_LABEL_WORK` body itself.
+The ordinary DirInfo3 packet was assembled byte-by-byte:
+
+```text
+call 2067 -> 2068: new packet starts at byte 48: 19 0 0 0 0 0 0 0
+call 2069 -> 2070: byte 50 changes 0 -> 8, producing raw[2]=8
+call 2072 -> 2073: byte 53 changes 0 -> 1
+call 2073 -> 2074: byte 54 changes 0 -> 1
+call 2084 -> 2085: byte 55 changes 0 -> 29
+```
+
+This is still ordinary non-target routing because raw byte 1 remains `0`.
+
+`tools/frida_runtime_probe/lightweight_spin_audio_probe.js` now has an
+additional low-noise LC701A command-state-change hook for `_OUTI`, `_OUTIC`,
+`_IN`, `_INI`, `_INIC`, `_JP`, `_RET`, `_RETEX`, `ASM_0xA7`, `ASM_0xAF`,
+`ASM_0xF8`, `SET_ENC_SUBFUNC`, and `RESET_ENC_SUBFUNC`.  It emits only when
+the ID401 staging or queue signature changes.  Use this for the next natural
+spin capture to identify the exact helper that writes DirInfo3 raw byte 1 or
+byte 2.
