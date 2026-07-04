@@ -2421,3 +2421,146 @@ packet_id == 19 && raw_packet[1] == 8
 This is the highest-value next mechanism task.  Once the natural producer of
 that packet is found, connect the same run to SP Story stage/selector values and
 final audio queue/BGM state before doing Bilibili-facing mass renders.
+
+### 2026-07-04 latest runtime sample: DirInfo3 ordinary packet byte attribution
+
+After the correction above, another stopped/ready physical-input spin was
+captured with the all-opcode hook:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_spinscan_20260704_01
+```
+
+Generated summary:
+
+```text
+summary_light_lc701a_full_opcode_spinscan_20260704_01.json
+summary_light_lc701a_full_opcode_spinscan_20260704_01_command_state_changes.csv
+summary_light_lc701a_full_opcode_spinscan_20260704_01_packets.csv
+summary_light_lc701a_full_opcode_spinscan_20260704_01_rxcom.csv
+summary_light_lc701a_full_opcode_spinscan_20260704_01_queue.csv
+summary_light_lc701a_full_opcode_spinscan_20260704_01_bgm.csv
+```
+
+Key facts:
+
+```text
+observer bytes:                  6,671,629
+packet observations:             10,034
+unique raw packet forms:         29
+DirInfo3 packet observations:    815
+target candidates:               0
+hook errors:                     0
+BGM helper rows:                 234
+final queue rows:                1
+slot event rows:                 2,338
+LC701A enter-sequence changes:   25
+command-state-change rows:       37
+command-state-change opcodes:    ASM_0x7e x17, ASM_0x77 x20
+```
+
+Observed DirInfo3:
+
+```text
+raw packet       = [19, 0, 6, 0, 0, 1, 0, 26]
+callback payload = [26, 0, 1, 0, 0, 6, 0, 19]
+```
+
+This is ordinary non-target routing:
+
+```text
+raw_packet[1] = 0
+raw_packet[2] = 6
+```
+
+The useful part is byte attribution:
+
+```text
+line 5283: ASM_0x7e creates DirInfo3 staging slot 48:
+           19 0 0 0 0 0 0 0
+line 5288: ASM_0x7e writes slot 50: 0 -> 6
+line 5295: ASM_0x7e writes slot 53: 0 -> 1
+line 5320: ASM_0x77 writes slot 55: 0 -> 26
+```
+
+RxCom confirmation:
+
+```text
+rxcom_dirinfo3_enter payload = 26 0 1 0 0 6 0 19
+all sampled SdGmData story-dispatch fields stayed 0
+```
+
+Audio confirmation in the same run:
+
+```text
+BGM helper kinds:
+  obj_nml_snd_request_bgm_dir       39
+  obj_nml_snd_request_bgm_dir_next  39
+  obj_nml_snd_request_bgm_end       39
+  obj_nml_snd_request_bgm_fade      39
+  obj_nml_snd_request_bgm_fade_next 39
+  obj_nml_snd_request_bgm_stg       39
+
+final queue:
+  sound_id=60, 286,788 bytes
+```
+
+Next instrumentation improvement:
+
+- add opcode-specific register/source/destination snapshots for `ASM_0x7e` and
+  `ASM_0x77`;
+- for `ASM_0x7e`, record destination address, source address, count field, and
+  source byte before/after;
+- for `ASM_0x77`, record destination address and register byte source;
+- then rerun stopped/ready spins until the target packet id 19 appears with
+  raw byte 1 nonzero, ideally `8`.
+
+This is more valuable than another blind render run because it directly attacks
+the generic scheduler mechanism.
+
+### 2026-07-04 opcode address/source-field probe validation
+
+The probe and summarizer were enhanced as described above:
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+tools/frida_runtime_probe/summarize_lightweight_spin_probe.py
+```
+
+New command-state CSV columns include:
+
+```text
+lc701a_addr06_before / lc701a_addr08_before
+asm7e_dst_addr_before / asm7e_src_addr_before
+asm7e_count_before
+asm7e_src_byte_before / asm7e_dst_byte_before
+asm77_dst_addr_before
+asm77_src_reg_before / asm77_dst_byte_before
+```
+
+Validation capture:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_spinscan_20260704_01
+```
+
+This capture did not emit DirInfo3, so it is not target evidence.  It does
+validate the new address/source fields:
+
+```text
+ASM_0x7e:
+  dst 0xf210 <- src 0xfff3, byte 4
+  dst 0xf211 <- src 0xfff4, byte 1
+  dst 0xf212 <- src 0xfff5, byte 3
+  dst 0xf213 <- src 0xfff6, byte 156
+  dst 0xf214 <- src 0xfff7, byte 240
+  dst 0xf215 <- src 0xfff8, byte 1
+
+ASM_0x77:
+  dst 0xf217 <- register byte 149
+```
+
+Next run should aim for a longer result-window capture or a state where
+DirInfo3 is known to occur, using the same enhanced fields.  When DirInfo3
+appears, inspect whether packet slot `0xf211` / raw byte 1 is copied from a
+specific VM source address and why it remains `0` in ordinary runs.

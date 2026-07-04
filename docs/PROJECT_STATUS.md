@@ -2359,3 +2359,139 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet
 确认 raw_packet[1] 何时、由哪个 opcode 写成 8，
 再把同一 run 接到 SP Story stage/selector 与最终 OpenSL queue/BGM。
 ```
+
+## 2026-07-04 追加：DirInfo3 普通包已逐字节归因
+
+在当前 live PID `5294` 下，从 stopped/ready 画面执行 BET x3、lever、三 stop，
+使用全 opcode 低噪声 hook 捕获：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_spinscan_20260704_01
+```
+
+汇总结果：
+
+```text
+observer_bytes=6671629
+packet_count=10034
+unique_packet_count=29
+dirinfo3_packet_count=815
+candidate_count=0
+hook_error_count=0
+bgm_event_count=234
+queue_event_count=1
+slot_event_count=2338
+lc701a_enter_sequence_changed_count=25
+command_state_change_count=37
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change=17
+  lc701a_opcode_0x77_command_state_change=20
+```
+
+本次普通 DirInfo3 为：
+
+```text
+raw packet       [19,0,6,0,0,1,0,26]
+callback payload [26,0,1,0,0,6,0,19]
+```
+
+仍不是目标：
+
+```text
+raw_packet[1]=0
+raw_packet[2]=6
+candidate_count=0
+```
+
+但 `command_state_changes.csv` 已经把 DirInfo3 packet 构建归因到 opcode：
+
+```text
+line 5283  ASM_0x7e  48:->19;49:->0;50:->0;51:->0;52:->0;53:->0;54:->0;55:->0
+line 5288  ASM_0x7e  50:0->6
+line 5295  ASM_0x7e  53:0->1
+line 5320  ASM_0x77  55:0->26
+```
+
+同一 run 的 RxCom 行确认：
+
+```text
+rxcom_dirinfo3_enter payload = 26 0 1 0 0 6 0 19
+SdGmData+0x130/+0x0a8/+0x184/+0x358/+0x13be 全部保持 0
+```
+
+同一 run 仍有外层 slot sound 活动：
+
+```text
+BGM helper rows=234
+final queue: sound_id=60, 286788 bytes
+```
+
+下一步应增强 opcode 专用采样，而不是继续盲跑：
+
+```text
+ASM_0x7e: 记录 src/dst VM address、count、source byte、dest byte
+ASM_0x77: 记录 dst VM address、register byte source、dest byte
+```
+
+目标是在出现 `packet_id=19` 时知道 raw byte 1 和 raw byte 2 分别从哪里复制/
+写入，进而定位自然 SP Story scheduler 条件。
+
+## 2026-07-04 追加：opcode source/destination 采样已验证
+
+`lightweight_spin_audio_probe.js` 现在在 `state_before/state_after` 中记录
+LC701A opcode 相关寄存器、VM 地址和源/目标字节；`summarize_lightweight_spin_probe.py`
+会把这些字段导出到 `command_state_changes.csv`。
+
+新增列包括：
+
+```text
+lc701a_addr06_before/after
+lc701a_addr08_before/after
+asm7e_dst_addr_before/after
+asm7e_src_addr_before/after
+asm7e_count_before/after
+asm7e_src_byte_before/after
+asm7e_dst_byte_before/after
+asm77_dst_addr_before/after
+asm77_src_reg_before/after
+asm77_dst_byte_before/after
+```
+
+验证 run：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_spinscan_20260704_01
+```
+
+摘要：
+
+```text
+packet_count=157
+unique_packet_count=7
+dirinfo3_packet_count=0
+candidate_count=0
+hook_error_count=0
+bgm_event_count=527
+queue_event_count=1
+slot_event_count=3830
+command_state_change_count=8
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change=6
+  lc701a_opcode_0x77_command_state_change=2
+```
+
+该 run 没有 DirInfo3，不是目标证据；但它证明地址采样可用：
+
+```text
+ASM_0x7e src 0xfff3 -> dst 0xf210, byte 4
+ASM_0x7e src 0xfff4 -> dst 0xf211, byte 1
+ASM_0x7e src 0xfff5 -> dst 0xf212, byte 3
+ASM_0x7e src 0xfff6 -> dst 0xf213, byte 156
+ASM_0x7e src 0xfff7 -> dst 0xf214, byte 240
+ASM_0x7e src 0xfff8 -> dst 0xf215, byte 1
+ASM_0x77 reg byte 149 -> dst 0xf217
+```
+
+下一步应使用同一增强 probe 捕获包含 DirInfo3 的结果阶段，以确定
+`raw_packet[1]` 对应 staging `0xf211` 从哪个 VM source address 复制而来，
+并比较 ordinary `raw[1]=0` 与目标 `raw[1]=8` 的上游条件。

@@ -318,3 +318,60 @@ Bilibili rendering: capture or reproduce the natural condition that builds
 `packet_id=19 && raw_packet[1]=8`, then connect that same run to SP Story
 stage/selector and final audio queue/BGM state.  After that gate is closed, the
 remaining work becomes systematic batch audit and long-edition production.
+
+## Same-day update 4: DirInfo3 byte construction attributed
+
+A follow-up physical spin from the stopped/ready screen used the same full
+opcode hook and did reach DirInfo3 again:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_spinscan_20260704_01
+```
+
+Summary:
+
+```text
+observer bytes:                  6,671,629
+packet observations:             10,034
+unique raw packet forms:         29
+DirInfo3 packet observations:    815
+target candidates:               0
+hook errors:                     0
+BGM helper rows:                 234
+final audio queue rows:          1
+command-state-change rows:       37
+command-state-change opcodes:    ASM_0x7e x17, ASM_0x77 x20
+```
+
+The ordinary DirInfo3 packet in this run was:
+
+```text
+raw packet        = [19, 0, 6, 0, 0, 1, 0, 26]
+callback payload  = [26, 0, 1, 0, 0, 6, 0, 19]
+```
+
+The important byte attribution is now direct:
+
+```text
+ASM_0x7e writes packet slot 48 -> 19
+ASM_0x7e writes packet slot 50 -> 6
+ASM_0x7e writes packet slot 53 -> 1
+ASM_0x77 writes packet slot 55 -> 26
+```
+
+This is still not the target because raw byte 1 remains `0`.  The next useful
+probe improvement is to record `ASM_0x7e/0x77` source/destination VM addresses
+and register bytes, so the project can identify what value source feeds
+DirInfo3 raw byte 1 versus raw byte 2.
+
+That probe improvement has now been implemented and smoke-tested:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_spinscan_20260704_01
+```
+
+This validation run did not reach DirInfo3, but it proves the new fields work.
+For a normal packet, `ASM_0x7e` copied bytes from source VM addresses
+`0xfff3..0xfff8` into command staging `0xf210..0xf215`, and `ASM_0x77` wrote
+the tail byte at `0xf217`.  The next target run should use this same enhanced
+probe and keep the run window around the result/DirInfo3 phase.

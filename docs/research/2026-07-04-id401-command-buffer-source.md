@@ -540,3 +540,190 @@ opcode helper, before/after staging bytes, RxCom dispatch, SdGmData chain,
 SP Story stage/selector, and final OpenSL queue/BGM rows in the same evidence
 root.
 ```
+
+## 2026-07-04 follow-up: DirInfo3 ordinary packet attributed to 0x7e/0x77
+
+A follow-up stopped/ready physical spin used the corrected all-opcode hook and
+captured an ordinary DirInfo3 packet with opcode-level staging changes:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_spinscan_20260704_01
+```
+
+Summary:
+
+```text
+observer_bytes = 6,671,629
+packet_count = 10,034
+unique_packet_count = 29
+dirinfo3_packet_count = 815
+candidate_count = 0
+hook_error_count = 0
+bgm_event_count = 234
+queue_event_count = 1
+slot_event_count = 2,338
+lc701a_enter_sequence_changed_count = 25
+command_state_change_count = 37
+
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change = 17
+  lc701a_opcode_0x77_command_state_change = 20
+```
+
+Observed DirInfo3:
+
+```text
+raw packet       = [19, 0, 6, 0, 0, 1, 0, 26]
+callback payload = [26, 0, 1, 0, 0, 6, 0, 19]
+```
+
+This is still ordinary non-target routing:
+
+```text
+raw_packet[1] = 0
+raw_packet[2] = 6
+```
+
+The opcode attribution is now direct:
+
+```text
+line 5283:
+  kind          = lc701a_opcode_0x7e_command_state_change
+  pending_len   = 56 -> 56
+  changed_bytes = 48:->19;49:->0;50:->0;51:->0;52:->0;53:->0;54:->0;55:->0
+  dirinfo3      = 19 0 0 0 0 0 0 0
+
+line 5288:
+  kind          = lc701a_opcode_0x7e_command_state_change
+  changed_bytes = 50:0->6
+  dirinfo3      = 19 0 6 0 0 0 0 0
+
+line 5295:
+  kind          = lc701a_opcode_0x7e_command_state_change
+  changed_bytes = 53:0->1
+  dirinfo3      = 19 0 6 0 0 1 0 0
+
+line 5320:
+  kind          = lc701a_opcode_0x77_command_state_change
+  changed_bytes = 55:0->26
+  dirinfo3      = 19 0 6 0 0 1 0 26
+```
+
+RxCom check:
+
+```text
+rxcom_dirinfo3_enter payload = 26 0 1 0 0 6 0 19
+SdGmData story-dispatch fields +0x130/+0x0a8/+0x184/+0x358/+0x13be stayed 0
+```
+
+Same-run sound check:
+
+```text
+BGM helper rows = 234
+final queue row = sound_id 60, 286,788 bytes
+```
+
+The key research implication is that `ASM_0x7e` is responsible for writing the
+variable DirInfo3 body byte observed here (`raw[2]=6`) and also initializes the
+8-byte DirInfo3 staging window.  The target `raw[1]=8` should therefore be
+investigated by recording the `ASM_0x7e` source and destination VM addresses
+when it writes packet slots 49 and 50.
+
+Next probe change:
+
+```text
+For ASM_0x7e:
+  record this+0x06 destination address
+  record this+0x08 source address
+  record this+0x05 count
+  record source byte and destination byte
+
+For ASM_0x77:
+  record this+0x08 destination address
+  record this+0x03 source register byte
+  record destination byte
+```
+
+Then rerun stopped/ready captures and compare ordinary DirInfo3 `raw[2]=6/8`
+against any future target `raw[1]=8`.  This is the current shortest path to a
+generic scheduler model.
+
+## 2026-07-04 follow-up: source/destination fields implemented and validated
+
+The opcode probe now records the LC701A registers and VM source/destination
+bytes needed to explain `ASM_0x7e` and `ASM_0x77` writes.
+
+Implemented in:
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+tools/frida_runtime_probe/summarize_lightweight_spin_probe.py
+```
+
+`describeID401CommandState()` now includes:
+
+```text
+lc701a_reg_u8_at_0x03
+lc701a_reg_u8_at_0x04
+lc701a_reg_u8_at_0x05_count
+lc701a_addr_u16_at_0x06
+lc701a_addr_u16_at_0x08
+lc701a_asm_7e_dst_addr_u16_at_0x06
+lc701a_asm_7e_src_addr_u16_at_0x08
+lc701a_asm_7e_count_u8_at_0x05
+lc701a_asm_7e_src_byte
+lc701a_asm_7e_dst_byte
+lc701a_asm_77_dst_addr_u16_at_0x08
+lc701a_asm_77_src_reg_u8_at_0x03
+lc701a_asm_77_dst_byte
+```
+
+The summarizer exports corresponding before/after columns in
+`*_command_state_changes.csv`.
+
+Validation capture:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_opcode_addr_spinscan_20260704_01
+```
+
+Summary:
+
+```text
+packet_count = 157
+unique_packet_count = 7
+dirinfo3_packet_count = 0
+candidate_count = 0
+hook_error_count = 0
+command_state_change_count = 8
+
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change = 6
+  lc701a_opcode_0x77_command_state_change = 2
+```
+
+The run did not contain DirInfo3 and must not be used as target evidence.  It
+does validate the new field semantics on a normal command packet:
+
+```text
+line 517:
+  ASM_0x7e dst 0xf210 <- src 0xfff3, byte 4
+line 520:
+  ASM_0x7e dst 0xf211 <- src 0xfff4, byte 1
+line 523:
+  ASM_0x7e dst 0xf212 <- src 0xfff5, byte 3
+line 526:
+  ASM_0x7e dst 0xf213 <- src 0xfff6, byte 156
+line 529:
+  ASM_0x7e dst 0xf214 <- src 0xfff7, byte 240
+line 532:
+  ASM_0x7e dst 0xf215 <- src 0xfff8, byte 1
+line 561:
+  ASM_0x77 dst 0xf217 <- register byte 149
+```
+
+This proves `ASM_0x7e` is copying packet body bytes from a VM source region
+around `0xfff3`, while command staging begins at `0xf210`.  In future DirInfo3
+runs, the critical raw byte 1 is staging address `0xf211`.  The next concrete
+question is which source address feeds `0xf211` for packet id 19, and what game
+state changes that source byte from ordinary `0` to target `8`.

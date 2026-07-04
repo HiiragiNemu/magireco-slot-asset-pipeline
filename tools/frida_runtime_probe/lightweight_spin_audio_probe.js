@@ -281,13 +281,48 @@ function readID401CommandRecords(base, maxBytes, maxRecords) {
   return records;
 }
 
+function readLC701AVmByteSafe(thisPointer, addressValue) {
+  if (thisPointer === null || thisPointer.isNull() || addressValue === null || addressValue < 0x4000) {
+    return null;
+  }
+  try {
+    return thisPointer.add(0x88 + addressValue).readU8();
+  } catch (_) {
+    return null;
+  }
+}
+
+function describeLC701AOpcodeRegisters(thisPointer) {
+  const addressAt0x06 = readU16Safe(thisPointer, 0x06);
+  const addressAt0x08 = readU16Safe(thisPointer, 0x08);
+  return {
+    lc701a_reg_u8_at_0x03: readU8Safe(thisPointer, 0x03),
+    lc701a_reg_u8_at_0x04: readU8Safe(thisPointer, 0x04),
+    lc701a_reg_u8_at_0x05_count: readU8Safe(thisPointer, 0x05),
+    lc701a_reg_u8_at_0x06: readU8Safe(thisPointer, 0x06),
+    lc701a_reg_u8_at_0x07: readU8Safe(thisPointer, 0x07),
+    lc701a_reg_u8_at_0x08: readU8Safe(thisPointer, 0x08),
+    lc701a_reg_u8_at_0x09: readU8Safe(thisPointer, 0x09),
+    lc701a_addr_u16_at_0x06: addressAt0x06,
+    lc701a_addr_u16_at_0x08: addressAt0x08,
+    lc701a_asm_7e_dst_addr_u16_at_0x06: addressAt0x06,
+    lc701a_asm_7e_src_addr_u16_at_0x08: addressAt0x08,
+    lc701a_asm_7e_count_u8_at_0x05: readU8Safe(thisPointer, 0x05),
+    lc701a_asm_7e_dst_byte: readLC701AVmByteSafe(thisPointer, addressAt0x06),
+    lc701a_asm_7e_src_byte: readLC701AVmByteSafe(thisPointer, addressAt0x08),
+    lc701a_asm_77_dst_addr_u16_at_0x08: addressAt0x08,
+    lc701a_asm_77_src_reg_u8_at_0x03: readU8Safe(thisPointer, 0x03),
+    lc701a_asm_77_dst_byte: readLC701AVmByteSafe(thisPointer, addressAt0x08),
+  };
+}
+
 function describeID401CommandState(thisPointer) {
   if (thisPointer === null || thisPointer.isNull()) {
     return { id401_lc701a_this: "0x0" };
   }
   const pendingLen = readU8Safe(thisPointer, 0xf0fe);
   const stagingBytes = pendingLen === null ? 0x100 : Math.max(8, Math.min(pendingLen, 0x100));
-  return {
+  return Object.assign({
     id401_lc701a_this: thisPointer.toString(),
     id401_pc_u16_at_0x20: readU16Safe(thisPointer, 0x20),
     id401_command_queue_flag_u8_at_0x200ed: readU8Safe(thisPointer, 0x200ed),
@@ -295,7 +330,7 @@ function describeID401CommandState(thisPointer) {
     id401_pending_len_u8_at_0xf0fe: pendingLen,
     id401_staging_packets_at_0xf298: readID401CommandRecords(thisPointer.add(0xf298), stagingBytes, 8),
     id401_queue_packets_at_0x200ee: readID401CommandRecords(thisPointer.add(0x200ee), 0xc00, 16),
-  };
+  }, describeLC701AOpcodeRegisters(thisPointer));
 }
 
 function id401CommandPacketSignature(packets) {
