@@ -2222,3 +2222,53 @@ DirInfo3 `raw_packet[1]` 或 `raw_packet[2]`。
   BGM/bed。
 - 已通过用户听检的 ac7114/ac7115/ac7116 语音/字幕结果仍可保留为强样本，
   但最终长片 promotion 仍需 BGM/outer-flow 证据门。
+
+## 2026-07-04 追加：LC701A ordinary opcode writer 识别
+
+后续 ready-state 物理输入捕获：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_state_change_from_ready_20260704
+```
+
+结论：
+
+- 从真正 ready 状态执行 lever/stop 后，捕获到 1436 条 packet observation、
+  10 种 raw packet、10 次 LC701A staging 变化、0 个 hook 错误。
+- 该 run 没有 DirInfo3，也没有 target candidate；它不是目标故事证据。
+- 它证明普通 packet byte-builder 的 PC 模式与先前完整 spin 一致：
+  `101/102/113/114`，即十六进制 `0x65/0x66/0x71/0x72`。
+
+新增静态反汇编：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_builder_opcodes_20260704
+```
+
+关键识别：
+
+- `CLC701A::ASM_0x71()` 和 `ASM_0x72()` 是 VM RAM 写入 opcode；
+  当地址 `>=0x4000` 时写 `this+0x88+addr`。
+- `LC701A_SLOT+0xf298` staging 对应 VM RAM 地址 `0xf210`，因此
+  `ASM_0x71/0x72` 是 packet staging byte 的主要写入候选。
+- `ASM_0x65/0x66` 是相邻读/组合 helper，同样加入低噪声 hook 以还原 byte
+  source。
+
+工具更新：
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+```
+
+现在额外 hook：
+
+```text
+ID401::CLC701A::ASM_0x65()
+ID401::CLC701A::ASM_0x66()
+ID401::CLC701A::ASM_0x71()
+ID401::CLC701A::ASM_0x72()
+```
+
+下一次有效 ready-state 捕获应验证这些 opcode hook 是否直接产生
+`*_command_state_change` 事件。若出现 DirInfo3，则重点看 `raw_packet[1]`
+是否由 `ASM_0x71/0x72` 写入。

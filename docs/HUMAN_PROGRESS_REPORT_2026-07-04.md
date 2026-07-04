@@ -242,3 +242,24 @@ work is one major mechanism closure plus a systematic re-audit/render pass.
 Once the natural scheduler/BGM gate is closed, producing Bilibili long videos is
 mainly batch pipeline work; before that, batch rendering risks creating more
 wrong but watchable files.
+
+## Same-day update 2: byte writer narrowed further
+
+One more useful narrowing happened after the report above:
+
+- A clean ready-state spin capture produced normal packet construction again:
+  1,436 packet observations, 10 unique packet forms, and 10 LC701A staging
+  changes.  It did not produce the target story packet, so it is not upload
+  evidence.
+- That capture identified the ordinary byte-builder pattern as LC701A opcodes
+  `0x65/0x66/0x71/0x72`.
+- Static disassembly shows `ASM_0x71` and `ASM_0x72` are VM RAM write
+  instructions.  Since ID401 command staging is VM address `0xf210` under the
+  `this+0x88` RAM base, these are now the main candidates for the code that
+  writes packet bytes.
+- The Frida probe has been updated to hook those four opcode helpers directly.
+
+This is a meaningful step toward a generic solution: the project is no longer
+just seeing completed packets; it is now close to attributing individual packet
+bytes to VM opcodes.  The next proof needed is the same attribution on a run
+that emits the target DirInfo3 packet.

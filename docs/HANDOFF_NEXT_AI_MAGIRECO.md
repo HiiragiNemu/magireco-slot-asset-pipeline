@@ -2249,3 +2249,58 @@ low-noise LC701A command-state-change hooks for `_OUTI/_OUTIC/_IN/_INI/_INIC`,
 only emit when the ID401 staging or queue signature changes.  Use them to find
 the exact helper responsible for writing DirInfo3 raw byte 1/2 during a natural
 spin.
+
+### 2026-07-04 follow-up: packet byte writer opcode candidates
+
+The first follow-up ready-state capture that actually entered packet building:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_state_change_from_ready_20260704
+```
+
+Summary:
+
+- packet observations: 1436
+- unique packet forms: 10
+- LC701A enter-sequence staging changes: 10
+- DirInfo3 packet observations: 0
+- target candidates: 0
+- hook errors: 0
+
+This run is not target SP Story evidence, but it identifies the ordinary packet
+byte-builder PC pattern:
+
+```text
+101/102/113/114 decimal == 0x65/0x66/0x71/0x72
+```
+
+Static disassembly:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_builder_opcodes_20260704
+```
+
+Interpretation:
+
+- `ASM_0x71` writes register byte `this+0x04` into LC701A VM RAM.
+- `ASM_0x72` writes register byte `this+0x07` into LC701A VM RAM.
+- The write address is `this+0x88+addr` when `addr >= 0x4000`.
+- ID401 command staging `this+0xf298` equals VM address `0xf210` plus the
+  `this+0x88` base, so these opcodes are concrete packet-staging byte writer
+  candidates.
+
+`lightweight_spin_audio_probe.js` now also hooks:
+
+```text
+ID401::CLC701A::ASM_0x65()
+ID401::CLC701A::ASM_0x66()
+ID401::CLC701A::ASM_0x71()
+ID401::CLC701A::ASM_0x72()
+```
+
+Next handoff action: relaunch from the title if needed, enter simulation, reach
+a stopped/ready state, then capture a clean lever/stop sequence with the updated
+probe.  The success condition is seeing `lc701a_asm_71_command_state_change` or
+`lc701a_asm_72_command_state_change` rows that explain packet byte writes.  A
+later capture installed the hooks but did not enter packet building; do not use
+that failed-input capture as a negative result.

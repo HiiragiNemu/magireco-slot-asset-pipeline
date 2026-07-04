@@ -363,3 +363,59 @@ additional low-noise LC701A command-state-change hook for `_OUTI`, `_OUTIC`,
 the ID401 staging or queue signature changes.  Use this for the next natural
 spin capture to identify the exact helper that writes DirInfo3 raw byte 1 or
 byte 2.
+
+## 2026-07-04 follow-up: ordinary packet opcode writers
+
+After relaunching from the title screen and starting a clean ready-state spin,
+the adjusted physical-input capture produced packet construction again:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_state_change_from_ready_20260704
+observer bytes:                 3,627,626
+packet observations:            1,436
+unique raw packet forms:        10
+DirInfo3 packet observations:   0
+target candidates:              0
+BGM helper rows:                198
+queue rows:                     0
+LC701A enter-sequence changes:  10
+hook errors:                    0
+```
+
+This run built ordinary packet ids `25`, `24`, `23`, and `22`.  The changed
+enter-sequence rows showed the same PC pattern seen in the larger run:
+
+```text
+PC 101 / 0x65: create or read packet byte source
+PC 102 / 0x66: adjacent byte-source helper
+PC 113 / 0x71: write/checksum-style VM RAM store
+PC 114 / 0x72: adjacent VM RAM store helper
+```
+
+The relevant static opcode disassembly is:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_builder_opcodes_20260704
+```
+
+Key interpretation:
+
+- `ASM_0x65` reads from `this+0x88+addr` and stores the result into register
+  byte `this+0x08`.
+- `ASM_0x66` reads from `this+0x88+addr` and combines it into the register
+  word at `this+0x08`.
+- `ASM_0x71` writes register byte `this+0x04` to `this+0x88+addr` when
+  `addr >= 0x4000`.
+- `ASM_0x72` writes register byte `this+0x07` to `this+0x88+addr` when
+  `addr >= 0x4000`.
+
+Because staging `this+0xf298` equals LC701A VM address `0xf210` plus the
+`this+0x88` VM RAM base, `ASM_0x71/0x72` are now the best concrete write-side
+opcode candidates for packet staging bytes.
+
+`lightweight_spin_audio_probe.js` was updated again to include command-state
+change hooks for `ASM_0x65`, `ASM_0x66`, `ASM_0x71`, and `ASM_0x72`.  The next
+valid ready-state capture should directly attribute staging byte creation to
+these opcode helpers.  A later attempted capture installed the new hooks, but
+its physical input did not enter a clean packet-building window and should not
+be treated as mechanism evidence.
