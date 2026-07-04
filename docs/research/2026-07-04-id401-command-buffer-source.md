@@ -859,3 +859,158 @@ That row should expose the ordinary source address for raw[1]=0.
 Then search the LC701A source-state writer that can change that source byte to
 8, which is the target condition for the proved SP Story lottery dispatch.
 ```
+
+## 2026-07-04 follow-up: raw[1] source and source-window writers
+
+The staging-write table reached DirInfo3 in:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_02
+```
+
+Summary:
+
+```text
+observer_bytes = 11,101,512
+packet_count = 10,034
+unique_packet_count = 29
+dirinfo3_packet_count = 815
+candidate_count = 0
+hook_error_count = 0
+opcode_staging_write_count = 96
+opcode_staging_write_dirinfo3_byte1_count = 1
+opcode_staging_write_dirinfo3_byte2_count = 1
+```
+
+DirInfo3 staging-write rows:
+
+```text
+raw[0] = 19:
+  dst = 0xf240
+  src = 0xffef
+
+raw[1] = 0:
+  dst = 0xf241
+  src = 0xfff0
+  is_dirinfo3_raw_byte1 = True
+
+raw[2] = 6:
+  dst = 0xf242
+  src = 0xfff1
+  is_dirinfo3_raw_byte2 = True
+
+raw[3] = 0:
+  dst = 0xf243
+  src = 0xfff2
+
+raw[4] = 0:
+  dst = 0xf244
+  src = 0xfff3
+
+raw[5] = 1:
+  dst = 0xf245
+  src = 0xfff4
+
+raw[6] = 0:
+  dst = 0xf246
+  src = 0xfff5
+
+raw[7] = 26:
+  dst = 0xf247
+  opcode = ASM_0x77
+```
+
+This closes the ordinary raw byte 1 source:
+
+```text
+packet_id 19 raw[1] comes from LC701A VM byte 0xfff0.
+```
+
+The target story-dispatch condition is now:
+
+```text
+LC701A VM byte 0xfff0 == 8 at the moment ASM_0x7e copies packet id 19.
+```
+
+To chase this upstream, the probe now adds a source-watch window to the command
+signature:
+
+```text
+id401_packet_source_watch_base_vm_addr = 0xffe0
+id401_packet_source_watch_bytes_at_0xffe0 length = 0x20
+```
+
+When any opcode changes `0xffe0..0xffff`, the command-state row now includes:
+
+```text
+source_watch_base_hex
+source_watch_before
+source_watch_after
+source_watch_changed_bytes
+```
+
+Source-window validation run:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_source_watch_full_spin_20260704_01
+```
+
+This run did not reach DirInfo3, but it did catch writers of the relevant source
+bytes:
+
+```text
+line 707:
+  ASM_0x48
+  0xfff0: 32 -> 86
+  0xfff1: 17 -> 0
+
+line 716:
+  ASM_0x4a
+  0xfff0: 86 -> 91
+
+line 736:
+  ASM_0xd9
+  0xfff0: 91 -> 16
+  0xfff1: 0 -> 242
+```
+
+Static disassembly:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_48_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_4a_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_d9_20260704
+```
+
+`ASM_0x48`:
+
+```text
+sp = [this+0x0e] - 2
+value = [this+0x20] + [this+0x70]
+store low/high bytes of value to this+0x88+sp
+update [this+0x20] from bytecode operand [old_pc+1]
+```
+
+`ASM_0x4a`:
+
+```text
+same stack push shape as 0x48
+updates [this+0x20] from bytecode operand [old_pc+1] | 0x200
+```
+
+`ASM_0xd9`:
+
+```text
+sp = [this+0x0e] - 2
+value = u16 [this+0x06]
+store low/high bytes of value to this+0x88+sp
+```
+
+Research implication:
+
+`0xfff0` is part of the LC701A stack/source area, not a fixed DirInfo3 table.
+The target `raw[1]=8` likely requires a different LC701A program branch or
+register/stack state immediately before the packet is copied.  The next useful
+capture should keep source-watch and staging-write enabled in the same run and
+look for the last `source_watch_changed_bytes` touching `0xfff0` before the
+DirInfo3 raw byte 1 staging-write row.

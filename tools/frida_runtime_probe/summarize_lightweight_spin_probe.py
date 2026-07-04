@@ -286,6 +286,46 @@ def changed_byte_summary(before: list[int], after: list[int], limit: int = 32) -
     return ";".join(rows)
 
 
+def byte_list_csv(values: Any) -> str:
+    if not isinstance(values, list):
+        return ""
+    return " ".join("" if value is None else str(value) for value in values)
+
+
+def changed_watch_byte_summary(
+    before: Any,
+    after: Any,
+    base_address: Any,
+    limit: int = 32,
+) -> str:
+    if not isinstance(before, list):
+        before = []
+    if not isinstance(after, list):
+        after = []
+    try:
+        base = int(base_address)
+    except (TypeError, ValueError):
+        base = 0
+    rows: list[str] = []
+    max_len = max(len(before), len(after))
+    for idx in range(max_len):
+        b = before[idx] if idx < len(before) else None
+        a = after[idx] if idx < len(after) else None
+        if b != a:
+            rows.append(f"{hex(base + idx)}:{b}->{a}")
+            if len(rows) >= limit:
+                remaining = sum(
+                    1
+                    for tail_idx in range(idx + 1, max_len)
+                    if (before[tail_idx] if tail_idx < len(before) else None)
+                    != (after[tail_idx] if tail_idx < len(after) else None)
+                )
+                if remaining:
+                    rows.append(f"...+{remaining}")
+                break
+    return ";".join(rows)
+
+
 def state_field(state: dict[str, Any] | None, key: str) -> Any:
     if not isinstance(state, dict):
         return None
@@ -512,6 +552,11 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
             after_packets = staging_packets(after)
             before_bytes = flattened_packet_bytes(before_packets)
             after_bytes = flattened_packet_bytes(after_packets)
+            source_watch_before = state_field(before, "id401_packet_source_watch_bytes_at_0xffe0")
+            source_watch_after = state_field(after, "id401_packet_source_watch_bytes_at_0xffe0")
+            source_watch_base = state_field(after, "id401_packet_source_watch_base_vm_addr") or state_field(
+                before, "id401_packet_source_watch_base_vm_addr"
+            )
             dirinfo3_before = packet_at_offset(before_packets, 48)
             dirinfo3_after = packet_at_offset(after_packets, 48)
             dirinfo3_after_raw = raw_from_packet(dirinfo3_after) if dirinfo3_after else None
@@ -531,6 +576,13 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
                     "queue_flag_after": state_field(after, "id401_command_queue_flag_u8_at_0x200ed"),
                     "queue_tail_before": state_field(before, "id401_command_queue_tail_u16_at_0x20cee"),
                     "queue_tail_after": state_field(after, "id401_command_queue_tail_u16_at_0x20cee"),
+                    "source_watch_base": source_watch_base,
+                    "source_watch_base_hex": hex_int(source_watch_base),
+                    "source_watch_before": byte_list_csv(source_watch_before),
+                    "source_watch_after": byte_list_csv(source_watch_after),
+                    "source_watch_changed_bytes": changed_watch_byte_summary(
+                        source_watch_before, source_watch_after, source_watch_base
+                    ),
                     "lc701a_reg03_before": state_field(before, "lc701a_reg_u8_at_0x03"),
                     "lc701a_reg03_after": state_field(after, "lc701a_reg_u8_at_0x03"),
                     "lc701a_reg04_before": state_field(before, "lc701a_reg_u8_at_0x04"),
@@ -912,6 +964,11 @@ def main() -> None:
             "queue_flag_after",
             "queue_tail_before",
             "queue_tail_after",
+            "source_watch_base",
+            "source_watch_base_hex",
+            "source_watch_before",
+            "source_watch_after",
+            "source_watch_changed_bytes",
             "lc701a_reg03_before",
             "lc701a_reg03_after",
             "lc701a_reg04_before",

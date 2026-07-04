@@ -403,3 +403,34 @@ zero" events, the probe now also emits `*_staging_write` rows for every
 `ASM_0x7e/0x77` write into command staging.  The new
 `opcode_staging_writes.csv` includes hex source/destination addresses and can
 directly expose the ordinary raw byte 1 source even when its value remains 0.
+
+That proof was obtained in the next full-spin run:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_02
+```
+
+It shows ordinary DirInfo3 raw byte 1 exactly:
+
+```text
+raw[1]: staging 0xf241 <- source 0xfff0, byte 0
+raw[2]: staging 0xf242 <- source 0xfff1, byte 6
+```
+
+So the remaining target condition is now concrete:
+
+```text
+make source byte 0xfff0 become 8 before packet id 19 is copied
+```
+
+A source-window follow-up also showed candidate source writers:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_source_watch_full_spin_20260704_01
+```
+
+In that run, `0xfff0/0xfff1` changed under `ASM_0x48`, `ASM_0x4a`, and
+`ASM_0xd9`.  Static disassembly confirms these opcodes write two bytes into the
+LC701A VM stack/source area using stack pointer `this+0x0e` and program/register
+state.  The problem has moved one layer upstream again: identify which LC701A
+program state makes the stack/source byte at `0xfff0` equal `8` for DirInfo3.

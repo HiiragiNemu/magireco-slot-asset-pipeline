@@ -11,6 +11,8 @@
 const moduleName = "libGameProc.so";
 const lc701aCommandStagingVmBase = 0xf210;
 const lc701aCommandStagingVmEnd = lc701aCommandStagingVmBase + 0xc00;
+const lc701aPacketSourceWatchVmBase = 0xffe0;
+const lc701aPacketSourceWatchLength = 0x20;
 
 let moduleValue = null;
 let sdGmCallback = null;
@@ -318,6 +320,13 @@ function describeLC701AOpcodeRegisters(thisPointer) {
   };
 }
 
+function readLC701AVmBytesSafe(thisPointer, addressValue, lengthValue) {
+  if (thisPointer === null || thisPointer.isNull() || addressValue === null || addressValue < 0x4000) {
+    return [];
+  }
+  return readU8VectorSafe(thisPointer.add(0x88), addressValue, lengthValue);
+}
+
 function isLC701ACommandStagingAddress(addressValue) {
   return (
     addressValue !== null
@@ -380,6 +389,12 @@ function describeID401CommandState(thisPointer) {
     id401_command_queue_flag_u8_at_0x200ed: readU8Safe(thisPointer, 0x200ed),
     id401_command_queue_tail_u16_at_0x20cee: readU16Safe(thisPointer, 0x20cee),
     id401_pending_len_u8_at_0xf0fe: pendingLen,
+    id401_packet_source_watch_base_vm_addr: lc701aPacketSourceWatchVmBase,
+    id401_packet_source_watch_bytes_at_0xffe0: readLC701AVmBytesSafe(
+      thisPointer,
+      lc701aPacketSourceWatchVmBase,
+      lc701aPacketSourceWatchLength
+    ),
     id401_staging_packets_at_0xf298: readID401CommandRecords(thisPointer.add(0xf298), stagingBytes, 8),
     id401_queue_packets_at_0x200ee: readID401CommandRecords(thisPointer.add(0x200ee), 0xc00, 16),
   }, describeLC701AOpcodeRegisters(thisPointer));
@@ -405,6 +420,7 @@ function id401CommandBufferSignature(state) {
     state.id401_pending_len_u8_at_0xf0fe,
     state.id401_command_queue_flag_u8_at_0x200ed,
     state.id401_command_queue_tail_u16_at_0x20cee,
+    (state.id401_packet_source_watch_bytes_at_0xffe0 || []).join(","),
     id401CommandPacketSignature(state.id401_staging_packets_at_0xf298 || []),
     id401CommandPacketSignature(state.id401_queue_packets_at_0x200ee || []),
   ].join("||");

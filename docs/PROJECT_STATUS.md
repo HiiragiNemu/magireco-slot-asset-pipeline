@@ -2584,3 +2584,90 @@ D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_stagi
 确认 ordinary raw[1]=0 的 source address；
 再寻找什么状态使该 source byte 变成目标值 8。
 ```
+
+## 2026-07-04 追加：DirInfo3 raw[1] source address 闭合到 0xfff0
+
+`opcode_staging_writes.csv` 已在下一次完整 result-window run 中命中 DirInfo3：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_02
+```
+
+关键摘要：
+
+```text
+observer_bytes=11101512
+packet_count=10034
+dirinfo3_packet_count=815
+candidate_count=0
+hook_error_count=0
+opcode_staging_write_count=96
+opcode_staging_write_dirinfo3_byte1_count=1
+opcode_staging_write_dirinfo3_byte2_count=1
+```
+
+普通 DirInfo3 的完整 source -> staging 映射：
+
+```text
+raw[0] 19: 0xf240 <- 0xffef
+raw[1]  0: 0xf241 <- 0xfff0
+raw[2]  6: 0xf242 <- 0xfff1
+raw[3]  0: 0xf243 <- 0xfff2
+raw[4]  0: 0xf244 <- 0xfff3
+raw[5]  1: 0xf245 <- 0xfff4
+raw[6]  0: 0xf246 <- 0xfff5
+raw[7] 26: 0xf247 <- ASM_0x77 register byte
+```
+
+因此目标条件已经从 packet 级进一步收窄为：
+
+```text
+在 packet id 19 拷贝时，LC701A VM source 0xfff0 必须等于 8。
+```
+
+随后新增 source-window signature：
+
+```text
+id401_packet_source_watch_bytes_at_0xffe0
+```
+
+该 signature 被加入 command-state signature，所以任意 opcode 改写
+`0xffe0..0xffff` 都会触发 `*_command_state_change`，并在 CSV 导出
+`source_watch_changed_bytes`。
+
+验证 run：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_source_watch_full_spin_20260704_01
+```
+
+未命中 DirInfo3，但已证明 source-window 追踪能定位 `0xfff0/0xfff1` writer：
+
+```text
+ASM_0x48: 0xfff0 32->86, 0xfff1 17->0
+ASM_0x4a: 0xfff0 86->91
+ASM_0xd9: 0xfff0 91->16, 0xfff1 0->242
+```
+
+静态反汇编输出：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_48_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_4a_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_d9_20260704
+```
+
+解释：
+
+- `ASM_0x48` / `ASM_0x4a` 使用 `this+0x0e` 作为 stack pointer，向
+  `this+0x88+stack` 写入两字节 PC/control 派生值，并更新 `this+0x20`。
+- `ASM_0xd9` 同样向 stack/source 区写入两字节，但来源是 `this+0x06` 的 u16。
+
+下一步最短路径：
+
+```text
+在同一 JSONL 内同时捕获：
+1. source_watch_changed_bytes 修改 0xfff0；
+2. 后续 DirInfo3 raw[1] staging write 读取 0xfff0；
+3. 若 0xfff0=8，则继续追 RxCom/SdGmData/SP Story/BGM。
+```

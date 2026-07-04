@@ -2654,3 +2654,87 @@ appears again.  Then inspect the row where `is_dirinfo3_raw_byte1=True`.  This
 should identify the ordinary raw byte 1 source address and make the target
 condition (`raw[1]=8`) a concrete VM source-byte problem instead of a black-box
 packet problem.
+
+### 2026-07-04 latest: raw byte 1 source identified
+
+The new staging-write table did capture DirInfo3 in:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_staging_write_dirinfo3_try_20260704_02
+```
+
+Key summary:
+
+```text
+observer bytes:                    11,101,512
+packet observations:               10,034
+DirInfo3 packet observations:      815
+target candidates:                 0
+opcode staging writes:             96
+DirInfo3 raw byte 1 staging rows:  1
+DirInfo3 raw byte 2 staging rows:  1
+hook errors:                       0
+```
+
+Critical rows:
+
+```text
+raw[0]: 0xf240 <- 0xffef, byte 19
+raw[1]: 0xf241 <- 0xfff0, byte 0
+raw[2]: 0xf242 <- 0xfff1, byte 6
+raw[3]: 0xf243 <- 0xfff2, byte 0
+raw[4]: 0xf244 <- 0xfff3, byte 0
+raw[5]: 0xf245 <- 0xfff4, byte 1
+raw[6]: 0xf246 <- 0xfff5, byte 0
+raw[7]: 0xf247 <- ASM_0x77 register byte 26
+```
+
+This is an important narrowing.  The target `packet_id=19 && raw_packet[1]=8`
+is now specifically:
+
+```text
+LC701A VM source byte at 0xfff0 must be 8 when ASM_0x7e copies DirInfo3.
+```
+
+A follow-up source-window run:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_source_watch_full_spin_20260704_01
+```
+
+did not reach DirInfo3, but did prove the source-window signature catches
+writers of `0xfff0/0xfff1`:
+
+```text
+ASM_0x48 changed 0xfff0:32->86 and 0xfff1:17->0
+ASM_0x4a changed 0xfff0:86->91
+ASM_0xd9 changed 0xfff0:91->16 and 0xfff1:0->242
+```
+
+Static disassembly outputs:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_48_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_4a_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_source_watch_opcode_d9_20260704
+```
+
+Interpretation:
+
+- `ASM_0x48` decrements the LC701A stack pointer at `this+0x0e` by 2, stores a
+  computed PC/control value as two bytes to `this+0x88+stack`, and updates
+  `this+0x20` from a bytecode operand.
+- `ASM_0x4a` is similar, but ORs the next PC/control byte with `0x200` before
+  writing it back to `this+0x20`.
+- `ASM_0xd9` decrements the same stack pointer by 2 and stores the u16 at
+  `this+0x06` into the VM stack/source area.
+
+Next target for the next AI:
+
+```text
+Run full source-window captures until DirInfo3 and source-window changes are in
+the same JSONL.  Filter command_state_changes.csv for source_watch_changed_bytes
+touching 0xfff0 and compare the last source value before the DirInfo3
+staging_write row.  Then statically trace what state/bytecode path sets the
+register or PC/control value that reaches 0xfff0.
+```
