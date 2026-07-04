@@ -84,6 +84,10 @@ Space policy:
 
 - A: lost newer temporary data during the power outage.  Treat A: as restored
   2026-06-29 backup plus disposable scratch only.
+- A: was lost again in a later power outage on 2026-07-04 and was not restored
+  from backup that time.  Treat A: only as disposable scratch.  Do not cite A:
+  as the only copy of evidence unless the file has been re-created in the
+  current session and also copied to D: or Git.
 - Durable immediate progress root is now:
 
 ```text
@@ -126,6 +130,34 @@ raw_packet[1] == 8
 because `ID401::accessSubProcess()` reverses the 8 raw bytes before
 `fnRxComDirInfo3` sees them.  Do not search by `ac` suffix number or by visual
 contact-sheet similarity.
+
+Second power-loss runtime recovery details:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\gadget_reinject_after_app_restart_second_loss_20260704
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_probe_smoke_after_app_restart_second_loss_20260704
+```
+
+After the second outage, ADB exposed the device as `emulator-5554` rather than
+the older `127.0.0.1:16384`.  Recovery sequence:
+
+```powershell
+adb -s emulator-5554 shell "su -c '/data/local/tmp/frida-server -l 0.0.0.0:27042 >/data/local/tmp/frida-server.log 2>&1 &'"
+adb -s emulator-5554 forward tcp:27042 tcp:27042
+python tools\frida_runtime_probe\reinject_gadget.py --adb-serial emulator-5554 --out-dir <durable evidence dir>
+adb -s emulator-5554 forward tcp:27043 tcp:27043
+```
+
+Known-good recovery result: PID `4207`, `gadget_arch=arm64`, and
+`gadget_sees_libGameProc=true`.  A 5-second lightweight smoke installed 42 hooks
+with no error-like rows.
+
+Avoid long `force_selector_probe` `--control-sequence` runs until the queue is
+made synchronous.  It can fail with `another action is still pending`, drop the
+27043 Gadget connection, and in one attempt terminate the app process.  For the
+next full-spin observation, use one lightweight observer plus ADB physical taps,
+or patch the control host/script to wait for `action_complete` before sending
+the next action.
 
 Before this handoff update, the branch was clean at:
 

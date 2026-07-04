@@ -16,6 +16,25 @@
 
 最新新增：
 
+- 2026-07-04 二次断电恢复：A: 再次丢失，且这次未重新恢复 2026-06-29 备份；
+  继续只把 A: 当可删除 scratch。D: 和 C: 保持安全，最新 durable evidence 仍在
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence`。MuMu 重启后
+  ADB 设备变为 `emulator-5554`，游戏前台为
+  `com.universal777.magireco/.SlotMainActivity`。恢复 Frida 需要先启动设备内
+  `/data/local/tmp/frida-server -l 0.0.0.0:27042`，再
+  `adb -s emulator-5554 forward tcp:27042 tcp:27042`，运行
+  `tools/frida_runtime_probe/reinject_gadget.py --adb-serial emulator-5554`，最后
+  `adb -s emulator-5554 forward tcp:27043 tcp:27043`。成功证据：
+  `D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\gadget_reinject_after_app_restart_second_loss_20260704`
+  显示 PID `4207`、`gadget_arch=arm64`、`gadget_sees_libGameProc=true`；
+  `light_probe_smoke_after_app_restart_second_loss_20260704` 显示
+  `lightweight_spin_audio_probe.js` 42 个 hook installed、0 个 error-like 行。
+  断电前/后尝试的长 `force_selector_probe` control sequence
+  (`body_bet x3 -> lever -> stops`) 会出现 `another action is still pending`，
+  且随后可导致 27043 `frida.TransportError: connection closed`，甚至 app 进程退出。
+  后续完整一局 runtime 捕获应优先使用轻量 observer + ADB 物理输入
+  (`2160x3840`; BET 约 `620,2475-2520`; lever `300,2680`; stop
+  `830/1080/1320,2700`)，或改造控制脚本为同步等待 action_complete 后再发下一步。
 - 2026-07-04 继续补齐 ID401 packet producer 机制：新增
   `docs/research/2026-07-04-id401-command-buffer-source.md`。静态证据表明
   `CSlotBody::analysPacket()` 先调用 `ID401::getCmdBuf(dst, 0xc00)`，再以
