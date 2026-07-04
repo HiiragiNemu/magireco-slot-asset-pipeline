@@ -19,6 +19,10 @@ kept separate from normal story animation.
 - MuMu/ADB recovered after the second outage:
   `emulator-5554`, game PID `4207`, physical resolution `2160x3840`,
   Frida ports `27042` and `27043` forwarded.
+- Later same-day runtime state after another app relaunch:
+  `emulator-5554`, game PID `5294`, Frida ports `27042` and `27043` still
+  listening.  Use the newer PID for live captures; keep PID `4207` as an
+  earlier evidence timestamp, not as the current process identity.
 
 ## What is already solid progress
 
@@ -263,3 +267,54 @@ This is a meaningful step toward a generic solution: the project is no longer
 just seeing completed packets; it is now close to attributing individual packet
 bytes to VM opcodes.  The next proof needed is the same attribution on a run
 that emits the target DirInfo3 packet.
+
+## Same-day update 3: important opcode correction
+
+The "PC 101/113 equals opcode 0x65/0x71" interpretation has been superseded.
+Those values were LC701A program counters, not opcode numbers.
+
+The probe now installs low-noise hooks for all `ASM_0x00..ASM_0xff` opcode
+helpers and emits only when command staging or queue state changes.  A clean
+ready-state spin with corrected stop coordinates produced seven real
+command-state changes and no hook errors:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704
+```
+
+New generated audit table:
+
+```text
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_command_state_changes.csv
+```
+
+The observed ordinary packet byte construction was:
+
+```text
+ASM_0x77: pending length 0 -> 8
+ASM_0x7e: byte 0 -> 4
+ASM_0x7e: byte 1 -> 1
+ASM_0x7e: byte 2 -> 3
+ASM_0x7e: byte 3 -> 156
+ASM_0x7e: byte 4 -> 240
+ASM_0x77: byte 7 -> 148
+```
+
+Static disassembly now identifies:
+
+- `ASM_0x77` as a single-byte VM RAM store from a register byte, and in this
+  packet it also creates the pending 8-byte staging window and writes the final
+  tail/check byte;
+- `ASM_0x7e` as a one-byte copy from one VM RAM address to another, used here
+  to fill the packet body bytes.
+
+This does not yet produce the target SP Story packet.  It is still ordinary
+packet evidence.  Its value is that the project can now attribute packet bytes
+to real VM opcode helpers instead of guessing by `ac` family or visual
+similarity.
+
+Updated distance estimate: one major mechanism gap remains before safe mass
+Bilibili rendering: capture or reproduce the natural condition that builds
+`packet_id=19 && raw_packet[1]=8`, then connect that same run to SP Story
+stage/selector and final audio queue/BGM state.  After that gate is closed, the
+remaining work becomes systematic batch audit and long-edition production.

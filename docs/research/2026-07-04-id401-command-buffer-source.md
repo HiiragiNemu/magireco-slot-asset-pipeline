@@ -419,3 +419,124 @@ valid ready-state capture should directly attribute staging byte creation to
 these opcode helpers.  A later attempted capture installed the new hooks, but
 its physical input did not enter a clean packet-building window and should not
 be treated as mechanism evidence.
+
+## 2026-07-04 follow-up: PC/opcode confusion corrected
+
+The previous section's `ASM_0x65/0x66/0x71/0x72` conclusion is superseded.
+Those values were LC701A program counter values observed in snapshots, not the
+opcode helper names.  They remain useful as program-location evidence, but they
+must not be used as opcode identities.
+
+The probe now installs command-state-change hooks for every opcode helper:
+
+```text
+ID401::CLC701A::ASM_0x00()
+...
+ID401::CLC701A::ASM_0xff()
+```
+
+The emission gate is unchanged: a row is only written if the before/after ID401
+staging or command queue signature changes.
+
+Latest full-opcode capture:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704
+```
+
+This capture used corrected physical stop coordinates after a previous
+input-control run left reels spinning:
+
+```text
+stop buttons around 820,2670 / 1080,2670 / 1360,2670
+```
+
+Summarizer command:
+
+```powershell
+python tools\frida_runtime_probe\summarize_lightweight_spin_probe.py `
+  D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704\observer_light_lc701a_full_opcode_bet_lever_corrected_stops.jsonl `
+  --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704 `
+  --prefix summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2
+```
+
+Important outputs:
+
+```text
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2.json
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_command_state_changes.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_lc701a_enter_sequence.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_packets.csv
+```
+
+Summary values:
+
+```text
+packet_count = 155
+unique_packet_count = 6
+dirinfo3_packet_count = 0
+candidate_count = 0
+hook_error_count = 0
+bgm_event_count = 468
+queue_event_count = 1
+slot_event_count = 1096
+lc701a_enter_sequence_changed_count = 6
+command_state_change_count = 7
+
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change = 5
+  lc701a_opcode_0x77_command_state_change = 2
+```
+
+The command-state table attributes ordinary packet construction to real opcode
+helpers:
+
+```text
+line 719: opcode 0x77, pending_len 0 -> 8
+line 734: opcode 0x7e, byte 0 becomes 4
+line 737: opcode 0x7e, byte 1 becomes 1
+line 740: opcode 0x7e, byte 2 becomes 3
+line 743: opcode 0x7e, byte 3 becomes 156
+line 746: opcode 0x7e, byte 4 becomes 240
+line 777: opcode 0x77, byte 7 becomes 148
+```
+
+Static disassembly:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_writer_opcodes_77_7e_20260704
+```
+
+`ASM_0x77` behavior:
+
+- reads one register byte from `this+0x03`;
+- reads a destination VM RAM address from `this+0x08`;
+- if the address is in VM RAM (`>=0x4000`), writes the byte to
+  `this+0x88+addr`.
+
+`ASM_0x7e` behavior:
+
+- reads destination address from `this+0x06`;
+- reads source address from `this+0x08`;
+- copies one byte from `this+0x88+src` to `this+0x88+dst`;
+- increments source and destination and decrements the count field at
+  `this+0x05`.
+
+Interpretation:
+
+- `ASM_0x77` is currently the direct single-byte staging/tail writer.
+- `ASM_0x7e` is currently the byte-copy helper that fills packet body bytes.
+- The run did not emit DirInfo3 and is not target SP Story proof.
+- The mechanism path is nevertheless improved: future captures can now ask
+  which opcode writes raw packet byte 1 in the target packet, instead of only
+  seeing completed packets after `ID401::getCmdBuf`.
+
+Updated next target:
+
+```text
+Capture packet_id == 19 construction under the full-opcode hook.
+If raw_packet[1] becomes 8, record the exact command_state_change row,
+opcode helper, before/after staging bytes, RxCom dispatch, SdGmData chain,
+SP Story stage/selector, and final OpenSL queue/BGM rows in the same evidence
+root.
+```

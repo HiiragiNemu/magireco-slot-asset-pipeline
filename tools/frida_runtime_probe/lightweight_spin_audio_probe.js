@@ -367,6 +367,21 @@ function attachID401CommandStateChange(symbol, kind) {
   return address;
 }
 
+function twoDigitUpperHex(value) {
+  const text = value.toString(16).toUpperCase();
+  return text.length < 2 ? "0" + text : text;
+}
+
+function installLC701AOpcodeCommandStateHooks() {
+  for (let opcode = 0; opcode <= 0xff; opcode += 1) {
+    const hex = twoDigitUpperHex(opcode);
+    attachID401CommandStateChange(
+      "_ZN5ID4017CLC701A8ASM_0x" + hex + "Ev",
+      "lc701a_opcode_0x" + hex.toLowerCase()
+    );
+  }
+}
+
 function describeID401CopiedCommandBuffer(bufferPointer, lengthValue) {
   if (bufferPointer === null || bufferPointer.isNull()) {
     return { id401_command_buffer_pointer: "0x0", id401_command_buffer_packets: [] };
@@ -642,18 +657,12 @@ function installStoryHooks() {
     ["_ZN5ID4017CLC701A3_JPEt", "lc701a_jp"],
     ["_ZN5ID4017CLC701A4_RETEv", "lc701a_ret"],
     ["_ZN5ID4017CLC701A6_RETEXEv", "lc701a_retex"],
-    ["_ZN5ID4017CLC701A8ASM_0x65Ev", "lc701a_asm_65"],
-    ["_ZN5ID4017CLC701A8ASM_0x66Ev", "lc701a_asm_66"],
-    ["_ZN5ID4017CLC701A8ASM_0x71Ev", "lc701a_asm_71"],
-    ["_ZN5ID4017CLC701A8ASM_0x72Ev", "lc701a_asm_72"],
-    ["_ZN5ID4017CLC701A8ASM_0xA7Ev", "lc701a_asm_a7"],
-    ["_ZN5ID4017CLC701A8ASM_0xAFEv", "lc701a_asm_af"],
-    ["_ZN5ID4017CLC701A8ASM_0xF8Ev", "lc701a_asm_f8"],
     ["_ZN5ID4017CLC701A15SET_ENC_SUBFUNCEv", "lc701a_set_enc_subfunc"],
     ["_ZN5ID4017CLC701A17RESET_ENC_SUBFUNCEv", "lc701a_reset_enc_subfunc"],
   ].forEach((entry) => {
     attachID401CommandStateChange(entry[0], entry[1]);
   });
+  installLC701AOpcodeCommandStateHooks();
   attachSignal("_ZN5ID40116accessSubProcessEPh", "id401_access_subprocess", (args) => {
     const fields = {
       id401_packet_pointer: args[0].toString(),

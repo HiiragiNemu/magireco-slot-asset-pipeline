@@ -2272,3 +2272,90 @@ ID401::CLC701A::ASM_0x72()
 下一次有效 ready-state 捕获应验证这些 opcode hook 是否直接产生
 `*_command_state_change` 事件。若出现 DirInfo3，则重点看 `raw_packet[1]`
 是否由 `ASM_0x71/0x72` 写入。
+
+## 2026-07-04 追加：全 opcode hook 修正 packet writer
+
+上一个小节的 `ASM_0x65/0x66/0x71/0x72` 解释已被更新结果修正：这些数值来自
+LC701A 程序计数器，不应直接当作 opcode helper 编号。当前正确结论如下。
+
+`lightweight_spin_audio_probe.js` 已改为自动 hook 全部
+`ID401::CLC701A::ASM_0x00()` 到 `ASM_0xff()`，仍然只在 ID401 staging 或
+queue signature 实际变化时输出 `*_command_state_change`，避免回到高噪声观测。
+
+最新有效物理输入捕获：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704
+```
+
+写入本节时的当前 live 状态为：
+
+```text
+ADB device: emulator-5554
+game PID:   5294
+Frida:      127.0.0.1:27042 / 27043 listening
+```
+
+若 MuMu 或 app 再次重启，必须重新确认 PID 与 Gadget，不得沿用旧 PID。
+
+v2 汇总输出：
+
+```text
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2.json
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_command_state_changes.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_lc701a_enter_sequence.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_packets.csv
+```
+
+摘要：
+
+```text
+packet_count=155
+unique_packet_count=6
+candidate_count=0
+dirinfo3_packet_count=0
+bgm_event_count=468
+slot_event_count=1096
+hook_error_count=0
+command_state_change_count=7
+command_state_change_kind_counts:
+  lc701a_opcode_0x7e_command_state_change = 5
+  lc701a_opcode_0x77_command_state_change = 2
+```
+
+`command_state_changes.csv` 显示普通 packet 的 staging 写入链条：
+
+```text
+lc701a_opcode_0x77: pending_len 0 -> 8
+lc701a_opcode_0x7e: byte 0 -> 4
+lc701a_opcode_0x7e: byte 1 -> 1
+lc701a_opcode_0x7e: byte 2 -> 3
+lc701a_opcode_0x7e: byte 3 -> 156
+lc701a_opcode_0x7e: byte 4 -> 240
+lc701a_opcode_0x77: byte 7 -> 148
+```
+
+新增静态反汇编：
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_writer_opcodes_77_7e_20260704
+```
+
+当前解释：
+
+- `ASM_0x77` 是单字节 VM RAM store，本次负责创建/维持 8 字节 pending
+  staging，并写入最后一个 tail/check byte。
+- `ASM_0x7e` 是一字节 VM RAM copy，本次负责把 packet body 字节复制进
+  staging。
+- 这不是目标 SP Story 证据，因为本次没有 DirInfo3，也没有
+  `packet_id=19 && raw_packet[1]=8`。
+- 但它已经证明：追踪路线应是 LC701A VM opcode 写包机制，而不是手工按
+  `ac` family 分类或按视觉猜测。
+
+下一步机制目标不变但更精确：
+
+```text
+在自然运行中捕获 packet_id=19 的构建过程，
+确认 raw_packet[1] 何时、由哪个 opcode 写成 8，
+再把同一 run 接到 SP Story stage/selector 与最终 OpenSL queue/BGM。
+```

@@ -327,6 +327,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
     event_code_rows: list[dict[str, Any]] = []
     play_start_rows: list[dict[str, Any]] = []
     slot_rows: list[dict[str, Any]] = []
+    command_state_change_rows: list[dict[str, Any]] = []
     user_label_enters: dict[int, dict[str, Any]] = {}
     lc701a_transition_rows: list[dict[str, Any]] = []
     lc701a_enter_sequence_rows: list[dict[str, Any]] = []
@@ -494,6 +495,48 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
                 row.update({key: state.get(key) for key in SLOT_STATE_KEYS if key in state})
             slot_rows.append(row)
 
+        if kind.endswith("_command_state_change"):
+            before = payload.get("state_before")
+            after = payload.get("state_after")
+            before_packets = staging_packets(before)
+            after_packets = staging_packets(after)
+            before_bytes = flattened_packet_bytes(before_packets)
+            after_bytes = flattened_packet_bytes(after_packets)
+            dirinfo3_before = packet_at_offset(before_packets, 48)
+            dirinfo3_after = packet_at_offset(after_packets, 48)
+            dirinfo3_after_raw = raw_from_packet(dirinfo3_after) if dirinfo3_after else None
+            command_state_change_rows.append(
+                {
+                    "line": line,
+                    "rel_s": t,
+                    "kind": kind,
+                    "symbol": payload.get("symbol"),
+                    "return_symbol": payload.get("return_symbol"),
+                    "retval_i32": payload.get("retval_i32"),
+                    "pc_before": state_field(before, "id401_pc_u16_at_0x20"),
+                    "pc_after": state_field(after, "id401_pc_u16_at_0x20"),
+                    "pending_len_before": state_field(before, "id401_pending_len_u8_at_0xf0fe"),
+                    "pending_len_after": state_field(after, "id401_pending_len_u8_at_0xf0fe"),
+                    "queue_flag_before": state_field(before, "id401_command_queue_flag_u8_at_0x200ed"),
+                    "queue_flag_after": state_field(after, "id401_command_queue_flag_u8_at_0x200ed"),
+                    "queue_tail_before": state_field(before, "id401_command_queue_tail_u16_at_0x20cee"),
+                    "queue_tail_after": state_field(after, "id401_command_queue_tail_u16_at_0x20cee"),
+                    "staging_raw_before": " | ".join(packet_raw_csv(packet) for packet in before_packets),
+                    "staging_raw_after": " | ".join(packet_raw_csv(packet) for packet in after_packets),
+                    "changed_bytes": changed_byte_summary(before_bytes, after_bytes),
+                    "dirinfo3_raw_before": packet_raw_csv(dirinfo3_before),
+                    "dirinfo3_raw_after": packet_raw_csv(dirinfo3_after),
+                    "dirinfo3_byte1_after": dirinfo3_after_raw[1] if dirinfo3_after_raw else "",
+                    "dirinfo3_byte2_after": dirinfo3_after_raw[2] if dirinfo3_after_raw else "",
+                    "candidate_after": bool(
+                        dirinfo3_after_raw
+                        and len(dirinfo3_after_raw) > 1
+                        and dirinfo3_after_raw[0] == 19
+                        and dirinfo3_after_raw[1] == 8
+                    ),
+                }
+            )
+
         if kind == "id401_user_label_work_enter":
             call_count = payload.get("high_level_call_count_for_kind")
             if isinstance(call_count, int):
@@ -646,6 +689,14 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
         "slot_event_count": len(slot_rows),
         "slot_rows_first": small_sample(slot_rows, 40),
         "slot_rows_last": slot_rows[-40:],
+        "command_state_change_count": len(command_state_change_rows),
+        "command_state_change_kind_counts": dict(
+            Counter(row["kind"] for row in command_state_change_rows).most_common()
+        ),
+        "command_state_change_candidate_after_count": sum(
+            1 for row in command_state_change_rows if row.get("candidate_after")
+        ),
+        "command_state_change_first": small_sample(command_state_change_rows, 80),
         "lc701a_transition_count": len(lc701a_transition_rows),
         "lc701a_transition_changed_count": sum(
             1 for row in lc701a_transition_rows if row.get("changed_bytes")
@@ -679,6 +730,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
         "event_codes": event_code_rows,
         "play_start": play_start_rows,
         "slot": slot_rows,
+        "command_state_changes": command_state_change_rows,
         "lc701a_transitions": lc701a_transition_rows,
         "lc701a_enter_sequence": lc701a_enter_sequence_rows,
     }
@@ -759,6 +811,34 @@ def main() -> None:
         out_dir / f"{prefix}_play_start.csv",
         tables["play_start"],
         ["line", "rel_s", "sound_id", "play_index", "sound_u32_at_0x0", "return_symbol"],
+    )
+    write_csv(
+        out_dir / f"{prefix}_command_state_changes.csv",
+        tables["command_state_changes"],
+        [
+            "line",
+            "rel_s",
+            "kind",
+            "symbol",
+            "return_symbol",
+            "retval_i32",
+            "pc_before",
+            "pc_after",
+            "pending_len_before",
+            "pending_len_after",
+            "queue_flag_before",
+            "queue_flag_after",
+            "queue_tail_before",
+            "queue_tail_after",
+            "staging_raw_before",
+            "staging_raw_after",
+            "changed_bytes",
+            "dirinfo3_raw_before",
+            "dirinfo3_raw_after",
+            "dirinfo3_byte1_after",
+            "dirinfo3_byte2_after",
+            "candidate_after",
+        ],
     )
     write_csv(
         out_dir / f"{prefix}_lc701a_transitions.csv",

@@ -2304,3 +2304,120 @@ probe.  The success condition is seeing `lc701a_asm_71_command_state_change` or
 `lc701a_asm_72_command_state_change` rows that explain packet byte writes.  A
 later capture installed the hooks but did not enter packet building; do not use
 that failed-input capture as a negative result.
+
+### 2026-07-04 latest correction: PC values are not opcode ids
+
+The previous handoff action above is now superseded.  Do not continue assuming
+that PC `101/102/113/114` means opcode `ASM_0x65/0x66/0x71/0x72`.  A later
+full-opcode trace proved those values are LC701A program counter values, not
+the opcode helper numbers.
+
+Current tool behavior:
+
+```text
+tools/frida_runtime_probe/lightweight_spin_audio_probe.js
+```
+
+now installs low-noise command-state-change hooks for all opcode helpers:
+
+```text
+ID401::CLC701A::ASM_0x00() through ID401::CLC701A::ASM_0xff()
+```
+
+Only helpers that actually change ID401 staging or queue signatures are emitted,
+so this is suitable for normal physical-input captures without returning to the
+very noisy full observer path.
+
+Corrected stop coordinates for the current 2160x3840 MuMu state:
+
+```text
+BET:   about 620,2475
+lever: about 300,2670
+stop:  about 820,2670 / 1080,2670 / 1360,2670
+```
+
+Latest durable capture:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704
+```
+
+Current live runtime at the time this correction was written:
+
+```text
+device:   emulator-5554
+game PID: 5294
+ports:    127.0.0.1:27042 and 127.0.0.1:27043 listening
+```
+
+If the app is relaunched again, re-check PID and re-run Gadget reinjection
+before relying on port `27043`.
+
+Generated with:
+
+```powershell
+python tools\frida_runtime_probe\summarize_lightweight_spin_probe.py `
+  D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704\observer_light_lc701a_full_opcode_bet_lever_corrected_stops.jsonl `
+  --out-dir D:\magia\MyProducts\casino\runtime_recovery_20260704\evidence\light_lc701a_full_opcode_bet_lever_corrected_stops_20260704 `
+  --prefix summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2
+```
+
+Important files:
+
+```text
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2.json
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_command_state_changes.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_lc701a_enter_sequence.csv
+summary_light_lc701a_full_opcode_bet_lever_corrected_stops_v2_packets.csv
+```
+
+Key facts from that run:
+
+```text
+packet observations:             155
+unique raw packet forms:         6
+DirInfo3 packet rows:            0
+target candidates:               0
+BGM helper rows:                 468
+slot event rows:                 1096
+hook errors:                     0
+command-state-change rows:       7
+command-state-change opcodes:    ASM_0x7e x5, ASM_0x77 x2
+```
+
+Observed ordinary packet construction:
+
+```text
+ASM_0x77: pending_len 0 -> 8
+ASM_0x7e: byte 0 -> 4
+ASM_0x7e: byte 1 -> 1
+ASM_0x7e: byte 2 -> 3
+ASM_0x7e: byte 3 -> 156
+ASM_0x7e: byte 4 -> 240
+ASM_0x77: byte 7 -> 148
+```
+
+Static disassembly for the real writer opcodes:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260704\static_disasm_lc701a_packet_writer_opcodes_77_7e_20260704
+```
+
+Interpretation:
+
+- `ASM_0x77` is a single-byte VM RAM store from a register byte; in this run it
+  also creates the 8-byte pending staging window and writes the final
+  tail/check byte.
+- `ASM_0x7e` is a one-byte VM RAM copy from source address to destination
+  address; in this run it fills packet body bytes.
+- The success condition for the next target run is no longer "see 0x71/0x72".
+  It is "capture the packet id 19 byte construction and identify which opcode
+  writes raw byte 1".  The target remains:
+
+```text
+packet_id == 19 && raw_packet[1] == 8
+```
+
+This is the highest-value next mechanism task.  Once the natural producer of
+that packet is found, connect the same run to SP Story stage/selector values and
+final audio queue/BGM state before doing Bilibili-facing mass renders.
