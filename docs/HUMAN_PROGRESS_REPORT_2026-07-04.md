@@ -1,12 +1,19 @@
 # Human progress report - MagiaReco slot animation recovery
 
-Date: 2026-07-04
+Original date: 2026-07-04
+Current update: 2026-07-12
 
 This is the short human-facing state report after the second A: RAM-disk loss.
 The project goal is unchanged: produce auditable, native-resolution animation
 archives and Bilibili-facing same-scene long editions with correct image,
 voice, subtitles, BGM/bed, and SE.  Slot/gold/particle/gameplay material must be
 kept separate from normal story animation.
+
+The concise current-state and remaining-work audit is
+`docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md`.  It
+supersedes stale PID/path statements below while preserving them as history.
+The latest foreground game PID is `2636`; ADB, root x86 Frida, and the ARM64
+Gadget have been restored, and the Gadget sees `libGameProc.so`.
 
 ## Current safety state
 
@@ -23,6 +30,90 @@ kept separate from normal story animation.
   `emulator-5554`, game PID `5294`, Frida ports `27042` and `27043` still
   listening.  Use the newer PID for live captures; keep PID `4207` as an
   earlier evidence timestamp, not as the current process identity.
+
+## 2026-07-11 human-readable checkpoint
+
+The full extracted game root now lives at
+`D:\magia\MyProducts\casino\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==`.
+The old Downloads path no longer exists.  Code work remains on the 7454
+`codex/corrected-runtime-pipeline` worktree; the D root's local `main` is old and
+is used only as the asset/manifest source.
+
+The most important improvement is that the project is no longer solving each
+`ac` family by visual trial and error.  The currently mapped reusable route is:
+
+```text
+LC701A helper/VM values
+  -> real ID401 command batch
+  -> SP Story lottery and legal stage/selector
+  -> DirectionController macro table
+  -> exact scene and sound request
+  -> PLAY/STOP request semantics
+  -> final CSL playback
+```
+
+Specific solved mechanism gaps:
+
+- the previously mysterious DirInfo3 source is now tied to extended helper
+  `ASM_0xED31` and its `r8` low/high bytes;
+- the parser now requires same-batch ID19 story permission plus a legal ID24
+  stage/selector and no longer counts thousands of snapshots as thousands of
+  real dispatches;
+- the generic DirectionController table/macro layer is mapped, including the
+  correction from uppercase `Pre()` to the real shared lowercase `pre()`;
+- one natural event is closed from event code to `ac0902_276` and from sound
+  request to the exact official Yachiyo dialogue;
+- sound code `295` is a voice-channel STOP request, not a missing BGM track;
+  `CSLStream` is a transport class, not proof that a sound is BGM.
+- a separate low-noise sound logic probe now covers all seven stages from code
+  lookup through final CSL play without copying audio buffers; its installation
+  smoke is complete, and the next natural trigger will test the exact STOP/PLAY
+  chain dynamically.
+
+The newest ordinary natural spin contains 13 real packet dispatches in two
+auditable command batches and zero parser/hook errors.  It is not yet a target
+SP Story spin, so it cannot be used as ac7114/ac7115/ac7116 publication proof.
+
+Distance to the goal should be stated in two parts:
+
+1. **ac7114/ac7115/ac7116 publication gate:** close, but not finished.  Voice,
+   subtitle, source video, and runtime tail-hold behavior are already strong.
+   The remaining hard proof is one natural target session that binds legal
+   ID19+ID24, the SP lottery, scene code, Direction macro, PLAY/STOP chain, and
+   before/after active BGM state.  Then rebuild the clean per-event pair and
+   same-scene long edition and run QA.
+2. **all-game Bilibili archive:** still a substantial batch-production job.
+   The generic mechanism is becoming reusable, but it must first pass the
+   target-session gate, then be applied catalog-wide with manifests, hashes,
+   cumulative timelines, exclusions, and review.  It is not honest to call the
+   entire archive nearly complete yet.
+
+The three remaining engineering gates are therefore:
+
+- prove whether outer gameplay BGM is already active when a target story
+  begins, rather than merely observing that the scene starts no new BGM;
+- turn the single-session logical trace into deterministic composition plans
+  and production manifests without visual classification;
+- run the resulting generator across the catalog, preserving per-event files
+  and producing only verified same-scene long editions/material collections.
+
+The current exact input rule is execution-based.  Neither `CSlotBody+0x454` nor
+`CSlotBody+0x455` tracks per-reel stop permission, so neither may be used as a
+stop-ready gate.  Confirm the game activity is foreground, reach the spin
+state, send only one candidate input at a time, and count it as accepted only
+when that same run's `CSlotBody::process` row contains the corresponding
+nonzero input bit.  Button color is not an evidence source.
+
+The sound-side evidence has also been tightened.  The generic v2 observer
+captures all bounded request metadata and makes only exact request-ID,
+`ReqOrder+0x28`, and same-thread nested-call joins.  CSL start rows deliberately
+carry no recent request context.  The first `ac0910_001` joint log directly
+shows request 344/channel 0 `PLAY` with resource 814 and request 774/channel 2
+`PLAY` with resource 2701; static tables map those paths to final IDs 287 and
+6758, respectively.  Any legacy `same_thread_recent` or
+`global_recent_window` label in that log is invalid as causal evidence.  The
+814/channel-0 path is a strong outer-BGM candidate, but BGM semantics remain
+open until a clean v2 same-run capture includes active-player state.
 
 ## What is already solid progress
 

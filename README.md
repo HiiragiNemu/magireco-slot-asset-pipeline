@@ -9,7 +9,14 @@
 
 ## 当前状态
 
-已完成的本地审计结论见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+接手或恢复工作时先读
+[docs/HANDOFF_NEXT_AI_MAGIRECO.md](docs/HANDOFF_NEXT_AI_MAGIRECO.md)；它是唯一
+核心入口。最新 MuMu 重连、机制修正和量化剩余工作见
+[docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md](docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md)。
+滚动审计结论见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+
+下方历史统计用于资产盘点，不等于已经通过语音、字幕、BGM 和场景语义门禁
+的可投稿成片数量；发生冲突时以核心 handoff 和最新 dated delta 为准。
 
 下一步执行建议见 [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)。
 

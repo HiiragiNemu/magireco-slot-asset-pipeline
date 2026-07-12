@@ -20,6 +20,7 @@ let pioTaskSearchCallback = null;
 let lastPlayStart = null;
 let eventCountByKind = {};
 let lastEmitMsByKind = {};
+let directionFrameSeqByController = {};
 
 function emit(kind, fields) {
   eventCountByKind[kind] = (eventCountByKind[kind] || 0) + 1;
@@ -44,6 +45,14 @@ function toI32(value) {
   }
 }
 
+function toU32(value) {
+  try {
+    return value.toUInt32();
+  } catch (_) {
+    return null;
+  }
+}
+
 function findExport(symbol) {
   try {
     return Module.findGlobalExportByName(symbol);
@@ -63,6 +72,14 @@ function readU8Safe(base, offset) {
 function readU16Safe(base, offset) {
   try {
     return base.add(offset).readU16();
+  } catch (_) {
+    return null;
+  }
+}
+
+function readU32Safe(base, offset) {
+  try {
+    return base.add(offset).readU32();
   } catch (_) {
     return null;
   }
@@ -97,10 +114,113 @@ function readCStringSafe(pointerValue) {
     if (pointerValue === null || pointerValue.isNull()) {
       return { text_utf8: "", text_error: "null" };
     }
-    return { text_utf8: pointerValue.readUtf8String(), text_error: "" };
+    const range = Process.findRangeByAddress(pointerValue);
+    if (range === null || range.protection.indexOf("r") === -1) {
+      return { text_utf8: "", text_error: "unreadable" };
+    }
+    const offsetInRange = pointerValue.sub(range.base).toInt32();
+    const readableBytes = Math.max(0, Math.min(512, range.size - offsetInRange));
+    let textLength = 0;
+    let terminated = false;
+    for (; textLength < readableBytes; textLength += 1) {
+      if (pointerValue.add(textLength).readU8() === 0) {
+        terminated = true;
+        break;
+      }
+    }
+    if (!terminated) {
+      return { text_utf8: "", text_error: "unterminated_within_readable_limit" };
+    }
+    return {
+      text_utf8: textLength === 0 ? "" : pointerValue.readUtf8String(textLength),
+      text_error: "",
+    };
   } catch (error) {
     return { text_utf8: "", text_error: String(error) };
   }
+}
+
+function describeDirectionControllerDeviceData(deviceData) {
+  const result = {
+    direction_device_data_pointer:
+      deviceData === null || deviceData.isNull() ? "0x0" : deviceData.toString(),
+  };
+  if (deviceData === null || deviceData.isNull()) {
+    return result;
+  }
+  const valueKind = readU16Safe(deviceData, 0x0a);
+  const macroBitsLow = readU32Safe(deviceData, 0x00);
+  const payload0 = readPointerSafe(deviceData, 0x10);
+  const payload1 = readPointerSafe(deviceData, 0x18);
+  Object.assign(result, {
+    direction_device_raw_0x28: readU8VectorSafe(deviceData, 0, 0x28),
+    direction_device_macro_bits_hex_at_0x00: readU64HexSafe(deviceData, 0x00),
+    direction_device_channel_u16_at_0x08: readU16Safe(deviceData, 0x08),
+    direction_device_value_kind_u16_at_0x0a: valueKind,
+    direction_device_payload0_hex_at_0x10: readU64HexSafe(deviceData, 0x10),
+    direction_device_payload1_hex_at_0x18: readU64HexSafe(deviceData, 0x18),
+    direction_device_selector_u8_at_0x20: readU8Safe(deviceData, 0x20),
+    direction_device_enabled_u8_at_0x21: readU8Safe(deviceData, 0x21),
+    direction_device_raw_u32_at_0x22: readU32Safe(deviceData, 0x22),
+    direction_device_raw_u16_at_0x26: readU16Safe(deviceData, 0x26),
+    direction_device_payload0_pointer:
+      payload0 === null || payload0.isNull() ? "0x0" : payload0.toString(),
+    direction_device_payload1_pointer:
+      payload1 === null || payload1.isNull() ? "0x0" : payload1.toString(),
+  });
+  if (valueKind === 1 && (macroBitsLow === 1 || macroBitsLow === 2 || macroBitsLow === 4)) {
+    const text0 = readCStringSafe(payload0 || ptr(0));
+    const text1 = macroBitsLow === 4
+      ? { text_utf8: "", text_error: "not_used_by_fade" }
+      : readCStringSafe(payload1 || ptr(0));
+    result.direction_device_payload0_text_utf8 = text0.text_utf8;
+    result.direction_device_payload0_text_error = text0.text_error;
+    result.direction_device_payload1_text_utf8 = text1.text_utf8;
+    result.direction_device_payload1_text_error = text1.text_error;
+  }
+  return result;
+}
+
+function describeDirectionSoundQueueSlot(controller, queueBase, slot, includeSecondCode) {
+  const result = {
+    direction_queue_base: queueBase,
+    direction_queue_slot: slot,
+  };
+  if (controller === null || controller.isNull() || slot === null || slot < 0 || slot >= 10) {
+    return result;
+  }
+  const queueEntry = controller.add(queueBase + slot * 0x18);
+  const code0 = readPointerSafe(queueEntry, 0x00);
+  const code1 = includeSecondCode ? readPointerSafe(queueEntry, 0x08) : null;
+  const text0 = readCStringSafe(code0 || ptr(0));
+  const text1 = readCStringSafe(code1 || ptr(0));
+  return Object.assign(result, {
+    direction_queue_entry: queueEntry.toString(),
+    direction_queue_code0_pointer: code0 === null || code0.isNull() ? "0x0" : code0.toString(),
+    direction_queue_code1_pointer: code1 === null || code1.isNull() ? "0x0" : code1.toString(),
+    direction_queue_code0_text_utf8: text0.text_utf8,
+    direction_queue_code0_text_error: text0.text_error,
+    direction_queue_code1_text_utf8: text1.text_utf8,
+    direction_queue_code1_text_error: text1.text_error,
+    direction_queue_state_u16_at_0x10: readU16Safe(queueEntry, 0x10),
+  });
+}
+
+function describeDirectionEventQueueSlot(controller, slot) {
+  const result = { direction_event_queue_slot: slot };
+  if (controller === null || controller.isNull() || slot === null || slot < 0 || slot >= 10) {
+    return result;
+  }
+  const queueEntry = controller.add(0xd18 + slot * 0x10);
+  const eventInfo = readPointerSafe(queueEntry, 0x00);
+  return Object.assign(result, {
+    direction_event_queue_entry: queueEntry.toString(),
+    direction_event_info_pointer:
+      eventInfo === null || eventInfo.isNull() ? "0x0" : eventInfo.toString(),
+    direction_event_code_hex:
+      eventInfo === null || eventInfo.isNull() ? null : readU64HexSafe(eventInfo, 0x00),
+    direction_event_queue_state_u16_at_0x08: readU16Safe(queueEntry, 0x08),
+  });
 }
 
 function describeSoundData(soundData) {
@@ -142,6 +262,7 @@ function describeSlotBody(bodyPointer) {
   result.body_force_main = readS32Safe(bodyPointer, 0x520);
   result.body_force_sub = readS32Safe(bodyPointer, 0x524);
   result.body_force_parameter = readS32Safe(bodyPointer, 0x528);
+  result.slot_input_enabled = readU8Safe(bodyPointer, 0x455);
   if (statePointer !== null && !statePointer.isNull()) {
     result.body_state = readS32Safe(statePointer, 0x0);
     result.body_mode = readS32Safe(statePointer, 0x4);
@@ -175,13 +296,16 @@ function describeSdGmData() {
       sdgm_rx_copy_stage_u16_at_0x318: readU16Safe(sdGmPointer, 0x318),
       sdgm_rx_copy_selector_u16_at_0x31a: readU16Safe(sdGmPointer, 0x31a),
       sdgm_lot_dir_case_u16_at_0x358: readU16Safe(sdGmPointer, 0x358),
+      sdgm_sp_story_special_case_u16_at_0x35e: readU16Safe(sdGmPointer, 0x35e),
       sdgm_lot_dir_aux_u16_at_0x400: readU16Safe(sdGmPointer, 0x400),
       sdgm_lot_dir_aux_u16_at_0x41e: readU16Safe(sdGmPointer, 0x41e),
+      sdgm_sp_story_enable_u16_at_0x45a: readU16Safe(sdGmPointer, 0x45a),
       sdgm_lot_dir_flag_u8_at_0x4c8: readU8Safe(sdGmPointer, 0x4c8),
       sdgm_lot_dir_flag_u8_at_0x4c9: readU8Safe(sdGmPointer, 0x4c9),
       sdgm_lot_dir_flag_u8_at_0x4ca: readU8Safe(sdGmPointer, 0x4ca),
       sdgm_lot_dir_flag_u8_at_0x4ce: readU8Safe(sdGmPointer, 0x4ce),
       sdgm_source_story_no_u16_at_0x788: readU16Safe(sdGmPointer, 0x788),
+      sdgm_sp_story_probability_selector_u16_at_0x592: readU16Safe(sdGmPointer, 0x592),
       sdgm_lot_stage_u16_at_0x1354: readU16Safe(sdGmPointer, 0x1354),
       sdgm_lot_substage_u16_at_0x1358: readU16Safe(sdGmPointer, 0x1358),
       sdgm_lot_mode_u8_at_0x135e: readU8Safe(sdGmPointer, 0x135e),
@@ -202,12 +326,31 @@ function describeSdGmData() {
       sdgm_ot_at_stryknd_pool5_u16_at_0x1f7c: readU16Safe(sdGmPointer, 0x1f7c),
       sdgm_ot_at_stryknd_pool6_u16_at_0x1f7e: readU16Safe(sdGmPointer, 0x1f7e),
       sdgm_ot_at_stryknd_pool7_u16_at_0x1f80: readU16Safe(sdGmPointer, 0x1f80),
+      sdgm_sp_story_kind_u16_at_0x1f82: readU16Safe(sdGmPointer, 0x1f82),
+      sdgm_sp_story_pool0_u16_at_0x1f84: readU16Safe(sdGmPointer, 0x1f84),
+      sdgm_sp_story_pool1_u16_at_0x1f86: readU16Safe(sdGmPointer, 0x1f86),
+      sdgm_sp_story_pool2_u16_at_0x1f88: readU16Safe(sdGmPointer, 0x1f88),
+      sdgm_sp_story_pool3_u16_at_0x1f8a: readU16Safe(sdGmPointer, 0x1f8a),
+      sdgm_sp_story_pool4_u16_at_0x1f8c: readU16Safe(sdGmPointer, 0x1f8c),
+      sdgm_sp_story_pool5_u16_at_0x1f8e: readU16Safe(sdGmPointer, 0x1f8e),
+      sdgm_sp_story_pool6_u16_at_0x1f90: readU16Safe(sdGmPointer, 0x1f90),
+      sdgm_sp_story_pool7_u16_at_0x1f92: readU16Safe(sdGmPointer, 0x1f92),
       sdgm_ot_at_strychara_pool0_u16_at_0x1f94: readU16Safe(sdGmPointer, 0x1f94),
       sdgm_ot_at_strychara_pool1_u16_at_0x1f96: readU16Safe(sdGmPointer, 0x1f96),
       sdgm_ot_at_strychara_pool2_u16_at_0x1f98: readU16Safe(sdGmPointer, 0x1f98),
       sdgm_ot_at_strychara_pool3_u16_at_0x1f9a: readU16Safe(sdGmPointer, 0x1f9a),
       sdgm_ot_at_strychara_pool4_u16_at_0x1f9c: readU16Safe(sdGmPointer, 0x1f9c),
       sdgm_ot_at_strychara_flag_u8_at_0x1f9e: readU8Safe(sdGmPointer, 0x1f9e),
+      sdgm_sp_story_premdl_kind_u16_at_0x2cde: readU16Safe(sdGmPointer, 0x2cde),
+      sdgm_sp_story_premdl_pool0_u16_at_0x2ce0: readU16Safe(sdGmPointer, 0x2ce0),
+      sdgm_sp_story_premdl_pool1_u16_at_0x2ce2: readU16Safe(sdGmPointer, 0x2ce2),
+      sdgm_sp_story_premdl_pool2_u16_at_0x2ce4: readU16Safe(sdGmPointer, 0x2ce4),
+      sdgm_sp_story_premdl_pool3_u16_at_0x2ce6: readU16Safe(sdGmPointer, 0x2ce6),
+      sdgm_sp_story_premdl_pool4_u16_at_0x2ce8: readU16Safe(sdGmPointer, 0x2ce8),
+      sdgm_sp_story_premdl_pool5_u16_at_0x2cea: readU16Safe(sdGmPointer, 0x2cea),
+      sdgm_sp_story_premdl_pool6_u16_at_0x2cec: readU16Safe(sdGmPointer, 0x2cec),
+      sdgm_sp_story_premdl_pool7_u16_at_0x2cee: readU16Safe(sdGmPointer, 0x2cee),
+      sdgm_sp_story_lottery_result_u16_at_0x2fdc: readU16Safe(sdGmPointer, 0x2fdc),
       sdgm_error: "",
     };
   } catch (error) {
@@ -300,6 +443,12 @@ function describeLC701AOpcodeRegisters(thisPointer) {
   const addressAt0x06 = readU16Safe(thisPointer, 0x06);
   const addressAt0x08 = readU16Safe(thisPointer, 0x08);
   return {
+    lc701a_reg_u16_at_0x02: readU16Safe(thisPointer, 0x02),
+    lc701a_reg_u16_at_0x04: readU16Safe(thisPointer, 0x04),
+    lc701a_reg_u16_at_0x06: addressAt0x06,
+    lc701a_reg_u16_at_0x08: addressAt0x08,
+    lc701a_sp_u16_at_0x0e: readU16Safe(thisPointer, 0x0e),
+    lc701a_bank_u8_at_0x70: readU8Safe(thisPointer, 0x70),
     lc701a_reg_u8_at_0x03: readU8Safe(thisPointer, 0x03),
     lc701a_reg_u8_at_0x04: readU8Safe(thisPointer, 0x04),
     lc701a_reg_u8_at_0x05_count: readU8Safe(thisPointer, 0x05),
@@ -335,6 +484,18 @@ function isLC701ACommandStagingAddress(addressValue) {
   );
 }
 
+function packetIdFromCommandStateAtOffset(state, packetOffset) {
+  if (!state || !Array.isArray(state.id401_staging_packets_at_0xf298)) {
+    return null;
+  }
+  for (const packet of state.id401_staging_packets_at_0xf298) {
+    if (packet && packet.offset === packetOffset && Array.isArray(packet.raw) && packet.raw.length > 0) {
+      return packet.raw[0] & 0x7f;
+    }
+  }
+  return null;
+}
+
 function describeLC701AOpcodeStagingWrite(kind, thisPointer, stateBefore) {
   if (thisPointer === null || thisPointer.isNull() || !stateBefore) {
     return null;
@@ -365,15 +526,28 @@ function describeLC701AOpcodeStagingWrite(kind, thisPointer, stateBefore) {
   const byteOffset = dstAddress - lc701aCommandStagingVmBase;
   const packetOffset = Math.floor(byteOffset / 8) * 8;
   const packetByteIndex = byteOffset % 8;
+  const packetIdBefore = packetIdFromCommandStateAtOffset(stateBefore, packetOffset);
+  const packetIdAfterRaw = readLC701AVmByteSafe(
+    thisPointer,
+    lc701aCommandStagingVmBase + packetOffset
+  );
+  const packetIdAfter = packetIdAfterRaw === null ? null : (packetIdAfterRaw & 0x7f);
+  const isDirInfo3Packet = packetIdBefore === 19 || packetIdAfter === 19;
+  const isDirInfo8Packet = packetIdBefore === 24 || packetIdAfter === 24;
   return Object.assign(fields, {
     lc701a_staging_write_dst_addr: dstAddress,
     lc701a_staging_write_byte_offset: byteOffset,
     lc701a_staging_write_packet_offset: packetOffset,
     lc701a_staging_write_packet_byte_index: packetByteIndex,
+    lc701a_staging_write_packet_id_before: packetIdBefore,
+    lc701a_staging_write_packet_id_after: packetIdAfter,
     lc701a_staging_write_dst_byte_after: readLC701AVmByteSafe(thisPointer, dstAddress),
-    lc701a_staging_write_in_dirinfo3_packet_slot: packetOffset === 48,
-    lc701a_staging_write_is_dirinfo3_raw_byte1: packetOffset === 48 && packetByteIndex === 1,
-    lc701a_staging_write_is_dirinfo3_raw_byte2: packetOffset === 48 && packetByteIndex === 2,
+    lc701a_staging_write_in_dirinfo3_packet_slot: isDirInfo3Packet,
+    lc701a_staging_write_in_dirinfo8_packet_slot: isDirInfo8Packet,
+    lc701a_staging_write_is_dirinfo3_raw_byte1: isDirInfo3Packet && packetByteIndex === 1,
+    lc701a_staging_write_is_dirinfo3_raw_byte2: isDirInfo3Packet && packetByteIndex === 2,
+    lc701a_staging_write_is_dirinfo8_raw_byte2: isDirInfo8Packet && packetByteIndex === 2,
+    lc701a_staging_write_is_dirinfo8_raw_byte3: isDirInfo8Packet && packetByteIndex === 3,
   });
 }
 
@@ -398,6 +572,96 @@ function describeID401CommandState(thisPointer) {
     id401_staging_packets_at_0xf298: readID401CommandRecords(thisPointer.add(0xf298), stagingBytes, 8),
     id401_queue_packets_at_0x200ee: readID401CommandRecords(thisPointer.add(0x200ee), 0xc00, 16),
   }, describeLC701AOpcodeRegisters(thisPointer));
+}
+
+function describeLC701ACoreState(thisPointer) {
+  if (thisPointer === null || thisPointer.isNull()) {
+    return { id401_lc701a_this: "0x0" };
+  }
+  const spValue = readU16Safe(thisPointer, 0x0e);
+  const stackWindowValid = spValue !== null && spValue >= 0x4000 && spValue <= 0xffff;
+  const stackWindowBase = stackWindowValid
+    ? Math.min(0x10000 - 18, Math.max(0x4000, spValue - 8))
+    : null;
+  return Object.assign(
+    {
+      id401_lc701a_this: thisPointer.toString(),
+      id401_pc_u16_at_0x20: readU16Safe(thisPointer, 0x20),
+      id401_packet_source_watch_base_vm_addr: lc701aPacketSourceWatchVmBase,
+      id401_packet_source_watch_bytes_at_0xffe0: readLC701AVmBytesSafe(
+        thisPointer,
+        lc701aPacketSourceWatchVmBase,
+        lc701aPacketSourceWatchLength
+      ),
+      lc701a_stack_window_valid: stackWindowValid,
+      lc701a_stack_window_base_vm_addr: stackWindowBase,
+      lc701a_stack_window_bytes:
+        stackWindowBase === null ? [] : readLC701AVmBytesSafe(thisPointer, stackWindowBase, 18),
+    },
+    describeLC701AOpcodeRegisters(thisPointer)
+  );
+}
+
+function lc701aCoreStateSignature(state) {
+  if (!state) {
+    return "";
+  }
+  return [
+    state.lc701a_sp_u16_at_0x0e,
+    state.lc701a_bank_u8_at_0x70,
+    state.lc701a_reg_u16_at_0x02,
+    state.lc701a_reg_u16_at_0x04,
+    state.lc701a_reg_u16_at_0x06,
+    state.lc701a_reg_u16_at_0x08,
+    (state.id401_packet_source_watch_bytes_at_0xffe0 || []).join(","),
+    state.lc701a_stack_window_valid,
+    state.lc701a_stack_window_base_vm_addr,
+    (state.lc701a_stack_window_bytes || []).join(","),
+  ].join("|");
+}
+
+function attachLC701ACoreStateChange(symbol, kind) {
+  const address = findExport(symbol);
+  if (address === null) {
+    emit("hook_unavailable", { hook_kind: kind, symbol });
+    return null;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        this.thisPointer = args[0];
+        this.callTargetU16 = kind === "lc701a_call" ? (toU32(args[1]) & 0xffff) : null;
+        this.returnAddressValue = this.returnAddress;
+        this.stateBefore = describeLC701ACoreState(args[0]);
+        this.signatureBefore = lc701aCoreStateSignature(this.stateBefore);
+      },
+      onLeave(retval) {
+        const stateAfter = describeLC701ACoreState(this.thisPointer);
+        const signatureAfter = lc701aCoreStateSignature(stateAfter);
+        if (signatureAfter !== this.signatureBefore) {
+          emit(
+            kind + "_core_state_change",
+            Object.assign(
+              {
+                symbol,
+                address: address.toString(),
+                retval_i32: toI32(retval),
+                lc701a_call_target_u16: this.callTargetU16,
+                state_before: this.stateBefore,
+                state_after: stateAfter,
+              },
+              describeReturnAddress(this.returnAddressValue)
+            )
+          );
+        }
+      },
+    });
+  } catch (error) {
+    emit("hook_attach_error", { hook_kind: kind, symbol, address: address.toString(), error: String(error) });
+    return null;
+  }
+  emit("hook_installed", { hook_kind: kind, symbol, address: address.toString(), core_state_change_only: true });
+  return address;
 }
 
 function id401CommandPacketSignature(packets) {
@@ -456,6 +720,7 @@ function attachID401CommandStateChange(symbol, kind) {
                 pc_after: stateAfter.id401_pc_u16_at_0x20,
                 pending_len_before: this.stateBefore.id401_pending_len_u8_at_0xf0fe,
                 pending_len_after: stateAfter.id401_pending_len_u8_at_0xf0fe,
+                lc701a_call_target_u16: this.callTargetU16,
               },
               stagingWrite,
               describeReturnAddress(this.returnAddressValue)
@@ -474,6 +739,7 @@ function attachID401CommandStateChange(symbol, kind) {
                 command_signature_after: signatureAfter,
                 state_before: this.stateBefore,
                 state_after: stateAfter,
+                lc701a_call_target_u16: this.callTargetU16,
               },
               describeReturnAddress(this.returnAddressValue)
             )
@@ -525,6 +791,7 @@ function attachEnterLeave(symbol, kind, callbacks) {
   try {
     Interceptor.attach(address, {
       onEnter(args) {
+        this.returnAddressValue = this.returnAddress;
         this.fields = callbacks && callbacks.onEnter ? callbacks.onEnter(args) : {};
         emit(
           kind + "_enter",
@@ -537,7 +804,14 @@ function attachEnterLeave(symbol, kind, callbacks) {
       },
       onLeave(retval) {
         if (callbacks && callbacks.onLeave) {
-          emit(kind + "_leave", callbacks.onLeave(retval, this.fields || {}));
+          emit(
+            kind + "_leave",
+            Object.assign(
+              { symbol, address: address.toString() },
+              describeReturnAddress(this.returnAddressValue),
+              callbacks.onLeave(retval, this.fields || {}) || {}
+            )
+          );
         }
       },
     });
@@ -770,6 +1044,19 @@ function installStoryHooks() {
       };
     },
   });
+  attachLC701ACoreStateChange(
+    "_ZN5ID40111LC701A_SLOT13_USER_FC_CALLEv",
+    "id401_user_fc_call"
+  );
+  [
+    ["_ZN5ID4017CLC701A5_CALLEt", "lc701a_call"],
+    ["_ZN5ID4017CLC701A10ASM_0xCB33Ev", "lc701a_opcode_0xcb33"],
+    ["_ZN5ID4017CLC701A10ASM_0xED31Ev", "lc701a_opcode_0xed31"],
+    ["_ZN5ID4017CLC701A10ASM_0xEDC7Ev", "lc701a_opcode_0xedc7"],
+    ["_ZN5ID4017CLC701A10ASM_0xEDD7Ev", "lc701a_opcode_0xedd7"],
+  ].forEach((entry) => {
+    attachLC701ACoreStateChange(entry[0], entry[1]);
+  });
   [
     ["_ZN5ID4017CLC701A5_OUTIEib", "lc701a_outi"],
     ["_ZN5ID4017CLC701A6_OUTICEib", "lc701a_outic"],
@@ -885,6 +1172,14 @@ function installStoryHooks() {
       return describeSdGmData();
     },
   });
+  attachEnterLeave("fnLot_OT_AT_SpStryKnd", "lot_ot_at_sp_stryknd", {
+    onEnter() {
+      return describeSdGmData();
+    },
+    onLeave() {
+      return describeSdGmData();
+    },
+  });
   attachEnterLeave("fnLot_OT_AT_StryChara", "lot_ot_at_strychara", {
     onEnter() {
       return describeSdGmData();
@@ -948,7 +1243,199 @@ function installStoryHooks() {
   }
 }
 
+function directionFrameSequence(controller) {
+  if (controller === null || controller.isNull()) {
+    return 0;
+  }
+  return directionFrameSeqByController[controller.toString()] || 0;
+}
+
+function installDirectionFrameCounter() {
+  const symbol = "_ZN25C_DirectionControllerBase3preEv";
+  const address = findExport(symbol);
+  if (address === null) {
+    emit("hook_unavailable", { hook_kind: "direction_frame_counter", symbol });
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const key = args[0].toString();
+        directionFrameSeqByController[key] = (directionFrameSeqByController[key] || 0) + 1;
+      },
+    });
+    emit("hook_installed", {
+      hook_kind: "direction_frame_counter",
+      symbol,
+      address: address.toString(),
+      emits_per_frame: false,
+    });
+  } catch (error) {
+    emit("hook_attach_error", {
+      hook_kind: "direction_frame_counter",
+      symbol,
+      address: address.toString(),
+      error: String(error),
+    });
+  }
+}
+
+function directionMacroEnterFields(args) {
+  return Object.assign(
+    {
+      direction_controller: args[0].toString(),
+      direction_frame_sequence: directionFrameSequence(args[0]),
+    },
+    describeDirectionControllerDeviceData(args[1])
+  );
+}
+
+function attachDirectionSoundMacro(symbol, kind, queueBase, includeSecondCode) {
+  attachEnterLeave(symbol, kind, {
+    onEnter(args) {
+      const fields = directionMacroEnterFields(args);
+      const before = describeDirectionSoundQueueSlot(
+        args[0],
+        queueBase,
+        fields.direction_device_channel_u16_at_0x08,
+        includeSecondCode
+      );
+      fields.direction_queue_state_before_u16 = before.direction_queue_state_u16_at_0x10;
+      fields.direction_queue_code0_before_pointer = before.direction_queue_code0_pointer;
+      fields.direction_queue_code1_before_pointer = before.direction_queue_code1_pointer;
+      fields.direction_queue_code0_before_text_utf8 = before.direction_queue_code0_text_utf8;
+      fields.direction_queue_code1_before_text_utf8 = before.direction_queue_code1_text_utf8;
+      return fields;
+    },
+    onLeave(_retval, fields) {
+      const controller = ptr(fields.direction_controller || "0x0");
+      const slot = fields.direction_device_channel_u16_at_0x08;
+      const after = describeDirectionSoundQueueSlot(controller, queueBase, slot, includeSecondCode);
+      after.direction_queue_changed = Boolean(
+        after.direction_queue_state_u16_at_0x10 !== fields.direction_queue_state_before_u16
+        || after.direction_queue_code0_pointer !== fields.direction_queue_code0_before_pointer
+        || after.direction_queue_code1_pointer !== fields.direction_queue_code1_before_pointer
+        || after.direction_queue_code0_text_utf8 !== fields.direction_queue_code0_before_text_utf8
+        || after.direction_queue_code1_text_utf8 !== fields.direction_queue_code1_before_text_utf8
+      );
+      return Object.assign(
+        fields,
+        after
+      );
+    },
+  });
+}
+
+function attachDirectionEventMacro(symbol, kind) {
+  attachEnterLeave(symbol, kind, {
+    onEnter(args) {
+      const fields = directionMacroEnterFields(args);
+      const before = describeDirectionEventQueueSlot(
+        args[0],
+        fields.direction_device_channel_u16_at_0x08
+      );
+      fields.direction_event_queue_state_before_u16 = before.direction_event_queue_state_u16_at_0x08;
+      fields.direction_event_code_before_hex = before.direction_event_code_hex;
+      return fields;
+    },
+    onLeave(_retval, fields) {
+      const controller = ptr(fields.direction_controller || "0x0");
+      const slot = fields.direction_device_channel_u16_at_0x08;
+      const after = describeDirectionEventQueueSlot(controller, slot);
+      after.direction_event_queue_changed = Boolean(
+        after.direction_event_queue_state_u16_at_0x08 !== fields.direction_event_queue_state_before_u16
+        || after.direction_event_code_hex !== fields.direction_event_code_before_hex
+      );
+      return Object.assign(
+        fields,
+        after
+      );
+    },
+  });
+}
+
+function installDirectionControllerHooks() {
+  installDirectionFrameCounter();
+  attachSignal(
+    "_ZN25C_DirectionControllerBase13PlayMacroDataEmm32tagDirectionControllerDeviceDatat",
+    "direction_macro_dispatch",
+    (args) => {
+      let effectiveMask = "";
+      try {
+        effectiveMask = args[1].and(args[2]).toString();
+      } catch (_) {
+      }
+      return Object.assign(
+        {
+          direction_controller: args[0].toString(),
+          direction_frame_sequence: directionFrameSequence(args[0]),
+          direction_entry_macro_bits_hex: args[1].toString(),
+          direction_active_mask_hex: args[2].toString(),
+          direction_effective_mask_hex: effectiveMask,
+          direction_effective_mask_u32_low: (toU32(args[1]) & toU32(args[2])) >>> 0,
+          direction_table_index_u16: toU32(args[4]) & 0xffff,
+        },
+        describeDirectionControllerDeviceData(args[3])
+      );
+    }
+  );
+  attachDirectionSoundMacro(
+    "_ZN25C_DirectionControllerBase17Macro_SND_SE_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_snd_se_play",
+    0x370,
+    true
+  );
+  attachDirectionSoundMacro(
+    "_ZN25C_DirectionControllerBase18Macro_SND_BGM_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_snd_bgm_play",
+    0x488,
+    true
+  );
+  attachDirectionSoundMacro(
+    "_ZN25C_DirectionControllerBase19Macro_SND_FADE_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_snd_fade_play",
+    0x5a0,
+    false
+  );
+  attachSignal(
+    "_ZN25C_DirectionControllerBase16Macro_CHANGE_ANME32tagDirectionControllerDeviceDatat",
+    "direction_macro_change_anm",
+    (args) => Object.assign(
+      directionMacroEnterFields(args),
+      { direction_table_index_u16: toU32(args[2]) & 0xffff }
+    )
+  );
+  attachDirectionEventMacro(
+    "_ZN25C_DirectionControllerBase16Macro_EVENT_PLAYE32tagDirectionControllerDeviceData",
+    "direction_macro_event_play"
+  );
+  attachSignal(
+    "_ZN25C_DirectionControllerBase19ChangeAnimationDataElht",
+    "direction_change_animation_resolved",
+    (args) => ({
+      direction_controller: args[0].toString(),
+      direction_frame_sequence: directionFrameSequence(args[0]),
+      direction_animation_number_i32: toI32(args[1]),
+      direction_change_arg2_u8: toU32(args[2]) & 0xff,
+      direction_table_index_u16: toU32(args[3]) & 0xffff,
+    })
+  );
+  for (const [symbol, kind] of [
+    ["_ZN9C_AnmBase10fnReqSceneEyhtt", "direction_scene_request"],
+    ["_ZN9C_AnmBase14fnReqSceneOnlyEyhtt", "direction_scene_only_request"],
+  ]) {
+    attachSignal(symbol, kind, (args) => ({
+      animation_object: args[0].toString(),
+      event_code_hex: args[1].toString(),
+      request_arg2_u8: toU32(args[2]) & 0xff,
+      request_arg3_u16: toU32(args[3]) & 0xffff,
+      request_arg4_u16: toU32(args[4]) & 0xffff,
+    }));
+  }
+}
+
 function installAudioHooks() {
+  installDirectionControllerHooks();
   attachSignal("_ZN12C_CtrlSndLib17fnReqSndEventCodeEy", "ctrl_snd_req_event_code", (args) => ({
     this_pointer: args[0].toString(),
     event_code_hex: args[1].toString(),
@@ -1000,7 +1487,6 @@ function installAudioHooks() {
     ["_ZN8C_ObjNml25fnSndRequest_BGM_DIR_NEXTEv", "obj_nml_snd_request_bgm_dir_next"],
     ["_ZN8C_ObjNml26fnSndRequest_BGM_FADE_NEXTEv", "obj_nml_snd_request_bgm_fade_next"],
     ["_ZN8C_ObjNml21fnSndRequest_BGM_FADEEv", "obj_nml_snd_request_bgm_fade"],
-    ["_ZN25C_DirectionControllerBase18Macro_SND_BGM_PLAYE32tagDirectionControllerDeviceData", "direction_macro_snd_bgm_play"],
   ]) {
     attachSignal(symbol, kind, (args) => ({ this_pointer: args[0].toString() }), { rateLimitMs: 1000 });
   }

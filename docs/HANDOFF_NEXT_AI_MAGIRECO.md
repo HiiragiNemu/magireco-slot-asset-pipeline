@@ -1,10 +1,23 @@
 # MagiaReco animation recovery handoff for the next AI
 
-Date: 2026-06-28
+Original date: 2026-06-28
+Current checkpoint: 2026-07-12
 
 This is the core handoff document for continuing the project.  Treat it as the
 first file to read before touching any renders, manifests, probes, or GitHub
 state.
+
+The newest authoritative delta, including the current MuMu PID/reconnect,
+clean sound-chain validation, corrected input semantics, surviving outputs,
+invalid roots, and quantified completion gap, is:
+
+```text
+docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md
+```
+
+When a dated report conflicts with this handoff or that delta, use the newer
+2026-07-12 statement.  Keep older dated reports as audit history rather than
+deleting them.
 
 ## Objective
 
@@ -61,22 +74,129 @@ The accidental `main` branch is not authoritative for this project.
 Runtime/game extraction roots currently in scope:
 
 ```text
-C:\Users\cryne\Downloads\MagiaRe\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==
-A:\magireco_installed_pull_20260603
-A:\magireco_corrected_research_20260612
-A:\magireco_bili_fulltest_20260603
+D:\magia\MyProducts\casino\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==
 D:\magia\MyProducts\casino
 D:\MagiReco_Reverse
 ```
 
+The former `C:\Users\cryne\Downloads\MagiaRe\...` game tree was moved to the
+D path above and no longer exists.  The D game-root checkout is the obsolete
+local `main`; use it for extracted assets/manifests, not for code changes.
+
 Space policy:
 
-- A: RAM-disk scratch/current working outputs.  After the 2026-07-03 power loss,
-  A: may only contain the restored 2026-06-29 backup plus disposable scratch.
+- A: volatile RAM-disk scratch only.  It was cleared again before the
+  2026-07-11 checkpoint.  Existing files may belong to the user; do not delete
+  them merely to obtain space.  Never leave the only evidence copy on A:.
 - C: fast P5801X scratch for many small files if A is tight.
 - D: repository, durable recovery evidence, final verified long/review
   collections, and the replacement progress root
   `D:\magia\MyProducts\casino` for data that must survive another power loss.
+
+## 2026-07-11 authoritative checkpoint - read this before older next steps
+
+The repo/worktree link was repaired after the game-root move.  Read-only audit:
+
+```text
+D game-root checkout: main @ 50e4f5d, origin/main gone, not authoritative
+C 7454 worktree:      codex/corrected-runtime-pipeline @ 6f1bddc before this update
+```
+
+The corrected worktree already contains the v17/v19 pipeline history,
+composition plans, `build_series_editions.py`, and
+`build_material_collection.py`; they were not stranded in the moved D
+checkout.  The newest mechanism work is summarized in:
+
+```text
+docs/research/2026-07-11-generic-runtime-timeline-and-lc701a-helpers.md
+```
+
+The main correction to all older “next step” sections is:
+
+- `0xfff0` is no longer an unexplained byte.  Extended LC701A helper
+  `ASM_0xED31` pushes `r8`; its low/high bytes become DirInfo3
+  `raw[1]/raw[2]` on the relevant `_USER_FC_CALL` path.
+- ID19 `raw[1]=8` is only story permission.  A complete SP Story candidate also
+  needs legal ID24 stage/selector in the same real `accessSubProcess` batch.
+- Count actual dispatches separately from staging/snapshot observations.
+- The generic composition layer is DirectionController
+  `pre -> PlayTableData -> PlayMacroData -> Macro_* -> scene/sound request`.
+- A Direction BGM/fade macro is not audible-play proof.  Preserve queue mutation,
+  request function type (PLAY/STOP), and final CSL play as separate levels.
+
+Latest durable natural-spin evidence:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260711\evidence\light_logic_state_driven_full_spin_20260711_02
+```
+
+Current parser result for that capture:
+
+```text
+packet observations 11149; actual dispatches 13
+copied-buffer observations 26; state/staging snapshots 11110
+DirInfo3 observations/dispatches 899/1
+DirInfo8 observations/dispatches 1843/1
+dispatch batches 2; complete SP Story batches 0
+hook errors 0; parse errors 0
+```
+
+This run is ordinary `ac0902_276`, not ac7114/ac7115/ac7116.  Its event chain
+proves that sound code `295` is a voice-channel STOP request and that the actual
+`CSLStream` id 1360 is the official 9.120375-second Yachiyo dialogue.  No new
+BGM queue mutation occurred, but already-playing outer BGM is still an open
+state question.
+
+The low-noise dynamic request-chain probe is now implemented and has been
+generalized (v2):
+
+```text
+tools/frida_runtime_probe/sound_logic_chain_probe.js
+docs/research/2026-07-11-sound-logic-chain-probe.md
+D:\magia\MyProducts\casino\runtime_recovery_20260712\evidence\sound_logic_chain_probe_smoke_20260712_01
+```
+
+Its smoke has 7/7 hook installs and zero attach/unavailable errors.  It records
+all bounded request metadata, not a hard-coded list, across `codeName2ReqId ->
+request list -> performRequest -> sndPlayReq -> CSLMng::PlayStart`; it does not
+dump audio buffers or full backtraces.  Causal joins are deliberately limited
+to the runtime request ID, `ReqOrder+0x28`, and a `sndPlayReq` call actually
+nested inside the same `performRequest` on the same thread.  `CSLMng::PlayStart`
+is left unassociated and must be joined through the static sound-id table.
+
+The first joint natural log is durable at:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260711\evidence\joint_natural_spin_direction_sound_20260711_01
+```
+
+It is an `ac0910_001` run.  Its legacy `same_thread_recent` and
+`global_recent_window` fields incorrectly make later request orders, resources,
+and final CSL IDs look like children of code 295.  Those temporal/global
+associations are invalid and must be ignored.  The underlying rows still show
+request 344 as channel-0 `PLAY` with resource 814, and request 774 as channel-2
+`PLAY` with resource 2701.  Static tables close `344 -> code 814 -> resource
+814 -> final sound id 287` and `774 -> resource 2701 -> final sound id 6758`;
+the same run observes final IDs 287 and 6758, but CSL itself has no causal
+request context.  Code 814/channel 0 is therefore a strong outer-BGM candidate,
+not yet a final BGM semantic classification.  A clean v2 target run plus
+before/after active-player state is still required.
+
+The next spin must be controlled by executed game logic, not by button
+appearance or a guessed field.  `CSlotBody+0x454` and `CSlotBody+0x455` are both
+disproved as per-reel stop-permission gates: their values do not track accepted
+individual stops.  Confirm the slot activity is foreground, reach the relevant
+logical spin state, then accept a lever/stop action only when that same run's
+`CSlotBody::process` call records the corresponding nonzero input bit.  Send one
+candidate input at a time and retain the process row that proves acceptance.
+The audit anchors are `slot_state_gate_smoke_20260712_02` (idle
+`+0x454=1/+0x455=0`), `joint_natural_spin_mechanism_v3_20260712_01` (the same
+bytes at state 3, while lever acceptance is `input_a=524288`), and
+`light_logic_state_driven_full_spin_20260711_02` (accepted STOP `input_a=2`
+from `CSlotBody::process`).
+Keep one capture alive through those accepted inputs, same-batch ID19+ID24, SP
+Story lottery, Direction macro, sound request PLAY/STOP, final CSL play, and
+before/after active-BGM state.
 
 ## Current repo state at handoff
 

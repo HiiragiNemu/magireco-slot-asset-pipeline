@@ -1,6 +1,93 @@
 # Project Status
 
-更新时间：2026-07-04
+更新时间：2026-07-12
+
+## 2026-07-12 配额约束下的权威增量
+
+最新 MuMu 重连、输入状态纠正、干净 sound-chain 自然验证、仓库树合并原则，
+以及 926-event 剩余工作量，统一记录在：
+
+```text
+docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md
+```
+
+当前前台游戏 PID 为 `2636`；root x86 Frida 27042 与 ARM64 Gadget 已恢复，
+Gadget 可见 `libGameProc.so`。不要再把下方历史 PID 当成当前进程。
+远端只保留 `codex/corrected-runtime-pipeline`；D 盘资源根中的旧本地
+`main@50e4f5d` 只作资源来源。旧状态被新状态覆盖时，以本节和核心 handoff
+为准； dated research 继续保留作审计链。
+
+本轮还纠正了一个新误区：`state+0x64` 的
+`0/0x200000/0x600000/0xe00000` 序列表现为停轮进度/结果掩码，不能作为
+stop-ready 门禁。输入是否被接受仍只看同次
+`CSlotBody::process` 的非零位（max-bet 1048576、lever 524288、stop
+2/4/8）。
+
+## 2026-07-11 机制优先检查点
+
+- 游戏/解包根目录已从旧 Downloads 路径迁移到
+  `D:\magia\MyProducts\casino\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==`。
+  该目录中的 Git checkout 是废弃的本地 `main@50e4f5d`，不能用于代码工作。
+  权威代码 worktree 仍是
+  `C:\Users\cryne\.codex\worktrees\7454\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==`
+  的 `codex/corrected-runtime-pipeline`；目录移动导致的 worktree pointer 已修复。
+- A: 继续只作可丢弃 RAM-disk scratch。D: 的
+  `D:\magia\MyProducts\casino\runtime_recovery_20260710` 与
+  `runtime_recovery_20260711` 保存最新持久证据。
+- 最新机制报告：
+  `docs/research/2026-07-11-generic-runtime-timeline-and-lc701a-helpers.md`。
+  旧的“继续寻找谁把 0xfff0 写成 8”已被进一步闭合：
+  `_USER_FC_CALL` 的扩展 helper 路径经过 `ASM_0xED31`，ED31 的 `r8`
+  低/高字节成为 DirInfo3 `raw[1]/raw[2]`。此前只按两位十六进制名安装
+  opcode hook，漏掉了 ED31/CB33/EDC7/EDD7。
+- SP Story 候选现在采用严格同批门禁：同一真实 `accessSubProcess` batch 内
+  必须同时出现 ID19 `raw[1]=8` 与合法 ID24 stage/selector。ID24 合法矩阵是
+  stage11→1/2、stage12→1/2/3/4/13/14、stage13→1/2；packet id 统一使用
+  `raw[0]&0x7f`。
+- 最新自然一局持久证据：
+  `D:\magia\MyProducts\casino\runtime_recovery_20260711\evidence\light_logic_state_driven_full_spin_20260711_02`。
+  当前解析为 11,149 次 packet 观测、13 次实际 dispatch、26 次 copied-buffer
+  观测、11,110 次 staging/state snapshot；DirInfo3 899/1、DirInfo8 1843/1
+  （观测/dispatch）；两批命令大小 1/12；0 个完整 SP Story batch；0 hook
+  error、0 parse error。batch 表现已保留 line/time/thread/getCmdBuf call count/
+  buffer pointer/length，避免线程交错造成假关联。
+- 通用调度层已定位到
+  `DirectionControllerBase::pre -> PlayTableData -> PlayMacroData -> Macro_* ->`
+  scene/sound request。小写 `pre()` 才是共享逐帧入口；旧的大写 `Pre()` hook
+  会令 frame sequence 恒为 0。SE/BGM/FADE/EVENT queue 布局和
+  `PlayMacroData` ABI 已静态确认。
+- 上述自然局在约 111.4 s 调度的 scene event code 映射到 `ac0902_276`。
+  code 291→request96→STOP；code295→request100→voice channel 0x9 STOP。
+  实际 CSL id1360 是 resource16048、request3094、官方八千代对白，运行时
+  875,556 bytes 与 9.120375 s、48 kHz、mono 官方 OGG 解码长度完全一致。
+  `CSLStream` 不是 BGM 分类。
+- 该局 `bgm_pending_queue_mutation_count=0`，只证明场景窗口没有新排入 BGM；
+  尚不能证明进入事件前没有已经播放的 outer gameplay BGM。通用 v2 hook 已实现
+  `codeName2ReqId -> zgSndReqId/getRequest/setRequestList -> performRequest ->`
+  `sndPlayReq -> CSLMng::PlayStart` 的全量有界元数据链，说明见
+  `docs/research/2026-07-11-sound-logic-chain-probe.md`。v2 只承认运行时 request ID、
+  `ReqOrder+0x28` 静态 join key、同线程且实际嵌套于 `performRequest` 的
+  `sndPlayReq`；CSL 不附加 recent context，必须走 sound-id 静态表。
+  `D:\magia\MyProducts\casino\runtime_recovery_20260712\evidence\sound_logic_chain_probe_smoke_20260712_01`
+  为 7/7 hook installed、0 unavailable/attach error。
+- 首个同源自然声音日志
+  `D:\magia\MyProducts\casino\runtime_recovery_20260711\evidence\joint_natural_spin_direction_sound_20260711_01`
+  是 `ac0910_001`。其中旧版 `same_thread_recent/global_recent_window` 把后续
+  order/resource/CSL 错挂到 code295，相关因果关联已全部作废；底层行仍直接记录
+  request344/channel0 `PLAY`/resource814 与 request774/channel2 `PLAY`/resource2701。
+  静态表闭合 `request344 -> code814 -> resource814 -> final287` 和
+  `request774 -> resource2701 -> final6758`，同局也见 final287/6758；但 CSL 行
+  本身无 request 因果上下文。code814/channel0 是强 outer-BGM 候选，BGM 最终
+  语义仍需 v2 同局证据和 active-player 前后状态确认。
+- 下一轮输入不得看蓝色按钮猜时机，也不得再把 `CSlotBody+0x454` 或 `+0x455`
+  当逐轮许可；两者均已被运行态反证。先确认游戏 activity 在前台，再进入旋转逻辑
+  状态；lever/每次 stop 只有在同次运行的 `CSlotBody::process` 实际收到对应非零
+  input bit 时才算接受。`slot_state_gate_smoke_20260712_02` 在 idle 见
+  `+0x454=1/+0x455=0`；`joint_natural_spin_mechanism_v3_20260712_01` 到 state3
+  仍是同值，但 lever 接受行是 `input_a=524288`；旧完整局的已接受 STOP 行则是
+  `input_a=2`。每次只试一个位置并保留该 process 行。目标是一次同源
+  JSONL 绑定已接受输入、ID19+ID24、SP Story lottery、Direction frame/macro、
+  场景码、PLAY/STOP、CSL 与 BGM 状态；未闭合前继续禁止批量晋升投稿成片。
 
 ## 2026-06-26 v18 当前状态
 

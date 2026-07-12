@@ -49,6 +49,7 @@ BGM_CONTROL_KINDS = {
     "obj_nml_snd_request_bgm_fade_next",
     "obj_nml_snd_request_bgm_fade",
     "direction_macro_snd_bgm_play",
+    "direction_macro_snd_bgm_play_leave",
     "obj_select_bns_snd_request_bgm",
     "sound_mng_is_already_playing_bgm",
     "snd_is_already_playing_bgm",
