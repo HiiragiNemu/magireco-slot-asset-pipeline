@@ -10,11 +10,14 @@
   "excluded_audio_code_names": [
     "8040_シネスコ変化音_金帯"
   ],
+  "graphical_only_subtitle_z2d_names": [
+    "cap7115_sp4_kdpl_kae_006"
+  ],
   "native_dimensions": {
     "width": 512,
     "height": 288
   },
-  "evidence": "clean animation edition: official runtime capture 2026-06-18 binds the main story DGM to all official audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; stable-tail contact audit verifies holding the main story frame through the runtime subtitle and audio tail",
+  "evidence": "clean animation edition: official runtime capture 2026-06-18 binds the main story DGM to all official audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; stable-tail contact audit verifies holding the main story frame through the runtime subtitle and audio tail; cap7115_sp4_kdpl_kae_006 is retained as graphical display text but explicitly detached from the false request 8894 text-similarity match because the target runtime sound list never called 8894",
   "clips": [
     {
       "dgm_name": "ac7115_AT_SP_story4_01",

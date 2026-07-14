@@ -14,6 +14,7 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
 )
 from tools.frida_runtime_probe.build_event_production_manifests import (
     apply_runtime_voice_subtitle_overrides,
+    filter_subtitle_rows_for_plan,
     load_voice_subtitle_overrides,
     merge_runtime_graphical_subtitle_rows,
 )
@@ -40,6 +41,34 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
 
 
 class CompositionPlanTests(unittest.TestCase):
+    def test_graphical_only_subtitle_keeps_text_without_false_voice_binding(self) -> None:
+        rows = [
+            {
+                "text": "ごめんね…",
+                "start_ms": 100,
+                "end_ms": 900,
+                "voice_request_id": "8894",
+                "voice_start_ms": 100,
+                "z2d_name": "cap7115_sp4_kdpl_kae_006",
+                "speaker_code": "mad",
+                "subtitle_source": "runtime_voice_and_graphical_text",
+                "evidence": "legacy_text_similarity",
+            }
+        ]
+        filtered = filter_subtitle_rows_for_plan(
+            rows,
+            {
+                "graphical_only_subtitle_z2d_names": [
+                    "cap7115_sp4_kdpl_kae_006"
+                ]
+            },
+        )
+        self.assertEqual(filtered[0]["text"], "ごめんね…")
+        self.assertEqual(filtered[0]["voice_request_id"], "")
+        self.assertEqual(filtered[0]["voice_start_ms"], 0)
+        self.assertEqual(filtered[0]["speaker_code"], "")
+        self.assertEqual(filtered[0]["subtitle_source"], "graphical_display_text")
+
     def test_lev_plan_separates_title_overlay_from_backgrounds(self) -> None:
         plan = lev_plan(
             {

@@ -800,6 +800,27 @@ def filter_subtitle_rows_for_plan(
     subtitle_rows: list[dict],
     composition_plan: dict | None,
 ) -> list[dict]:
+    graphical_only_z2d_names = plan_exclusion_values(
+        composition_plan,
+        "graphical_only_subtitle_z2d_names",
+    )
+    if graphical_only_z2d_names:
+        subtitle_rows = [
+            {
+                **row,
+                "voice_request_id": "",
+                "voice_start_ms": 0,
+                "speaker_code": "",
+                "subtitle_source": "graphical_display_text",
+                "evidence": (
+                    f"{row.get('evidence', '')};"
+                    "composition_plan_graphical_only_no_voice_binding"
+                ).strip(";"),
+            }
+            if str(row.get("z2d_name", "")).strip() in graphical_only_z2d_names
+            else row
+            for row in subtitle_rows
+        ]
     request_ids = plan_exclusion_values(
         composition_plan,
         "excluded_audio_request_ids",

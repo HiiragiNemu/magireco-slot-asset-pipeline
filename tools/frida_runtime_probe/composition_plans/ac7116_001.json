@@ -14,7 +14,7 @@
     "width": 512,
     "height": 288
   },
-  "evidence": "clean animation edition: official runtime capture 2026-06-18 binds the main story DGM to all official audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; stable-tail contact audit verifies holding the main story frame through the runtime subtitle and audio tail",
+  "evidence": "clean animation edition: official runtime capture 2026-06-18 binds the main story DGM to all official audio and subtitles; gold-frame, particle, and slot UI layers are deliberately excluded from the audience upload and retained only as separate material assets; same-run 2026-07-03 Z2D evidence names ac7116_AT_SP_story5_01.dgm, proves end frame 337 remains drawable with GetDecodeFrame=337 and IsDrawTime=1 through the 11.267-13.05 s voice tail, so hold_last_frame is runtime-mechanism proven rather than a visual guess; the outage-lost July 3 raw log still merits a natural durable recapture but does not reopen the hold mechanism",
   "clips": [
     {
       "dgm_name": "ac7116_AT_SP_story5_01",

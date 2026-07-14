@@ -374,6 +374,170 @@ def collect_packets_from_field(
         )
 
 
+class DispatchBatchTracker:
+    """Correlate real ``accessSubProcess`` calls with their command-buffer batch.
+
+    The offline summarizer and the natural-spin hunt driver must use the same
+    packet semantics.  Snapshot/copy observations are deliberately excluded:
+    only an actual ``ID401::accessSubProcess`` call can complete a batch.
+
+    ``strict=True`` is intended for new live evidence.  It requires a thread,
+    a readable command-buffer base/length, an in-range packet pointer, and
+    eight-byte packet alignment.  The default preserves the legacy summarizer's
+    ability to describe older captures that lacked some of that metadata.
+    """
+
+    def __init__(self, *, strict: bool = False) -> None:
+        self.strict = strict
+        self.dispatch_batch_index = 0
+        self.metadata: dict[int, dict[str, Any]] = {}
+        self.latest_batch_by_thread: dict[str, int] = {}
+        self.rows_by_batch: dict[int, list[dict[str, Any]]] = {}
+
+    def register_get_cmd_buf(
+        self,
+        payload: dict[str, Any],
+        *,
+        line: int,
+        rel_time: float | None,
+    ) -> int:
+        self.dispatch_batch_index += 1
+        batch = self.dispatch_batch_index
+        thread_id = payload.get("thread_id")
+        thread_key = str(thread_id) if thread_id is not None else ""
+        if thread_key:
+            self.latest_batch_by_thread[thread_key] = batch
+        self.metadata[batch] = {
+            "source_line": line,
+            "source_rel_s": rel_time,
+            "thread_id": thread_id if thread_id is not None else "",
+            "get_cmd_buf_call_count": payload.get("high_level_call_count_for_kind", ""),
+            "command_buffer_pointer": payload.get("id401_command_buffer_pointer", ""),
+            "command_buffer_length": payload.get("id401_command_buffer_length", ""),
+        }
+        return batch
+
+    def _resolve_access_batch(self, payload: dict[str, Any]) -> int | None:
+        thread_id = payload.get("thread_id")
+        thread_key = str(thread_id) if thread_id is not None else ""
+        packet_address = pointer_int(payload.get("id401_packet_pointer"))
+
+        if thread_key and thread_key in self.latest_batch_by_thread:
+            batch = self.latest_batch_by_thread[thread_key]
+            metadata = self.metadata.get(batch, {})
+            base_address = pointer_int(metadata.get("command_buffer_pointer"))
+            try:
+                buffer_length = int(metadata.get("command_buffer_length"))
+            except (TypeError, ValueError):
+                buffer_length = 0
+
+            if self.strict:
+                if packet_address is None or base_address is None or buffer_length <= 0:
+                    return None
+                if not (
+                    base_address <= packet_address
+                    and packet_address + 8 <= base_address + buffer_length
+                ):
+                    return None
+                if (packet_address - base_address) % 8 != 0:
+                    return None
+                return batch
+
+            if (
+                packet_address is None
+                or base_address is None
+                or buffer_length <= 0
+                or base_address <= packet_address < base_address + buffer_length
+            ):
+                return batch
+            return None
+
+        if not self.strict and not thread_key and self.dispatch_batch_index:
+            # Legacy captures did not record thread/pointer metadata.
+            return self.dispatch_batch_index
+        return None
+
+    def observe_access(
+        self,
+        payload: dict[str, Any],
+        *,
+        line: int,
+        rel_time: float | None,
+        source_kind: str,
+    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        raw = raw_from_access(payload)
+        if raw is None:
+            return None, None
+        batch = self._resolve_access_batch(payload)
+        row = packet_row(
+            line=line,
+            rel_time=rel_time,
+            source_kind=source_kind,
+            source_field="id401_access_subprocess_raw",
+            offset=None,
+            raw=raw,
+            dispatch_batch=batch,
+            thread_id=payload.get("thread_id"),
+            buffer_pointer=payload.get("id401_packet_pointer"),
+            packet={
+                "callback0_symbol": payload.get("id401_callback0_symbol"),
+                "callback1_symbol": payload.get("id401_callback1_symbol"),
+            },
+        )
+        if isinstance(batch, int):
+            self.rows_by_batch.setdefault(batch, []).append(row)
+            summary = self.batch_summary(batch)
+            if summary["complete_sp_story_candidate"]:
+                # A real accessSubProcess batch can keep receiving packets after
+                # it first becomes complete.  Live consumers need the refreshed
+                # selection set (for example stage-12 selectors 1..4 arriving
+                # after 13/14), while the offline summarizer ignores this return
+                # value and derives one final summary per batch below.
+                return row, summary
+        return row, None
+
+    def batch_summary(self, batch: int) -> dict[str, Any]:
+        rows = self.rows_by_batch.get(batch, [])
+        story_rows = [row for row in rows if row.get("story_dispatch_candidate")]
+        selection_rows = [row for row in rows if row.get("sp_story_selection_candidate")]
+        metadata = self.metadata.get(batch, {})
+        story_raws = [list(row.get("raw") or []) for row in story_rows]
+        selection_raws = [list(row.get("raw") or []) for row in selection_rows]
+        return {
+            "dispatch_batch": batch,
+            "source_line": metadata.get("source_line", ""),
+            "source_rel_s": metadata.get("source_rel_s", ""),
+            "thread_id": metadata.get("thread_id", ""),
+            "get_cmd_buf_call_count": metadata.get("get_cmd_buf_call_count", ""),
+            "command_buffer_pointer": metadata.get("command_buffer_pointer", ""),
+            "command_buffer_length": metadata.get("command_buffer_length", ""),
+            "packet_count": len(rows),
+            "packet_raw_csv": " | ".join(str(row.get("raw_csv") or "") for row in rows),
+            "story_dispatch_candidate": bool(story_rows),
+            "sp_story_selection_candidate": bool(selection_rows),
+            "complete_sp_story_candidate": bool(story_rows and selection_rows),
+            "story_dispatch_raw_csv": " | ".join(
+                str(row.get("raw_csv") or "") for row in story_rows
+            ),
+            "sp_story_selection_raw_csv": " | ".join(
+                str(row.get("raw_csv") or "") for row in selection_rows
+            ),
+            "story_dispatch_raws": story_raws,
+            "sp_story_selection_raws": selection_raws,
+            "sp_story_selection_pairs": [
+                {"stage": raw[3], "selector": raw[2]}
+                for raw in selection_raws
+                if len(raw) == 8
+            ],
+        }
+
+    def dispatch_batches(self) -> list[dict[str, Any]]:
+        return [
+            self.batch_summary(batch)
+            for batch in sorted(self.rows_by_batch)
+        ]
+
+
 def small_sample(rows: list[dict[str, Any]], limit: int = 20) -> list[dict[str, Any]]:
     return rows[:limit]
 
@@ -592,9 +756,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
     lc701a_transition_rows: list[dict[str, Any]] = []
     lc701a_enter_sequence_rows: list[dict[str, Any]] = []
     previous_user_label_enter: dict[str, Any] | None = None
-    dispatch_batch_index = 0
-    dispatch_batch_metadata: dict[int, dict[str, Any]] = {}
-    latest_dispatch_batch_by_thread: dict[str, int] = {}
+    dispatch_tracker = DispatchBatchTracker()
 
     state_values: dict[str, set[Any]] = {key: set() for key in SLOT_STATE_KEYS}
     sdgm_values: dict[str, set[Any]] = {key: set() for key in SDGM_KEYS}
@@ -611,20 +773,11 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
 
         current_record_dispatch_batch: int | None = None
         if kind == "id401_get_cmd_buf_leave":
-            dispatch_batch_index += 1
-            current_record_dispatch_batch = dispatch_batch_index
-            thread_id = payload.get("thread_id")
-            thread_key = str(thread_id) if thread_id is not None else ""
-            if thread_key:
-                latest_dispatch_batch_by_thread[thread_key] = dispatch_batch_index
-            dispatch_batch_metadata[dispatch_batch_index] = {
-                "source_line": line,
-                "source_rel_s": t,
-                "thread_id": thread_id if thread_id is not None else "",
-                "get_cmd_buf_call_count": payload.get("high_level_call_count_for_kind", ""),
-                "command_buffer_pointer": payload.get("id401_command_buffer_pointer", ""),
-                "command_buffer_length": payload.get("id401_command_buffer_length", ""),
-            }
+            current_record_dispatch_batch = dispatch_tracker.register_get_cmd_buf(
+                payload,
+                line=line,
+                rel_time=t,
+            )
 
         if kind != "json_parse_error" and "error" in kind.lower():
             hook_errors.append({"line": line, "kind": kind, "payload": payload})
@@ -634,48 +787,14 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
                 parse_errors.append(f"{line}:{kind}:{err}")
 
         # Direct ID401 accessSubProcess packet.
-        raw = raw_from_access(payload)
-        if raw is not None:
-            access_thread_id = payload.get("thread_id")
-            access_thread_key = str(access_thread_id) if access_thread_id is not None else ""
-            access_packet_pointer = payload.get("id401_packet_pointer")
-            access_packet_address = pointer_int(access_packet_pointer)
-            access_dispatch_batch: int | None = None
-            if access_thread_key and access_thread_key in latest_dispatch_batch_by_thread:
-                candidate_batch = latest_dispatch_batch_by_thread[access_thread_key]
-                metadata = dispatch_batch_metadata.get(candidate_batch, {})
-                base_address = pointer_int(metadata.get("command_buffer_pointer"))
-                try:
-                    buffer_length = int(metadata.get("command_buffer_length"))
-                except (TypeError, ValueError):
-                    buffer_length = 0
-                if (
-                    access_packet_address is None
-                    or base_address is None
-                    or buffer_length <= 0
-                    or base_address <= access_packet_address < base_address + buffer_length
-                ):
-                    access_dispatch_batch = candidate_batch
-            elif not access_thread_key and dispatch_batch_index:
-                # Legacy captures did not record thread/pointer metadata.
-                access_dispatch_batch = dispatch_batch_index
-            packet_rows.append(
-                packet_row(
-                    line=line,
-                    rel_time=t,
-                    source_kind=kind,
-                    source_field="id401_access_subprocess_raw",
-                    offset=None,
-                    raw=raw,
-                    dispatch_batch=access_dispatch_batch,
-                    thread_id=access_thread_id,
-                    buffer_pointer=access_packet_pointer,
-                    packet={
-                        "callback0_symbol": payload.get("id401_callback0_symbol"),
-                        "callback1_symbol": payload.get("id401_callback1_symbol"),
-                    },
-                )
-            )
+        access_row, _new_complete_batch = dispatch_tracker.observe_access(
+            payload,
+            line=line,
+            rel_time=t,
+            source_kind=kind,
+        )
+        if access_row is not None:
+            packet_rows.append(access_row)
 
         # Command-buffer packet arrays can appear directly, under copied_buffer,
         # and under LC701A before/after state snapshots.
@@ -1123,38 +1242,7 @@ def summarize(path: Path) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]
     dirinfo3_dispatch_packets = [row for row in dispatch_packet_rows if row.get("packet_id") == 19]
     dirinfo8_dispatch_packets = [row for row in dispatch_packet_rows if row.get("packet_id") == 24]
 
-    dispatch_batches_by_id: dict[int, list[dict[str, Any]]] = {}
-    for row in dispatch_packet_rows:
-        batch = row.get("dispatch_batch")
-        if isinstance(batch, int):
-            dispatch_batches_by_id.setdefault(batch, []).append(row)
-    dispatch_batches: list[dict[str, Any]] = []
-    for batch, rows in sorted(dispatch_batches_by_id.items()):
-        story_rows = [row for row in rows if row.get("story_dispatch_candidate")]
-        selection_rows = [row for row in rows if row.get("sp_story_selection_candidate")]
-        metadata = dispatch_batch_metadata.get(batch, {})
-        dispatch_batches.append(
-            {
-                "dispatch_batch": batch,
-                "source_line": metadata.get("source_line", ""),
-                "source_rel_s": metadata.get("source_rel_s", ""),
-                "thread_id": metadata.get("thread_id", ""),
-                "get_cmd_buf_call_count": metadata.get("get_cmd_buf_call_count", ""),
-                "command_buffer_pointer": metadata.get("command_buffer_pointer", ""),
-                "command_buffer_length": metadata.get("command_buffer_length", ""),
-                "packet_count": len(rows),
-                "packet_raw_csv": " | ".join(str(row.get("raw_csv") or "") for row in rows),
-                "story_dispatch_candidate": bool(story_rows),
-                "sp_story_selection_candidate": bool(selection_rows),
-                "complete_sp_story_candidate": bool(story_rows and selection_rows),
-                "story_dispatch_raw_csv": " | ".join(
-                    str(row.get("raw_csv") or "") for row in story_rows
-                ),
-                "sp_story_selection_raw_csv": " | ".join(
-                    str(row.get("raw_csv") or "") for row in selection_rows
-                ),
-            }
-        )
+    dispatch_batches = dispatch_tracker.dispatch_batches()
 
     bgm_pending_queue_mutations = [
         row

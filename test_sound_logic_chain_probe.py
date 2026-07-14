@@ -84,6 +84,87 @@ class SoundLogicChainProbeTests(unittest.TestCase):
         self.assertNotIn("this.context =", self.source)
         self.assertIn("this.soundLogicContext =", self.source)
 
+    def test_active_sound_snapshot_uses_versioned_csl_layout_and_getters(self) -> None:
+        for token in (
+            'lib_amain_sha256: "58E3F7A9DBCE2E3D79D1A5A30F1DBFEEAC5BB4712BD4D8FF4E6328D2631DCA5D"',
+            'name: "_ZN6CSLMng4CalcEv"',
+            'name: "_ZN6CSLMng8SndGetIDEi"',
+            'name: "_ZN6CSLMng13SndGetChannelEi"',
+            'name: "_ZN6CSLMng10SndGetTimeEi"',
+            'name: "_ZN6CSLMng13SndGetLoopNumEi"',
+            'name: "_ZN6CSLMng14SndGetPriorityEi"',
+            'name: "_ZN6CSLMng11SndGetLoopFEi"',
+            'name: "_ZN6CSLMng11SndGetWaitFEi"',
+            'name: "_ZN6CSLMng12SndGetPauseFEi"',
+            "const CSL_ACTIVE_VECTOR_BEGIN_OFFSET = 0xa0",
+            "const CSL_ACTIVE_VECTOR_END_OFFSET = 0xa8",
+            "const CSL_ACTIVE_SLOT_STRIDE = 0x38",
+        ):
+            self.assertIn(token, self.source)
+
+    def test_active_sound_snapshot_is_bounded_and_does_not_claim_bgm_semantics(self) -> None:
+        for token in (
+            "const MAX_ACTIVE_SOUND_SLOTS = 128",
+            "Math.min(declaredCount, MAX_ACTIVE_SOUND_SLOTS)",
+            "capture_cap_is_declared_game_limit: false",
+            "byteLength % CSL_ACTIVE_SLOT_STRIDE !== 0",
+            "readableSpan(begin, byteLength)",
+            'classification_rule: "active_transport_state_only_csl_resource_table_channel_zero_is_not_bgm_proof"',
+            "csl_resource_table_channel_zero_candidate_only:",
+            "transportPlaying && channel === 0",
+            "bgm_semantics_proven: false",
+            "outerbgmsnapshot(label)",
+            'snapshot_runs_on_csl_calc_thread: executionSource === "cslMngCalc_on_enter"',
+        ):
+            self.assertIn(token, self.source)
+        self.assertNotIn("confirmed_outer_bgm", self.source)
+
+    def test_defensive_cap_does_not_truncate_observed_65_slot_vector(self) -> None:
+        match = re.search(
+            r"const MAX_ACTIVE_SOUND_SLOTS = (\d+);",
+            self.source,
+        )
+        self.assertIsNotNone(match)
+        capture_cap = int(match.group(1))
+        self.assertEqual(capture_cap, 128)
+        self.assertEqual(min(65, capture_cap), 65)
+        self.assertFalse(65 > capture_cap)
+        self.assertIn("capture_cap_is_declared_game_limit: false", self.source)
+
+    def test_calc_hook_exists_only_during_one_snapshot_rpc(self) -> None:
+        self.assertIn("prepareCslCalcSnapshotEntry()", self.source)
+        self.assertIn("Interceptor.attach(cslCalcSnapshotAddress", self.source)
+        self.assertIn("listener.detach()", self.source)
+        self.assertIn(
+            'execution_policy: "attach_for_one_rpc_then_snapshot_on_calc_thread_and_detach"',
+            self.source,
+        )
+        self.assertNotIn('installHook("cslMngCalc"', self.source)
+
+    def test_active_snapshot_reads_only_named_fixed_fields(self) -> None:
+        for token in (
+            "sound_object_pointer_at_0x00",
+            "slot_mute_u8_at_0x0c",
+            "slot_volume_u32_at_0x10",
+            "slot_time_or_sample_u32_at_0x14",
+            "slot_loop_state_u32_at_0x18",
+            "pending_sound_data_pointer_at_0x20",
+            "chain_data_pointer_at_0x28",
+            "transport_playing_proven",
+            "transport_state",
+            "sound_time_seconds",
+            "sound_pause_flag_i32",
+        ):
+            self.assertIn(token, self.source)
+        for forbidden in ("Memory.scan", "readByteArray", "Thread.backtrace"):
+            self.assertNotIn(forbidden, self.source)
+
+    def test_paused_transport_is_not_reported_as_proven_playing(self) -> None:
+        self.assertIn(
+            'transport_playing_proven: transportState === "playing"',
+            self.source,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

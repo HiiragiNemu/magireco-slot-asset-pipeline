@@ -9,9 +9,22 @@
 
 ## 当前状态
 
+面向项目所有者和外部读者的最新中文进度、静态/动态机制边界、三版本字幕规格、
+CDN 高分辨率备选路线和量化剩余工作见
+[docs/HUMAN_PROGRESS_REPORT_2026-07-13.md](docs/HUMAN_PROGRESS_REPORT_2026-07-13.md)。
+三项只读审计的完整证据边界见
+[docs/research/2026-07-13-static-generality-font-and-cdn.md](docs/research/2026-07-13-static-generality-font-and-cdn.md)：
+它明确区分 Slot 与 Exedra 下载机制，并记录静态通用性和游戏字体门禁。
+当前 Sound Pack entitlement、222 项原生静音表和 BGM 结论边界见
+[docs/research/2026-07-14-sound-pack-entitlement-gate.md](docs/research/2026-07-14-sound-pack-entitlement-gate.md)；
+JM 位图字形的可复现导出/缺字门禁见
+[docs/research/2026-07-14-jm-dgi-glyph-catalog.md](docs/research/2026-07-14-jm-dgi-glyph-catalog.md)。
+
 接手或恢复工作时先读
 [docs/HANDOFF_NEXT_AI_MAGIRECO.md](docs/HANDOFF_NEXT_AI_MAGIRECO.md)；它是唯一
-核心入口。最新 MuMu 重连、机制修正和量化剩余工作见
+核心入口。最新自然 SP Story hunter、停轮权威门禁、静态抽奖表和量化剩余工作见
+[docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md](docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md)。
+前一轮 MuMu 重连与声音链基线见
 [docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md](docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md)。
 滚动审计结论见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
 

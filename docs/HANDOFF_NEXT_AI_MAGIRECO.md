@@ -1,22 +1,36 @@
 # MagiaReco animation recovery handoff for the next AI
 
 Original date: 2026-06-28
-Current checkpoint: 2026-07-12
+Current checkpoint: 2026-07-14
 
 This is the core handoff document for continuing the project.  Treat it as the
 first file to read before touching any renders, manifests, probes, or GitHub
 state.
 
-The newest authoritative delta, including the current MuMu PID/reconnect,
-clean sound-chain validation, corrected input semantics, surviving outputs,
-invalid roots, and quantified completion gap, is:
+The newest authoritative delta, including the natural SP Story hunter, exact
+STOP/calcStop/setStopAngle authority, static kind lottery, current runtime
+failure/reconnect point, surviving outputs, and quantified completion gap, is:
 
 ```text
-docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md
+docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md
+```
+
+静态通用性、游戏字体和 Slot CDN/官网高清路线的只读审计：
+
+```text
+docs/research/2026-07-13-static-generality-font-and-cdn.md
+```
+
+The newest owner-facing Chinese report, including the static/dynamic boundary,
+three-edition subtitle requirement, CDN/high-resolution research track, and
+GitHub/CI clarification, is:
+
+```text
+docs/HUMAN_PROGRESS_REPORT_2026-07-13.md
 ```
 
 When a dated report conflicts with this handoff or that delta, use the newer
-2026-07-12 statement.  Keep older dated reports as audit history rather than
+2026-07-13 statement.  Keep older dated reports as audit history rather than
 deleting them.
 
 ## Objective
@@ -25,7 +39,11 @@ Recover the game's animation/video content into auditable, watchable outputs:
 
 - preserve original media resolution, frame rate, bitrate class, audio sample
   rate, and channel layout;
-- produce both subtitle and no-subtitle editions;
+- produce three synchronized editions: no subtitles, Japanese subtitles, and
+  reviewed Chinese subtitles;
+- use one verified game-font/game-text-rendering profile for the Japanese and
+  Chinese subtitle editions; the current `Yu Gothic` renderer default is not
+  proof of the game's font;
 - keep original per-event segment files;
 - also produce same-scene long videos suitable for Bilibili upload when the
   scene is verified;
@@ -49,11 +67,20 @@ Do not violate these:
 - Do not upscale.
 - Do not use the old motion/static classification as final evidence.
 - Do not infer CRI indices from the numeric suffix of an `ac` event.
-- Do not mix subtitle and no-subtitle editions.
+- Do not mix no-subtitle, Japanese-subtitle, and Chinese-subtitle editions.
+- Do not publish machine-only Chinese translation or an unverified substitute
+  font as the game font.
 - Do not promote contact-sheet or stream/codec QA as delivery proof.
 - Do not classify an event as pure material if it contains role voice, dialogue,
   or subtitle-relevant sound.
 - Do not batch-render AV-blocked role-voice scenes for publication.
+
+Official store provenance adds a mandatory BGM caveat: the separately sold
+Sound Pack unlocks main normal-play BGM and bonus music.  Installed OnDemand
+SMZ data does not prove the current account entitlement, volume setting, or
+native playback gate.  Record those states together with PLAY/STOP evidence
+before claiming that a natural target has no BGM or before adding any external
+bed.  See the 2026-07-13 static/font/CDN audit linked above.
 
 ## Authoritative working locations
 
@@ -92,6 +119,144 @@ Space policy:
 - D: repository, durable recovery evidence, final verified long/review
   collections, and the replacement progress root
   `D:\magia\MyProducts\casino` for data that must survive another power loss.
+
+## 2026-07-14 authoritative checkpoint - read before all older input guidance
+
+The current foreground instance after MuMu restart is PID 3125.  Every older
+PID below is dated evidence only.  Direct x86 frida-server attach correctly
+failed closed because it saw `Process.arch=x64` and could not resolve the ARM64
+gameplay exports; no gameplay input was sent.  Its journal SHA-256 is
+`76024DABC98C089D9EC18C13D71079DAEE90E1EC405EF2D5711C29694356F887`.
+
+ARM64 Gadget reinjection then succeeded without restarting the game.  The
+summary SHA-256 is
+`179E136AF6E2B5B1DC0C90691F1F625C3D48CDD46F68CAA57DE7BF2BCB653AC5`.
+The subsequent read-only smoke captured all 65 declared CSL slots at both
+endpoints, no truncation and no active rows; its journal SHA-256 is
+`E7BA647DDFBC8B166478367B53669D7786EBE4247DB4A442AAD9C661D4A941C1`.
+
+Three bounded natural rounds then completed in 3.934/4.013/3.898 seconds.  All
+15 one-shot controls, nine reel axes and all seven dispatch batches per round
+were valid; there was no overflow.  Every real ID19 packet was
+`19 0 2 0 0 1 0 22`, so all three were conservative non-targets.  The journal
+SHA-256 is
+`5A1D45FEF85D9EE706907172FFE7229FEBD592B43DF1F8FE7B572804EB3E6E6C`.
+ID304 survived across all three rounds but remains an unlabeled transport row,
+not confirmed BGM.
+
+Two static corrections are now mandatory.  First, the official store says the
+separately sold Sound Pack unlocks main normal-play BGM and bonus music;
+installed SMZ does not prove entitlement or enabled playback.  This is no
+longer only a caveat: the PID3125 read-only snapshot shows all seven saved and
+active addon values are zero.  Native addon index 6 gates a sorted 222-ID table
+through `SoundMng::changeVolume` and `checkEnableSoundID`; both generic play
+routes pass through it.  The provenance-complete capture manifest SHA-256 is
+`5932A15AF90BAA831B9EE2C7C08A4ADE077C4823C4567A81DC2D4214F694C89F`.
+Current BGM/SE/Voice volumes are 50/50/50, master is 100, and Android media is
+not muted.  Read
+`docs/research/2026-07-14-sound-pack-entitlement-gate.md`; never alter the flag
+or guess a replacement track.  Second,
+`utf8_font_package.bin`/`sjis_font_package.bin` are missing disabled debug-print
+paths, not story fonts.  The story path is the exact DGI catalog of 4,124
+`JM_<Unicode>_<family>_<variant>` ASTC glyphs plus Z2D-authored placement.  The
+existing Japanese corpus has complete glyph coverage, while the set covers
+only about 8.46% of GB2312 CJK; Chinese therefore requires a per-codepoint gate
+and an explicitly disclosed fallback when an official glyph is absent.
+The read-only catalog/coverage implementation is
+`tools/frida_runtime_probe/extract_jm_dgi_glyph_catalog.py`; its dedicated
+research note is `docs/research/2026-07-14-jm-dgi-glyph-catalog.md`.
+
+Do not reopen the ac7116 visual-tail mechanism as an unknown.  The committed
+2026-07-03 same-run Z2D evidence names `ac7116_AT_SP_story5_01.dgm`, gives end
+frame 337, and observes `GetDecodeFrame=337` with `IsDrawTime=1` and continued
+draw calls through the 11.267--13.05 s voice tail.  This proves the clean
+last-frame hold at runtime-mechanism level.  The outage destroyed that July 3
+raw A: JSONL, so a natural target recapture is still useful to restore the raw
+audit chain and close outer BGM; it is not needed to re-prove the hold.  The
+current v19 two-edition files are also transcoded at roughly 1.09--1.11 Mb/s
+versus the existing main-story source around 1.506 Mb/s, so they remain review
+artifacts rather than native-bitstream/bitrate-class final uploads.
+
+Durable 2026-07-14 paths:
+
+```text
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\gadget_reinject_pid3125_20260714_01
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\natural_hunter_pid3125_server_readonly_smoke_20260714_01
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\natural_hunter_pid3125_gadget_readonly_smoke_20260714_01
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\natural_hunter_pid3125_active_csl_execute_20260714_01
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\addon_state_pid3125_readonly_20260714_02
+D:\magia\MyProducts\casino\runtime_recovery_20260714\evidence\sound_pack_gate_static_v31_20260714_02
+```
+
+## 2026-07-13 authoritative checkpoint - historical but still valid
+
+The generic natural hunter and its static lottery extractor are documented in:
+
+```text
+docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md
+```
+
+Do not treat a stop `CSlotBody::process` bit as logical stop acceptance.  The
+new four-layer rule is: internal `body+0x538/+0x53c/+0x540` ready fields,
+process input as routing corroboration, exact post-input
+`CReel::setStopAngle` axis, and cumulative `state+0x64` progress.  The exact
+process bit remains mandatory for MAX BET and lever; a STOP may be accepted by
+the exact post-gesture axis plus progress even if its process callback sample is
+absent.  The normal-mode first-stop threshold is `body+0x538 >= 16`,
+`body+0x53c >= 5`, `body+0x540 == -1`; button colour remains non-evidence.  All
+controls use one bounded 500 ms stationary gesture, and missing confirmation
+fails closed without retry.
+
+The five relocated SP Story kind tables are now reproducibly decoded by
+`extract_sp_story_kind_lottery.py`; every table sums to 32768.  This explains
+search cost but does not replace a natural same-run target packet and exact
+event-code capture.
+
+PID 3189 and the later PID 8528 both crashed in GLThread with the same Houdini
+illegal-PC / SIGSEGV signature ending at fault `0xdead1005`; neither is a target
+result and neither may be reused.  The matching signature does not prove which
+hook caused the crash.  PID8528 evidence is
+`D:\magia\MyProducts\casino\runtime_recovery_20260713\evidence\crash_pid8528_20260713_01`.
+
+PID11160 is now historical.  The latest captured instance is PID 3083; as with
+every dated PID, re-read foreground PID after any MuMu restart instead of
+reusing it.  The reliable order remains: force-stop, start the title, enter
+Simulation without Gadget, press `ゲームスタート`, wait for the real slot
+screen, and only then inject Gadget.  Under Houdini the ARM64 game export
+belongs to a mapping physically named `split_config.arm64_v8a.apk`, so probes
+must resolve the module from a game-specific export rather than hard code the
+display name `libGameProc.so`.  Reinjection evidence is
+`D:\magia\MyProducts\casino\runtime_recovery_20260713\evidence\gadget_reinject_pid3083_20260713_01`;
+the summary SHA-256 is
+`DA752417710EF91EFDE6B28F7EACA79E65B5215A1AC97AF35100453AEAAE924F`.
+
+The bounded active CSL transport snapshot is now implemented.  The current
+read-only smoke is
+`natural_hunter_pid3083_active_csl_readonly_smoke_20260713_03`: zero gameplay
+input, declared/captured `65/65`, `truncated=false`, no active rows at either
+endpoint, journal SHA-256
+`DA92840BC7E140AF1EF8A25E6BA77F97133E36ECA06BE375DDB666BE31F1A6CB`.
+Each RPC attaches to the next `CSLMng::Calc`, snapshots on that Calc thread,
+then detaches.  The 128-row cap is defensive, not a declared game limit.
+
+`natural_hunter_pid3083_active_csl_execute_20260713_01` is one valid ordinary
+non-target round.  Its post snapshot has four playing transport rows, all with
+`bgm_semantics_proven=false`: ID820/ch1 (statically an Iroha dialogue),
+ID304/ch2, ID2655/ch3 (Sana title call), and ID308/ch11.  ID304/resource834 and
+ID308/resource839 remain unlabeled BGM candidates only; channel and loop flags
+are not semantic proof.
+
+`natural_hunter_pid3083_active_csl_execute_20260713_02` adds three bounded
+ordinary rounds.  All 15 one-shot controls were accepted, all nine STOP axes
+and cumulative masks were exact, each round ended without overflow, and every
+real ID19 packet still had `raw[1]=0, raw[2]=8`; no legal target was observed.
+The journal SHA-256 is
+`16B2929BD3FF6B6137AD29CF245F7708AA76D762024B1E11E572C77B581BD828`.
+
+The remaining audio gate is no longer “implement any active snapshot”.  It is
+to bind CSL transport to ZG published play-info or equivalent authoritative
+identity and prove outer-BGM semantics in the same natural target run.  CSL
+transport state by itself must never be described as confirmed BGM.
 
 ## 2026-07-11 authoritative checkpoint - read this before older next steps
 

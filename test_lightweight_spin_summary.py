@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from tools.frida_runtime_probe.summarize_lightweight_spin_probe import (
+    DispatchBatchTracker,
     changed_addressed_byte_summary,
     packet_row,
     payload_bytes,
@@ -75,6 +76,151 @@ class PacketCandidateTests(unittest.TestCase):
 
 
 class SummarySemanticsTests(unittest.TestCase):
+    def test_strict_live_tracker_requires_one_real_buffer_batch(self) -> None:
+        tracker = DispatchBatchTracker(strict=True)
+        tracker.register_get_cmd_buf(
+            {
+                "thread_id": 7,
+                "id401_command_buffer_pointer": "0x1000",
+                "id401_command_buffer_length": 16,
+            },
+            line=1,
+            rel_time=None,
+        )
+        story = {
+            "thread_id": 7,
+            "id401_packet_pointer": "0x1000",
+            **{f"id401_raw_packet_u8_at_{i}": value for i, value in enumerate(
+                [19, 8, 0, 0, 0, 0, 0, 19]
+            )},
+        }
+        selection = {
+            "thread_id": 7,
+            "id401_packet_pointer": "0x1008",
+            **{f"id401_raw_packet_u8_at_{i}": value for i, value in enumerate(
+                [24, 0, 2, 11, 0, 0, 0, 24]
+            )},
+        }
+        _row, complete = tracker.observe_access(
+            story,
+            line=2,
+            rel_time=None,
+            source_kind="id401_access_subprocess",
+        )
+        self.assertIsNone(complete)
+        _row, complete = tracker.observe_access(
+            selection,
+            line=3,
+            rel_time=None,
+            source_kind="id401_access_subprocess",
+        )
+        self.assertIsNotNone(complete)
+        self.assertEqual(
+            complete["sp_story_selection_pairs"],
+            [{"stage": 11, "selector": 2}],
+        )
+
+    def test_strict_live_tracker_refreshes_complete_batch_with_late_selectors(self) -> None:
+        tracker = DispatchBatchTracker(strict=True)
+        tracker.register_get_cmd_buf(
+            {
+                "thread_id": 12,
+                "id401_command_buffer_pointer": "0x2000",
+                "id401_command_buffer_length": 56,
+            },
+            line=1,
+            rel_time=None,
+        )
+
+        packets = [
+            [19, 8, 0, 0, 0, 0, 0, 19],
+            [24, 0, 13, 12, 0, 0, 0, 24],
+            [24, 0, 14, 12, 0, 0, 0, 24],
+            [24, 0, 1, 12, 0, 0, 0, 24],
+            [24, 0, 2, 12, 0, 0, 0, 24],
+            [24, 0, 3, 12, 0, 0, 0, 24],
+            [24, 0, 4, 12, 0, 0, 0, 24],
+        ]
+        complete = None
+        for index, raw in enumerate(packets):
+            payload = {
+                "thread_id": 12,
+                "id401_packet_pointer": hex(0x2000 + index * 8),
+                **{
+                    f"id401_raw_packet_u8_at_{offset}": value
+                    for offset, value in enumerate(raw)
+                },
+            }
+            _row, observed_complete = tracker.observe_access(
+                payload,
+                line=index + 2,
+                rel_time=None,
+                source_kind="id401_access_subprocess",
+            )
+            if index == 0:
+                self.assertIsNone(observed_complete)
+            else:
+                self.assertIsNotNone(observed_complete)
+                complete = observed_complete
+
+        self.assertIsNotNone(complete)
+        self.assertEqual(
+            complete["sp_story_selection_pairs"],
+            [
+                {"stage": 12, "selector": 13},
+                {"stage": 12, "selector": 14},
+                {"stage": 12, "selector": 1},
+                {"stage": 12, "selector": 2},
+                {"stage": 12, "selector": 3},
+                {"stage": 12, "selector": 4},
+            ],
+        )
+
+    def test_strict_live_tracker_rejects_packet_past_buffer_tail(self) -> None:
+        tracker = DispatchBatchTracker(strict=True)
+        tracker.register_get_cmd_buf(
+            {
+                "thread_id": 7,
+                "id401_command_buffer_pointer": "0x3000",
+                "id401_command_buffer_length": 12,
+            },
+            line=1,
+            rel_time=None,
+        )
+        story = {
+            "thread_id": 7,
+            "id401_packet_pointer": "0x3000",
+            **{
+                f"id401_raw_packet_u8_at_{index}": value
+                for index, value in enumerate([19, 8, 0, 0, 0, 0, 0, 19])
+            },
+        }
+        selection_past_tail = {
+            "thread_id": 7,
+            "id401_packet_pointer": "0x3008",
+            **{
+                f"id401_raw_packet_u8_at_{index}": value
+                for index, value in enumerate([24, 0, 1, 11, 0, 0, 0, 24])
+            },
+        }
+
+        _row, complete = tracker.observe_access(
+            story,
+            line=2,
+            rel_time=None,
+            source_kind="id401_access_subprocess",
+        )
+        self.assertIsNone(complete)
+        row, complete = tracker.observe_access(
+            selection_past_tail,
+            line=3,
+            rel_time=None,
+            source_kind="id401_access_subprocess",
+        )
+        self.assertIsNone(complete)
+        self.assertEqual(row["dispatch_batch"], "")
+        self.assertFalse(tracker.batch_summary(1)["complete_sp_story_candidate"])
+
     def test_dispatch_batches_ignore_repeated_snapshots(self) -> None:
         records = [
             event_record("id401_get_cmd_buf_leave", 1000),

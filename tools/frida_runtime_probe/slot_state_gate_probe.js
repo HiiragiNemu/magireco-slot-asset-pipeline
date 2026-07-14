@@ -2,12 +2,16 @@
 
 // Change-only logical input/state observer for reliable ADB spin control.
 // It records no image, audio, or arbitrary memory dump.  Non-zero input bits
-// are authoritative acceptance evidence for lever/stop taps.
+// prove that a touch reached process.  Reel-stop acceptance additionally
+// requires CReel::setStopAngle and the bounded stop-progress fields below.
 
 const PROCESS_SYMBOL = "_ZN9CSlotBody7processEiiNS_10eStateModeE";
+const SET_STOP_ANGLE_SYMBOL = "_ZN5CReel12setStopAngleEii";
 let eventCount = 0;
 let lastStateByBody = {};
 let hookInstalled = false;
+let reelStopHookInstalled = false;
+let lastBody = null;
 
 function emit(kind, fields) {
   eventCount += 1;
@@ -83,6 +87,9 @@ function describeState(body) {
     body_input_u8_at_0x455: readU8Safe(body, 0x455),
     body_input_u8_at_0x456: readU8Safe(body, 0x456),
     body_input_u8_at_0x457: readU8Safe(body, 0x457),
+    body_stop_wait16_i32_at_0x538: readS32Safe(body, 0x538),
+    body_interstop_i32_at_0x53c: readS32Safe(body, 0x53c),
+    body_selected_axis_i32_at_0x540: readS32Safe(body, 0x540),
   });
   if (state === null || state.isNull()) {
     return result;
@@ -117,6 +124,8 @@ function stateSignature(state) {
   // This field is a per-process-call counter and would otherwise make a
   // change-only observer emit every frame.
   delete stable.body_initialized_i32_at_0x08;
+  delete stable.body_stop_wait16_i32_at_0x538;
+  delete stable.body_interstop_i32_at_0x53c;
   return JSON.stringify(stable);
 }
 
@@ -147,6 +156,7 @@ function install() {
     Interceptor.attach(address, {
       onEnter(args) {
         this.body = args[0];
+        lastBody = args[0];
         this.inputA = toI32(args[1]);
         this.inputB = toI32(args[2]);
         this.requestedMode = toU32(args[3]);
@@ -190,19 +200,65 @@ function install() {
   }
 }
 
+function installReelStopHook() {
+  const address = Module.findGlobalExportByName(SET_STOP_ANGLE_SYMBOL);
+  if (address === null) {
+    emit("reel_stop_hook_unavailable", { symbol: SET_STOP_ANGLE_SYMBOL });
+    return;
+  }
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        emit("reel_stop_angle_enter", {
+          symbol: SET_STOP_ANGLE_SYMBOL,
+          address: address.toString(),
+          axis_i32: toI32(args[1]),
+          angle_i32: toI32(args[2]),
+          slot_body_pointer: (
+            lastBody === null || lastBody.isNull() ? "0x0" : lastBody.toString()
+          ),
+        });
+      },
+    });
+    reelStopHookInstalled = true;
+    emit("reel_stop_hook_installed", {
+      symbol: SET_STOP_ANGLE_SYMBOL,
+      address: address.toString(),
+    });
+  } catch (error) {
+    emit("reel_stop_hook_attach_error", {
+      symbol: SET_STOP_ANGLE_SYMBOL,
+      address: address.toString(),
+      error: String(error),
+    });
+  }
+}
+
 setImmediate(function () {
   emit("slot_gate_probe_start", {
     architecture: Process.arch,
     pointer_size: Process.pointerSize,
-    evidence_rule: "nonzero_process_input_is_accepted_input",
+    evidence_rule: "process_input_plus_set_stop_angle_and_progress",
   });
   install();
+  installReelStopHook();
   emit("slot_gate_probe_ready", {
-    installed: hookInstalled,
+    installed: hookInstalled && reelStopHookInstalled,
+    process_hook_installed: hookInstalled,
+    reel_stop_hook_installed: reelStopHookInstalled,
   });
 });
 
 rpc.exports = {
+  snapshot() {
+    return {
+      event_count: eventCount,
+      installed: hookInstalled && reelStopHookInstalled,
+      process_hook_installed: hookInstalled,
+      reel_stop_hook_installed: reelStopHookInstalled,
+      state: describeState(lastBody),
+    };
+  },
   status() {
     return {
       event_count: eventCount,

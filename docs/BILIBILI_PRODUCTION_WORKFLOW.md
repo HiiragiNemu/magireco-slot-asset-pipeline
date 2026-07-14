@@ -1,5 +1,16 @@
 # Bilibili Production Workflow
 
+> **2026-07-13 authority correction:** the bulk `5,485`-row/294-part plan below
+> is historical tooling documentation, not authorization to publish those old
+> renders.  Final production now requires three synchronized editions
+> (no subtitles, Japanese subtitles, reviewed Chinese subtitles), a verified
+> game-font/game-text layout, strict runtime/static AV evidence, and same-scene
+> grouping rather than arbitrary visual adjacency.  Read
+> `docs/HUMAN_PROGRESS_REPORT_2026-07-13.md` and
+> `docs/HANDOFF_NEXT_AI_MAGIRECO.md` first.  Existing `--edition both` commands
+> only describe the older two-edition implementation and must not be presented
+> as satisfying the current three-edition target.
+
 ## Production inputs
 
 Use the verified production plan:

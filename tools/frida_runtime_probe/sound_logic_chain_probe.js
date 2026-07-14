@@ -10,7 +10,14 @@
 const STATIC_REFERENCE = {
   game_proc_sha256: "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF",
   arm64_apk_sha256: "89ACC81D02FF63697603FCE2E5F4281850C092FA833FD8CF3E636B44AB624E24",
+  lib_amain_sha256: "58E3F7A9DBCE2E3D79D1A5A30F1DBFEEAC5BB4712BD4D8FF4E6328D2631DCA5D",
   abi: "aarch64-aapcs64",
+  csl_active_slot_layout: {
+    vector_begin_offset: "0xa0",
+    vector_end_offset: "0xa8",
+    stride: "0x38",
+    source_constructor_offset: "0x12f004",
+  },
 };
 
 const SYMBOLS = {
@@ -39,12 +46,50 @@ const SYMBOLS = {
     name: "_ZN6CSLMng9PlayStartEP11SSound_Datai",
     expectedOffset: "0x12fa9c",
   },
+  cslMngCalc: { name: "_ZN6CSLMng4CalcEv", expectedOffset: "0x12f7c8" },
+  cslMngSndGetId: { name: "_ZN6CSLMng8SndGetIDEi", expectedOffset: "0x1308c0" },
+  cslMngSndGetChannel: {
+    name: "_ZN6CSLMng13SndGetChannelEi",
+    expectedOffset: "0x130888",
+  },
+  cslMngSndGetTime: { name: "_ZN6CSLMng10SndGetTimeEi", expectedOffset: "0x130934" },
+  cslMngSndGetLoopNum: {
+    name: "_ZN6CSLMng13SndGetLoopNumEi",
+    expectedOffset: "0x1309a8",
+  },
+  cslMngSndGetPriority: {
+    name: "_ZN6CSLMng14SndGetPriorityEi",
+    expectedOffset: "0x130d04",
+  },
+  cslMngSndGetLoopF: { name: "_ZN6CSLMng11SndGetLoopFEi", expectedOffset: "0x130d60" },
+  cslMngSndGetWaitF: { name: "_ZN6CSLMng11SndGetWaitFEi", expectedOffset: "0x130dbc" },
+  cslMngSndGetPauseF: {
+    name: "_ZN6CSLMng12SndGetPauseFEi",
+    expectedOffset: "0x130e18",
+  },
 };
 
 const REQUEST_CODE_BY_ID = { 96: "291", 100: "295", 3094: "16048" };
 const CONTEXT_WINDOW_MS = 3000;
 const REQUEST_METADATA_TTL_MS = 10000;
 const MAX_REQDATA_ROWS = 8;
+const CSL_ACTIVE_VECTOR_BEGIN_OFFSET = 0xa0;
+const CSL_ACTIVE_VECTOR_END_OFFSET = 0xa8;
+const CSL_ACTIVE_SLOT_STRIDE = 0x38;
+// Defensive capture cap only.  The game's declared vector length is read from
+// begin/end at runtime and is not asserted to equal this value.
+const MAX_ACTIVE_SOUND_SLOTS = 128;
+const ACTIVE_SNAPSHOT_WAIT_TIMEOUT_MS = 15000;
+const ACTIVE_SOUND_ACCESSOR_TYPES = {
+  cslMngSndGetId: "int",
+  cslMngSndGetChannel: "int",
+  cslMngSndGetTime: "float",
+  cslMngSndGetLoopNum: "int",
+  cslMngSndGetPriority: "int",
+  cslMngSndGetLoopF: "int",
+  cslMngSndGetWaitF: "int",
+  cslMngSndGetPauseF: "int",
+};
 
 const FUNCTION_TYPE_NAMES = {
   0: "NONE",
@@ -71,6 +116,15 @@ let recentContexts = [];
 let requestMetadataByPointer = {};
 let codeByRequestId = Object.assign({}, REQUEST_CODE_BY_ID);
 let activePerformStackByThread = {};
+let hookStaticMatchByKey = {};
+let activeSoundAccessors = {};
+let activeSoundAccessorStatus = {};
+let lastCslMngPointer = null;
+let lastCslMngPointerSource = "";
+let lastCslMngPointerObservedMs = null;
+let cslCalcSnapshotAddress = null;
+let cslCalcSnapshotStatus = { status: "not_initialized" };
+let activeSnapshotRequestInFlight = false;
 
 function emit(kind, fields) {
   eventCountByKind[kind] = (eventCountByKind[kind] || 0) + 1;
@@ -151,6 +205,14 @@ function readU64HexSafe(base, offset) {
   }
 }
 
+function pointerText(pointerValue) {
+  try {
+    return pointerValue === null || pointerValue.isNull() ? "0x0" : pointerValue.toString();
+  } catch (_) {
+    return "0x0";
+  }
+}
+
 function readable(pointerValue) {
   try {
     if (pointerValue === null || pointerValue.isNull()) {
@@ -158,6 +220,20 @@ function readable(pointerValue) {
     }
     const range = Process.findRangeByAddress(pointerValue);
     return range !== null && range.protection.indexOf("r") !== -1;
+  } catch (_) {
+    return false;
+  }
+}
+
+function readableSpan(pointerValue, byteLength) {
+  try {
+    if (!readable(pointerValue) || byteLength < 0) {
+      return false;
+    }
+    const range = Process.findRangeByAddress(pointerValue);
+    const requestedEnd = pointerValue.add(byteLength);
+    const rangeEnd = range.base.add(range.size);
+    return requestedEnd.compare(rangeEnd) <= 0;
   } catch (_) {
     return false;
   }
@@ -456,14 +532,16 @@ function installHook(key, callbacks) {
   const spec = SYMBOLS[key];
   const address = findExport(spec.name);
   if (address === null) {
+    hookStaticMatchByKey[key] = false;
     emit("sound_logic_hook_unavailable", { hook_key: key, symbol: spec.name });
-    return;
+    return null;
   }
   const location = describeAddress(address);
   const actualOffset = normalizeHex(location.module_offset);
   const expectedOffset = normalizeHex(spec.expectedOffset);
+  hookStaticMatchByKey[key] = actualOffset === expectedOffset;
   try {
-    Interceptor.attach(address, callbacks);
+    const listener = Interceptor.attach(address, callbacks);
     emit("sound_logic_hook_installed", {
       hook_key: key,
       symbol: spec.name,
@@ -474,14 +552,441 @@ function installHook(key, callbacks) {
       expected_module_offset: expectedOffset,
       module_offset_matches_static_reference: actualOffset === expectedOffset,
     });
+    return listener;
   } catch (error) {
+    hookStaticMatchByKey[key] = false;
     emit("sound_logic_hook_attach_error", {
       hook_key: key,
       symbol: spec.name,
       address: address.toString(),
       error: String(error),
     });
+    return null;
   }
+}
+
+function installActiveSoundAccessor(key, returnType) {
+  const spec = SYMBOLS[key];
+  const address = findExport(spec.name);
+  if (address === null) {
+    activeSoundAccessorStatus[key] = {
+      status: "unavailable",
+      symbol: spec.name,
+      expected_module_offset: normalizeHex(spec.expectedOffset),
+    };
+    emit("sound_logic_accessor_unavailable", Object.assign({ accessor_key: key }, activeSoundAccessorStatus[key]));
+    return;
+  }
+  const location = describeAddress(address);
+  const actualOffset = normalizeHex(location.module_offset);
+  const expectedOffset = normalizeHex(spec.expectedOffset);
+  const offsetMatches = actualOffset === expectedOffset;
+  const status = {
+    status: offsetMatches ? "ready" : "static_reference_mismatch",
+    symbol: spec.name,
+    address: address.toString(),
+    module: location.module || "",
+    module_path: location.module_path || "",
+    actual_module_offset: actualOffset,
+    expected_module_offset: expectedOffset,
+    module_offset_matches_static_reference: offsetMatches,
+    return_type: returnType,
+  };
+  activeSoundAccessorStatus[key] = status;
+  if (!offsetMatches) {
+    emit("sound_logic_accessor_unavailable", Object.assign({ accessor_key: key }, status));
+    return;
+  }
+  try {
+    activeSoundAccessors[key] = new NativeFunction(address, returnType, ["pointer", "int"]);
+    emit("sound_logic_accessor_ready", Object.assign({ accessor_key: key }, status));
+  } catch (error) {
+    delete activeSoundAccessors[key];
+    status.status = "error";
+    status.error = String(error);
+    emit("sound_logic_accessor_error", Object.assign({ accessor_key: key }, status));
+  }
+}
+
+function allActiveSoundAccessorsReady() {
+  return Object.keys(ACTIVE_SOUND_ACCESSOR_TYPES).every(
+    (key) => typeof activeSoundAccessors[key] === "function"
+  );
+}
+
+function rememberCslMngPointer(pointerValue, sourceHookKey) {
+  if (
+    pointerValue === null
+    || pointerValue.isNull()
+    || hookStaticMatchByKey[sourceHookKey] !== true
+    || !readableSpan(pointerValue, 0xb8)
+  ) {
+    return false;
+  }
+  const changed = lastCslMngPointer === null || !lastCslMngPointer.equals(pointerValue);
+  lastCslMngPointer = pointerValue;
+  lastCslMngPointerSource = sourceHookKey;
+  lastCslMngPointerObservedMs = Date.now();
+  if (changed) {
+    emit("sound_logic_csl_mng_pointer_observed", {
+      csl_mng_pointer: pointerValue.toString(),
+      observation_source_hook: sourceHookKey,
+      static_layout_allowed: true,
+    });
+  }
+  return true;
+}
+
+function prepareCslCalcSnapshotEntry() {
+  const spec = SYMBOLS.cslMngCalc;
+  const address = findExport(spec.name);
+  if (address === null) {
+    hookStaticMatchByKey.cslMngCalc = false;
+    cslCalcSnapshotStatus = {
+      status: "unavailable",
+      symbol: spec.name,
+      expected_module_offset: normalizeHex(spec.expectedOffset),
+    };
+    emit("sound_logic_snapshot_entry_unavailable", cslCalcSnapshotStatus);
+    return;
+  }
+  const location = describeAddress(address);
+  const actualOffset = normalizeHex(location.module_offset);
+  const expectedOffset = normalizeHex(spec.expectedOffset);
+  const offsetMatches = actualOffset === expectedOffset;
+  hookStaticMatchByKey.cslMngCalc = offsetMatches;
+  cslCalcSnapshotStatus = {
+    status: offsetMatches ? "ready" : "static_reference_mismatch",
+    symbol: spec.name,
+    address: address.toString(),
+    module: location.module || "",
+    module_path: location.module_path || "",
+    actual_module_offset: actualOffset,
+    expected_module_offset: expectedOffset,
+    module_offset_matches_static_reference: offsetMatches,
+    execution_policy: "attach_for_one_rpc_then_snapshot_on_calc_thread_and_detach",
+  };
+  if (offsetMatches) {
+    cslCalcSnapshotAddress = address;
+    emit("sound_logic_snapshot_entry_ready", cslCalcSnapshotStatus);
+  } else {
+    emit("sound_logic_snapshot_entry_unavailable", cslCalcSnapshotStatus);
+  }
+}
+
+function requestActiveSoundSnapshot(label) {
+  if (activeSnapshotRequestInFlight) {
+    return Promise.resolve({
+      schema: "magireco-csl-active-sound-snapshot-v1",
+      label: String(label || "manual_rpc").slice(0, 128),
+      captured_unix_ms: Date.now(),
+      available: false,
+      error: "another active-sound snapshot request is already in flight",
+    });
+  }
+  if (cslCalcSnapshotAddress === null || hookStaticMatchByKey.cslMngCalc !== true) {
+    return Promise.resolve({
+      schema: "magireco-csl-active-sound-snapshot-v1",
+      label: String(label || "manual_rpc").slice(0, 128),
+      captured_unix_ms: Date.now(),
+      available: false,
+      error: "version-checked CSLMng::Calc snapshot entry is unavailable",
+      snapshot_entry_status: cslCalcSnapshotStatus,
+    });
+  }
+
+  activeSnapshotRequestInFlight = true;
+  return new Promise((resolve) => {
+    let listener = null;
+    let timeoutId = null;
+    let completed = false;
+
+    function finish(result) {
+      if (completed) {
+        return;
+      }
+      completed = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      setImmediate(function () {
+        let detachError = "";
+        if (listener !== null) {
+          try {
+            listener.detach();
+          } catch (error) {
+            detachError = String(error);
+          }
+        }
+        activeSnapshotRequestInFlight = false;
+        result.snapshot_hook_detached = detachError === "";
+        result.snapshot_hook_detach_error = detachError;
+        emit("sound_logic_snapshot_hook_detached", {
+          label: result.label,
+          detach_error: detachError,
+        });
+        resolve(result);
+      });
+    }
+
+    try {
+      listener = Interceptor.attach(cslCalcSnapshotAddress, {
+        onEnter(args) {
+          if (completed) {
+            return;
+          }
+          const pointerObserved = rememberCslMngPointer(args[0], "cslMngCalc");
+          if (!pointerObserved) {
+            finish({
+              schema: "magireco-csl-active-sound-snapshot-v1",
+              label: String(label || "manual_rpc").slice(0, 128),
+              captured_unix_ms: Date.now(),
+              available: false,
+              error: "CSLMng::Calc receiver failed version/readability validation",
+            });
+            return;
+          }
+          try {
+            finish(snapshotActiveSoundState(label, args[0], "cslMngCalc_on_enter"));
+          } catch (error) {
+            finish({
+              schema: "magireco-csl-active-sound-snapshot-v1",
+              label: String(label || "manual_rpc").slice(0, 128),
+              captured_unix_ms: Date.now(),
+              available: false,
+              error: "active-sound snapshot raised: " + String(error),
+            });
+          }
+        },
+      });
+      emit("sound_logic_snapshot_hook_installed", {
+        label: String(label || "manual_rpc").slice(0, 128),
+        symbol: SYMBOLS.cslMngCalc.name,
+        address: cslCalcSnapshotAddress.toString(),
+        timeout_ms: ACTIVE_SNAPSHOT_WAIT_TIMEOUT_MS,
+      });
+      timeoutId = setTimeout(function () {
+        finish({
+          schema: "magireco-csl-active-sound-snapshot-v1",
+          label: String(label || "manual_rpc").slice(0, 128),
+          captured_unix_ms: Date.now(),
+          available: false,
+          error: "timed out waiting for the next CSLMng::Calc call",
+          timeout_ms: ACTIVE_SNAPSHOT_WAIT_TIMEOUT_MS,
+        });
+      }, ACTIVE_SNAPSHOT_WAIT_TIMEOUT_MS);
+    } catch (error) {
+      finish({
+        schema: "magireco-csl-active-sound-snapshot-v1",
+        label: String(label || "manual_rpc").slice(0, 128),
+        captured_unix_ms: Date.now(),
+        available: false,
+        error: "could not attach one-shot CSLMng::Calc snapshot hook: " + String(error),
+      });
+    }
+  });
+}
+
+function callActiveSoundAccessor(key, cslMngPointer, argument, errors) {
+  const callback = activeSoundAccessors[key];
+  if (typeof callback !== "function") {
+    errors.push(key + ":unavailable");
+    return null;
+  }
+  try {
+    const value = callback(cslMngPointer, argument);
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      errors.push(key + ":non_finite");
+      return null;
+    }
+    return value;
+  } catch (error) {
+    errors.push(key + ":" + String(error));
+    return null;
+  }
+}
+
+function snapshotActiveSoundState(label, cslMngPointer, executionSource) {
+  const result = {
+    schema: "magireco-csl-active-sound-snapshot-v1",
+    label: String(label || "manual_rpc").slice(0, 128),
+    captured_unix_ms: Date.now(),
+    available: false,
+    csl_mng_pointer: pointerText(cslMngPointer),
+    csl_mng_pointer_source: lastCslMngPointerSource,
+    csl_mng_pointer_observed_unix_ms: lastCslMngPointerObservedMs,
+    snapshot_execution_source: executionSource,
+    snapshot_runs_on_csl_calc_thread: executionSource === "cslMngCalc_on_enter",
+    vector_begin_offset: CSL_ACTIVE_VECTOR_BEGIN_OFFSET,
+    vector_end_offset: CSL_ACTIVE_VECTOR_END_OFFSET,
+    active_slot_stride: CSL_ACTIVE_SLOT_STRIDE,
+    maximum_captured_slots: MAX_ACTIVE_SOUND_SLOTS,
+    capture_cap_is_declared_game_limit: false,
+    snapshot_atomic: false,
+    classification_rule: "active_transport_state_only_csl_resource_table_channel_zero_is_not_bgm_proof",
+    static_reference: STATIC_REFERENCE,
+    accessor_status: activeSoundAccessorStatus,
+    active_rows: [],
+  };
+  if (cslMngPointer === null || !readableSpan(cslMngPointer, 0xb8)) {
+    result.error = "CSLMng pointer is not safely readable";
+    return result;
+  }
+  if (!allActiveSoundAccessorsReady()) {
+    result.error = "one or more version-checked CSLMng accessors are unavailable";
+    return result;
+  }
+
+  const begin = readPointerSafe(cslMngPointer, CSL_ACTIVE_VECTOR_BEGIN_OFFSET);
+  const end = readPointerSafe(cslMngPointer, CSL_ACTIVE_VECTOR_END_OFFSET);
+  result.active_vector_begin_pointer = pointerText(begin);
+  result.active_vector_end_pointer = pointerText(end);
+  if (begin === null || end === null) {
+    result.error = "active slot vector pointer read failed";
+    return result;
+  }
+  if (begin.isNull() && end.isNull()) {
+    result.available = true;
+    result.active_vector_byte_length = 0;
+    result.declared_slot_count = 0;
+    result.captured_slot_count = 0;
+    result.truncated = false;
+    result.occupied_slot_count = 0;
+    result.playing_slot_count = 0;
+    result.pending_slot_count = 0;
+    result.paused_slot_count = 0;
+    return result;
+  }
+  const byteLength = pointerDistance(end, begin);
+  result.active_vector_byte_length = byteLength;
+  if (
+    byteLength === null
+    || byteLength < 0
+    || byteLength % CSL_ACTIVE_SLOT_STRIDE !== 0
+    || !readableSpan(begin, byteLength)
+  ) {
+    result.error = "active slot vector failed bounded layout validation";
+    return result;
+  }
+
+  const declaredCount = Math.floor(byteLength / CSL_ACTIVE_SLOT_STRIDE);
+  const capturedCount = Math.min(declaredCount, MAX_ACTIVE_SOUND_SLOTS);
+  result.declared_slot_count = declaredCount;
+  result.captured_slot_count = capturedCount;
+  result.truncated = declaredCount > capturedCount;
+  for (let index = 0; index < capturedCount; index += 1) {
+    const slot = begin.add(index * CSL_ACTIVE_SLOT_STRIDE);
+    const soundPointer = readPointerSafe(slot, 0x00);
+    const pendingSoundData = readPointerSafe(slot, 0x20);
+    const chainData = readPointerSafe(slot, 0x28);
+    const getterErrors = [];
+    const soundId = callActiveSoundAccessor(
+      "cslMngSndGetId",
+      cslMngPointer,
+      index,
+      getterErrors
+    );
+    const occupied =
+      (soundPointer !== null && !soundPointer.isNull())
+      || (pendingSoundData !== null && !pendingSoundData.isNull())
+      || (typeof soundId === "number" && soundId >= 0);
+    if (!occupied) {
+      continue;
+    }
+    const channel = typeof soundId === "number" && soundId >= 0
+      ? callActiveSoundAccessor(
+        "cslMngSndGetChannel",
+        cslMngPointer,
+        soundId,
+        getterErrors
+      )
+      : null;
+    const pauseFlag = callActiveSoundAccessor(
+      "cslMngSndGetPauseF",
+      cslMngPointer,
+      index,
+      getterErrors
+    );
+    const pendingRequestPresent = pendingSoundData !== null && !pendingSoundData.isNull();
+    const transportPlaying =
+      !pendingRequestPresent && typeof soundId === "number" && soundId >= 0;
+    const transportState = pendingRequestPresent
+      ? "pending_request"
+      : pauseFlag === 1
+      ? "paused"
+      : transportPlaying
+      ? "playing"
+      : "occupied_nonplaying_or_stopping";
+    const row = {
+      slot_index: index,
+      slot_pointer: slot.toString(),
+      sound_object_pointer_at_0x00: pointerText(soundPointer),
+      slot_mute_u8_at_0x0c: readU8Safe(slot, 0x0c),
+      slot_volume_u32_at_0x10: readU32Safe(slot, 0x10),
+      slot_time_or_sample_u32_at_0x14: readU32Safe(slot, 0x14),
+      slot_loop_state_u32_at_0x18: readU32Safe(slot, 0x18),
+      pending_sound_data_pointer_at_0x20: pointerText(pendingSoundData),
+      pending_sound_data_id_u16_at_0x00:
+        pendingSoundData === null || pendingSoundData.isNull()
+          ? null
+          : readU16Safe(pendingSoundData, 0x00),
+      chain_data_pointer_at_0x28: pointerText(chainData),
+      pending_request_present: pendingRequestPresent,
+      transport_state: transportState,
+      transport_playing_proven: transportState === "playing",
+      transport_paused: pauseFlag === 1,
+      sound_id_i32: soundId,
+      csl_resource_table_channel_i32: channel,
+      sound_time_seconds: callActiveSoundAccessor(
+        "cslMngSndGetTime",
+        cslMngPointer,
+        index,
+        getterErrors
+      ),
+      sound_loop_num_i32: callActiveSoundAccessor(
+        "cslMngSndGetLoopNum",
+        cslMngPointer,
+        index,
+        getterErrors
+      ),
+      sound_priority_i32: callActiveSoundAccessor(
+        "cslMngSndGetPriority",
+        cslMngPointer,
+        index,
+        getterErrors
+      ),
+      sound_loop_flag_i32: callActiveSoundAccessor(
+        "cslMngSndGetLoopF",
+        cslMngPointer,
+        index,
+        getterErrors
+      ),
+      sound_wait_flag_i32: callActiveSoundAccessor(
+        "cslMngSndGetWaitF",
+        cslMngPointer,
+        index,
+        getterErrors
+      ),
+      sound_pause_flag_i32: pauseFlag,
+      csl_resource_table_channel_zero_candidate_only:
+        transportPlaying && channel === 0,
+      bgm_semantics_proven: false,
+      getter_errors: getterErrors,
+    };
+    result.active_rows.push(row);
+  }
+  result.available = true;
+  result.occupied_slot_count = result.active_rows.length;
+  result.playing_slot_count = result.active_rows.filter(
+    (row) => row.transport_state === "playing"
+  ).length;
+  result.pending_slot_count = result.active_rows.filter(
+    (row) => row.transport_state === "pending_request"
+  ).length;
+  result.paused_slot_count = result.active_rows.filter(
+    (row) => row.transport_state === "paused"
+  ).length;
+  return result;
 }
 
 function installCodeNameLookupHook() {
@@ -734,6 +1239,7 @@ function describeSoundData(soundData) {
 function installCslPlayStartHook() {
   installHook("cslMngPlayStart", {
     onEnter(args) {
+      rememberCslMngPointer(args[0], "cslMngPlayStart");
       const sound = describeSoundData(args[1]);
       emit(
         "sound_logic_csl_mng_play_start",
@@ -785,18 +1291,27 @@ setImmediate(function () {
     return;
   }
 
+  for (const key of Object.keys(ACTIVE_SOUND_ACCESSOR_TYPES)) {
+    installActiveSoundAccessor(key, ACTIVE_SOUND_ACCESSOR_TYPES[key]);
+  }
+
   installCodeNameLookupHook();
   installZgSndReqIdHook();
   installGetRequestHook();
   installSetRequestListHook();
   installPerformRequestHook();
   installSoundMngPlayRequestHook();
+  prepareCslCalcSnapshotEntry();
   installCslPlayStartHook();
 
   emit("sound_logic_probe_ready", {
     installed_hook_event_count: eventCountByKind.sound_logic_hook_installed || 0,
     unavailable_hook_event_count: eventCountByKind.sound_logic_hook_unavailable || 0,
     attach_error_event_count: eventCountByKind.sound_logic_hook_attach_error || 0,
+    outer_bgm_snapshot_accessors_ready: allActiveSoundAccessorsReady(),
+    outer_bgm_snapshot_accessor_status: activeSoundAccessorStatus,
+    outer_bgm_snapshot_calc_entry_status: cslCalcSnapshotStatus,
+    outer_bgm_snapshot_policy: "bounded_active_transport_state_not_semantic_bgm_classification",
   });
 });
 
@@ -810,6 +1325,12 @@ rpc.exports = {
       runtime_request_code_mapping_count: Object.keys(codeByRequestId).length,
       active_perform_thread_count: Object.keys(activePerformStackByThread).length,
       capture_scope: "all_sound_logic_metadata",
+      active_sound_accessors_ready: allActiveSoundAccessorsReady(),
+      csl_mng_pointer: pointerText(lastCslMngPointer),
+      csl_mng_pointer_source: lastCslMngPointerSource,
     };
+  },
+  outerbgmsnapshot(label) {
+    return requestActiveSoundSnapshot(label);
   },
 };

@@ -1,6 +1,134 @@
 # Project Status
 
-更新时间：2026-07-12
+更新时间：2026-07-14
+
+## 2026-07-14 PID3125 重连、字体纠错与 Sound Pack 门禁
+
+MuMu 重启后的当前前台 PID 是 `3125`，所有旧 PID 都仅为 dated evidence。x86
+server 直连只看到 `Process.arch=x64`，不能解析 ARM64 gameplay 导出；失败关闭的
+只读 smoke journal SHA-256 为
+`76024DABC98C089D9EC18C13D71079DAEE90E1EC405EF2D5711C29694356F887`。
+重新加载 ARM64 Gadget 后，summary SHA-256 为
+`179E136AF6E2B5B1DC0C90691F1F625C3D48CDD46F68CAA57DE7BF2BCB653AC5`。
+
+新的 Gadget 只读 smoke 捕获 65/65 CSL slot、无 truncation、零输入、两端无 active
+row；journal SHA-256 为
+`E7BA647DDFBC8B166478367B53669D7786EBE4247DB4A442AAD9C661D4A941C1`。
+随后 3 局有界 hunt 均完成 5/5 单次动作、三轴 0/1/2、7 个 dispatch batch、无
+overflow，用时 3.934/4.013/3.898 秒；ID19 均为 `19 0 2 0 0 1 0 22`，故正确判为
+non-target。journal SHA-256 为
+`5A1D45FEF85D9EE706907172FFE7229FEBD592B43DF1F8FE7B572804EB3E6E6C`。
+ID304 跨三局存在，但仍未获得业务 BGM 身份。
+
+官方商店说明另售 Sound Pack 会解锁主要通常时 BGM 与 bonus music，所以无声运行
+不能直接证明事件原生无 BGM；必须把 entitlement、音量和 native gate 与 PLAY/STOP
+链一起记录。字体路线也已纠错：缺失的 `utf8/sjis_font_package` 是禁用 debug 路径，
+真实故事字形是 DGI archive 中 4,124 个 JM Unicode glyph。现有日文语料 1,053 个
+非空格码点覆盖完整，但该语料专用集合只覆盖约 8.46% GB2312 CJK，中文字幕需要
+逐码点门禁和明确披露的 fallback。
+
+当前 PID3125 的 provenance-complete 只读 entitlement 快照现已把该混杂因素定量
+闭合：七项 addon 的 saved/active 均为 0，索引 6 Sound Pack 门禁未开启；零输入、
+零 native call、零 memory write 的 `capture_manifest.json` SHA-256 为
+`5932A15AF90BAA831B9EE2C7C08A4ADE077C4823C4567A81DC2D4214F694C89F`。
+`SoundMng::changeVolume/checkEnableSoundID` 在该索引为 0 时扫描 222 个唯一声音 ID；
+通用 play/channel request 都经过这条门禁。222 项中 219 项连接到当前
+`sound_id_records.csv`，而当前 BGM/SE/Voice=50、master=100、Android 媒体音量未
+静音。详见 `docs/research/2026-07-14-sound-pack-entitlement-gate.md`。ac7114/15/16
+事件内的 420xx 对白不在表内，但 outer BGM 是否在事件前启动仍须自然入口边界捕获。
+
+JM DGI 结论也已工具化：`extract_jm_dgi_glyph_catalog.py` 默认只读审计，显式请求时
+才输出 JSON/CSV/原生 ASTC 4x4；每个字形记录 chunk/payload hash，缺任一中文字幕
+码点退出 3。它明确不虚构 typography metrics、不解码、不 upscale。详见
+`docs/research/2026-07-14-jm-dgi-glyph-catalog.md`。
+
+ac7116 的尾帧命题不是剩余未知：已提交的同一次官方强制事件在
+`ac7116_AT_SP_story5_01.dgm` end frame 337 后持续观察到
+`GetDecodeFrame=337`、`IsDrawTime=1` 和 drawCall，覆盖 11.267--13.05 秒 voice tail。
+断电丢失的是 7 月 3 日 A 盘原始 JSONL 审计副本，不是 Git 中已固化的机制结论。
+自然目标重捕用于恢复原始链和闭合 outer BGM。当前 v19 两版虽时长/帧数正确，却是
+约 1.09--1.11 Mb/s 的 libx264 重编码，低于现有主故事源约 1.506 Mb/s；最终三版仍
+必须复核 codec/profile/bitrate 与一致的音频来源/hash。
+
+## 2026-07-13 PID3083 active transport 与三局自然检查点
+
+面向外部读者的最新中文汇总、静态/动态机制边界、三版本字幕规格、CDN 备选路线
+和量化剩余工作统一见：
+
+```text
+docs/HUMAN_PROGRESS_REPORT_2026-07-13.md
+```
+
+PID 11160 已降为历史证据。最近一次有效捕获 PID 为 `3083`；MuMu 重启后必须重新
+读取前台 PID，任何 dated PID 都不得跨重启复用。PID 3189/8528 曾复现相同的
+GLThread/Houdini 非法 PC 后 SIGSEGV/SEGV_MAPERR、fault `0xdead1005`，但现有栈
+不能把崩溃归因于某一个 hook。
+
+恢复顺序仍是：force-stop，先无 Gadget 启动并进入 Simulation，按一次
+`ゲームスタート` 到真实 slot 主画面，再注入 ARM64 Gadget。Houdini 把游戏 ARM64
+映射登记为 `split_config.arm64_v8a.apk`，所以探针按游戏专有导出定位所属映射，
+不硬匹配 `libGameProc.so`。PID3083 reinject 证据为
+`runtime_recovery_20260713\evidence\gadget_reinject_pid3083_20260713_01`，summary
+SHA-256 为
+`DA752417710EF91EFDE6B28F7EACA79E65B5215A1AC97AF35100453AEAAE924F`。
+
+CSL active transport 前/后有界快照已经实现，不再是“下一步待实现”。当前只读
+smoke 为 `natural_hunter_pid3083_active_csl_readonly_smoke_20260713_03`：零 gameplay
+输入，声明/捕获 `65/65`、`truncated=false`，两端均无 active row；journal
+SHA-256 为
+`DA92840BC7E140AF1EF8A25E6BA77F97133E36ECA06BE375DDB666BE31F1A6CB`。
+每次 RPC 临时挂到下一次 `CSLMng::Calc`，在 Calc thread 快照后 detach；128 是
+防御 cap，不是游戏声明上限。
+
+`natural_hunter_pid3083_active_csl_execute_20260713_01` 是一次有效普通 non-target。
+五个输入各一次、三轴和累计 progress 正确、7 个 dispatch batch、无 overflow。
+ID19 raw 为 `19 0 8 0 0 10 1 38`，零基 `raw[1]=0, raw[2]=8`，不能误判目标。
+attempt-post 的 4 个 playing transport row 为 ID820/ch1、ID304/ch2、ID2655/ch3、
+ID308/ch11，全部 `bgm_semantics_proven=false`。静态映射证明 ID820 是伊吕波对白、
+ID2655 是 Sana title call；ID304/resource834 和 ID308/resource839 没有业务标签，
+不能仅凭时长、channel 或 loop flag 叫 BGM。
+
+本轮新增
+`natural_hunter_pid3083_active_csl_execute_20260713_02`：三次自然局分别用时
+4.080/3.990/3.780 秒，所有 15 个单次动作均接受，九次 STOP 均有轴 0/1/2 与
+`0x200000/0x600000/0xe00000` 对应证据；每局 7 个真实 dispatch batch、无 overflow，
+三局均为 `raw[1]=0, raw[2]=8` 的普通 non-target。journal SHA-256 为
+`16B2929BD3FF6B6137AD29CF245F7708AA76D762024B1E11E572C77B581BD828`。
+
+尚未开始无界搜索。下一道声音门禁是把 CSL transport 与 ZG published play-info
+或等价官方 identity 绑定，并在同一次合法 ac7114/15/16 自然命中中证明 outer BGM；
+CSL active row 本身不是 BGM 语义。ac7116 的 final-frame 337 hold 已由同一次官方
+强制事件达到 runtime-mechanism 级证明；自然目标重捕只为恢复断电丢失的原始同源
+日志并闭合 outer BGM，不再重开该机制命题。随后要实现日文/中文/无字幕三版（同一
+经确认的游戏字体/排版）并重新执行 codec/profile/bitrate/audio-hash QA。全库基线
+仍为 926 events：
+technical-ready 521，已有 per-event QA 304，ready 但缺 QA 217，仍需 series
+decision 254，material collection 缺 323，严格 AV 门禁阻断 897。这些是库存门禁
+计数，不是完成百分比。
+
+## 2026-07-13 自然 SP Story hunter 与抽奖表权威增量
+
+最新机制、失败审计、静态五表概率和面向人类的剩余工作量统一记录在：
+
+```text
+docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md
+```
+
+本轮纠正 2026-07-12 的“STOP 非零 process 位就是接受”表述：process 位只证明
+触摸到达输入层。逻辑停轮还必须看到正确轴的 `CReel::setStopAngle`，并由
+`state+0x64` 的 `0x200000/0x600000/0xe00000` 累计进度交叉确认。首停/两停间
+门禁来自 `body+0x538/+0x53c/+0x540`，不是按钮颜色。新的 hunter 每个动作只发
+一次，按 PID/前台/队列/主机时间和 sequence 水位失败关闭。
+
+`extract_sp_story_kind_lottery.py` 已从原生 relocation 解析全部五张表并输出
+JSON/CSV；所有权重和均为 32768。ac7115 的 `ごめんね…` cue 也已改为
+graphical-only，清除未被运行时调用的 request 8894 元数据，不改动正确音轨。
+
+PID 3189 在约 6559 秒 app lifetime 后崩溃回 Lawnchair；它已失效。其后曾恢复的
+PID 7619/11160 也只是历史中间状态，当前必须以上方 PID3083 小节为准；旧证据目录
+`runtime_recovery_20260713\evidence\gadget_reinject_pid7619_20260713_01` 仅保留审计。
+ac7114/15/16 尚未捕获到新的合法自然 target batch；CSL active transport 捕获已
+实现，但 ZG/业务 BGM identity 尚未闭合，不能晋升正式投稿。
 
 ## 2026-07-12 配额约束下的权威增量
 
@@ -11,8 +139,8 @@
 docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md
 ```
 
-当前前台游戏 PID 为 `2636`；root x86 Frida 27042 与 ARM64 Gadget 已恢复，
-Gadget 可见 `libGameProc.so`。不要再把下方历史 PID 当成当前进程。
+本节的 PID `2636` 是 2026-07-12 历史快照，不是当前进程；当前 PID 见文首最新
+小节。不要把任何 dated PID 跨重启复用。
 远端只保留 `codex/corrected-runtime-pipeline`；D 盘资源根中的旧本地
 `main@50e4f5d` 只作资源来源。旧状态被新状态覆盖时，以本节和核心 handoff
 为准； dated research 继续保留作审计链。
