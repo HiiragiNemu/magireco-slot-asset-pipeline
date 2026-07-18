@@ -1,5 +1,14 @@
 # Official Event Reconstruction Pipeline
 
+> **2026-07-15 SUPERSEDED AS A PRODUCTION SPECIFICATION.** The static
+> `GDB -> Z2D -> DGM -> CRI` mapping remains useful evidence, but the 8,482-row
+> plan, old two-edition outputs, fixed limiter/headroom mix and paths below are
+> historical. They do not prove runtime voice/BGM/subtitle scheduling and must
+> not authorize rendering. Current production requires native dimensions, two
+> evidence-bound audio masters by three subtitle variants, exact frame/sample
+> timelines and READY-last promotion; see `docs/HANDOFF_NEXT_AI_MAGIRECO.md` and
+> `docs/research/2026-07-14-two-audio-master-six-edition-contract.md`.
+
 ## Authoritative mapping
 
 The production mapping is:

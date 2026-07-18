@@ -1,15 +1,14 @@
 # Bilibili Production Workflow
 
-> **2026-07-13 authority correction:** the bulk `5,485`-row/294-part plan below
-> is historical tooling documentation, not authorization to publish those old
-> renders.  Final production now requires three synchronized editions
-> (no subtitles, Japanese subtitles, reviewed Chinese subtitles), a verified
-> game-font/game-text layout, strict runtime/static AV evidence, and same-scene
-> grouping rather than arbitrary visual adjacency.  Read
-> `docs/HUMAN_PROGRESS_REPORT_2026-07-13.md` and
-> `docs/HANDOFF_NEXT_AI_MAGIRECO.md` first.  Existing `--edition both` commands
-> only describe the older two-edition implementation and must not be presented
-> as satisfying the current three-edition target.
+> **2026-07-15 SUPERSEDED / DO NOT EXECUTE FOR CURRENT PRODUCTION.** The bulk
+> `5,485`-row/294-part plan and every command below are retained only as audit
+> history. Current delivery is two audio masters (`with_bgm` and `no_bgm`) by
+> three subtitle variants (none/JA/reviewed ZH), for six outputs. The 1920x1080
+> scale/pad, global limiter/loudness, `--edition both`, visual-adjacency grouping
+> and old two/three-edition claims below are prohibited. Preserve each event's
+> native dimensions and use the evidence-bound clean-visual/audio-master/READY
+> pipeline documented in `docs/HANDOFF_NEXT_AI_MAGIRECO.md` and
+> `docs/research/2026-07-14-two-audio-master-six-edition-contract.md`.
 
 ## Production inputs
 

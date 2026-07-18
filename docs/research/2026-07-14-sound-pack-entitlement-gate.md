@@ -7,6 +7,12 @@ entitlement，游戏会在通用声音请求路径中把固定声音集合的音
 本轮只读检查没有购买追加包、没有改写 entitlement/config、没有给游戏发送输入，
 也没有把表内曲目擅自补进任何成片。
 
+> 2026-07-14 后续修正：未授权运行态只解释当前静音，不取消带 BGM 成片目标。
+> 新的门控前探针已从真实 `changeVolume` 调用恢复 ID826 的 authorized final
+> volume=50，而门控后 CSL volume=0。最终要求是 `with_bgm` 与 `no_bgm` 两条
+> 音频母版，各自派生无字幕/日文/中文三版。完整证据见
+> `2026-07-14-sound-pack-pre-gate-runtime-volume.md`。
+
 ## 1. 官方产品语义
 
 [Google Play 官方页面](https://play.google.com/store/apps/details?hl=ja&id=com.universal777.magireco)
@@ -139,4 +145,6 @@ outer BGM。只审计事件局部清单，既不能证明有 outer BGM，也不�
    BGM”。
 
 这项修正把过去的笼统疑问变成了可测门禁，但尚未替代 ac7114/15/16 同一次自然
-目标事件的入口前后声音捕获。
+目标事件的入口前后声音捕获。当前无需开启 entitlement 也能继续只读捕获门控前
+曲目 ID、原生音量和 ducking transition；这些证据将用于制作带 BGM 母版，而当前
+门控后的真实静音输出将用于核对无 BGM 母版。

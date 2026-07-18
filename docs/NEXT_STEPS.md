@@ -1,5 +1,12 @@
 # Next Steps
 
+> **2026-07-15 SUPERSEDED / 禁止作为当前执行手册。** 本文是 2026-06-05 的
+> 历史样本阶段记录，下面按 `video_sequence_candidates`、首帧和视觉相邻关系推进的
+> 方法不能用于当前音画/字幕生产。当前只读入口是
+> `docs/HANDOFF_NEXT_AI_MAGIRECO.md` 和
+> `docs/research/2026-07-14-two-audio-master-six-edition-contract.md`；不得据本文生成
+> 旧两版、1080p 输出，也不得用视觉猜测声音或事件归属。
+
 更新时间：2026-06-05
 
 ## 是否还有内容值得上传

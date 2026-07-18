@@ -16,9 +16,11 @@ from tools.frida_runtime_probe.extract_sound_pack_gate import (
     ACTIVE_SOUND_PACK_OFFSET,
     DEFAULT_TABLE_BYTE_LENGTH,
     ENTITLEMENT_INDEX,
+    REFERENCE_LIBRARY_SHA256,
     REFERENCE_TABLE_SHA256,
     SAVED_SOUND_PACK_OFFSET,
     build_gate_report,
+    enforce_reference_policy,
     extract_gate_ids,
     gate_table_bytes,
     make_csv_source,
@@ -246,6 +248,68 @@ class SoundRecordJoinTests(unittest.TestCase):
         self.assertEqual(play_call["call_site_offset_from_entry"], "0x1bc")
         self.assertNotEqual(play_call["caller_symbol_entry"], play_call["call_site"])
 
+    def test_reference_policy_fails_closed_without_explicit_override(self) -> None:
+        table = pack_ids([7, 8, 9])
+        document, _, _ = build_gate_report(
+            table,
+            lib_path="unreviewed.so",
+            table_file_offset=0,
+            table_byte_length=len(table),
+        )
+
+        with self.assertRaisesRegex(ValueError, "Refusing to label arbitrary bytes"):
+            enforce_reference_policy(document)
+        enforce_reference_policy(document, allow_unmatched_reference=True)
+
+    def test_matching_table_in_unknown_library_is_only_experimental(self) -> None:
+        table = pack_ids(CURRENT_REFERENCE_IDS)
+        document, _, _ = build_gate_report(
+            table,
+            lib_path="table-only-not-known-library.so",
+            table_file_offset=0,
+            table_byte_length=len(table),
+        )
+        self.assertTrue(document["reference_comparison"]["reference_vector_matches"])
+        self.assertFalse(document["reference_comparison"]["library_sha256_matches"])
+        self.assertNotEqual(document["lib_sha256"], REFERENCE_LIBRARY_SHA256)
+        with self.assertRaisesRegex(ValueError, "library and fixed-offset table"):
+            enforce_reference_policy(document)
+
+    def test_cli_table_match_only_override_is_not_audited(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            table = pack_ids(CURRENT_REFERENCE_IDS)
+            lib = root / "table-only-not-known-library.so"
+            lib.write_bytes(table)
+            out_dir = root / "audit"
+            argv = [
+                "extract_sound_pack_gate.py",
+                "--lib",
+                str(lib),
+                "--out-dir",
+                str(out_dir),
+                "--table-file-offset",
+                "0",
+                "--table-byte-length",
+                str(len(table)),
+                "--allow-unmatched-reference",
+            ]
+            stdout = io.StringIO()
+            with patch.object(sys, "argv", argv), contextlib.redirect_stdout(stdout):
+                self.assertEqual(main(), 0)
+            result = json.loads(stdout.getvalue())
+            self.assertFalse(result["ok"])
+            self.assertTrue(result["experimental"])
+            self.assertTrue(result["reference_vector_matches"])
+            self.assertFalse(result["library_sha256_matches"])
+            manifest = json.loads(
+                (out_dir / "sound_pack_gate.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                manifest["reference_policy"]["audit_status"],
+                "experimental_table_match_only",
+            )
+
     def test_writes_json_and_csv_with_full_library_hash(self) -> None:
         table = pack_ids([7, 8, 9])
         blob = b"prefix" + table
@@ -277,11 +341,15 @@ class SoundRecordJoinTests(unittest.TestCase):
             table_file_offset=0,
             table_byte_length=len(table),
         )
+
         with tempfile.TemporaryDirectory() as temp_dir:
             out_dir = Path(temp_dir)
             write_gate_outputs(out_dir, document, rows, fieldnames)
-            with self.assertRaises(FileExistsError):
+            with self.assertRaisesRegex(FileExistsError, "refusing to overwrite"):
                 write_gate_outputs(out_dir, document, rows, fieldnames)
+            write_gate_outputs(
+                out_dir, document, rows, fieldnames, overwrite=True
+            )
 
     def test_cli_fails_closed_before_output_on_reference_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

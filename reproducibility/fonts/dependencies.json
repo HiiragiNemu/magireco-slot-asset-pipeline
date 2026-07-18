@@ -1,0 +1,45 @@
+{
+  "schema": "magireco-font-dependencies-v1",
+  "dependencies": {
+    "noto-sans-cjk-sc-2.004-variable-ttf": {
+      "purpose": "Audited Simplified Chinese fallback for subtitle glyphs; this is not a game-native font.",
+      "version": "2.004",
+      "font": {
+        "family": "Noto Sans SC",
+        "face_index": 0,
+        "format": "OpenType variable TTF",
+        "upstream_filename": "NotoSansSC-VF.ttf"
+      },
+      "upstream": {
+        "owner": "notofonts",
+        "repository": "https://github.com/notofonts/noto-cjk",
+        "release": "https://github.com/notofonts/noto-cjk/releases/tag/Sans2.004",
+        "tag": "Sans2.004",
+        "commit": "523d033d6cb47f4a80c58a35753646f5c3608a78"
+      },
+      "license": {
+        "spdx": "OFL-1.1",
+        "name": "SIL Open Font License 1.1",
+        "file": "noto-sans-cjk-sc-2.004/OFL-1.1.txt"
+      },
+      "files": [
+        {
+          "role": "font",
+          "path": "noto-sans-cjk-sc-2.004/NotoSansSC-VF.ttf",
+          "bytes": 17773132,
+          "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964",
+          "git_blob_sha1": "5371a543be5fc670c7cdee9760c03554ee3e9b8e",
+          "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/Sans/Variable/TTF/Subset/NotoSansSC-VF.ttf"
+        },
+        {
+          "role": "license",
+          "path": "noto-sans-cjk-sc-2.004/OFL-1.1.txt",
+          "bytes": 4301,
+          "sha256": "6A73F9541C2DE74158C0E7CF6B0A58EF774F5A780BF191F2D7EC9CC53EFE2BF2",
+          "git_blob_sha1": "d952d62c065f3f35fb83a173496e90b21525aef3",
+          "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/523d033d6cb47f4a80c58a35753646f5c3608a78/LICENSE"
+        }
+      ]
+    }
+  }
+}

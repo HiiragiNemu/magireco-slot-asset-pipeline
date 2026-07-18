@@ -7,9 +7,63 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
+import tempfile
+import uuid
 from pathlib import Path
+
+try:
+    from .composition_contract import (
+        composition_contract_projection,
+        composition_contract_sha256,
+    )
+    from .output_path_contract import (
+        ensure_resolved_containment,
+        resolve_output_child,
+        validate_output_identifier,
+    )
+    from .render_subtitle_editions import (
+        file_sha256 as production_file_sha256,
+        probe as production_probe,
+        probe_video_timeline,
+        video_encoding_signature,
+        video_packet_hash,
+    )
+    from .subtitle_edition_contract import (
+        AUDIO_PROFILES,
+        SUPPORTED_EDITIONS,
+        build_edition_plan,
+        load_font_config,
+    )
+except ImportError:  # direct script execution
+    from composition_contract import (  # type: ignore
+        composition_contract_projection,
+        composition_contract_sha256,
+    )
+    from output_path_contract import (  # type: ignore
+        ensure_resolved_containment,
+        resolve_output_child,
+        validate_output_identifier,
+    )
+    from render_subtitle_editions import (  # type: ignore
+        file_sha256 as production_file_sha256,
+        probe as production_probe,
+        probe_video_timeline,
+        video_encoding_signature,
+        video_packet_hash,
+    )
+    from subtitle_edition_contract import (  # type: ignore
+        AUDIO_PROFILES,
+        SUPPORTED_EDITIONS,
+        build_edition_plan,
+        load_font_config,
+    )
+
+
+CLEAN_VISUAL_READY_SCHEMA = "magireco-clean-visual-release-ready-v1"
+SHA256_RE = re.compile(r"^[0-9A-F]{64}$")
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,6 +74,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ffprobe", default="ffprobe")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--keep-work", action="store_true")
+    parser.add_argument(
+        "--edition",
+        action="append",
+        choices=SUPPORTED_EDITIONS,
+        dest="editions",
+        help="repeat to request none/ja/zh; verified default is the full three variants",
+    )
+    parser.add_argument("--font-config")
+    parser.add_argument(
+        "--audio-profile",
+        action="append",
+        choices=AUDIO_PROFILES,
+        dest="audio_profiles",
+        help="repeat to select verified with_bgm/no_bgm masters",
+    )
+    parser.add_argument(
+        "--legacy-two-edition",
+        action="store_true",
+        help="explicitly retain the old unclassified-audio none+ja behavior",
+    )
+    parser.add_argument(
+        "--clean-visual-only",
+        action="store_true",
+        help=(
+            "render only the evidence-bound native H.264 composition, with no "
+            "audio or subtitles, and emit a bound event-manifest copy"
+        ),
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=(
+            "validate edition tracks, timing, and explicit font provenance/coverage "
+            "without probing or rendering media"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -56,6 +146,228 @@ def sha256(path: Path) -> str:
     return digest.hexdigest().upper()
 
 
+def snapshot_clip_source_hashes(manifest: dict) -> list[dict]:
+    """Verify every clean-visual source against its production binding."""
+
+    rows = manifest.get("clips")
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError("event manifest has no visual clips")
+    actual_by_path: dict[str, str] = {}
+    snapshots: list[dict] = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise RuntimeError(f"manifest clip {index} is not an object")
+        source_path = Path(str(row.get("path", ""))).resolve()
+        if not source_path.is_file():
+            raise RuntimeError(f"manifest clip {index} source is missing: {source_path}")
+        expected = str(row.get("source_sha256", "")).strip().upper()
+        if not SHA256_RE.fullmatch(expected):
+            raise RuntimeError(
+                f"manifest clip {index} lacks a valid source_sha256 binding"
+            )
+        key = str(source_path)
+        if key not in actual_by_path:
+            actual_by_path[key] = production_file_sha256(source_path)
+        actual = actual_by_path[key]
+        if actual != expected:
+            raise RuntimeError(
+                f"manifest clip {index} source SHA-256 mismatch: "
+                f"expected {expected}, found {actual}"
+            )
+        snapshots.append(
+            {
+                "order": index,
+                "dgm_name": str(row.get("dgm_name", "")),
+                "path": key,
+                "source_sha256": expected,
+            }
+        )
+    return snapshots
+
+
+def verify_clip_source_hashes_unchanged(snapshots: list[dict]) -> None:
+    """Fail if a source disappears or changes after rendering started."""
+
+    actual_by_path: dict[str, str] = {}
+    for row in snapshots:
+        source_path = Path(str(row["path"]))
+        if not source_path.is_file():
+            raise RuntimeError(f"clean-visual source disappeared: {source_path}")
+        key = str(source_path)
+        if key not in actual_by_path:
+            actual_by_path[key] = production_file_sha256(source_path)
+        if actual_by_path[key] != row["source_sha256"]:
+            raise RuntimeError(
+                "clean-visual source changed during render: "
+                f"{source_path}"
+            )
+
+
+def _validate_clean_visual_release(
+    release_root: Path,
+    *,
+    event: str,
+    published_root: Path,
+) -> dict:
+    """Validate the complete staged or promoted clean-visual release."""
+
+    ready_path = release_root / "READY.json"
+    if not ready_path.is_file():
+        raise RuntimeError("clean-visual release lacks READY.json")
+    try:
+        ready = json.loads(ready_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError("clean-visual READY.json is not valid JSON") from error
+    if (
+        ready.get("schema") != CLEAN_VISUAL_READY_SCHEMA
+        or ready.get("status") != "READY"
+        or ready.get("event") != event
+    ):
+        raise RuntimeError("clean-visual READY.json identity/status mismatch")
+    artifacts = ready.get("artifacts")
+    if not isinstance(artifacts, list):
+        raise RuntimeError("clean-visual READY.json has no artifact list")
+    expected_roles = {
+        "clean_visual",
+        "render_manifest",
+        "bound_event_manifest",
+    }
+    roles: set[str] = set()
+    artifact_paths: dict[str, Path] = {}
+    for row in artifacts:
+        if not isinstance(row, dict):
+            raise RuntimeError("clean-visual READY artifact row is not an object")
+        role = str(row.get("role", ""))
+        relative_path = str(row.get("relative_path", ""))
+        expected_sha256 = str(row.get("sha256", "")).upper()
+        if role in roles or role not in expected_roles:
+            raise RuntimeError("clean-visual READY artifact roles are invalid")
+        if not relative_path or Path(relative_path).is_absolute():
+            raise RuntimeError("clean-visual READY artifact path is invalid")
+        artifact_path = ensure_resolved_containment(
+            release_root,
+            release_root / relative_path,
+            label=f"{event} clean-visual READY artifact",
+        )
+        if not artifact_path.is_file():
+            raise RuntimeError(f"clean-visual READY artifact is missing: {role}")
+        if not SHA256_RE.fullmatch(expected_sha256):
+            raise RuntimeError(f"clean-visual READY artifact hash is invalid: {role}")
+        if production_file_sha256(artifact_path) != expected_sha256:
+            raise RuntimeError(f"clean-visual READY artifact hash mismatch: {role}")
+        roles.add(role)
+        artifact_paths[role] = artifact_path
+    if roles != expected_roles:
+        raise RuntimeError("clean-visual READY artifact set is incomplete")
+
+    report = json.loads(
+        artifact_paths["render_manifest"].read_text(encoding="utf-8")
+    )
+    bound = json.loads(
+        artifact_paths["bound_event_manifest"].read_text(encoding="utf-8")
+    )
+    published_video = (
+        published_root / "clean_visual" / f"{event}__clean_visual.mp4"
+    ).resolve()
+    published_report = (published_root / "render_manifest.json").resolve()
+    actual_video_sha256 = production_file_sha256(
+        artifact_paths["clean_visual"]
+    )
+    if (
+        report.get("schema") != "magireco-clean-visual-render-v1"
+        or report.get("status") != "passed"
+        or report.get("publishable") is not True
+        or Path(str(report.get("output", ""))).resolve() != published_video
+        or report.get("output_sha256") != actual_video_sha256
+    ):
+        raise RuntimeError("clean-visual render manifest release binding mismatch")
+    binding = bound.get("clean_visual_master", {})
+    artifact_binding = binding.get("artifact", {})
+    report_binding = binding.get("render_manifest", {})
+    if (
+        Path(str(artifact_binding.get("path", ""))).resolve() != published_video
+        or artifact_binding.get("sha256") != report.get("output_sha256")
+        or Path(str(report_binding.get("path", ""))).resolve() != published_report
+        or report_binding.get("sha256")
+        != production_file_sha256(artifact_paths["render_manifest"])
+    ):
+        raise RuntimeError("bound event manifest clean_visual_master mismatch")
+    return ready
+
+
+def _promote_clean_visual_release(
+    *,
+    staging_root: Path,
+    published_root: Path,
+    event: str,
+    overwrite: bool,
+) -> None:
+    """Promote one complete same-volume directory and restore on late failure."""
+
+    _validate_clean_visual_release(
+        staging_root,
+        event=event,
+        published_root=published_root,
+    )
+    previous_root: Path | None = None
+    failed_root: Path | None = None
+    if published_root.exists():
+        if not overwrite:
+            raise FileExistsError(
+                f"clean-visual release exists; pass --overwrite: {published_root}"
+            )
+        previous_root = published_root.parent / (
+            f".{published_root.name}.previous-{uuid.uuid4().hex}"
+        )
+        published_root.replace(previous_root)
+    try:
+        staging_root.replace(published_root)
+        _validate_clean_visual_release(
+            published_root,
+            event=event,
+            published_root=published_root,
+        )
+    except BaseException:
+        if published_root.exists():
+            failed_root = published_root.parent / (
+                f".{published_root.name}.failed-{uuid.uuid4().hex}"
+            )
+            published_root.replace(failed_root)
+        if previous_root is not None and not published_root.exists():
+            previous_root.replace(published_root)
+        if failed_root is not None:
+            shutil.rmtree(failed_root, ignore_errors=True)
+        raise
+    if previous_root is not None:
+        shutil.rmtree(previous_root, ignore_errors=True)
+
+
+def audio_hash(path: Path, ffmpeg: str) -> str:
+    result = subprocess.run(
+        [
+            ffmpeg,
+            "-v",
+            "error",
+            "-i",
+            str(path),
+            "-map",
+            "0:a:0",
+            "-c:a",
+            "copy",
+            "-f",
+            "hash",
+            "-hash",
+            "sha256",
+            "-",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return result.stdout.strip().split("=", 1)[-1].upper()
+
+
 def srt_time(milliseconds: int) -> str:
     value = max(milliseconds, 0)
     hours, value = divmod(value, 3_600_000)
@@ -64,13 +376,146 @@ def srt_time(milliseconds: int) -> str:
     return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
 
-def main() -> int:
-    args = parse_args()
+def write_srt(path: Path, cues: list[dict]) -> None:
+    lines: list[str] = []
+    for index, row in enumerate(cues, 1):
+        lines.extend(
+            [
+                str(index),
+                f"{srt_time(int(row['start_ms']))} --> "
+                f"{srt_time(int(row['end_ms']))}",
+                str(row["text"]),
+                "",
+            ]
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def edition_paths(out_root: Path, event: str, language: str) -> tuple[Path, Path]:
+    event = validate_output_identifier(event, label="event")
+    if language == "ja":
+        paths = (
+            out_root / "with_subtitles" / f"{event}__subtitles.mp4",
+            out_root / "subtitles" / f"{event}.srt",
+        )
+    else:
+        paths = (
+            out_root
+            / f"with_subtitles_{language}"
+            / f"{event}__{language}_subtitles.mp4",
+            out_root / f"subtitles_{language}" / f"{event}.{language}.srt",
+        )
+    return tuple(
+        ensure_resolved_containment(out_root, path, label=f"{event} edition output")
+        for path in paths
+    )
+
+
+def link_or_copy(source: Path, target: Path, *, overwrite: bool) -> str:
+    if target.exists():
+        if not overwrite:
+            raise FileExistsError(f"output exists; pass --overwrite: {target}")
+        target.unlink()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.link(source, target)
+        return "hardlink"
+    except OSError:
+        shutil.copy2(source, target)
+        return "copy"
+
+
+def validate_explicit_composition_plan(manifest: dict) -> dict:
+    """Fail closed unless the clean render has a complete explicit plan."""
+
+    composition_model = manifest.get("video_composition_model")
+    if composition_model not in {
+        "linear_full_frame_sequence",
+        "timed_full_frame_layers",
+    }:
+        raise RuntimeError(
+            f"unsupported or blank video_composition_model: {composition_model!r}"
+        )
+    plan = manifest.get("composition_plan")
+    if not isinstance(plan, dict) or not plan:
+        raise RuntimeError("clean-visual production requires an explicit composition_plan")
+    if plan.get("model") != composition_model:
+        raise RuntimeError(
+            "composition_plan.model does not match video_composition_model"
+        )
+    if plan.get("event") not in (None, manifest.get("event")):
+        raise RuntimeError("composition_plan.event does not match manifest event")
+    if plan.get("native_dimensions") not in (
+        None,
+        manifest.get("native_dimensions"),
+    ):
+        raise RuntimeError(
+            "composition_plan.native_dimensions does not match manifest"
+        )
+    # Authored plans describe the evidence-backed content tail.  A production
+    # manifest may extend that tail by less than one CFR frame so that video
+    # packets and 48 kHz audio share an exact presentation boundary.  Keep the
+    # authored value in the contract instead of silently rewriting it.
+    plan_duration_ms = plan.get("duration_ms")
+    accepted_plan_durations = {
+        manifest.get("render_duration_ms"),
+        manifest.get("raw_render_duration_ms"),
+        manifest.get("timeline_content_end_ms"),
+    }
+    if plan_duration_ms is not None and plan_duration_ms not in accepted_plan_durations:
+        raise RuntimeError(
+            "composition_plan.duration_ms does not match the content or CFR "
+            "presentation tail"
+        )
+    if plan.get("extension_policy") != manifest.get("video_extension_policy"):
+        raise RuntimeError(
+            "composition_plan.extension_policy does not match manifest"
+        )
+    clips = manifest.get("clips")
+    plan_clips = plan.get("clips")
+    if not isinstance(clips, list) or not clips:
+        raise RuntimeError("event manifest has no visual clips")
+    if not isinstance(plan_clips, list) or not plan_clips:
+        raise RuntimeError("composition_plan has no clip rows")
+
+    def names(rows: list, *, label: str) -> list[str]:
+        result = [
+            str(row.get("dgm_name", "")).strip()
+            for row in rows
+            if isinstance(row, dict)
+        ]
+        if len(result) != len(rows) or any(not value for value in result):
+            raise RuntimeError(f"{label} contains a blank or non-object clip row")
+        if len(set(result)) != len(result):
+            raise RuntimeError(f"{label} contains duplicate dgm_name values")
+        return result
+
+    clip_names = names(clips, label="manifest clips")
+    plan_names = names(plan_clips, label="composition_plan clips")
+    if set(clip_names) != set(plan_names):
+        raise RuntimeError(
+            "composition_plan clip coverage does not exactly match manifest clips"
+        )
+    if composition_model == "linear_full_frame_sequence" and clip_names != plan_names:
+        raise RuntimeError(
+            "linear composition_plan clip order does not match manifest clips"
+        )
+    return plan
+
+
+def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
     manifest_path = Path(args.manifest).resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    event = manifest["event"]
+    source_manifest_sha256 = production_file_sha256(manifest_path)
+    event = validate_output_identifier(manifest["event"], label="manifest event")
     gates = manifest.get("quality_gates", {})
-    if not gates.get("ready"):
+    if args.clean_visual_only:
+        if gates.get("composition_resolved") is not True:
+            raise SystemExit(
+                "manifest does not have a verified resolved visual composition"
+            )
+    elif not gates.get("ready"):
         raise SystemExit(
             f"manifest is not ready: {', '.join(gates.get('errors', []))}"
         )
@@ -80,22 +525,159 @@ def main() -> int:
     }:
         raise SystemExit("refusing to render unverified event classification")
 
-    out_root = Path(args.out_root).resolve() / event
-    without_dir = out_root / "without_subtitles"
-    with_dir = out_root / "with_subtitles"
-    subtitle_dir = out_root / "subtitles"
-    work_dir = out_root / "_work"
-    for directory in (without_dir, with_dir, subtitle_dir, work_dir):
+    if args.clean_visual_only and args.legacy_two_edition:
+        raise SystemExit(
+            "--clean-visual-only and --legacy-two-edition are mutually exclusive"
+        )
+    if args.clean_visual_only and any(
+        (args.editions, args.audio_profiles, args.font_config)
+    ):
+        raise SystemExit(
+            "clean-visual mode does not accept edition, audio-profile, or font options"
+        )
+
+    edition_plan: dict | None = None
+    source_composition_projection: dict | None = None
+    source_composition_sha256 = ""
+    clip_source_snapshots: list[dict] = []
+    if args.clean_visual_only:
+        try:
+            validate_explicit_composition_plan(manifest)
+            clip_source_snapshots = snapshot_clip_source_hashes(manifest)
+        except RuntimeError as error:
+            raise SystemExit(str(error)) from error
+        source_composition_projection = composition_contract_projection(manifest)
+        source_composition_sha256 = composition_contract_sha256(manifest)
+        if args.dry_run:
+            print(
+                json.dumps(
+                    {
+                        "schema": "magireco-clean-visual-render-dry-run-v1",
+                        "dry_run": True,
+                        "rendered": False,
+                        "source_manifest": str(manifest_path),
+                        "source_composition_contract_sha256": (
+                            source_composition_sha256
+                        ),
+                        "source_composition_contract": (
+                            source_composition_projection
+                        ),
+                        "source_clips": clip_source_snapshots,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return 0
+    else:
+        font_config = load_font_config(
+            Path(args.font_config).resolve() if args.font_config else None
+        )
+        edition_plan = build_edition_plan(
+            manifest,
+            editions=args.editions,
+            audio_profiles=args.audio_profiles,
+            legacy_compat=args.legacy_two_edition,
+            font_config=font_config,
+            manifest_path=manifest_path,
+        )
+        if args.dry_run:
+            print(
+                json.dumps(
+                    {
+                        "schema": "magireco-event-render-dry-run-v1",
+                        "dry_run": True,
+                        "rendered": False,
+                        "source_manifest": str(manifest_path),
+                        "edition_plan": edition_plan,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return 0
+        if not args.legacy_two_edition:
+            raise SystemExit(
+                "verified 2x3 audio-master rendering is not implemented in this "
+                "composition renderer yet; refusing to turn the existing audio list "
+                "into a guessed BGM mix. Use --dry-run to validate evidence or the "
+                "explicit --legacy-two-edition compatibility path."
+            )
+
+    output_parent = Path(args.out_root).resolve()
+    published_out_root = resolve_output_child(
+        output_parent, event, label="manifest event"
+    )
+    if args.clean_visual_only:
+        if published_out_root.exists() and not args.overwrite:
+            raise SystemExit(
+                "refusing to overwrite existing clean-visual release: "
+                f"{published_out_root}"
+            )
+        output_parent.mkdir(parents=True, exist_ok=True)
+        staging_container = Path(
+            tempfile.mkdtemp(
+                prefix=f".{event}.clean-visual-staging-",
+                dir=output_parent,
+            )
+        )
+        transaction_cleanup.append(staging_container)
+        out_root = staging_container / "release"
+    else:
+        out_root = published_out_root
+    work_dir = ensure_resolved_containment(
+        out_root, out_root / "_work", label=f"{event} work directory"
+    )
+    without_dir = ensure_resolved_containment(
+        out_root,
+        out_root / "without_subtitles",
+        label=f"{event} subtitle-free directory",
+    )
+    clean_visual_dir = ensure_resolved_containment(
+        out_root,
+        out_root / "clean_visual",
+        label=f"{event} clean-visual directory",
+    )
+    directories = (
+        (clean_visual_dir, work_dir)
+        if args.clean_visual_only
+        else (without_dir, work_dir)
+    )
+    for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
 
     without_path = without_dir / f"{event}.mp4"
-    with_path = with_dir / f"{event}__subtitles.mp4"
     output_manifest_path = out_root / "render_manifest.json"
-    existing = [
-        path
-        for path in (without_path, with_path, output_manifest_path)
-        if path.exists()
-    ]
+    clean_visual_path = clean_visual_dir / f"{event}__clean_visual.mp4"
+    bound_manifest_path = out_root / f"{event}.clean_visual.bound.json"
+    published_output_manifest_path = published_out_root / "render_manifest.json"
+    published_clean_visual_path = (
+        published_out_root / "clean_visual" / f"{event}__clean_visual.mp4"
+    )
+    published_bound_manifest_path = (
+        published_out_root / f"{event}.clean_visual.bound.json"
+    )
+    if args.clean_visual_only:
+        requested: list[str] = []
+        subtitle_outputs: dict[str, tuple[Path, Path]] = {}
+        existing: list[Path] = []
+    else:
+        assert edition_plan is not None
+        requested = list(edition_plan["requested_editions"])
+        subtitle_outputs = {
+            language: edition_paths(out_root, event, language)
+            for language in requested
+            if language != "none"
+        }
+        existing = [
+            path
+            for path in (
+                without_path,
+                output_manifest_path,
+                *(path for pair in subtitle_outputs.values() for path in pair),
+            )
+            if path.exists()
+        ]
     if existing and not args.overwrite:
         raise SystemExit(
             "refusing to overwrite existing output: "
@@ -670,6 +1252,238 @@ def main() -> int:
     else:
         raise SystemExit(f"unsupported video composition model: {composition_model}")
 
+    if args.clean_visual_only:
+        clean_probe = production_probe(video_only, args.ffprobe)
+        video_streams = [
+            row
+            for row in clean_probe.get("streams", [])
+            if row.get("codec_type") == "video"
+        ]
+        audio_streams = [
+            row
+            for row in clean_probe.get("streams", [])
+            if row.get("codec_type") == "audio"
+        ]
+        subtitle_streams = [
+            row
+            for row in clean_probe.get("streams", [])
+            if row.get("codec_type") == "subtitle"
+        ]
+        qa_errors: list[str] = []
+        if len(video_streams) != 1:
+            qa_errors.append(
+                f"expected exactly one video stream, found {len(video_streams)}"
+            )
+        if audio_streams:
+            qa_errors.append(
+                f"clean visual contains {len(audio_streams)} forbidden audio stream(s)"
+            )
+        if subtitle_streams:
+            qa_errors.append(
+                "clean visual contains "
+                f"{len(subtitle_streams)} forbidden subtitle stream(s)"
+            )
+        clean_video = video_streams[0] if len(video_streams) == 1 else {}
+        if clean_video.get("codec_name") != "h264":
+            qa_errors.append("clean visual video codec is not H.264")
+        if (
+            clean_video.get("width") != width
+            or clean_video.get("height") != height
+        ):
+            qa_errors.append("clean visual changed native dimensions")
+        if clean_video.get("r_frame_rate") != frame_rate:
+            qa_errors.append("clean visual changed native frame rate")
+        try:
+            stream_duration_ms = round(float(clean_video["duration"]) * 1000)
+            container_duration_ms = round(
+                float(clean_probe["format"]["duration"]) * 1000
+            )
+            start_ms = round(float(clean_video["start_time"]) * 1000)
+        except (KeyError, TypeError, ValueError):
+            qa_errors.append("clean visual lacks auditable start/duration metadata")
+        else:
+            if start_ms != 0:
+                qa_errors.append(f"clean visual starts at {start_ms} ms")
+            if stream_duration_ms != render_duration_ms:
+                qa_errors.append(
+                    "clean visual stream duration does not equal render_duration_ms"
+                )
+            if container_duration_ms != render_duration_ms:
+                qa_errors.append(
+                    "clean visual container duration does not equal render_duration_ms"
+                )
+        if qa_errors:
+            raise SystemExit("clean visual QA failed: " + "; ".join(qa_errors))
+
+        try:
+            video_timeline = probe_video_timeline(
+                video_only,
+                args.ffprobe,
+                expected_duration_ms=render_duration_ms,
+                expected_frame_rate=str(frame_rate),
+                label=f"{event} clean visual",
+            )
+        except RuntimeError as error:
+            raise SystemExit(f"clean visual timeline QA failed: {error}") from error
+        output_video_packet_sha256 = video_packet_hash(video_only, args.ffmpeg)
+        output_sha256 = production_file_sha256(video_only)
+        current_manifest_bytes_sha256 = production_file_sha256(manifest_path)
+        current_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if current_manifest_bytes_sha256 != source_manifest_sha256:
+            raise SystemExit("source event manifest changed during clean render")
+        if composition_contract_sha256(current_manifest) != source_composition_sha256:
+            raise SystemExit("source composition contract changed during clean render")
+        try:
+            verify_clip_source_hashes_unchanged(clip_source_snapshots)
+        except RuntimeError as error:
+            raise SystemExit(str(error)) from error
+        assert source_composition_projection is not None
+
+        report = {
+            "schema": "magireco-clean-visual-render-v1",
+            "status": "passed",
+            "publishable": True,
+            "event": event,
+            "source_manifest": {
+                "path": str(manifest_path),
+                "sha256": source_manifest_sha256,
+                "locator": f"source event manifest for {event} clean visual",
+            },
+            "source_composition_contract_sha256": source_composition_sha256,
+            "source_composition_contract": source_composition_projection,
+            "source_clips": clip_source_snapshots,
+            "output": str(published_clean_visual_path),
+            "output_sha256": output_sha256,
+            "duration_ms": render_duration_ms,
+            "output_video_packet_sha256": output_video_packet_sha256,
+            "output_video_timeline_sha256": video_timeline["timeline_sha256"],
+            "video_encoding_signature": list(
+                video_encoding_signature(clean_video)
+            ),
+            "output_video_timeline": video_timeline,
+            "qa": {
+                "status": "passed",
+                "errors": [],
+                "checks": {
+                    "explicit_composition_plan": True,
+                    "native_dimensions": True,
+                    "native_frame_rate": True,
+                    "h264_video": True,
+                    "no_audio_stream": True,
+                    "no_subtitle_stream": True,
+                    "exact_duration": True,
+                    "exact_video_presentation_timeline": True,
+                    "source_manifest_unchanged_during_render": True,
+                    "source_clip_hashes_bound": True,
+                    "source_clips_unchanged_during_render": True,
+                },
+            },
+        }
+        clean_visual_path.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(video_only, clean_visual_path)
+        output_manifest_path.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        report_reference = {
+            "path": str(published_output_manifest_path),
+            "sha256": production_file_sha256(output_manifest_path),
+            "locator": f"passed clean-visual render QA for {event}",
+        }
+        bound_manifest = json.loads(
+            json.dumps(manifest, ensure_ascii=False)
+        )
+        bound_manifest["clean_visual_master"] = {
+            "artifact": {
+                "path": str(published_clean_visual_path),
+                "sha256": output_sha256,
+                "locator": f"native clean visual artifact for {event}",
+            },
+            "render_manifest": report_reference,
+        }
+        if composition_contract_sha256(bound_manifest) != source_composition_sha256:
+            raise SystemExit("clean_visual_master binding changed composition contract")
+        bound_manifest_path.write_text(
+            json.dumps(bound_manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        # Work products are never part of a READY release.  The clean-visual
+        # transaction publishes only the three evidence-bound artifacts plus
+        # its marker, even if --keep-work is used by a legacy rendering mode.
+        shutil.rmtree(work_dir, ignore_errors=True)
+        ready = {
+            "schema": CLEAN_VISUAL_READY_SCHEMA,
+            "status": "READY",
+            "event": event,
+            "source_manifest_sha256": source_manifest_sha256,
+            "source_composition_contract_sha256": source_composition_sha256,
+            "artifacts": [
+                {
+                    "role": "clean_visual",
+                    "relative_path": str(
+                        clean_visual_path.relative_to(out_root)
+                    ).replace("\\", "/"),
+                    "sha256": production_file_sha256(clean_visual_path),
+                },
+                {
+                    "role": "render_manifest",
+                    "relative_path": str(
+                        output_manifest_path.relative_to(out_root)
+                    ).replace("\\", "/"),
+                    "sha256": production_file_sha256(output_manifest_path),
+                },
+                {
+                    "role": "bound_event_manifest",
+                    "relative_path": str(
+                        bound_manifest_path.relative_to(out_root)
+                    ).replace("\\", "/"),
+                    "sha256": production_file_sha256(bound_manifest_path),
+                },
+            ],
+        }
+        ready_temp = out_root / "READY.json.tmp"
+        ready_path = out_root / "READY.json"
+        ready_temp.write_text(
+            json.dumps(ready, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(ready_temp, ready_path)
+        try:
+            _promote_clean_visual_release(
+                staging_root=out_root,
+                published_root=published_out_root,
+                event=event,
+                overwrite=args.overwrite,
+            )
+        except (OSError, RuntimeError) as error:
+            raise SystemExit(f"clean-visual publication failed: {error}") from error
+        result = {
+            **report,
+            "render_manifest": {
+                "path": str(published_output_manifest_path),
+                "sha256": production_file_sha256(
+                    published_output_manifest_path
+                ),
+                "locator": f"passed clean-visual render QA for {event}",
+            },
+            "bound_event_manifest": {
+                "path": str(published_bound_manifest_path),
+                "sha256": production_file_sha256(
+                    published_bound_manifest_path
+                ),
+                "locator": f"event manifest bound to clean visual for {event}",
+            },
+            "ready_marker": {
+                "path": str(published_out_root / "READY.json"),
+                "sha256": production_file_sha256(
+                    published_out_root / "READY.json"
+                ),
+                "schema": CLEAN_VISUAL_READY_SCHEMA,
+            },
+        }
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
     audio = manifest["audio"]
     audio_inputs: list[str] = []
     audio_filters: list[str] = []
@@ -720,67 +1534,96 @@ def main() -> int:
         ]
     )
 
-    subtitle_path = subtitle_dir / f"{event}.srt"
-    subtitle_lines: list[str] = []
-    for index, row in enumerate(manifest["subtitles"], 1):
-        subtitle_lines.extend(
-            [
-                str(index),
-                f"{srt_time(int(row['start_ms']))} --> "
-                f"{srt_time(int(row['end_ms']))}",
-                row["text"],
-                "",
-            ]
-        )
-    subtitle_path.write_text("\n".join(subtitle_lines), encoding="utf-8")
-    subtitle_media_reused = not subtitle_lines
-    if subtitle_media_reused:
-        try:
-            os.link(without_path, with_path)
-        except OSError:
-            shutil.copy2(without_path, with_path)
-    else:
-        relative_subtitle = subtitle_path.relative_to(out_root).as_posix()
-        subtitle_filter = (
-            f"subtitles=filename='{relative_subtitle}':"
-            "force_style='FontName=Yu Gothic,FontSize=16,"
-            "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-            "BorderStyle=1,Outline=1,Shadow=0,MarginV=12,Alignment=2'"
-        )
-        run(
-            [
-                args.ffmpeg,
-                "-y",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-i",
-                str(without_path),
-                "-vf",
-                subtitle_filter,
-                "-c:v",
-                "libx264",
-                "-preset",
-                "slow",
-                "-crf",
-                "14",
-                "-pix_fmt",
-                str(pixel_format),
-                "-c:a",
-                "copy",
-                "-movflags",
-                "+faststart",
-                str(with_path),
-            ],
-            cwd=out_root,
-        )
+    edition_outputs: dict[str, dict] = {
+        "none": {
+            "language": "none",
+            "video": str(without_path.resolve()),
+            "subtitles": "",
+            "video_method": "rendered_composition",
+        }
+    }
+    plan_tracks = edition_plan["tracks"]
+    for language in requested:
+        if language == "none":
+            continue
+        track = plan_tracks[language]
+        cues = track["cues"]
+        font = track["font"]
+        with_path, subtitle_path = subtitle_outputs[language]
+        write_srt(subtitle_path, cues)
+        staged_font = ""
+        font_stage_method = ""
+        if not cues:
+            video_method = link_or_copy(
+                without_path, with_path, overwrite=args.overwrite
+            )
+        else:
+            if not isinstance(font, dict):
+                raise RuntimeError(f"{event} {language} has cues without a font binding")
+            source_font = Path(str(font["path"])).resolve()
+            staged_font_path = (
+                out_root
+                / "fonts"
+                / language
+                / (str(font["sha256"])[:16] + source_font.suffix.lower())
+            )
+            font_stage_method = link_or_copy(
+                source_font, staged_font_path, overwrite=args.overwrite
+            )
+            staged_font = str(staged_font_path.resolve())
+            with_path.parent.mkdir(parents=True, exist_ok=True)
+            relative_subtitle = subtitle_path.relative_to(out_root).as_posix()
+            relative_fonts = staged_font_path.parent.relative_to(out_root).as_posix()
+            subtitle_filter = (
+                f"subtitles=filename='{relative_subtitle}':"
+                f"fontsdir='{relative_fonts}':"
+                f"force_style='FontName={font['family']},FontSize=16,"
+                "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
+                "BorderStyle=1,Outline=1,Shadow=0,MarginV=12,Alignment=2'"
+            )
+            run(
+                [
+                    args.ffmpeg,
+                    "-y" if args.overwrite else "-n",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-i",
+                    str(without_path),
+                    "-vf",
+                    subtitle_filter,
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "14",
+                    "-pix_fmt",
+                    str(pixel_format),
+                    "-c:a",
+                    "copy",
+                    "-movflags",
+                    "+faststart",
+                    str(with_path),
+                ],
+                cwd=out_root,
+            )
+            video_method = "rendered_video_audio_copy"
+        edition_outputs[language] = {
+            "language": language,
+            "video": str(with_path.resolve()),
+            "subtitles": str(subtitle_path.resolve()),
+            "video_method": video_method,
+            "font": font,
+            "staged_font": staged_font,
+            "font_stage_method": font_stage_method,
+        }
 
-    without_probe = probe(without_path, args.ffprobe)
-    with_probe = probe(with_path, args.ffprobe)
-    for label, item in (
-        ("without_subtitles", without_probe),
-        ("with_subtitles", with_probe),
-    ):
+    edition_probes = {
+        language: probe(Path(row["video"]), args.ffprobe)
+        for language, row in edition_outputs.items()
+    }
+    for label, item in edition_probes.items():
         video = next(
             stream
             for stream in item["streams"]
@@ -792,34 +1635,77 @@ def main() -> int:
             if stream.get("codec_type") == "audio"
         )
         if video.get("width") != width or video.get("height") != height:
-            raise SystemExit(f"{label} output was resized")
+            raise SystemExit(f"{label} edition output was resized")
         if video.get("r_frame_rate") != frame_rate:
-            raise SystemExit(f"{label} output frame rate changed")
+            raise SystemExit(f"{label} edition output frame rate changed")
         if audio_stream.get("sample_rate") != "48000":
-            raise SystemExit(f"{label} output audio is not 48 kHz")
+            raise SystemExit(f"{label} edition output audio is not 48 kHz")
         actual_duration_ms = round(float(item["format"]["duration"]) * 1000)
         if abs(actual_duration_ms - render_duration_ms) > 50:
             raise SystemExit(
-                f"{label} duration mismatch: actual={actual_duration_ms} ms, "
+                f"{label} edition duration mismatch: actual={actual_duration_ms} ms, "
                 f"expected={render_duration_ms} ms"
             )
 
+    edition_audio_hashes = {
+        language: audio_hash(Path(row["video"]), args.ffmpeg)
+        for language, row in edition_outputs.items()
+    }
+    base_audio_hash = edition_audio_hashes["none"]
+    mismatched_audio = {
+        language: value
+        for language, value in edition_audio_hashes.items()
+        if value != base_audio_hash
+    }
+    if mismatched_audio:
+        raise SystemExit(
+            "subtitle edition audio differs from none edition: "
+            + json.dumps(mismatched_audio, ensure_ascii=False)
+        )
+    for language, value in edition_audio_hashes.items():
+        edition_outputs[language]["audio_sha256"] = value
+        edition_outputs[language]["video_sha256"] = sha256(
+            Path(edition_outputs[language]["video"])
+        )
+        subtitle_value = str(edition_outputs[language].get("subtitles", ""))
+        edition_outputs[language]["subtitle_sha256"] = (
+            sha256(Path(subtitle_value)) if subtitle_value else ""
+        )
+        edition_outputs[language]["probe"] = edition_probes[language]
+
+    subtitle_media_reused_by_edition = {
+        language: row["video_method"] in {"hardlink", "copy"}
+        for language, row in edition_outputs.items()
+        if language != "none"
+    }
     output = {
+        "schema": "magireco-event-render-editions-v2",
+        "legacy_schema_compatible": "ja" in edition_outputs,
         "source_manifest": str(manifest_path),
         "event": event,
         "render_duration_ms": render_duration_ms,
         "video_extension_policy": extension_policy,
-        "subtitle_media_reused": subtitle_media_reused,
+        "subtitle_media_reused": subtitle_media_reused_by_edition.get(
+            "ja", False
+        ),
+        "subtitle_media_reused_by_edition": subtitle_media_reused_by_edition,
         "without_subtitles": str(without_path),
-        "with_subtitles": str(with_path),
-        "subtitles": str(subtitle_path),
+        "with_subtitles": edition_outputs.get("ja", {}).get("video", ""),
+        "subtitles": edition_outputs.get("ja", {}).get("subtitles", ""),
+        "editions": edition_outputs,
+        "edition_plan": edition_plan,
+        "shared_audio_sha256": base_audio_hash,
         "sha256": {
             "without_subtitles": sha256(without_path),
-            "with_subtitles": sha256(with_path),
-            "subtitles": sha256(subtitle_path),
+            "with_subtitles": edition_outputs.get("ja", {}).get(
+                "video_sha256", ""
+            ),
+            "subtitles": edition_outputs.get("ja", {}).get(
+                "subtitle_sha256", ""
+            ),
         },
-        "probe_without_subtitles": without_probe,
-        "probe_with_subtitles": with_probe,
+        "probe_without_subtitles": edition_probes["none"],
+        "probe_with_subtitles": edition_probes.get("ja", {}),
     }
     output_manifest_path.write_text(
         json.dumps(output, ensure_ascii=False, indent=2) + "\n",
@@ -829,6 +1715,15 @@ def main() -> int:
         shutil.rmtree(work_dir)
     print(json.dumps(output, ensure_ascii=False, indent=2))
     return 0
+
+
+def main() -> int:
+    transaction_cleanup: list[Path] = []
+    try:
+        return _main(parse_args(), transaction_cleanup)
+    finally:
+        for path in reversed(transaction_cleanup):
+            shutil.rmtree(path, ignore_errors=True)
 
 
 if __name__ == "__main__":

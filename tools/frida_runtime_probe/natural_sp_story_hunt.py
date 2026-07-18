@@ -24,6 +24,7 @@ import copy
 import hashlib
 import json
 import queue
+import struct
 import subprocess
 import sys
 import time
@@ -107,10 +108,549 @@ READY_KINDS = {
     "dispatch": "sp_story_dispatch_hunt_probe_ready",
     "sound_logic": "sound_logic_probe_ready",
 }
+SOUND_REQUEST_TRACE_KINDS = frozenset(
+    {
+        "sound_logic_code_name_to_request_id",
+        "sound_logic_zg_snd_req_id",
+        "sound_logic_request_ctrl_get_request",
+        "sound_logic_request_ctrl_set_request_list",
+        "sound_logic_player_perform_request",
+        "sound_logic_sound_mng_snd_play_req_enter",
+        "sound_logic_sound_mng_snd_play_req_leave",
+        "sound_logic_csl_mng_snd_req_enqueue",
+        "sound_logic_csl_mng_play_start",
+        "sound_logic_bgm_upstream_kndcal_cc_dir_end",
+        "sound_logic_bgm_upstream_kndcal_rl_start",
+        "sound_logic_bgm_upstream_update_gm_data_commit",
+        "sound_logic_bgm_upstream_data_set_dir_commit",
+        "sound_logic_bgm_upstream_bgm_dir_request",
+        "sound_logic_bgm_upstream_trace_overflow",
+    }
+)
+MAX_SOUND_REQUEST_TRACE_EVENTS = 2048
+SOUND_REQUEST_TRACE_FIELDS = (
+    "thread_id",
+    "call_count_for_kind",
+    "code_string",
+    "code_text_error",
+    "code_pointer",
+    "request_id_i32",
+    "request_arg1_i32",
+    "request_arg2_i32",
+    "get_request_success_i32",
+    "derived_request_ids",
+    "request_id_association_basis",
+    "context_id",
+    "context_code",
+    "request_ctrl_pointer",
+    "perform_invocation_id",
+    "perform_arg3_bool",
+    "order_request_id_u32",
+    "order_code",
+    "order_association_basis",
+    "play_request_call_id",
+    "sound_mng_pointer",
+    "sound_resource_id_i32",
+    "play_index_or_bank_i32",
+    "request_arg3_i32",
+    "perform_order_request_id_u32",
+    "perform_order_code",
+    "perform_function_type_name",
+    "perform_player_channel_i32",
+    "perform_association_basis",
+    "return_i32",
+    "csl_enqueue_id",
+    "csl_mng_pointer",
+    "requested_sound_resource_id_i32",
+    "request_mode_i32",
+    "callback_remap_possible",
+    "request_table_valid",
+    "request_table_error",
+    "request_table_begin_pointer",
+    "request_table_end_pointer",
+    "request_table_byte_length",
+    "request_table_row_count",
+    "request_table_row_index",
+    "request_table_entry_sound_resource_id_u16",
+    "request_table_entry_slot_index_u16",
+    "sound_data_pointer",
+    "active_slot_pointer",
+    "pending_sound_data_pointer_after_request",
+    "enqueue_committed",
+    "pending_enqueue_key",
+    "replaced_pending_csl_enqueue_id",
+    "play_index_i32",
+    "causal_csl_enqueue_id",
+    "causal_play_request_call_id",
+    "causal_sound_resource_id_i32",
+    "causal_perform_invocation_id",
+    "causal_perform_order_request_id_u32",
+    "causal_perform_order_code",
+    "causal_request_table_row_index",
+    "causal_association_basis",
+    "request",
+    "order",
+    "sound",
+    "bgm_upstream_hook",
+    "bgm_upstream_call_id",
+    "bgm_upstream_window_label",
+    "bgm_upstream_window_epoch",
+    "bgm_upstream_window_event_index",
+    "bgm_upstream_state_partition",
+    "emission_reason",
+    "sdgm_pointer_entry",
+    "sdgm_pointer_leave",
+    "mstcomcbk_pointer",
+    "obj_nml_pointer",
+    "entry",
+    "leave",
+    "committed",
+    "changed_fields",
+    "maximum_emitted_events",
+    "dropped_event_count",
+    "overflow_policy",
+    "return_address",
+    "return_module",
+    "return_module_offset",
+    "return_symbol",
+)
+SOUND_PACK_REFERENCE_KEYS = {
+    0: 67,
+    1: 171,
+    60: 778,
+    67: 786,
+    119: 863,
+    151: 6103,
+    169: 9070,
+    170: 9071,
+    171: 16716,
+    181: 38009,
+    219: 41030,
+    220: 41031,
+    221: 41032,
+}
+EXPECTED_SOUND_CAPTURE_SCOPE = {
+    "code_lookups": "all",
+    "request_ids": "all",
+    "request_metadata": "all_bounded_to_8_reqdata_rows",
+    "perform_orders": "all",
+    "sound_play_requests": "all_metadata_only",
+    "sound_pack_pre_gate_volume": "gate_table_members_only_read_only_reconstruction",
+    "csl_request_enqueue": "bounded_named_table_and_pending_slot_fields_only",
+    "csl_play_start": "all_metadata_only",
+    "target_bgm_upstream": "named_fields_only_explicit_attempt_window",
+    "temporal_context_is_causal": False,
+    "synchronous_nested_invocation_ids_are_causal": True,
+}
+EXPECTED_SOUND_HOOKS = {
+    "codeName2ReqId": (
+        "_ZN2zg3snd11RequestCtrl14codeName2ReqIdEPKc",
+        "0x4288b28",
+    ),
+    "zgSndReqId": ("zgSndReqId", "0x4272e28"),
+    "getRequest": (
+        "_ZN2zg3snd11RequestCtrl10getRequestEjRNS0_7RequestE",
+        "0x42891a4",
+    ),
+    "setRequestList": (
+        "_ZN2zg3snd11RequestCtrl14setRequestListERKNS0_7RequestE",
+        "0x428927c",
+    ),
+    "performRequest": (
+        "_ZN2zg3snd10PlayerImpl14performRequestERNS0_11RequestCtrlERNS0_8ReqOrderEb",
+        "0x4282a3c",
+    ),
+    "soundMngSndPlayReq": ("_ZN8SoundMng10sndPlayReqEiii", "0x425fbdc"),
+    "cslMngSndReq": ("_ZN6CSLMng6SndReqEii", "0x130124"),
+    "cslMngPlayStart": ("_ZN6CSLMng9PlayStartEP11SSound_Datai", "0x12fa9c"),
+    "kndCalLotCcDirEnd": ("fnKndCalLot_CcDirEnd", "0x4445e3c"),
+    "kndCalLotRlStart": ("fnKndCalLot_RlStart", "0x444466c"),
+    "mstComCbkUpdateGmData": (
+        "_ZN11C_MstComCbk14fnUpDateGmDataEv",
+        "0x4399a4c",
+    ),
+    "anmBaseDataSetDir": ("_ZN9C_AnmBase16fnDataSetDir_DIREv", "0x4387f90"),
+    "objNmlSndRequestBgmDir": (
+        "_ZN8C_ObjNml20fnSndRequest_BGM_DIREv",
+        "0x43a86b0",
+    ),
+}
+EXPECTED_GAME_PROC_SHA256 = (
+    "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF"
+)
+EXPECTED_GAME_PROC_SIZE_BYTES = 79683640
+EXPECTED_ARM64_SPLIT_SHA256 = (
+    "89ACC81D02FF63697603FCE2E5F4281850C092FA833FD8CF3E636B44AB624E24"
+)
+EXPECTED_ARM64_SPLIT_SIZE_BYTES = 83710748
+EXPECTED_ARM64_SPLIT_BASENAME = "split_config.arm64_v8a.apk"
+EXPECTED_GAME_PROC_APK_ENTRY = "lib/arm64-v8a/libGameProc.so"
+EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET = 2469872
+EXPECTED_GAME_PROC_APK_DATA_OFFSET = 2473984
+EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD = 0
+EXPECTED_GAME_PROC_APK_CRC32 = "BBB59DED"
+EXPECTED_BGM_UPSTREAM_FIELD_SCHEMA = {
+    "schema": "magireco-target-bgm-upstream-field-schema-v1",
+    "sdgm_snapshot_fields": {
+        "current_kind_u16_at_0x13da": {"offset": "0x13da", "type": "u16"},
+        "next_kind_u16_at_0x13dc": {"offset": "0x13dc", "type": "u16"},
+        "current_no_u16_at_0x13de": {"offset": "0x13de", "type": "u16"},
+        "next_no_u16_at_0x13e0": {"offset": "0x13e0", "type": "u16"},
+        "restore_state_u16_at_0x1472": {"offset": "0x1472", "type": "u16"},
+        "saved_kind_u16_at_0x1474": {"offset": "0x1474", "type": "u16"},
+        "saved_no_u16_at_0x149a": {"offset": "0x149a", "type": "u16"},
+    },
+    "mstcomcbk_commit_fields": {
+        "committed_kind_u16_at_0x0a72": {"offset": "0xa72", "type": "u16"},
+        "committed_no_u16_at_0x0a76": {"offset": "0xa76", "type": "u16"},
+    },
+    "obj_nml_snapshot_fields": {
+        "direction_kind_u16_at_0x00ca": {"offset": "0xca", "type": "u16"},
+        "direction_no_u16_at_0x011a": {"offset": "0x11a", "type": "u16"},
+        "cached_code_pointer_at_0x0800": {"offset": "0x800", "type": "pointer"},
+        "cached_code_string_at_0x0800": {
+            "offset": "0x800",
+            "type": "nul_terminated_utf8",
+            "maximum_bytes": 64,
+        },
+        "cached_code_text_error_at_0x0800": {
+            "offset": "0x800",
+            "type": "bounded_read_diagnostic_string",
+        },
+    },
+    "event_kinds": {
+        "knd_cal_lot_cc_dir_end": "sound_logic_bgm_upstream_kndcal_cc_dir_end",
+        "knd_cal_lot_rl_start": "sound_logic_bgm_upstream_kndcal_rl_start",
+        "update_gm_data_commit": "sound_logic_bgm_upstream_update_gm_data_commit",
+        "data_set_dir_commit": "sound_logic_bgm_upstream_data_set_dir_commit",
+        "bgm_dir_request": "sound_logic_bgm_upstream_bgm_dir_request",
+        "trace_overflow": "sound_logic_bgm_upstream_trace_overflow",
+    },
+    "emission_policy": {
+        "window_control": "explicit_rpc_begin_end",
+        "lottery_hooks": "every_entry_leave_pair_within_window",
+        "high_frequency_hooks": "first_observation_or_state_change_within_window",
+        "maximum_emitted_events_per_window": 1024,
+        "overflow_policy": "emit_overflow_once_and_fail_attempt",
+        "read_only_observer": True,
+    },
+}
+EXPECTED_BGM_UPSTREAM_HOOK_KEYS = frozenset(
+    {
+        "kndCalLotCcDirEnd",
+        "kndCalLotRlStart",
+        "mstComCbkUpdateGmData",
+        "anmBaseDataSetDir",
+        "objNmlSndRequestBgmDir",
+    }
+)
 
 
 class HuntError(RuntimeError):
     """A safety/evidence invariant failed."""
+
+
+def compact_sound_request_event(
+    payload: dict[str, Any],
+    *,
+    sequence: int,
+    host_unix_ms: Any,
+) -> dict[str, Any]:
+    """Retain the bounded metadata needed to join one native sound call chain."""
+
+    row: dict[str, Any] = {
+        "sequence": sequence,
+        "host_unix_ms": host_unix_ms,
+        "source_unix_ms": payload.get("unix_ms"),
+        "kind": str(payload.get("kind") or ""),
+    }
+    for key in SOUND_REQUEST_TRACE_FIELDS:
+        if key in payload:
+            row[key] = copy.deepcopy(payload[key])
+    return row
+
+
+def validate_bgm_upstream_window_contract(
+    payload: Any,
+    *,
+    expected_active: bool,
+    expected_epoch: int | None = None,
+) -> dict[str, Any]:
+    """Validate one exact, read-only attempt-window response from the probe."""
+
+    if not isinstance(payload, dict):
+        raise HuntError(f"BGM upstream window response is not an object: {payload!r}")
+    if payload.get("schema") != "magireco-target-bgm-upstream-window-v1":
+        raise HuntError("BGM upstream window response has an unexpected schema")
+    if payload.get("active") is not expected_active:
+        raise HuntError("BGM upstream window response has the wrong active state")
+    if payload.get("read_only_observer") is not True:
+        raise HuntError("BGM upstream window is not declared read-only")
+    try:
+        epoch = int(payload["epoch"])
+        emitted = int(payload["emitted_event_count"])
+        dropped = int(payload["dropped_event_count"])
+        maximum = int(payload["maximum_emitted_events"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise HuntError("BGM upstream window response has invalid counters") from error
+    if epoch <= 0 or emitted < 0 or dropped < 0 or maximum != 1024:
+        raise HuntError("BGM upstream window response counters violate the bounded contract")
+    if expected_epoch is not None and epoch != expected_epoch:
+        raise HuntError(
+            f"BGM upstream window epoch changed unexpectedly: {expected_epoch} -> {epoch}"
+        )
+    if dropped != 0:
+        raise HuntError("BGM upstream window dropped events")
+    return copy.deepcopy(payload)
+
+
+def validate_probe_ready_contracts(
+    ready_payloads: dict[str, dict[str, Any]],
+    *,
+    installed_split_identity: dict[str, Any],
+) -> None:
+    """Fail before ADB input if any evidence hook is weaker than this hunter needs."""
+
+    slot_gate = ready_payloads.get("slot_gate")
+    if not isinstance(slot_gate, dict):
+        raise HuntError("slot-gate ready payload is missing")
+    for key in ("installed", "process_hook_installed", "reel_stop_hook_installed"):
+        if slot_gate.get(key) is not True:
+            raise HuntError(f"slot-gate ready contract requires {key}=true")
+
+    dispatch = ready_payloads.get("dispatch")
+    if not isinstance(dispatch, dict):
+        raise HuntError("dispatch ready payload is missing")
+    for key in (
+        "installed",
+        "required_hooks_installed",
+        "optional_sound_event_hook_installed",
+        "optional_lottery_hook_installed",
+    ):
+        if dispatch.get(key) is not True:
+            raise HuntError(f"dispatch ready contract requires {key}=true")
+
+    sound_logic = ready_payloads.get("sound_logic")
+    if not isinstance(sound_logic, dict):
+        raise HuntError("sound-logic ready payload is missing")
+    if int(sound_logic.get("installed_hook_event_count") or 0) != len(
+        EXPECTED_SOUND_HOOKS
+    ):
+        raise HuntError("sound-logic ready contract requires every primary hook")
+    for key in ("unavailable_hook_event_count", "attach_error_event_count"):
+        if int(sound_logic.get(key) or 0) != 0:
+            raise HuntError(f"sound-logic ready contract requires {key}=0")
+    hook_status = sound_logic.get("hook_status")
+    if not isinstance(hook_status, dict) or set(hook_status) != set(
+        EXPECTED_SOUND_HOOKS
+    ):
+        raise HuntError("sound-logic hook status does not name exactly every primary hook")
+    for key, (expected_symbol, expected_offset) in EXPECTED_SOUND_HOOKS.items():
+        status = hook_status.get(key)
+        if not isinstance(status, dict):
+            raise HuntError(f"sound-logic hook {key} status is not an object")
+        if (
+            status.get("status") != "installed"
+            or status.get("symbol") != expected_symbol
+            or str(status.get("actual_module_offset") or "").lower()
+            != expected_offset
+            or str(status.get("expected_module_offset") or "").lower()
+            != expected_offset
+            or status.get("module_offset_matches_static_reference") is not True
+            or not status.get("module")
+            or not status.get("module_path")
+        ):
+            raise HuntError(f"sound-logic hook {key} is not version-checked installed")
+
+    host_split_identity = validate_installed_arm64_split_identity(
+        installed_split_identity
+    )
+    game_proc_identity = sound_logic.get("game_proc_identity_status")
+    if not isinstance(game_proc_identity, dict):
+        raise HuntError("libGameProc identity status is missing")
+    if (
+        game_proc_identity.get("status") != "ready"
+        or game_proc_identity.get("mapping_kind")
+        != "apk_backed_uncompressed_elf"
+        or game_proc_identity.get("logical_library_name") != "libGameProc.so"
+        or game_proc_identity.get("container_module")
+        != EXPECTED_ARM64_SPLIT_BASENAME
+        or game_proc_identity.get("container_path")
+        != host_split_identity["device_apk_path"]
+        or game_proc_identity.get("expected_container_module")
+        != EXPECTED_ARM64_SPLIT_BASENAME
+        or game_proc_identity.get("container_name_matches") is not True
+        or game_proc_identity.get("container_path_matches") is not True
+        or not game_proc_identity.get("derived_elf_base")
+        or game_proc_identity.get("reported_base_matches_derived") is not True
+        or game_proc_identity.get("anchor_symbol") != "fnGetAddrSdGmData"
+        or str(game_proc_identity.get("actual_anchor_derived_elf_offset") or "").lower()
+        != "0x424d474"
+        or str(game_proc_identity.get("expected_anchor_offset") or "").lower()
+        != "0x424d474"
+        or str(game_proc_identity.get("reported_anchor_module_offset") or "").lower()
+        != "0x424d474"
+        or game_proc_identity.get("anchor_offset_matches") is not True
+        or game_proc_identity.get("elf_header_matches_aarch64") is not True
+        or game_proc_identity.get("all_export_checks_match") is not True
+        or game_proc_identity.get("installed_container_identity_required_from_host")
+        is not True
+        or str(game_proc_identity.get("expected_container_sha256") or "").upper()
+        != EXPECTED_ARM64_SPLIT_SHA256
+        or int(game_proc_identity.get("expected_container_size_bytes") or -1)
+        != EXPECTED_ARM64_SPLIT_SIZE_BYTES
+        or game_proc_identity.get("read_only_verification") is not True
+    ):
+        raise HuntError("APK-backed libGameProc runtime mapping identity is not exact")
+    elf_header = game_proc_identity.get("elf_header")
+    if elf_header != {
+        "magic_u32_le_at_0x00": 0x464C457F,
+        "class_u8_at_0x04": 2,
+        "data_encoding_u8_at_0x05": 1,
+        "machine_u16_at_0x12": 183,
+    }:
+        raise HuntError("APK-backed libGameProc ELF header contract mismatch")
+    bound_entry = game_proc_identity.get("bound_apk_entry")
+    if bound_entry != {
+        "path": EXPECTED_GAME_PROC_APK_ENTRY,
+        "compression_method": EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD,
+        "crc32": EXPECTED_GAME_PROC_APK_CRC32,
+        "local_header_offset": EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET,
+        "data_offset": EXPECTED_GAME_PROC_APK_DATA_OFFSET,
+        "compressed_size_bytes": EXPECTED_GAME_PROC_SIZE_BYTES,
+        "uncompressed_size_bytes": EXPECTED_GAME_PROC_SIZE_BYTES,
+        "expected_uncompressed_sha256": EXPECTED_GAME_PROC_SHA256,
+    }:
+        raise HuntError("APK-backed libGameProc entry binding contract mismatch")
+    export_checks = game_proc_identity.get("export_checks")
+    if not isinstance(export_checks, list) or len(export_checks) != len(
+        EXPECTED_BGM_UPSTREAM_HOOK_KEYS
+    ):
+        raise HuntError("APK-backed libGameProc export checks are incomplete")
+    checks_by_key = {
+        str(row.get("hook_key") or ""): row
+        for row in export_checks
+        if isinstance(row, dict)
+    }
+    if set(checks_by_key) != set(EXPECTED_BGM_UPSTREAM_HOOK_KEYS):
+        raise HuntError("APK-backed libGameProc export check keys are incomplete")
+    for key in EXPECTED_BGM_UPSTREAM_HOOK_KEYS:
+        row = checks_by_key[key]
+        expected_symbol, expected_offset = EXPECTED_SOUND_HOOKS[key]
+        if (
+            row.get("symbol") != expected_symbol
+            or row.get("container_module") != EXPECTED_ARM64_SPLIT_BASENAME
+            or row.get("container_path") != host_split_identity["device_apk_path"]
+            or str(row.get("actual_derived_elf_offset") or "").lower()
+            != expected_offset
+            or str(row.get("expected_elf_offset") or "").lower()
+            != expected_offset
+            or row.get("offset_matches") is not True
+            or row.get("same_apk_container") is not True
+        ):
+            raise HuntError(f"APK-backed libGameProc export check failed for {key}")
+    for key in EXPECTED_BGM_UPSTREAM_HOOK_KEYS:
+        status = hook_status[key]
+        if (
+            status.get("module") != EXPECTED_ARM64_SPLIT_BASENAME
+            or status.get("module_path") != host_split_identity["device_apk_path"]
+            or status.get("derived_elf_base")
+            != game_proc_identity.get("derived_elf_base")
+            or status.get("offset_basis")
+            != "known_export_minus_derived_game_proc_elf_base"
+            or status.get("module_identity_matches_static_reference") is not True
+        ):
+            raise HuntError(f"BGM upstream hook {key} is not bound to verified split/ELF")
+
+    accessor_status = sound_logic.get("bgm_upstream_sdgm_accessor_status")
+    if not isinstance(accessor_status, dict):
+        raise HuntError("BGM upstream SdGmData accessor status is missing")
+    if (
+        accessor_status.get("status") != "ready"
+        or accessor_status.get("symbol") != "fnGetAddrSdGmData"
+        or accessor_status.get("module") != EXPECTED_ARM64_SPLIT_BASENAME
+        or accessor_status.get("module_path") != host_split_identity["device_apk_path"]
+        or accessor_status.get("derived_elf_base")
+        != game_proc_identity.get("derived_elf_base")
+        or str(accessor_status.get("actual_module_offset") or "").lower()
+        != "0x424d474"
+        or str(accessor_status.get("expected_module_offset") or "").lower()
+        != "0x424d474"
+        or accessor_status.get("module_offset_matches_static_reference") is not True
+        or accessor_status.get("read_only_accessor") is not True
+    ):
+        raise HuntError("BGM upstream SdGmData accessor is not version-checked read-only")
+
+    if sound_logic.get("bgm_upstream_field_schema") != EXPECTED_BGM_UPSTREAM_FIELD_SCHEMA:
+        raise HuntError("BGM upstream field schema does not match the named static contract")
+    window_rpc = sound_logic.get("bgm_upstream_window_rpc")
+    if window_rpc != {
+        "schema": "magireco-target-bgm-upstream-window-v1",
+        "begin_export": "beginbgmupstreamattempt",
+        "end_export": "endbgmupstreamattempt",
+        "status_export": "bgmupstreamstatus",
+        "read_only_observer": True,
+    }:
+        raise HuntError("BGM upstream attempt-window RPC contract is incomplete")
+    if sound_logic.get("outer_bgm_snapshot_accessors_ready") is not True:
+        raise HuntError("all active-sound snapshot accessors must be ready")
+    accessor_status = sound_logic.get("outer_bgm_snapshot_accessor_status")
+    if not isinstance(accessor_status, dict) or len(accessor_status) != 8:
+        raise HuntError("active-sound accessor status must contain exactly eight accessors")
+    for name, status in accessor_status.items():
+        if not isinstance(status, dict):
+            raise HuntError(f"active-sound accessor {name} status is not an object")
+        if status.get("status") != "ready" or status.get(
+            "module_offset_matches_static_reference"
+        ) is not True:
+            raise HuntError(f"active-sound accessor {name} is not version-checked ready")
+
+    calc_status = sound_logic.get("outer_bgm_snapshot_calc_entry_status")
+    if not isinstance(calc_status, dict):
+        raise HuntError("CSLMng::Calc snapshot entry status is missing")
+    if calc_status.get("status") != "ready" or calc_status.get(
+        "module_offset_matches_static_reference"
+    ) is not True:
+        raise HuntError("CSLMng::Calc snapshot entry is not version-checked ready")
+
+    capture_scope = sound_logic.get("capture_scope")
+    if capture_scope != EXPECTED_SOUND_CAPTURE_SCOPE:
+        raise HuntError(
+            "sound-logic capture scope does not provide the exact synchronous metadata contract"
+        )
+
+    gate_status = sound_logic.get("sound_pack_pre_gate_status")
+    if not isinstance(gate_status, dict):
+        raise HuntError("sound-pack pre-gate status is missing")
+    required_gate_fields = {
+        "status": "ready",
+        "module_offset_matches_static_reference": True,
+        "gate_table_entry_count": 222,
+        "gate_table_strictly_increasing_unique": True,
+        "read_only_observer": True,
+        "repeated_unchanged_volume_control_calls_suppressed": True,
+    }
+    for key, expected in required_gate_fields.items():
+        if gate_status.get(key) != expected:
+            raise HuntError(f"sound-pack pre-gate contract mismatch for {key}")
+    key_checks = gate_status.get("gate_table_key_checks")
+    if not isinstance(key_checks, list):
+        raise HuntError("sound-pack gate key checks are missing")
+    observed: dict[int, int] = {}
+    for row in key_checks:
+        if not isinstance(row, dict) or row.get("matches") is not True:
+            raise HuntError("sound-pack gate key check is invalid")
+        try:
+            index = int(row["index"])
+            expected = int(row["expected"])
+            actual = int(row["actual"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise HuntError("sound-pack gate key check has invalid numeric fields") from error
+        if index in observed or expected != actual:
+            raise HuntError("sound-pack gate key checks contain a duplicate or mismatch")
+        observed[index] = actual
+    if observed != SOUND_PACK_REFERENCE_KEYS:
+        raise HuntError("sound-pack gate key checks do not have full static extractor parity")
 
 
 def repo_root() -> Path:
@@ -137,6 +677,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--adb", default="adb")
     parser.add_argument("--device", default="emulator-5554")
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument(
+        "--expected-pid",
+        type=int,
+        default=0,
+        help="fail closed unless the current game PID matches; 0 accepts the inspected PID",
+    )
     parser.add_argument("--package", default=PACKAGE)
     parser.add_argument("--activity", default=ACTIVITY)
     parser.add_argument(
@@ -230,6 +776,255 @@ def run_command(argv: list[str], *, timeout: float = 20.0) -> subprocess.Complet
 
 def adb_command(args: argparse.Namespace, *parts: str) -> list[str]:
     return [args.adb, "-s", args.device, *parts]
+
+
+def parse_bound_game_proc_local_header(raw: bytes) -> dict[str, Any]:
+    """Parse only the fixed local ZIP header bound by the exact split digest."""
+
+    expected_length = (
+        EXPECTED_GAME_PROC_APK_DATA_OFFSET
+        - EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET
+    )
+    if len(raw) != expected_length or len(raw) < 30:
+        raise HuntError(
+            f"bound GameProc local header span mismatch: {len(raw)} != {expected_length}"
+        )
+    (
+        signature,
+        version_needed,
+        flag_bits,
+        compression_method,
+        mod_time,
+        mod_date,
+        crc32,
+        compressed_size,
+        uncompressed_size,
+        filename_length,
+        extra_length,
+    ) = struct.unpack("<IHHHHHIIIHH", raw[:30])
+    filename_end = 30 + filename_length
+    extra_end = filename_end + extra_length
+    try:
+        filename = raw[30:filename_end].decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise HuntError("bound GameProc ZIP filename is not UTF-8") from error
+    result = {
+        "signature_u32_le": f"0x{signature:08X}",
+        "version_needed_u16": version_needed,
+        "flag_bits_u16": flag_bits,
+        "compression_method_u16": compression_method,
+        "mod_time_u16": mod_time,
+        "mod_date_u16": mod_date,
+        "crc32": f"{crc32:08X}",
+        "compressed_size_bytes": compressed_size,
+        "uncompressed_size_bytes": uncompressed_size,
+        "filename_length": filename_length,
+        "extra_length": extra_length,
+        "filename": filename,
+        "local_header_offset": EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET,
+        "data_offset": EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET + extra_end,
+    }
+    if (
+        signature != 0x04034B50
+        or flag_bits != 0
+        or compression_method != EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD
+        or result["crc32"] != EXPECTED_GAME_PROC_APK_CRC32
+        or compressed_size != EXPECTED_GAME_PROC_SIZE_BYTES
+        or uncompressed_size != EXPECTED_GAME_PROC_SIZE_BYTES
+        or filename != EXPECTED_GAME_PROC_APK_ENTRY
+        or result["data_offset"] != EXPECTED_GAME_PROC_APK_DATA_OFFSET
+        or extra_end != len(raw)
+    ):
+        raise HuntError("installed split GameProc local ZIP entry contract mismatch")
+    return result
+
+
+def validate_installed_arm64_split_identity(payload: Any) -> dict[str, Any]:
+    """Fail closed unless outer APK and its live uncompressed GameProc bytes match."""
+
+    if not isinstance(payload, dict):
+        raise HuntError("installed ARM64 split identity is not an object")
+    required = {
+        "schema": "magireco-installed-arm64-split-identity-v1",
+        "split_basename": EXPECTED_ARM64_SPLIT_BASENAME,
+        "verification_method": (
+            "host_sha256_over_adb_exec_out_cat_with_fixed_uncompressed_entry_range"
+        ),
+        "actual_apk_size_bytes": EXPECTED_ARM64_SPLIT_SIZE_BYTES,
+        "expected_apk_size_bytes": EXPECTED_ARM64_SPLIT_SIZE_BYTES,
+        "actual_apk_sha256": EXPECTED_ARM64_SPLIT_SHA256,
+        "expected_apk_sha256": EXPECTED_ARM64_SPLIT_SHA256,
+        "apk_size_matches": True,
+        "apk_sha256_matches": True,
+        "entry_path": EXPECTED_GAME_PROC_APK_ENTRY,
+        "entry_compression_method": EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD,
+        "entry_crc32": EXPECTED_GAME_PROC_APK_CRC32,
+        "entry_data_offset": EXPECTED_GAME_PROC_APK_DATA_OFFSET,
+        "actual_entry_bytes_hashed": EXPECTED_GAME_PROC_SIZE_BYTES,
+        "expected_entry_bytes": EXPECTED_GAME_PROC_SIZE_BYTES,
+        "actual_entry_sha256": EXPECTED_GAME_PROC_SHA256,
+        "expected_entry_sha256": EXPECTED_GAME_PROC_SHA256,
+        "entry_sha256_matches": True,
+        "entry_elf_header_matches_aarch64": True,
+        "outer_digest_binds_local_header_layout": True,
+        "read_only_adb_stream": True,
+        "gameplay_input_sent": False,
+        "device_state_modified": False,
+    }
+    for key, expected in required.items():
+        actual = payload.get(key)
+        if isinstance(expected, str) and key.endswith("sha256"):
+            actual = str(actual or "").upper()
+        if actual != expected:
+            raise HuntError(f"installed ARM64 split identity mismatch for {key}")
+    path = str(payload.get("device_apk_path") or "")
+    if not path.endswith("/" + EXPECTED_ARM64_SPLIT_BASENAME):
+        raise HuntError("installed ARM64 split path is not the exact expected split")
+    local_header = payload.get("entry_local_header")
+    if not isinstance(local_header, dict):
+        raise HuntError("installed ARM64 split lacks parsed GameProc local header")
+    if (
+        local_header.get("signature_u32_le") != "0x04034B50"
+        or local_header.get("flag_bits_u16") != 0
+        or local_header.get("compression_method_u16")
+        != EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD
+        or local_header.get("crc32") != EXPECTED_GAME_PROC_APK_CRC32
+        or local_header.get("filename") != EXPECTED_GAME_PROC_APK_ENTRY
+        or local_header.get("local_header_offset")
+        != EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET
+        or local_header.get("data_offset") != EXPECTED_GAME_PROC_APK_DATA_OFFSET
+        or local_header.get("compressed_size_bytes") != EXPECTED_GAME_PROC_SIZE_BYTES
+        or local_header.get("uncompressed_size_bytes") != EXPECTED_GAME_PROC_SIZE_BYTES
+    ):
+        raise HuntError("installed ARM64 split parsed GameProc header is inconsistent")
+    return copy.deepcopy(payload)
+
+
+def stream_installed_arm64_split_identity(
+    args: argparse.Namespace,
+    device_apk_path: str,
+) -> dict[str, Any]:
+    """Hash the installed split and fixed uncompressed ELF range in one ADB stream."""
+
+    argv = adb_command(args, "exec-out", "cat", device_apk_path)
+    process = subprocess.Popen(
+        argv,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if process.stdout is None or process.stderr is None:
+        process.kill()
+        raise HuntError("ADB split stream did not expose stdout/stderr pipes")
+    outer_digest = hashlib.sha256()
+    inner_digest = hashlib.sha256()
+    header_bytes = bytearray()
+    inner_prefix = bytearray()
+    total_bytes = 0
+    inner_bytes = 0
+    header_start = EXPECTED_GAME_PROC_APK_LOCAL_HEADER_OFFSET
+    header_end = EXPECTED_GAME_PROC_APK_DATA_OFFSET
+    inner_start = EXPECTED_GAME_PROC_APK_DATA_OFFSET
+    inner_end = inner_start + EXPECTED_GAME_PROC_SIZE_BYTES
+    try:
+        while True:
+            chunk = process.stdout.read(1024 * 1024)
+            if not chunk:
+                break
+            chunk_start = total_bytes
+            chunk_end = chunk_start + len(chunk)
+            outer_digest.update(chunk)
+
+            overlap_start = max(chunk_start, header_start)
+            overlap_end = min(chunk_end, header_end)
+            if overlap_start < overlap_end:
+                header_bytes.extend(
+                    chunk[overlap_start - chunk_start : overlap_end - chunk_start]
+                )
+
+            overlap_start = max(chunk_start, inner_start)
+            overlap_end = min(chunk_end, inner_end)
+            if overlap_start < overlap_end:
+                inner_chunk = chunk[
+                    overlap_start - chunk_start : overlap_end - chunk_start
+                ]
+                inner_digest.update(inner_chunk)
+                inner_bytes += len(inner_chunk)
+                if len(inner_prefix) < 64:
+                    inner_prefix.extend(inner_chunk[: 64 - len(inner_prefix)])
+            total_bytes = chunk_end
+        stderr = process.stderr.read().decode("utf-8", errors="replace")
+        return_code = process.wait(timeout=10.0)
+    except Exception:
+        process.kill()
+        process.wait(timeout=5.0)
+        raise
+    if return_code != 0:
+        raise HuntError(
+            f"ADB installed split stream failed: rc={return_code} stderr={stderr!r}"
+        )
+
+    local_header = parse_bound_game_proc_local_header(bytes(header_bytes))
+    prefix = bytes(inner_prefix)
+    elf_header_matches = (
+        len(prefix) >= 20
+        and prefix[:4] == b"\x7fELF"
+        and prefix[4] == 2
+        and prefix[5] == 1
+        and int.from_bytes(prefix[18:20], "little") == 183
+    )
+    payload = {
+        "schema": "magireco-installed-arm64-split-identity-v1",
+        "device": args.device,
+        "package": args.package,
+        "device_apk_path": device_apk_path,
+        "split_basename": device_apk_path.rsplit("/", 1)[-1],
+        "verification_method": (
+            "host_sha256_over_adb_exec_out_cat_with_fixed_uncompressed_entry_range"
+        ),
+        "actual_apk_size_bytes": total_bytes,
+        "expected_apk_size_bytes": EXPECTED_ARM64_SPLIT_SIZE_BYTES,
+        "actual_apk_sha256": outer_digest.hexdigest().upper(),
+        "expected_apk_sha256": EXPECTED_ARM64_SPLIT_SHA256,
+        "apk_size_matches": total_bytes == EXPECTED_ARM64_SPLIT_SIZE_BYTES,
+        "apk_sha256_matches": outer_digest.hexdigest().upper()
+        == EXPECTED_ARM64_SPLIT_SHA256,
+        "entry_path": EXPECTED_GAME_PROC_APK_ENTRY,
+        "entry_compression_method": EXPECTED_GAME_PROC_APK_COMPRESSION_METHOD,
+        "entry_crc32": EXPECTED_GAME_PROC_APK_CRC32,
+        "entry_local_header": local_header,
+        "entry_data_offset": EXPECTED_GAME_PROC_APK_DATA_OFFSET,
+        "actual_entry_bytes_hashed": inner_bytes,
+        "expected_entry_bytes": EXPECTED_GAME_PROC_SIZE_BYTES,
+        "actual_entry_sha256": inner_digest.hexdigest().upper(),
+        "expected_entry_sha256": EXPECTED_GAME_PROC_SHA256,
+        "entry_sha256_matches": inner_digest.hexdigest().upper()
+        == EXPECTED_GAME_PROC_SHA256,
+        "entry_elf_prefix_hex": prefix.hex().upper(),
+        "entry_elf_header_matches_aarch64": elf_header_matches,
+        "outer_digest_binds_local_header_layout": True,
+        "read_only_adb_stream": True,
+        "gameplay_input_sent": False,
+        "device_state_modified": False,
+    }
+    return validate_installed_arm64_split_identity(payload)
+
+
+def inspect_installed_arm64_split(args: argparse.Namespace) -> dict[str, Any]:
+    paths = run_command(adb_command(args, "shell", "pm", "path", args.package))
+    if paths.returncode != 0:
+        raise HuntError(f"pm path failed: {paths.stderr!r}")
+    candidates = []
+    for raw_line in paths.stdout.splitlines():
+        line = raw_line.strip()
+        if line.startswith("package:"):
+            line = line[len("package:") :]
+        if line.endswith("/" + EXPECTED_ARM64_SPLIT_BASENAME):
+            candidates.append(line)
+    if len(candidates) != 1:
+        raise HuntError(
+            f"expected one installed {EXPECTED_ARM64_SPLIT_BASENAME}, observed {candidates!r}"
+        )
+    return stream_installed_arm64_split_identity(args, candidates[0])
 
 
 def normalized_component(package: str, activity: str) -> str:
@@ -335,9 +1130,13 @@ class LiveCapture:
         self.device: Any = None
         self.session: Any = None
         self.scripts: dict[str, Any] = {}
+        self.loaded_probe_source_bytes: dict[str, bytes] = {}
+        self.loaded_probe_sources: dict[str, dict[str, Any]] = {}
         self.detached_reason = ""
         self.ready: set[str] = set()
         self.ready_payloads: dict[str, dict[str, Any]] = {}
+        self.probe_errors: list[dict[str, Any]] = []
+        self.attempt_probe_errors: list[dict[str, Any]] = []
         self.sequence = 0
         self.latest_gate_state: dict[str, Any] | None = None
         self.latest_gate_event_count = 0
@@ -356,8 +1155,19 @@ class LiveCapture:
         self.lever_eligible_after_host_unix_ms: int | None = None
         self.selection_candidate: dict[str, Any] | None = None
         self.observed_event_codes: list[dict[str, Any]] = []
+        self.sound_pack_pre_gate_events: list[dict[str, Any]] = []
+        self.sound_pack_pre_gate_last_state: dict[
+            tuple[Any, ...], tuple[tuple[Any, ...], int]
+        ] = {}
+        self.max_sound_request_trace_events = MAX_SOUND_REQUEST_TRACE_EVENTS
+        self.sound_request_trace_events: list[dict[str, Any]] = []
+        self.sound_request_trace_event_count_by_kind: dict[str, int] = {}
+        self.sound_request_trace_dropped_count = 0
         self.target_batch: dict[str, Any] | None = None
         self.outer_bgm_snapshots: list[dict[str, Any]] = []
+        self.bgm_upstream_window: dict[str, Any] | None = None
+        self.bgm_upstream_attempt_serial = 0
+        self.installed_split_identity: dict[str, Any] | None = None
 
     def _callback(self, probe_name: str) -> Callable[[dict[str, Any], bytes | None], None]:
         def on_message(message: dict[str, Any], data: bytes | None) -> None:
@@ -391,7 +1201,18 @@ class LiveCapture:
         except Exception:
             pass
         for name, path in self.script_paths.items():
-            source = path.read_text(encoding="utf-8")
+            source_bytes = path.read_bytes()
+            try:
+                source = source_bytes.decode("utf-8")
+            except UnicodeDecodeError as error:
+                raise HuntError(f"probe {name} source is not valid UTF-8: {path}") from error
+            self.loaded_probe_source_bytes[name] = source_bytes
+            self.loaded_probe_sources[name] = {
+                "path_at_load": str(path),
+                "bytes": len(source_bytes),
+                "sha256": hashlib.sha256(source_bytes).hexdigest().upper(),
+                "provenance_basis": "exact_utf8_bytes_passed_to_create_script",
+            }
             script = self.session.create_script(source)
             script.on("message", self._callback(name))
             self.scripts[name] = script
@@ -447,6 +1268,12 @@ class LiveCapture:
         """
 
         host_unix_ms = int(time.time() * 1000)
+        waterline_before = {
+            "sequence": self.sequence,
+            "messages_enqueued": self.messages_enqueued,
+            "messages_processed": self.messages_processed,
+            "sound_request_trace_event_count": len(self.sound_request_trace_events),
+        }
         script = self.scripts.get("sound_logic")
         if script is None:
             snapshot: dict[str, Any] = {
@@ -472,6 +1299,20 @@ class LiveCapture:
                     "available": False,
                     "error": f"outer BGM snapshot RPC failed: {error}",
                 }
+        drained_callback_count = 0
+        while drained_callback_count < 10000:
+            if self.pump(0.0) is None:
+                break
+            drained_callback_count += 1
+        snapshot["capture_waterline_before_rpc"] = waterline_before
+        snapshot["capture_waterline_after_rpc"] = {
+            "sequence": self.sequence,
+            "messages_enqueued": self.messages_enqueued,
+            "messages_processed": self.messages_processed,
+            "sound_request_trace_event_count": len(self.sound_request_trace_events),
+            "drained_callback_count": drained_callback_count,
+            "drain_limit_reached": drained_callback_count == 10000,
+        }
         self.outer_bgm_snapshots.append(snapshot)
         return snapshot
 
@@ -487,18 +1328,73 @@ class LiveCapture:
         self.lever_eligible_after_host_unix_ms = None
         self.selection_candidate = None
         self.observed_event_codes = []
+        self.sound_pack_pre_gate_events = []
+        self.sound_pack_pre_gate_last_state = {}
+        self.sound_request_trace_events = []
+        self.sound_request_trace_event_count_by_kind = {}
+        self.sound_request_trace_dropped_count = 0
+        self.attempt_probe_errors = []
         self.target_batch = None
         self.input_events = []
         self.reel_stop_events = []
         self.outer_bgm_snapshots = []
+        self.bgm_upstream_window = None
+        sound_logic = self.scripts.get("sound_logic")
+        if sound_logic is not None:
+            self.bgm_upstream_attempt_serial += 1
+            try:
+                raw_window = sound_logic.exports_sync.beginbgmupstreamattempt(
+                    f"hunt_attempt_{self.bgm_upstream_attempt_serial:06d}"
+                )
+            except Exception as error:
+                raise HuntError(f"BGM upstream attempt window failed to begin: {error}") from error
+            self.bgm_upstream_window = validate_bgm_upstream_window_contract(
+                raw_window,
+                expected_active=True,
+            )
+            if (
+                int(self.bgm_upstream_window["emitted_event_count"]) != 0
+                or int(self.bgm_upstream_window["dropped_event_count"]) != 0
+            ):
+                raise HuntError("BGM upstream attempt window did not begin empty")
+
+    def finish_bgm_upstream_window(self) -> dict[str, Any] | None:
+        """Close the RPC window while retaining its final counters for the journal."""
+
+        sound_logic = self.scripts.get("sound_logic")
+        if (
+            sound_logic is not None
+            and self.bgm_upstream_window is not None
+            and self.bgm_upstream_window.get("active") is True
+        ):
+            expected_epoch = int(self.bgm_upstream_window["epoch"])
+            try:
+                raw_window = sound_logic.exports_sync.endbgmupstreamattempt()
+            except Exception as error:
+                raise HuntError(f"BGM upstream attempt window failed to end: {error}") from error
+            self.bgm_upstream_window = copy.deepcopy(raw_window)
+            return validate_bgm_upstream_window_contract(
+                raw_window,
+                expected_active=False,
+                expected_epoch=expected_epoch,
+            )
+        return copy.deepcopy(self.bgm_upstream_window)
 
     def end_attempt(self) -> None:
-        self.attempt_active = False
-        self.attempt_records = {name: [] for name in self.script_paths}
-        self.attempt_bytes = 0
-        self.input_events = []
-        self.reel_stop_events = []
-        self.outer_bgm_snapshots = []
+        try:
+            self.finish_bgm_upstream_window()
+        finally:
+            self.attempt_active = False
+            self.attempt_records = {name: [] for name in self.script_paths}
+            self.attempt_bytes = 0
+            self.input_events = []
+            self.reel_stop_events = []
+            self.sound_request_trace_events = []
+            self.sound_request_trace_event_count_by_kind = {}
+            self.sound_request_trace_dropped_count = 0
+            self.attempt_probe_errors = []
+            self.outer_bgm_snapshots = []
+            self.bgm_upstream_window = None
 
     def mark_lever_issued(self, sequence: int, host_unix_ms: int) -> None:
         self.lever_eligible_after_sequence = sequence
@@ -568,6 +1464,26 @@ class LiveCapture:
         self.sequence += 1
         self.messages_processed += 1
         self._retain_line(probe_name, line)
+        message = record.get("message")
+        if isinstance(message, dict) and message.get("type") == "error":
+            error_row = {
+                "sequence": self.sequence,
+                "host_unix_ms": record.get("host_unix_ms"),
+                "probe": probe_name,
+                "description": str(message.get("description") or "")[:4096],
+                "stack": str(message.get("stack") or "")[:16384],
+                "file_name": str(message.get("fileName") or "")[:1024],
+                "line_number": message.get("lineNumber"),
+                "column_number": message.get("columnNumber"),
+            }
+            if len(self.probe_errors) < 64:
+                self.probe_errors.append(copy.deepcopy(error_row))
+            if self.attempt_active and len(self.attempt_probe_errors) < 64:
+                self.attempt_probe_errors.append(copy.deepcopy(error_row))
+            raise HuntError(
+                f"probe {probe_name} emitted a Frida script error: "
+                f"{error_row['description'] or error_row['stack'][:512]}"
+            )
         payload = payload_for(record)
         kind = str(payload.get("kind") or "")
         if kind == READY_KINDS.get(probe_name):
@@ -575,6 +1491,27 @@ class LiveCapture:
                 raise HuntError(f"probe {probe_name} reported not installed: {payload!r}")
             self.ready.add(probe_name)
             self.ready_payloads[probe_name] = copy.deepcopy(payload)
+
+        if (
+            self.attempt_active
+            and probe_name == "sound_logic"
+            and kind in SOUND_REQUEST_TRACE_KINDS
+        ):
+            self.sound_request_trace_event_count_by_kind[kind] = (
+                self.sound_request_trace_event_count_by_kind.get(kind, 0) + 1
+            )
+            if len(self.sound_request_trace_events) < self.max_sound_request_trace_events:
+                self.sound_request_trace_events.append(
+                    compact_sound_request_event(
+                        payload,
+                        sequence=self.sequence,
+                        host_unix_ms=record.get("host_unix_ms"),
+                    )
+                )
+            else:
+                self.sound_request_trace_dropped_count += 1
+            if kind == "sound_logic_bgm_upstream_trace_overflow":
+                raise HuntError("BGM upstream trace overflowed its bounded attempt window")
 
         if probe_name == "slot_gate" and kind == "slot_gate_state":
             state_after = payload.get("state_after")
@@ -657,6 +1594,83 @@ class LiveCapture:
                         }
                     )
                     self._refresh_target()
+        if (
+            probe_name == "sound_logic"
+            and kind == "sound_logic_sound_pack_pre_gate_volume"
+        ):
+            emission_reason = payload.get("emission_reason")
+            caller_offset = payload.get("return_module_offset")
+            volume_control_call = (
+                caller_offset == "0x425f918"
+                and emission_reason
+                in {
+                    "first_observed_volume_control_state",
+                    "volume_control_state_changed",
+                }
+            )
+            state_key = (
+                payload.get("sound_resource_id_i32"),
+                payload.get("volume_index_i32"),
+                payload.get("return_module_offset"),
+            )
+            signature = (
+                payload.get("sound_pack_active_u32"),
+                payload.get("volume_class_u8"),
+                payload.get("class_volume_u16"),
+                payload.get("indexed_volume_u16"),
+                payload.get("master_volume_u16"),
+                payload.get("pre_gate_stage_volume_i32"),
+                payload.get("authorized_final_volume_i32"),
+                payload.get("current_gate_will_zero"),
+            )
+            previous = (
+                self.sound_pack_pre_gate_last_state.get(state_key)
+                if volume_control_call
+                else None
+            )
+            if previous is not None and previous[0] == signature:
+                aggregate = self.sound_pack_pre_gate_events[previous[1]]
+                aggregate["observation_count"] += 1
+                aggregate["last_sequence"] = self.sequence
+                aggregate["last_host_unix_ms"] = record.get("host_unix_ms")
+                aggregate["last_source_unix_ms"] = payload.get("unix_ms")
+            else:
+                aggregate = {
+                    "sequence": self.sequence,
+                    "first_sequence": self.sequence,
+                    "last_sequence": self.sequence,
+                    "host_unix_ms": record.get("host_unix_ms"),
+                    "first_host_unix_ms": record.get("host_unix_ms"),
+                    "last_host_unix_ms": record.get("host_unix_ms"),
+                    "source_unix_ms": payload.get("unix_ms"),
+                    "first_source_unix_ms": payload.get("unix_ms"),
+                    "last_source_unix_ms": payload.get("unix_ms"),
+                    "observation_count": 1,
+                    "sound_resource_id_i32": payload.get("sound_resource_id_i32"),
+                    "volume_index_i32": payload.get("volume_index_i32"),
+                    "sound_pack_active_u32": payload.get("sound_pack_active_u32"),
+                    "volume_class_u8": payload.get("volume_class_u8"),
+                    "class_volume_u16": payload.get("class_volume_u16"),
+                    "indexed_volume_u16": payload.get("indexed_volume_u16"),
+                    "master_volume_u16": payload.get("master_volume_u16"),
+                    "pre_gate_stage_volume_i32": payload.get(
+                        "pre_gate_stage_volume_i32"
+                    ),
+                    "authorized_final_volume_i32": payload.get(
+                        "authorized_final_volume_i32"
+                    ),
+                    "current_gate_will_zero": payload.get("current_gate_will_zero"),
+                    "reconstruction_complete": payload.get("reconstruction_complete"),
+                    "emission_reason": emission_reason,
+                    "return_module_offset": payload.get("return_module_offset"),
+                    "return_symbol": payload.get("return_symbol", ""),
+                }
+                self.sound_pack_pre_gate_events.append(aggregate)
+                if volume_control_call:
+                    self.sound_pack_pre_gate_last_state[state_key] = (
+                        signature,
+                        len(self.sound_pack_pre_gate_events) - 1,
+                    )
         return {"probe": probe_name, "record": record, "payload": payload, "kind": kind}
 
     def pump_for(self, seconds: float) -> None:
@@ -1121,6 +2135,38 @@ def append_journal(path: Path, row: dict[str, Any]) -> None:
         handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
+def bgm_upstream_probe_provenance(capture: LiveCapture) -> dict[str, Any]:
+    """Bind each compact attempt trace to its validated hash/hook/field contract."""
+
+    sound_logic = capture.ready_payloads.get("sound_logic")
+    if not isinstance(sound_logic, dict):
+        return {
+            "available": False,
+            "reason": "sound_logic_ready_payload_not_retained",
+        }
+    hook_status = sound_logic.get("hook_status")
+    upstream_hooks = {
+        key: copy.deepcopy(hook_status.get(key))
+        for key in sorted(EXPECTED_BGM_UPSTREAM_HOOK_KEYS)
+        if isinstance(hook_status, dict) and key in hook_status
+    }
+    return {
+        "available": True,
+        "installed_split_identity": copy.deepcopy(
+            capture.installed_split_identity
+        ),
+        "game_proc_identity_status": copy.deepcopy(
+            sound_logic.get("game_proc_identity_status")
+        ),
+        "upstream_hook_status": upstream_hooks,
+        "sdgm_accessor_status": copy.deepcopy(
+            sound_logic.get("bgm_upstream_sdgm_accessor_status")
+        ),
+        "field_schema": copy.deepcopy(sound_logic.get("bgm_upstream_field_schema")),
+        "window_rpc": copy.deepcopy(sound_logic.get("bgm_upstream_window_rpc")),
+    }
+
+
 def compact_attempt_summary(
     *,
     attempt: int,
@@ -1177,6 +2223,32 @@ def compact_attempt_summary(
         "complete_candidate_count": len(capture.complete_candidates),
         "selection_candidate": capture.selection_candidate,
         "observed_event_codes": capture.observed_event_codes,
+        "sound_pack_pre_gate_volume_events": copy.deepcopy(
+            capture.sound_pack_pre_gate_events
+        ),
+        "sound_logic_request_trace": {
+            "schema": "magireco-natural-sound-request-trace-v1",
+            "retained_event_count": len(capture.sound_request_trace_events),
+            "dropped_event_count": capture.sound_request_trace_dropped_count,
+            "complete": capture.sound_request_trace_dropped_count == 0
+            and not capture.attempt_probe_errors,
+            "maximum_retained_events": capture.max_sound_request_trace_events,
+            "bgm_upstream_window": copy.deepcopy(capture.bgm_upstream_window),
+            "bgm_upstream_field_schema": copy.deepcopy(
+                EXPECTED_BGM_UPSTREAM_FIELD_SCHEMA
+            ),
+            "bgm_upstream_provenance": bgm_upstream_probe_provenance(capture),
+            "event_count_by_kind": dict(
+                sorted(capture.sound_request_trace_event_count_by_kind.items())
+            ),
+            "causal_policy": (
+                "only equal perform_invocation_id/play_request_call_id values emitted "
+                "from a synchronous nested stack are causal; timestamps and sound IDs alone "
+                "remain correlation evidence"
+            ),
+            "probe_errors": copy.deepcopy(capture.attempt_probe_errors),
+            "events": copy.deepcopy(capture.sound_request_trace_events),
+        },
         "target_batch": capture.target_batch,
         "buffer_overflow": capture.buffer_overflow,
         "buffered_observer_bytes": capture.attempt_bytes,
@@ -1219,12 +2291,18 @@ def write_target_package(
         path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
         observer_paths[name] = path
 
+    injected_probe_paths: dict[str, Path] = {}
+    for name, source_bytes in capture.loaded_probe_source_bytes.items():
+        path = target_dir / f"injected_probe_{name}.js"
+        path.write_bytes(source_bytes)
+        injected_probe_paths[f"injected_probe_{name}"] = path
+
     provenance_paths = {
         "hunt_driver": Path(__file__).resolve(),
         "shared_batch_logic": (
             repo_root() / "tools" / "frida_runtime_probe" / "summarize_lightweight_spin_probe.py"
         ).resolve(),
-        **{f"probe_{name}": path for name, path in capture.script_paths.items()},
+        **injected_probe_paths,
     }
     hashes: dict[str, dict[str, Any]] = {}
     for name, path in {**observer_paths, **provenance_paths, "hunt_journal": journal_path}.items():
@@ -1251,6 +2329,25 @@ def write_target_package(
         "resolved_target_event": capture.target_batch.get("resolved_event"),
         "all_dispatch_batches": capture.dispatch_tracker.dispatch_batches(),
         "probe_ready_payloads": copy.deepcopy(capture.ready_payloads),
+        "loaded_probe_sources": copy.deepcopy(capture.loaded_probe_sources),
+        "sound_logic_request_trace": {
+            "schema": "magireco-natural-sound-request-trace-v1",
+            "retained_event_count": len(capture.sound_request_trace_events),
+            "dropped_event_count": capture.sound_request_trace_dropped_count,
+            "complete": capture.sound_request_trace_dropped_count == 0
+            and not capture.attempt_probe_errors,
+            "maximum_retained_events": capture.max_sound_request_trace_events,
+            "bgm_upstream_window": copy.deepcopy(capture.bgm_upstream_window),
+            "bgm_upstream_field_schema": copy.deepcopy(
+                EXPECTED_BGM_UPSTREAM_FIELD_SCHEMA
+            ),
+            "bgm_upstream_provenance": bgm_upstream_probe_provenance(capture),
+            "event_count_by_kind": dict(
+                sorted(capture.sound_request_trace_event_count_by_kind.items())
+            ),
+            "probe_errors": copy.deepcopy(capture.attempt_probe_errors),
+            "events": copy.deepcopy(capture.sound_request_trace_events),
+        },
         "outer_bgm_active_sound_snapshots": copy.deepcopy(capture.outer_bgm_snapshots),
         "buffer_overflow": capture.buffer_overflow,
         "observer_and_source_hashes": hashes,
@@ -1281,6 +2378,8 @@ def script_paths_from_args(args: argparse.Namespace) -> dict[str, Path]:
 
 
 def validate_args(args: argparse.Namespace) -> None:
+    if args.expected_pid < 0:
+        raise HuntError("--expected-pid must be >= 0")
     if args.max_attempts < 0:
         raise HuntError("--max-attempts must be >= 0")
     if args.max_buffer_mib < 0:
@@ -1298,20 +2397,34 @@ def main() -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     journal_path = args.out_dir / "hunt_journal.jsonl"
     capture: LiveCapture | None = None
+    installed_split_identity: dict[str, Any] | None = None
     try:
         validate_args(args)
         initial_runtime = inspect_foreground(args)
+        if args.expected_pid and initial_runtime["pid"] != args.expected_pid:
+            raise HuntError(
+                f"expected game PID {args.expected_pid}, observed {initial_runtime['pid']}"
+            )
+        installed_split_identity = inspect_installed_arm64_split(args)
+        initial_runtime["installed_arm64_split_identity"] = copy.deepcopy(
+            installed_split_identity
+        )
         capture = LiveCapture(
             host=args.host,
             expected_pid=initial_runtime["pid"],
             script_paths=script_paths_from_args(args),
             max_buffer_bytes=int(args.max_buffer_mib * 1024 * 1024),
         )
+        capture.installed_split_identity = copy.deepcopy(installed_split_identity)
         capture.attach()
         capture.wait_until(
             lambda: capture.ready == set(PROBE_FILES),
             args.probe_ready_timeout,
             "all three probes to report ready",
+        )
+        validate_probe_ready_contracts(
+            capture.ready_payloads,
+            installed_split_identity=installed_split_identity,
         )
         capture.wait_until(
             lambda: capture.latest_gate_state is not None,
@@ -1319,7 +2432,7 @@ def main() -> int:
             "initial CSlotBody::process state",
         )
         require_same_runtime(args, initial_runtime["pid"])
-        loaded_probe_sources = probe_source_provenance(capture.script_paths)
+        loaded_probe_sources = copy.deepcopy(capture.loaded_probe_sources)
         initial_outer_bgm_snapshot = capture.record_outer_bgm_snapshot("session_ready")
         append_journal(
             journal_path,
@@ -1339,24 +2452,68 @@ def main() -> int:
         )
 
         if not args.execute:
-            capture.capture_session_headers = False
-            capture.pump_for(args.dry_run_seconds)
-            require_same_runtime(args, initial_runtime["pid"])
-            final_outer_bgm_snapshot = capture.record_outer_bgm_snapshot(
-                "dry_run_complete"
-            )
-            append_journal(
-                journal_path,
-                {
-                    "schema": "magireco-natural-sp-story-hunt-session-v1",
-                    "host_unix_ms": int(time.time() * 1000),
-                    "event": "dry_run_complete",
-                    "adb_input_sent": False,
-                    "runtime": initial_runtime,
-                    "final_gate_state": capture.latest_gate_state,
-                    "final_outer_bgm_active_sound_snapshot": final_outer_bgm_snapshot,
-                },
-            )
+            capture.begin_attempt()
+            dry_run_started_unix_ms = int(time.time() * 1000)
+            try:
+                capture.pump_for(args.dry_run_seconds)
+                require_same_runtime(args, initial_runtime["pid"])
+                capture.finish_bgm_upstream_window()
+                final_outer_bgm_snapshot = capture.record_outer_bgm_snapshot(
+                    "dry_run_complete"
+                )
+                dry_run_trace = compact_attempt_summary(
+                    attempt=0,
+                    started_unix_ms=dry_run_started_unix_ms,
+                    outcome="read_only_dry_run",
+                    actions=[],
+                    capture=capture,
+                )["sound_logic_request_trace"]
+                append_journal(
+                    journal_path,
+                    {
+                        "schema": "magireco-natural-sp-story-hunt-session-v1",
+                        "host_unix_ms": int(time.time() * 1000),
+                        "event": "dry_run_complete",
+                        "adb_input_sent": False,
+                        "runtime": initial_runtime,
+                        "final_gate_state": capture.latest_gate_state,
+                        "final_outer_bgm_active_sound_snapshot": final_outer_bgm_snapshot,
+                        "sound_logic_request_trace": dry_run_trace,
+                    },
+                )
+            except Exception as error:
+                window_close_error: Exception | None = None
+                try:
+                    capture.finish_bgm_upstream_window()
+                except Exception as close_error:
+                    window_close_error = close_error
+                recorded_error = repr(error)
+                if window_close_error is not None:
+                    recorded_error += (
+                        "; bgm_upstream_window_close_error="
+                        + repr(window_close_error)
+                    )
+                append_journal(
+                    journal_path,
+                    {
+                        "schema": "magireco-natural-sp-story-hunt-session-v1",
+                        "host_unix_ms": int(time.time() * 1000),
+                        "event": "dry_run_error",
+                        "adb_input_sent": False,
+                        "error": recorded_error,
+                        "sound_logic_request_trace": compact_attempt_summary(
+                            attempt=0,
+                            started_unix_ms=dry_run_started_unix_ms,
+                            outcome="read_only_dry_run_error",
+                            actions=[],
+                            capture=capture,
+                            error=recorded_error,
+                        )["sound_logic_request_trace"],
+                    },
+                )
+                raise
+            finally:
+                capture.end_attempt()
             print(json.dumps({"ok": True, "dry_run": True, "journal": str(journal_path)}))
             return 0
 
@@ -1526,6 +2683,7 @@ def main() -> int:
                     capture.pump_for(args.post_hit_seconds)
                     require_same_runtime(args, initial_runtime["pid"])
                     capture.record_outer_bgm_snapshot("attempt_post")
+                    capture.finish_bgm_upstream_window()
                     outcome = "target_hit" if not capture.buffer_overflow else "target_hit_buffer_overflow"
                     row = compact_attempt_summary(
                         attempt=attempt,
@@ -1558,6 +2716,7 @@ def main() -> int:
                     return 0 if not capture.buffer_overflow else 2
 
                 capture.record_outer_bgm_snapshot("attempt_post")
+                capture.finish_bgm_upstream_window()
                 append_journal(
                     journal_path,
                     compact_attempt_summary(
@@ -1569,7 +2728,18 @@ def main() -> int:
                     ),
                 )
             except Exception as error:
+                window_close_error: Exception | None = None
+                try:
+                    capture.finish_bgm_upstream_window()
+                except Exception as close_error:
+                    window_close_error = close_error
                 capture.record_outer_bgm_snapshot("attempt_post_error")
+                recorded_error = repr(error)
+                if window_close_error is not None:
+                    recorded_error += (
+                        "; bgm_upstream_window_close_error="
+                        + repr(window_close_error)
+                    )
                 append_journal(
                     journal_path,
                     compact_attempt_summary(
@@ -1578,9 +2748,11 @@ def main() -> int:
                         outcome="attempt_error",
                         actions=actions,
                         capture=capture,
-                        error=repr(error),
+                        error=recorded_error,
                     ),
                 )
+                if window_close_error is not None:
+                    raise HuntError(recorded_error) from error
                 raise
             finally:
                 if capture.target_batch is None:
@@ -1608,14 +2780,28 @@ def main() -> int:
         )
         return 0
     except Exception as error:
+        fatal_row: dict[str, Any] = {
+            "schema": "magireco-natural-sp-story-hunt-session-v1",
+            "host_unix_ms": int(time.time() * 1000),
+            "event": "fatal_error",
+            "error": repr(error),
+        }
+        if capture is not None:
+            fatal_row.update(
+                {
+                    "probe_ready_payloads": copy.deepcopy(capture.ready_payloads),
+                    "probe_errors": copy.deepcopy(capture.probe_errors),
+                    "loaded_probe_sources": copy.deepcopy(capture.loaded_probe_sources),
+                    "detached_reason": capture.detached_reason,
+                }
+            )
+        if installed_split_identity is not None:
+            fatal_row["installed_arm64_split_identity"] = copy.deepcopy(
+                installed_split_identity
+            )
         append_journal(
             journal_path,
-            {
-                "schema": "magireco-natural-sp-story-hunt-session-v1",
-                "host_unix_ms": int(time.time() * 1000),
-                "event": "fatal_error",
-                "error": repr(error),
-            },
+            fatal_row,
         )
         print(json.dumps({"ok": False, "error": repr(error), "journal": str(journal_path)}))
         return 1

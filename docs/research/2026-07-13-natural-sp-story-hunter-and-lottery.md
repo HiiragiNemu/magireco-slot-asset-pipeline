@@ -4,9 +4,39 @@ This is the authoritative delta after the 2026-07-12 reconnect report.  Read
 it together with `docs/HANDOFF_NEXT_AI_MAGIRECO.md`.  It records mechanism
 evidence and failures as failures; it does not promote any new video.
 
-The owner-facing Chinese summary of the static/dynamic boundary, three-edition
-subtitle requirement, CDN/high-resolution research track, GitHub state, and
+The owner-facing Chinese summary of the static/dynamic boundary, two-audio-
+master by three-subtitle-variant requirement, CDN/high-resolution research track, GitHub state, and
 catalog-scale completion gap is `docs/HUMAN_PROGRESS_REPORT_2026-07-13.md`.
+
+## 2026-07-15 production and hunt continuation
+
+The sound transport is no longer a temporal guess. A natural run joined eight
+`CSLMng::SndReq` pending rows to cross-thread `PlayStart` using the stable token
+`(CSLMng*, slot, table-row pointer, enqueue generation)`, with zero drops. Static
+`C_ObjNml::fnSndRequest_BGM_DIR()` analysis independently proves business codes
+835/836 are BGM. This closes generic playback identity, but it does not bind
+either code, its loop phase, or transitions to an ac7114/15/16 target event.
+
+After another ARM64 Gadget reinjection and zero-input preflight, two bounded
+five-attempt batches completed. All ten were valid non-target attempts, no
+overflow or false promotion occurred, and ordinary credit ended at 19. Durable
+journal hashes:
+
+```text
+natural_hunter_pid3207_cross_thread_csl_execute_20260715_06
+6DA701E60A8CD3D5BAB25925C3DFAACC854FA3D6E139E1DB032D5855E7F2ECDE
+natural_hunter_pid3207_cross_thread_csl_execute_20260715_07
+26902C0927129A1E0A7C4BBAD12F857768EA23FE56D8217A14BF41A6DA78436F
+```
+
+The real v20 manifest rebuild is also complete: 926 events, 521 READY, 405
+fail-closed. ac7114/15/16 have durable D:-resolved composition plans and passed
+clean-visual outputs at 512x288/30 fps with 289/666/391 exact frames. The audio
+presentation grids are 462400/1065600/625600 samples. The two-profile event
+master and six-edition scene machinery are implemented; final target production
+still waits for same-run BGM semantics, reviewed Chinese cues, and game-layout/
+font approval. Do not spend the remaining credit in an unbounded hunt or render
+audio by guessing.
 
 ## 2026-07-14 reconnect addendum
 
@@ -33,6 +63,32 @@ Official store text adds a new BGM provenance gate: the separately sold Sound
 Pack unlocks main normal-play BGM and bonus music.  Installed SMZ data alone
 does not prove current entitlement, volume or native playback state.  A silent
 run must not be promoted as proof that the original route has no BGM.
+
+### 2026-07-14 post-push continuation
+
+The committed hunter completed fourteen additional bounded natural non-target
+rounds in five journals.  Every attempt remained foreground PID3125, ended
+without observer overflow and retained the real dispatch batches.  None had a
+legal same-batch ID19+ID24 target plus later exact event code, so no target was
+promoted.  The latest final credit was 18 after normal wins and losses; the
+hunter did not write credit or force a selector.
+
+After the 2x3 BGM contract was fixed, one more bounded five-round journal also
+completed without a target or overflow.  It lowered the displayed credit from
+18 to 5 through normal play and did not force credit or lottery state.  The
+post-reconnect continuation total is therefore nineteen non-target rounds.
+This last journal is the user-confirmed audible-BGM window documented in
+`2026-07-14-audible-bgm-observation.md`.
+
+This continuation also added a version-matched read-only
+`SoundMng::changeVolume` pre-gate observer.  In a real ID826 request it recovered
+authorized final volume 50 before the native entitlement branch reduced the CSL
+runtime volume to zero.  Five journal joins observed Sound Pack IDs
+800/801/821/826 in seven proven-playing zero-volume rows, with no nonzero
+contradiction.  This makes the unentitled instance useful for recovering the
+required BGM master; it does not eliminate that master.  Full mechanism,
+source/audio hashes and compact audit hashes are in
+`2026-07-14-sound-pack-pre-gate-runtime-volume.md`.
 
 ## Outcome in plain language
 
@@ -291,16 +347,22 @@ run that binds the exact packet/event/voice/outer-BGM state, followed by a
 three-event rebuild, QA, and human playback.  The full archive remains a large
 catalog-wide production phase after that generic gate is closed.
 
-Final delivery now has three synchronized editions rather than the earlier
-pair: no subtitles, Japanese subtitles, and reviewed Chinese subtitles.  The
-Japanese and Chinese editions must share a verified game-font/game-text layout
-profile.  The existing `Yu Gothic` default is not proof of the game font.
+Final delivery is a 2x3 matrix: `with_bgm` and `no_bgm` audio masters, each
+with no subtitles, Japanese subtitles, and reviewed Chinese subtitles.  Within
+one audio master the three derivatives must share one audio packet hash; the
+ two masters must not be collapsed to the same audio. Japanese and Chinese
+ share the verified cue timing and placement/safe-area profile, but each may
+ bind a different audited font with its own hash, provenance and complete cmap.
+ Chinese completeness takes priority over font identity; the existing implicit
+ `Yu Gothic` default is still not auditable provenance.
 
 ## Next action
 
-1. Join the implemented CSL active-transport snapshot to ZG published
-   play-info or equivalent authoritative playback identity.  Do not classify
-   BGM from a channel number, loop flag, duration, or listening impression.
+1. Use the exact cross-thread CSL token already implemented to bind the next
+   legal target's business request, final PlayStart, active loop phase, native
+   volume and any independent VOL_EFCT/duck/stop transition. Do not classify
+   target BGM from a channel number, loop flag, duration, or listening
+   impression alone.
 2. Continue small, auditable hunt batches only while foreground, PID, credit,
    queue waterline, and buffer bounds remain valid.
 3. On a legal target, retain the full observer package and bind the exact
@@ -312,5 +374,6 @@ profile.  The existing `Yu Gothic` default is not proof of the game font.
    the hold mechanism question.
 5. Resolve the remaining Z2D typography metrics and add reviewed cue-by-cue
    Chinese translations without changing the Japanese timing or audio.
-6. Only then rebuild ac7114/ac7115/ac7116 and their three-edition long set, run
-   hash/AV/subtitle/timeline QA, and request human playback confirmation.
+6. Only then rebuild ac7114/ac7115/ac7116 and their six-edition 2x3 long set,
+   run per-master hash/AV/subtitle/timeline QA, and request human playback
+   confirmation for both audio masters.

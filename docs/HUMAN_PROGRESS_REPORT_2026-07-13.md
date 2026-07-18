@@ -1,6 +1,6 @@
 # MagiaReco 动画恢复项目人类可读进度报告
 
-更新时间：2026-07-14（文件名保留首次检查点日期）
+更新时间：2026-07-16（文件名保留首次检查点日期）
 
 本报告面向项目所有者和外部接手者。它回答四个问题：现在真正完成了
 什么、游戏机制解明到什么程度、离可投稿长片还差什么、下一步为什么不再是
@@ -12,22 +12,170 @@
 ## 一句话结论
 
 项目尚未完成，但也不是只靠肉眼逐个拼视频。资源容器、事件到素材的静态关系、
-Direction 宏调度、SP Story 抽奖与 selector、声音 request 到 CSL transport 的
-大部分骨架已经被解出；ac7116 的尾帧 hold 已在同一次官方强制事件中达到
-runtime-mechanism 级证明。当前最关键的缺口是把通用声音层在同一次**自然目标事件**
-中闭合继承的外层 BGM，并恢复断电丢失的自然同源原始审计链。全库批量生产必须等
-这个门禁可靠，不能再生产“有声音但语义错误”的假成品。
+Direction 宏调度、SP Story 抽奖与 selector、声音 request 到跨线程 CSL PlayStart
+的通用骨架已经被解出；ac7116 的尾帧 hold 已在同一次官方强制事件中达到
+runtime-mechanism 级证明。当前最关键的缺口，是在同一次**自然目标事件**中闭合
+继承的具体外层 BGM、入口 loop phase、音量变化和退出行为，并恢复断电丢失的自然
+同源原始审计链。全库批量生产必须等这个门禁可靠，不能再生产“有声音但语义错误”
+的假成品。
 
-最终交付规格现固定为三种同时间轴版本：
+最终交付规格现固定为 **2 条音频母版 × 3 种字幕 = 6 个发布 edition**：
 
-1. 无字幕版；
-2. 日文字幕版；
-3. 中文字幕版。
+1. `with_bgm`：BGM + 游戏原生语音/SE；
+2. `no_bgm`：不含 BGM，但保留同源语音/SE；
+3. 每条音频母版各派生无字幕、日文字幕、中文字幕。
 
-三版必须保留原生画面尺寸、帧率和合理码率等级，音轨内容与时间轴必须一致；
-日文和中文使用同一套经确认的游戏字体或游戏文字渲染风格。当前旧渲染器使用的
-`Yu Gothic` 尚未被证明是游戏字体，所以**字体门禁尚未完成**，不能把现有字体
-默认值当作最终规范。
+两条母版的语音/SE、画面和时间轴必须一致；BGM 版必须另有曲目 source hash、
+request/start、循环相位、原生音量与 ducking 证据。六版都保留原生画面尺寸、帧率
+和合理码率等级。旧渲染器使用的 `Yu Gothic` 不是游戏字体证据；静态提取已经证明
+故事文字使用 `JM_<Unicode>_<family>_<variant>` DGI/ASTC 字形链，当前日文语料覆盖
+完整，但现有字形只覆盖约 8.46% GB2312 汉字。因此日文可走游戏字形；中文现已
+独立锁定 Noto Sans CJK 2.004 的固定 commit、SHA-256 与 OFL-1.1 许可证，并实测覆盖
+目标三事件候选字符 34/34。它明确标为非游戏原生的可审计中文字体；翻译和布局仍需
+人工批准，不能静默回退到本机字体。
+
+## 2026-07-16 最新检查点
+
+- 2026-07-16 存储修正：A: RAMDISK 已关闭，后续不把 A: 当输入、scratch 或输出。
+  耐久研究/媒体统一写入 `D:\magia\MyProducts\casino`；C: SSD 保留仓库和小型临时
+  文件。旧 manifest 内的 A: 只作为历史 provenance，经显式 path-prefix map 与 source
+  hash 核验后解析到 D:，不能恢复成新的 A: 依赖。
+- 付费门控已全量映射：只有 7 个 SKU，依次为存档、Wait Cut、设置、Auto、强制役、
+  前五项合集、Sound Pack。前六项不增加独占媒体；Sound Pack 是唯一直接影响成片
+  音轨的门。固定台设定 1–6 受 index2 门控，但五个角色按钮本身不付费，并会写入
+  `g_CustomChara/g_CustomVoice`，后续应作为角色/语音覆盖维度。购买回调没有另一条
+  PAD/OBB 下载链。详见 `research/2026-07-16-paid-addon-gates-and-archive-impact.md`。
+- 静态变体空间已进一步压缩：免费 `?` 会随机得到有效设定 0..5；固定设定只改变
+  普通 Story 的六张概率描述符，目标 SP Story 彩票完全不读设定。五个 UI 角色是
+  5 个 profile 而非 5×5 voice，强制役 0..19 也与目标 `(stage,selector)` 不同域。
+  因此购买状态变化不会直接加速 ac7114/15/16 自然 BGM 门；后续按 event/video/
+  voice/subtitle canonical signature 分等价类，避免 7×5×20 盲跑。详见
+  `research/2026-07-16-setting-character-force-variant-space.md`。
+- 当前 PID3188 的新版只读 entitlement snapshot 已验证 7/7 active/saved 共 14 个字段
+  全为 0，且没有 gameplay input/native call/memory write。capture manifest SHA-256 为
+  `FDADCE46BB6252F61356D4662D6696C2857A569294993B071E1A39F3E5E86E15`。
+- CDN 于 2026-07-16 复查三个客户端已声明边界对象，仍为 HTTP 200 且大小未变；Android
+  客户端、392 分片流量、7,801 视频 inventory 和官网仍没有 HLS/quality/720p/1080p
+  或同剧情高清 variant。当前 CDN 可重拉原始 OBB/PAD，但没有隐藏高清母版证据。
+
+- 2026-07-15 的 PID3207 是历史捕获；当前 2026-07-16 连接为 PID3188，ARM64 Gadget
+  已恢复且 addon 快照保持零输入/零写入。PID3207 的零输入 journal SHA-256 是
+  `68ECC94DF1C3B08C5CD51EAC72636FECBDA0E2CCCF67A9A983C15D34F3585A6D`；222-ID
+  Sound Pack 表的 13 个 key check 全部匹配，初始 active rows 为空。这是重连健康
+  检查，不是“游戏没有 BGM”的证据。
+- 用户确认 BGM 是在此前 PID3125 五局自然 non-target 批次中听到的；ID800 当时
+  runtime volume=0，不能贡献可听声音。静态反汇编现已证明 835/836 都由
+  `C_ObjNml::fnSndRequest_BGM_DIR()` 直接请求，不再只是“loop=1 的候选”；但零输入
+  跟随快照在五局结束约 14 分 35 秒后才开始，仍不能把人的听感唯一绑定到其中一首。
+- 新的上游静态链证明 ac7114/15/16 目标对象自身不请求 BGM，而是继承全局 Direction
+  `kind/no`：`kind=0x2f` 且 `no=1..24` 选 835，`no>=25` 选 836。当前 `kind/no` 有
+  多条提交/恢复/清零 writer，DirInfo 的 190/191/192 是另一套字段，不能拿来推 836。
+  因此剩余动态捕获已缩到目标同 run 的 writer/快照/请求/播放器相位，而不是盲目挂
+  全部声音。详见 `research/2026-07-15-target-sp-story-bgm-state-upstream.md`。
+- 对应 5 个上游 hook 已进入通用 hunter，并在 PID3188 做完 8 秒零输入预检。MuMu 的
+  GameProc 是 APK-backed 未压缩映射，因此身份门同时核验已安装 split APK 外层 SHA、
+  固定 ZIP entry 内部 ELF SHA/AArch64 header，以及运行时 derived base/export offset；
+  成功检查点 13/13 hooks、0 unavailable/error、973 条 sound metadata 零丢失，且
+  `adb_input_sent=false`。journal SHA-256 为
+  `562A8F16864D6D0377CDC32E3F603338C4133A3DA37F4B5CF96D2204631C0F11`。这证明下次
+  自然目标可以直接捕获命名字段，不代表主界面空闲时已确定目标 BGM。
+- 首个实际回合暴露并失败关闭了一处高频 signature 溢出；修复为 hook+对象分区并
+  排除 call ID 后，可执行回归及第二个单回合均通过。成功的 non-target `_06` 只有
+  40 条上游状态（37 DataSet、2 BGM_DIR、1 RlStart），window closed、0 drop/error，
+  141 条完整 sound trace，credit 47→44 并回到 0/0。journal SHA-256
+  `7D8FA6761DAD9AF55405EC845FB0CB53CB0DF62D59D7CEC4C2234E4A4C84826E`。该回合没有
+  `kind=0x2f`/835/836，不冒充目标；它证明真实负载下 observer 已可用。
+- 加固的历史 snapshot audit 汇总 32 条 active row，其中 4 条 gate row
+  （ID800/801/821）均为零音量；unentitled corroborating/conflict=4/0，invalid=0，
+  pre-gate row=0。三份输出 hash 与完整边界见
+  `research/2026-07-14-audible-bgm-observation.md`。
+- LC701A 已静态闭合 `f070..f075` 六字节到 ED31/DirInfo3 的读取链，并证明
+  `CplayData::LoadData` 可覆盖该工作区；自然抽选时的最后 writer 仍未定位。下一步
+  需要短时只读 writer probe，见 `research/2026-07-15-lc701a-f070-native-writer.md`。
+- 两条真实 audio base-master 的合成器和现代 scene 六版构建器已经落地并通过 tiny
+  real-media E2E。事件母版 H.264 stream-copy、AAC 48 kHz stereo、逐包/逐帧 PTS、
+  有效 PCM、source rehash、clipping 和 READY transaction 全部失败关闭；scene 不直接
+  拼 AAC，而是按每个 sidecar 的 `presentation_sample_count` 裁切有效 PCM，连续拼接后
+  每个音频 profile 只编码一次，再复用到 none/JA/ZH 三版。视频 packet、帧格、样本、
+  cue、hash 或 READY 任一不一致都会拒绝发布。
+- 提交前故障注入进一步修复了发布事务：series 不再直接拼 AAC；scene、subtitle batch、
+  material collection 全部在同卷 staging 完成后才 promotion；旧 READY 在失败重跑中
+  保持逐字节不变；event audio master 用跨进程 mutex + no-replace hardlink，竞态
+  sentinel/foreign replacement 不会被覆盖或回滚删除。material audible 也改成精确
+  trim/gain/duck、PCM 连续拼接和最终单次 AAC，并要求 hash-bound 人审视觉语义。
+  详见 `research/2026-07-16-release-pipeline-hardening.md`。
+- v20 production manifest 已在 D: 实际构建：926 个事件中 521 READY、405 fail-closed；
+  ac7114/15/16 的旧 A: provenance 通过显式 path-prefix map 指向已核验 D: 副本，三个
+  event 都 READY 且不再含 A: 路径。summary/catalog SHA-256 分别为
+  `9025608499EE13760A817CF8DF630AC08EE92F539EF6C13E1E2042835C2A58B2` /
+  `6E6D7C01CD98B11704543266D7E523254CBDCE37BA9A2C21CA8FCE90AC06A927`。
+- ac7114/15/16 的真实 clean visual 已通过 QA，均为 512x288、30 fps、H.264、无音轨、
+  无字幕，精确为 289/666/391 帧；对应 48 kHz presentation grid 是
+  462400/1065600/625600 样本。这些是可信画面输入，不是最终投稿成片。仍缺自然目标
+  同 run 的 BGM ID/phase/volume/transitions、经人工批准的中文 cue，以及最终游戏布局/
+  字体门禁，因此没有把任何旧音频猜测冒充六版。
+- ARM64 Gadget 再注入成功后，零输入 preflight 与两批各五局 bounded hunt 均完整；
+  十局全部为 non-target、0 overflow、未伪报目标，正常 credit 最后为 19。两个 journal
+  SHA-256 为 `6DA701E60A8CD3D5BAB25925C3DFAACC854FA3D6E139E1DB032D5855E7F2ECDE` 和
+  `26902C0927129A1E0A7C4BBAD12F857768EA23FE56D8217A14BF41A6DA78436F`。应保留剩余
+  credit 做有证据价值的小批捕获，而不是无上限消耗。
+- 把 `MAGIRECO_SLOT_ASSET_ROOT` 指向 D: 耐久真实资源后，当前全套自动验证为
+  289/289 通过、0 跳过、0 failure/error；四个 installed-asset 字形向量和真实 Noto
+  34/34 cmap、FFmpeg 事务/逐样本向量也实际执行。全仓 `compileall`、Frida JS
+  `node --check` 与
+  `git diff --check` 也通过。
+- 提交前独立审查又修掉两处审计风险：每个 modern scene 的 summary/READY 现在独立
+  存放，不会被下一个 scene 覆盖；每条 JA/ZH SRT 必须与已审计 `edition_plan` 的 cue
+  数量、起止和文本完全一致，合并写出后还会回读逐 cue 校验。音频样本数也改为按
+  有理帧率计算，并与 source event manifest、实际帧数和两套 audio sidecar 四方互证，
+  不再硬编码 30 fps 的 1600 samples/frame。
+- ac7114/15/16 共 10 条日文 cue 已整理成独立中文字幕人工审阅单，但全部仍是
+  NOT HUMAN APPROVED。JM 的确只覆盖候选中文 19/34；现在新增的固定 Noto Sans CJK
+  2.004 依赖已用真实上游字体覆盖 34/34，并固定字体与 OFL 文本各自的大小和 SHA-256，
+  可离线复验且坏缓存默认拒绝覆盖。它是显式 `audited_chinese_fallback`，不是游戏原生
+  字体；翻译、字号、描边、安全区和布局获批前仍不具发布资格。依赖说明见
+  `../reproducibility/fonts/README.md`，审阅表见
+  `review/2026-07-15-ac7114-16-chinese-subtitle-review.md`。
+
+## 2026-07-14 本轮同步推进结果
+
+- 已从原生 `SoundMng::changeVolume@0x425ee68` 只读恢复 Sound Pack **门控前**
+  整数音量。自然 non-target 中 ID826 的 class/indexed/master 为 50/100/100，
+  authorized final volume=50；当前 entitlement=0 后 CSL runtime volume=0。它证明
+  未购买实例仍可用于恢复 BGM 混音参数，而不是停止 BGM 生产。
+- 五个 PID3125 journal 的自动 join 捕获 Sound Pack ID800/801/821/826 共 7 个
+  proven-playing zero-volume rows，0 个矛盾；旧逐帧 660 条门控前记录已压缩成 5 个
+  compact state groups；这些旧记录不能冒充 5 次真实 transition。证据和 hash 见
+  `research/2026-07-14-sound-pack-pre-gate-runtime-volume.md`。
+- 后续五局自然 non-target 中，用户确认实际听到了 BGM；运行时出现不在 Sound Pack
+  表内、volume=50、loop=1 的 ID835/836。静态业务函数现已把两者明确归为
+  `BGM_DIR`；剩余问题是单一回合/场景的 exact ID、phase 和 transitions，而不是
+  “它们是否为 BGM”。见 `research/2026-07-14-audible-bgm-observation.md` 和
+  `research/2026-07-15-bgm-dir-and-csl-cross-thread-identity.md`。
+- 2×3 生成合同、真实 audio base-master 合成器、真实 clean-visual 接入和 scene 六路
+  连续音频构建器已经落地；证据不完整时拒绝渲染。voice/SE 与 BGM 均需逐源 hash、
+  原生 timing/volume，BGM 另需 phase/loop/ducking transitions。日中字幕共用已验证
+  cue 时间轴和 placement/safe-area profile，但各自绑定独立字体/hash/cmap；中文允许
+  使用完整、可审计的不同字体。现在的剩余阻塞是目标场景的真实 BGM 合同、中文字幕
+  审阅和目标媒体六版 E2E，而不是 scene concat 引擎。详见
+  `research/2026-07-14-two-audio-master-six-edition-contract.md`。
+- ac0906 与 ac0912 的纯素材**视觉分类**成立；ac7204 的源 manifests 有 27 个角色
+  语音事件，当前集合折成 14 个唯一 AV 代表、4 个唯一 OGG，必须归为 gameplay/
+  result animation review，不能再叫 pure material。旧 audible collection 未验证
+  原生 volume/ducking，也没有完整逐 OGG hash，只能保留为 review，不能发布。
+- ac1102/ac1103/ac1104 的旧 review 文件、长片时间轴和输出 hash 完整，但 37 条中
+  35 条仍缺运行时 AV 验证；ac1103_006/_012/_013 混入胜利粒子/WIN 效果，不能把
+  旧系列直接晋升为正常动画长片。2026-07-15 只读迁移 rehash 实查 120 个 family
+  source/output 文件，0 missing、0 hash error；这是“文件完整”，不等于“语义可发布”。
+  原始 review 保留，不重编码。
+- ac0906 material collection 的 schema-v2 清单另核验 36 个引用文件，0 error；仍是
+  六个黑幕小 Kyubey 观众素材组件、16 条音频证据，分类
+  `reviewed_audience_components_not_standalone_animation` 正确。旧 audible mix 缺当前
+  原生 volume/duck/hash/READY 合同，所以可审计但不是当前发布母版。
+- 自然 hunt 累计又完成 19 个 bounded non-target 回合，没有伪报 target；最新五局
+  将正常游戏 credit 从 18 变为 5，未写 credit 或强制 selector。当前最有价值
+  的下一次命中必须在同一 run 绑定 ID19+ID24、精确事件码、BGM request/phase/
+  pre-gate volume、语音、字幕和 CSL 最终 transport。
 
 ## 静态分析并没有被放弃
 
@@ -39,7 +187,7 @@ runtime-mechanism 级证明。当前最关键的缺口是把通用声音层在�
 | GDB -> Z2D -> DGM -> CRI | 已静态提取事件、画布、图层与原生媒体引用 | 资源身份通用；图层父子和区间尚有可审计启发式 |
 | Direction 调度 | `pre -> PlayTableData -> PlayMacroData -> Macro_* -> scene/sound request` 已定位 | 是，属于通用调度骨架 |
 | SP Story 选择 | ID19 permission、同批 ID24 stage/selector、精确 event code 和五张 lottery 表已解出 | 对 SP Story family 通用，不等于所有玩法共用同一 selector 表 |
-| 声音请求 | request/code/resource/final sound-id 静态表与低噪声运行时链已接通 | transport 层通用；BGM/对白等业务语义仍需证据 |
+| 声音请求 | request/code/resource/final sound-id 与跨线程 pending-row/PlayStart 已精确接通；835/836 有 BGM_DIR 业务正证 | transport 层通用；其他业务代码、phase/fade/duck 仍需证据 |
 | 字幕 | 官方图形文字、声音标签、运行时字幕及其时间可进入 manifest | 日文来源层部分通用；中文翻译与字体尚未实现 |
 | 外部合成 | composition plan、单事件渲染、系列 stream-copy、QA/哈希/时间轴工具已存在 | 引擎通用；尚不能自动决定所有多层事件的观众语义 |
 
@@ -59,7 +207,8 @@ event code”是表驱动机制，但不证明每条路由的最终声音、尾�
   证据位置，但还不是完整 Z2D 语法解释器；
 - 外部 compositor 尚未完整复刻 DGI/shader/nameplate 等渲染能力；
 - 从所有玩法的上游状态到完整 Direction sequence 的统一外部解释器；
-- ZG play-info 与 CSL active transport 的身份等价及 BGM 业务语义；
+- 各玩法上游 BGM 状态、入口 loop phase、fade/duck 参数与已闭合 CSL 播放身份的
+  同 run 连接；
 - ac7116 已证明 end-frame 337 在 voice tail 持续可绘；跨事件的 LP/影片结束/尾帧
   通用状态规则仍未形式化；
 - 所有图形字幕和角色语音的自动、唯一、可复核关联；
@@ -230,7 +379,7 @@ OnDemand SMZ 只能证明声音资产在设备上，不能证明当前账号 ent
 控制的 222-ID 静音表。因此“这一局没听到 BGM”既不能证明事件原生无 BGM，也不能
 授权外部随意补曲；必须同时记录 Sound Pack/音量状态与真实 PLAY/STOP 链。
 
-## 三版本字幕的新增审计要求
+## 2×3 发布矩阵的新增审计要求
 
 正式 production manifest 每个 cue 至少要保留：
 
@@ -245,11 +394,13 @@ font_source, layout_profile, evidence
 
 - 日文必须来自游戏图形文字、官方运行时文字或可追溯声音标签；ASR 只能辅助审校；
 - 中文必须逐句对应同一个日文 cue，并保留人工复核状态；机器翻译不能直接进入正式版；
-- 日文和中文使用同一字体来源、字号逻辑、描边、位置和安全区；
+- 日文和中文共用 cue 时间轴、位置和安全区；两种语言允许使用不同字体，每个字体
+  都必须记录 path/hash/family/source/license 并通过各自全文 cmap，中文完整覆盖优先；
 - 如果游戏使用预渲染位图字而不是可复用字体，必须先还原字形/排版机制，不能把
   `Yu Gothic` 假称为游戏字体；
-- 三版音频 hash 必须一致，字幕烧录只允许重编码视频流；
-- 三版画面尺寸、帧率、像素格式和总时间轴必须一致，不做 upscale。
+- 每条音频母版内部的无字幕/日文/中文三版音频 packet hash 必须一致，字幕烧录只
+  允许重编码视频流；`with_bgm` 与 `no_bgm` 两条母版的音频 hash 必须不同；
+- 六版画面尺寸、帧率、像素格式和总时间轴必须一致，不做 upscale。
 
 ### 游戏字体审计结论
 
@@ -342,7 +493,8 @@ default branch: codex/corrected-runtime-pipeline
 本项目目前只启用 GitHub `Dependency Graph`，最近一次运行成功；HEAD 没有配置
 commit check。GitHub API 的 `pending` 且 `total_count=0` 表示没有 check run，
 不是 CI 测试失败。设置版本匹配的 `MAGIRECO_SLOT_ASSET_ROOT` 后，本地全套测试在
-本检查点为 113/113 通过（包含真实 JM DGI 向量）。本报告和同批工具会随
+本检查点为 289/289 通过（包含真实 JM DGI、Noto cmap、FFmpeg 事务向量、发布后回滚与
+输出路径越界向量）。本报告和同批工具会随
 本轮提交直接推送到唯一工作分支；GitHub 页面只会在 push 完成后显示它们。
 
 ## 距离最终目标还有多少
@@ -364,11 +516,11 @@ commit check。GitHub API 的 `pending` 且 `total_count=0` 表示没有 check r
 
 1. 自然命中 ac7114/15/16，闭合 packet/event/voice/outer-audio，并把原始证据直接
    持久化到 D 盘；
-2. 以已经通过的 ac7116 原生 hold 规则重建三事件三版本；
+2. 以已经通过的 ac7116 原生 hold 规则重建三事件 2×3 六版本；
 3. 完成 Z2D 字形排版 metrics、逐句中文翻译与人工审校；
-4. 运行三版音频、字幕、画面、时间轴、codec/profile/bitrate/audio-hash QA，并由
-   人类完整播放确认。无字幕/日文/中文三版可以因烧录字幕使用不同视频编码，但音频
-   必须同源、同时间轴、可核对 hash，且不得 upscale。
+4. 对两条母版分别运行三种字幕派生的音频、字幕、画面、时间轴、codec/profile/
+   bitrate/audio-hash QA，并由人类完整播放确认。同一母版内三版音频必须同源、
+   同时间轴、同 packet hash；两个母版之间只允许 BGM 层不同，且不得 upscale。
 
 对“全部资源归档”而言，之后仍有 catalog 级规模化生产：217 个单事件 QA、254 个
 系列决定、323 个素材合集以及大量严格 AV 证据。当前最重要的进展不是多生成几百
@@ -382,4 +534,4 @@ commit check。GitHub API 的 `pending` 且 `total_count=0` 表示没有 check r
 2. 继续小批自然 SP Story hunt，只在合法同批 target 时保留完整 observer 包；
 3. 同时完成静态通用机制边界、游戏字体和 slot CDN/PAD 的三份审计；
 4. 更新核心 handoff/status，运行全套测试，提交并推送正确分支；
-5. 目标命中后重建 ac7114/15/16 三版本和长版，再进入 catalog 批量阶段。
+5. 目标命中后重建 ac7114/15/16 的 2×3 六版本和长版，再进入 catalog 批量阶段。

@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from tools.frida_runtime_probe.capture_addon_entitlement_state import (
+    EXPECTED_ADDON_METADATA,
     parse_single_pid,
     validate_snapshot,
 )
@@ -25,9 +26,16 @@ class AddonEntitlementStateProbeTests(unittest.TestCase):
             "ok": True,
             "process": {"id": 3125, "arch": "arm64", "pointer_size": 8},
             "read_policy": "seven_named_u32_active_and_saved_fields_no_calls_no_writes",
+            "addon_index_map_basis": (
+                "java_sku_order_plus_CplayData_SetAddonID_and_native_xrefs"
+            ),
+            "value_pack_policy": "index_5_sets_indices_0_through_5_but_not_index_6",
             "rows": [
                 {
                     "index": index,
+                    "sku": EXPECTED_ADDON_METADATA[index][0],
+                    "label": EXPECTED_ADDON_METADATA[index][1],
+                    "archive_impact": EXPECTED_ADDON_METADATA[index][2],
                     "active_offset": hex(0x14BF4 + index * 4),
                     "active_u32": 0,
                     "active_read_error": "",
@@ -56,6 +64,9 @@ class AddonEntitlementStateProbeTests(unittest.TestCase):
         read_error = self.snapshot()
         read_error["rows"][2]["saved_read_error"] = "unreadable"
         cases.append(read_error)
+        wrong_label = self.snapshot()
+        wrong_label["rows"][4]["label"] = "sound_pack"
+        cases.append(wrong_label)
         for value in cases:
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):

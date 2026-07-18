@@ -19,6 +19,15 @@ PACKAGE = "com.universal777.magireco"
 EXPECTED_SCHEMA = "magireco-addon-entitlement-snapshot-v1"
 EXPECTED_ACTIVE_OFFSETS = [0x14BF4 + index * 4 for index in range(7)]
 EXPECTED_SAVED_OFFSETS = [0x14A58 + index * 4 for index in range(7)]
+EXPECTED_ADDON_METADATA = [
+    ("magireco_addon_01", "save_data", "operational_only"),
+    ("magireco_addon_02", "wait_cut", "operational_only"),
+    ("magireco_addon_03", "settings_change", "route_probability_control"),
+    ("magireco_addon_04", "auto_play", "operational_only"),
+    ("magireco_addon_05", "forced_role", "forced_route_control"),
+    ("magireco_addon_06", "value_pack", "bundle_indices_0_through_4"),
+    ("magireco_addon_07", "sound_pack", "audio_playback_gate"),
+]
 
 
 def sha256_file(path: Path) -> str:
@@ -71,6 +80,16 @@ def validate_snapshot(snapshot: dict[str, Any], expected_pid: int) -> None:
         raise ValueError(f"snapshot must contain exactly seven addon rows: {rows!r}")
     if [int(row.get("index", -1)) for row in rows] != list(range(7)):
         raise ValueError("addon row indices are incomplete or out of order")
+    metadata = [
+        (
+            str(row.get("sku", "")),
+            str(row.get("label", "")),
+            str(row.get("archive_impact", "")),
+        )
+        for row in rows
+    ]
+    if metadata != EXPECTED_ADDON_METADATA:
+        raise ValueError("addon row SKU/label/archive-impact mapping is not version-audited")
     active_offsets = [parse_hex(row.get("active_offset")) for row in rows]
     saved_offsets = [parse_hex(row.get("saved_offset")) for row in rows]
     if active_offsets != EXPECTED_ACTIVE_OFFSETS or saved_offsets != EXPECTED_SAVED_OFFSETS:
@@ -82,6 +101,14 @@ def validate_snapshot(snapshot: dict[str, Any], expected_pid: int) -> None:
             raise ValueError(f"addon row value is not an integer: {row!r}")
     if snapshot.get("read_policy") != "seven_named_u32_active_and_saved_fields_no_calls_no_writes":
         raise ValueError("probe did not declare the required read-only policy")
+    if snapshot.get("addon_index_map_basis") != (
+        "java_sku_order_plus_CplayData_SetAddonID_and_native_xrefs"
+    ):
+        raise ValueError("addon index map lacks the required static provenance")
+    if snapshot.get("value_pack_policy") != (
+        "index_5_sets_indices_0_through_5_but_not_index_6"
+    ):
+        raise ValueError("Value Pack policy mismatch")
 
 
 def adb_state(adb: str, device: str, package: str) -> dict[str, Any]:

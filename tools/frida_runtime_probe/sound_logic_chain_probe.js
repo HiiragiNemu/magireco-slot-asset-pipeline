@@ -9,6 +9,15 @@
 
 const STATIC_REFERENCE = {
   game_proc_sha256: "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF",
+  game_proc_size_bytes: 79683640,
+  game_proc_logical_name: "libGameProc.so",
+  game_proc_apk_entry: "lib/arm64-v8a/libGameProc.so",
+  game_proc_apk_entry_compression_method: 0,
+  game_proc_apk_entry_crc32: "BBB59DED",
+  game_proc_apk_entry_header_offset: 2469872,
+  game_proc_apk_entry_data_offset: 2473984,
+  arm64_apk_module: "split_config.arm64_v8a.apk",
+  arm64_apk_size_bytes: 83710748,
   arm64_apk_sha256: "89ACC81D02FF63697603FCE2E5F4281850C092FA833FD8CF3E636B44AB624E24",
   lib_amain_sha256: "58E3F7A9DBCE2E3D79D1A5A30F1DBFEEAC5BB4712BD4D8FF4E6328D2631DCA5D",
   abi: "aarch64-aapcs64",
@@ -42,9 +51,17 @@ const SYMBOLS = {
     name: "_ZN8SoundMng10sndPlayReqEiii",
     expectedOffset: "0x425fbdc",
   },
+  soundMngChangeVolume: {
+    name: "_ZN8SoundMng12changeVolumeEii",
+    expectedOffset: "0x425ee68",
+  },
   cslMngPlayStart: {
     name: "_ZN6CSLMng9PlayStartEP11SSound_Datai",
     expectedOffset: "0x12fa9c",
+  },
+  cslMngSndReq: {
+    name: "_ZN6CSLMng6SndReqEii",
+    expectedOffset: "0x130124",
   },
   cslMngCalc: { name: "_ZN6CSLMng4CalcEv", expectedOffset: "0x12f7c8" },
   cslMngSndGetId: { name: "_ZN6CSLMng8SndGetIDEi", expectedOffset: "0x1308c0" },
@@ -67,6 +84,31 @@ const SYMBOLS = {
     name: "_ZN6CSLMng12SndGetPauseFEi",
     expectedOffset: "0x130e18",
   },
+  kndCalLotCcDirEnd: {
+    name: "fnKndCalLot_CcDirEnd",
+    expectedOffset: "0x4445e3c",
+    requiresGameProcIdentity: true,
+  },
+  kndCalLotRlStart: {
+    name: "fnKndCalLot_RlStart",
+    expectedOffset: "0x444466c",
+    requiresGameProcIdentity: true,
+  },
+  mstComCbkUpdateGmData: {
+    name: "_ZN11C_MstComCbk14fnUpDateGmDataEv",
+    expectedOffset: "0x4399a4c",
+    requiresGameProcIdentity: true,
+  },
+  anmBaseDataSetDir: {
+    name: "_ZN9C_AnmBase16fnDataSetDir_DIREv",
+    expectedOffset: "0x4387f90",
+    requiresGameProcIdentity: true,
+  },
+  objNmlSndRequestBgmDir: {
+    name: "_ZN8C_ObjNml20fnSndRequest_BGM_DIREv",
+    expectedOffset: "0x43a86b0",
+    requiresGameProcIdentity: true,
+  },
 };
 
 const REQUEST_CODE_BY_ID = { 96: "291", 100: "295", 3094: "16048" };
@@ -80,6 +122,84 @@ const CSL_ACTIVE_SLOT_STRIDE = 0x38;
 // begin/end at runtime and is not asserted to equal this value.
 const MAX_ACTIVE_SOUND_SLOTS = 128;
 const ACTIVE_SNAPSHOT_WAIT_TIMEOUT_MS = 15000;
+const CSL_SOUND_DATA_TABLE_BEGIN_OFFSET = 0x08;
+const CSL_SOUND_DATA_TABLE_END_OFFSET = 0x10;
+const CSL_SOUND_DATA_ENTRY_STRIDE = 0x0c;
+const CSL_SOUND_DATA_ENTRY_ID_OFFSET = 0x00;
+const CSL_SOUND_DATA_ENTRY_SLOT_OFFSET = 0x08;
+const CSL_PENDING_SOUND_DATA_SLOT_OFFSET = 0x20;
+const MAX_CSL_SOUND_DATA_TABLE_ROWS = 65536;
+const SOUND_PACK_GATE_TABLE_OFFSET = 0x14458dc;
+const SOUND_PACK_GATE_ENTRY_COUNT = 222;
+const SOUND_PACK_CATEGORY_MAP_POINTER_SLOT_OFFSET = 0x4b8f1c0;
+const SOUND_PACK_ADDON_POINTER_SLOT_OFFSET = 0x4b8ea08;
+const SOUND_PACK_ACTIVE_ADDON_OFFSET = 0x14c0c;
+const SOUND_MNG_INDEXED_VOLUME_BASE_OFFSET = 0x82c;
+const SOUND_MNG_MASTER_VOLUME_OFFSET = 0x8ac;
+const SDGM_ACCESSOR_SYMBOL = "fnGetAddrSdGmData";
+const SDGM_ACCESSOR_EXPECTED_OFFSET = "0x424d474";
+const MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW = 1024;
+const BGM_UPSTREAM_FIELD_SCHEMA = {
+  schema: "magireco-target-bgm-upstream-field-schema-v1",
+  sdgm_snapshot_fields: {
+    current_kind_u16_at_0x13da: { offset: "0x13da", type: "u16" },
+    next_kind_u16_at_0x13dc: { offset: "0x13dc", type: "u16" },
+    current_no_u16_at_0x13de: { offset: "0x13de", type: "u16" },
+    next_no_u16_at_0x13e0: { offset: "0x13e0", type: "u16" },
+    restore_state_u16_at_0x1472: { offset: "0x1472", type: "u16" },
+    saved_kind_u16_at_0x1474: { offset: "0x1474", type: "u16" },
+    saved_no_u16_at_0x149a: { offset: "0x149a", type: "u16" },
+  },
+  mstcomcbk_commit_fields: {
+    committed_kind_u16_at_0x0a72: { offset: "0xa72", type: "u16" },
+    committed_no_u16_at_0x0a76: { offset: "0xa76", type: "u16" },
+  },
+  obj_nml_snapshot_fields: {
+    direction_kind_u16_at_0x00ca: { offset: "0xca", type: "u16" },
+    direction_no_u16_at_0x011a: { offset: "0x11a", type: "u16" },
+    cached_code_pointer_at_0x0800: { offset: "0x800", type: "pointer" },
+    cached_code_string_at_0x0800: {
+      offset: "0x800",
+      type: "nul_terminated_utf8",
+      maximum_bytes: 64,
+    },
+    cached_code_text_error_at_0x0800: {
+      offset: "0x800",
+      type: "bounded_read_diagnostic_string",
+    },
+  },
+  event_kinds: {
+    knd_cal_lot_cc_dir_end: "sound_logic_bgm_upstream_kndcal_cc_dir_end",
+    knd_cal_lot_rl_start: "sound_logic_bgm_upstream_kndcal_rl_start",
+    update_gm_data_commit: "sound_logic_bgm_upstream_update_gm_data_commit",
+    data_set_dir_commit: "sound_logic_bgm_upstream_data_set_dir_commit",
+    bgm_dir_request: "sound_logic_bgm_upstream_bgm_dir_request",
+    trace_overflow: "sound_logic_bgm_upstream_trace_overflow",
+  },
+  emission_policy: {
+    window_control: "explicit_rpc_begin_end",
+    lottery_hooks: "every_entry_leave_pair_within_window",
+    high_frequency_hooks: "first_observation_or_state_change_within_window",
+    maximum_emitted_events_per_window: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+    overflow_policy: "emit_overflow_once_and_fail_attempt",
+    read_only_observer: true,
+  },
+};
+const SOUND_PACK_REFERENCE_KEYS = {
+  0: 67,
+  1: 171,
+  60: 778,
+  67: 786,
+  119: 863,
+  151: 6103,
+  169: 9070,
+  170: 9071,
+  171: 16716,
+  181: 38009,
+  219: 41030,
+  220: 41031,
+  221: 41032,
+};
 const ACTIVE_SOUND_ACCESSOR_TYPES = {
   cslMngSndGetId: "int",
   cslMngSndGetChannel: "int",
@@ -116,7 +236,15 @@ let recentContexts = [];
 let requestMetadataByPointer = {};
 let codeByRequestId = Object.assign({}, REQUEST_CODE_BY_ID);
 let activePerformStackByThread = {};
+let activeSoundPlayStackByThread = {};
+let nextPerformInvocationId = 1;
+let nextSoundPlayCallId = 1;
+let nextCslEnqueueId = 1;
+let cslRequestTableCacheByManager = {};
+let pendingCslEnqueueByKey = {};
+let pendingCslEnqueueKeyBySlot = {};
 let hookStaticMatchByKey = {};
+let hookStatusByKey = {};
 let activeSoundAccessors = {};
 let activeSoundAccessorStatus = {};
 let lastCslMngPointer = null;
@@ -125,6 +253,21 @@ let lastCslMngPointerObservedMs = null;
 let cslCalcSnapshotAddress = null;
 let cslCalcSnapshotStatus = { status: "not_initialized" };
 let activeSnapshotRequestInFlight = false;
+let soundPackGateIds = {};
+let soundPackPreGateStatus = { status: "not_initialized" };
+let lastSoundPackPreGateSignatureByKey = {};
+let gameProcIdentityStatus = { status: "not_initialized" };
+let gameProcDerivedBase = null;
+let sdGmDataAccessor = null;
+let sdGmDataAccessorStatus = { status: "not_initialized" };
+let bgmUpstreamWindowActive = false;
+let bgmUpstreamWindowLabel = "";
+let bgmUpstreamWindowEpoch = 0;
+let bgmUpstreamWindowEventCount = 0;
+let bgmUpstreamWindowDroppedCount = 0;
+let bgmUpstreamWindowOverflowEmitted = false;
+let bgmUpstreamSignatureByHook = {};
+let nextBgmUpstreamCallId = 1;
 
 function emit(kind, fields) {
   eventCountByKind[kind] = (eventCountByKind[kind] || 0) + 1;
@@ -500,6 +643,86 @@ function activePerformForCurrentThread() {
   return stack.length > 0 ? stack[stack.length - 1] : null;
 }
 
+function activeSoundPlayForCurrentThread() {
+  const key = String(Process.getCurrentThreadId());
+  const stack = activeSoundPlayStackByThread[key] || [];
+  return stack.length > 0 ? stack[stack.length - 1] : null;
+}
+
+function cslSoundDataTable(cslMngPointer) {
+  const managerKey = cslMngPointer.toString();
+  const begin = readPointerSafe(cslMngPointer, CSL_SOUND_DATA_TABLE_BEGIN_OFFSET);
+  const end = readPointerSafe(cslMngPointer, CSL_SOUND_DATA_TABLE_END_OFFSET);
+  const byteLength = pointerDistance(end, begin);
+  const signature = [pointerText(begin), pointerText(end), byteLength].join(":");
+  const cached = cslRequestTableCacheByManager[managerKey];
+  if (cached && cached.signature === signature) {
+    return cached;
+  }
+  const result = {
+    signature,
+    valid: false,
+    error: "",
+    begin_pointer: pointerText(begin),
+    end_pointer: pointerText(end),
+    byte_length: byteLength,
+    row_count: null,
+    by_id: {},
+  };
+  if (
+    begin === null
+    || end === null
+    || byteLength === null
+    || byteLength < 0
+    || byteLength % CSL_SOUND_DATA_ENTRY_STRIDE !== 0
+    || !readableSpan(begin, byteLength)
+  ) {
+    result.error = "sound data table failed bounded layout validation";
+    cslRequestTableCacheByManager[managerKey] = result;
+    return result;
+  }
+  const rowCount = Math.floor(byteLength / CSL_SOUND_DATA_ENTRY_STRIDE);
+  result.row_count = rowCount;
+  if (rowCount > MAX_CSL_SOUND_DATA_TABLE_ROWS) {
+    result.error = "sound data table exceeds defensive row cap";
+    cslRequestTableCacheByManager[managerKey] = result;
+    return result;
+  }
+  for (let index = 0; index < rowCount; index += 1) {
+    const entry = begin.add(index * CSL_SOUND_DATA_ENTRY_STRIDE);
+    const soundResourceId = readU16Safe(entry, CSL_SOUND_DATA_ENTRY_ID_OFFSET);
+    const slotIndex = readU16Safe(entry, CSL_SOUND_DATA_ENTRY_SLOT_OFFSET);
+    if (soundResourceId === null || slotIndex === null) {
+      result.error = "sound data table row read failed";
+      cslRequestTableCacheByManager[managerKey] = result;
+      return result;
+    }
+    const idKey = String(soundResourceId);
+    if (Object.prototype.hasOwnProperty.call(result.by_id, idKey)) {
+      result.error = "sound data table contains duplicate resource ID";
+      cslRequestTableCacheByManager[managerKey] = result;
+      return result;
+    }
+    result.by_id[idKey] = {
+      row_index: index,
+      sound_resource_id_u16: soundResourceId,
+      slot_index_u16: slotIndex,
+      sound_data_pointer: entry,
+    };
+  }
+  result.valid = true;
+  cslRequestTableCacheByManager[managerKey] = result;
+  return result;
+}
+
+function cslPendingEnqueueKey(cslMngPointer, slotIndex, soundDataPointer) {
+  return [cslMngPointer.toString(), slotIndex, soundDataPointer.toString()].join(":");
+}
+
+function cslPendingSlotKey(cslMngPointer, slotIndex) {
+  return [cslMngPointer.toString(), slotIndex].join(":");
+}
+
 function describeReqOrder(playerPointer, reqOrderPointer) {
   const functionType = readU32Safe(reqOrderPointer, 0x50);
   const playerChannelRaw = readS32Safe(playerPointer, 0x42a4);
@@ -528,40 +751,492 @@ function findExport(symbol) {
   }
 }
 
+function verifyGameProcIdentity() {
+  const anchorAddress = findExport(SDGM_ACCESSOR_SYMBOL);
+  if (anchorAddress === null) {
+    gameProcIdentityStatus = {
+      status: "anchor_symbol_unavailable",
+      anchor_symbol: SDGM_ACCESSOR_SYMBOL,
+      expected_anchor_offset: SDGM_ACCESSOR_EXPECTED_OFFSET,
+      read_only_verification: true,
+    };
+    emit("sound_logic_game_proc_identity_unavailable", gameProcIdentityStatus);
+    return;
+  }
+
+  const anchorLocation = describeAddress(anchorAddress);
+  const expectedAnchorOffset = parseInt(SDGM_ACCESSOR_EXPECTED_OFFSET, 16);
+  const derivedBase = anchorAddress.sub(expectedAnchorOffset);
+  const containerNameMatches =
+    anchorLocation.module === STATIC_REFERENCE.arm64_apk_module;
+  const containerPathMatches = String(anchorLocation.module_path || "").endsWith(
+    "/" + STATIC_REFERENCE.arm64_apk_module
+  );
+  const reportedOffsetMatches =
+    normalizeHex(anchorLocation.module_offset) === normalizeHex(SDGM_ACCESSOR_EXPECTED_OFFSET);
+  let reportedBaseMatchesDerived = false;
+  let reportedContainerBase = null;
+  try {
+    const moduleValue = Process.findModuleByAddress(anchorAddress);
+    reportedContainerBase = moduleValue === null ? null : moduleValue.base.toString();
+    reportedBaseMatchesDerived = moduleValue !== null && moduleValue.base.equals(derivedBase);
+  } catch (_) {
+    reportedBaseMatchesDerived = false;
+  }
+
+  const elfHeader = {
+    magic_u32_le_at_0x00: readU32Safe(derivedBase, 0x00),
+    class_u8_at_0x04: readU8Safe(derivedBase, 0x04),
+    data_encoding_u8_at_0x05: readU8Safe(derivedBase, 0x05),
+    machine_u16_at_0x12: readU16Safe(derivedBase, 0x12),
+  };
+  const elfHeaderMatches =
+    elfHeader.magic_u32_le_at_0x00 === 0x464c457f
+    && elfHeader.class_u8_at_0x04 === 2
+    && elfHeader.data_encoding_u8_at_0x05 === 1
+    && elfHeader.machine_u16_at_0x12 === 183;
+
+  const identityKeys = [
+    "kndCalLotCcDirEnd",
+    "kndCalLotRlStart",
+    "mstComCbkUpdateGmData",
+    "anmBaseDataSetDir",
+    "objNmlSndRequestBgmDir",
+  ];
+  const exportChecks = [];
+  let allExportChecksMatch = true;
+  for (const key of identityKeys) {
+    const spec = SYMBOLS[key];
+    const address = findExport(spec.name);
+    const location = describeAddress(address);
+    const actualOffset = address === null
+      ? ""
+      : normalizeHex(address.sub(derivedBase).toString());
+    const expectedOffset = normalizeHex(spec.expectedOffset);
+    const check = {
+      hook_key: key,
+      symbol: spec.name,
+      address: address === null ? null : address.toString(),
+      container_module: location.module || "",
+      container_path: location.module_path || "",
+      actual_derived_elf_offset: actualOffset,
+      expected_elf_offset: expectedOffset,
+      offset_matches: actualOffset === expectedOffset,
+      same_apk_container:
+        location.module === anchorLocation.module
+        && location.module_path === anchorLocation.module_path,
+    };
+    if (!check.offset_matches || !check.same_apk_container) {
+      allExportChecksMatch = false;
+    }
+    exportChecks.push(check);
+  }
+
+  const mappingMatches =
+    containerNameMatches
+    && containerPathMatches
+    && reportedOffsetMatches
+    && reportedBaseMatchesDerived
+    && elfHeaderMatches
+    && allExportChecksMatch;
+  gameProcDerivedBase = mappingMatches ? derivedBase : null;
+  gameProcIdentityStatus = {
+    status: mappingMatches ? "ready" : "apk_backed_mapping_mismatch",
+    mapping_kind: "apk_backed_uncompressed_elf",
+    logical_library_name: STATIC_REFERENCE.game_proc_logical_name,
+    container_module: anchorLocation.module || "",
+    container_path: anchorLocation.module_path || "",
+    expected_container_module: STATIC_REFERENCE.arm64_apk_module,
+    container_name_matches: containerNameMatches,
+    container_path_matches: containerPathMatches,
+    reported_container_base: reportedContainerBase,
+    derived_elf_base: derivedBase.toString(),
+    reported_base_matches_derived: reportedBaseMatchesDerived,
+    anchor_symbol: SDGM_ACCESSOR_SYMBOL,
+    anchor_address: anchorAddress.toString(),
+    actual_anchor_derived_elf_offset: normalizeHex(
+      anchorAddress.sub(derivedBase).toString()
+    ),
+    expected_anchor_offset: normalizeHex(SDGM_ACCESSOR_EXPECTED_OFFSET),
+    reported_anchor_module_offset: normalizeHex(anchorLocation.module_offset),
+    anchor_offset_matches: reportedOffsetMatches,
+    elf_header: elfHeader,
+    elf_header_matches_aarch64: elfHeaderMatches,
+    export_checks: exportChecks,
+    all_export_checks_match: allExportChecksMatch,
+    installed_container_identity_required_from_host: true,
+    expected_container_sha256: STATIC_REFERENCE.arm64_apk_sha256,
+    expected_container_size_bytes: STATIC_REFERENCE.arm64_apk_size_bytes,
+    bound_apk_entry: {
+      path: STATIC_REFERENCE.game_proc_apk_entry,
+      compression_method: STATIC_REFERENCE.game_proc_apk_entry_compression_method,
+      crc32: STATIC_REFERENCE.game_proc_apk_entry_crc32,
+      local_header_offset: STATIC_REFERENCE.game_proc_apk_entry_header_offset,
+      data_offset: STATIC_REFERENCE.game_proc_apk_entry_data_offset,
+      compressed_size_bytes: STATIC_REFERENCE.game_proc_size_bytes,
+      uncompressed_size_bytes: STATIC_REFERENCE.game_proc_size_bytes,
+      expected_uncompressed_sha256: STATIC_REFERENCE.game_proc_sha256,
+    },
+    read_only_verification: true,
+  };
+  emit(
+    gameProcIdentityStatus.status === "ready"
+      ? "sound_logic_game_proc_identity_ready"
+      : "sound_logic_game_proc_identity_unavailable",
+    gameProcIdentityStatus
+  );
+}
+
+function prepareSdGmDataAccessor() {
+  if (gameProcIdentityStatus.status !== "ready") {
+    sdGmDataAccessorStatus = {
+      status: "game_proc_identity_not_ready",
+      symbol: SDGM_ACCESSOR_SYMBOL,
+      expected_module_offset: SDGM_ACCESSOR_EXPECTED_OFFSET,
+      read_only_accessor: true,
+    };
+    return;
+  }
+  const address = findExport(SDGM_ACCESSOR_SYMBOL);
+  if (address === null) {
+    sdGmDataAccessorStatus = {
+      status: "symbol_unavailable",
+      symbol: SDGM_ACCESSOR_SYMBOL,
+      expected_module_offset: SDGM_ACCESSOR_EXPECTED_OFFSET,
+      read_only_accessor: true,
+    };
+    return;
+  }
+  const location = describeAddress(address);
+  const actualOffset = gameProcDerivedBase === null
+    ? ""
+    : normalizeHex(address.sub(gameProcDerivedBase).toString());
+  const expectedOffset = normalizeHex(SDGM_ACCESSOR_EXPECTED_OFFSET);
+  if (
+    location.module !== gameProcIdentityStatus.container_module
+    || location.module_path !== gameProcIdentityStatus.container_path
+    || actualOffset !== expectedOffset
+  ) {
+    sdGmDataAccessorStatus = {
+      status: "static_reference_mismatch",
+      symbol: SDGM_ACCESSOR_SYMBOL,
+      module: location.module || "",
+      module_path: location.module_path || "",
+      derived_elf_base: gameProcDerivedBase === null
+        ? null
+        : gameProcDerivedBase.toString(),
+      offset_basis: "known_export_minus_derived_game_proc_elf_base",
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+      module_offset_matches_static_reference: actualOffset === expectedOffset,
+      read_only_accessor: true,
+    };
+    return;
+  }
+  try {
+    sdGmDataAccessor = new NativeFunction(address, "pointer", []);
+    sdGmDataAccessorStatus = {
+      status: "ready",
+      symbol: SDGM_ACCESSOR_SYMBOL,
+      module: location.module,
+      module_path: location.module_path,
+      derived_elf_base: gameProcDerivedBase.toString(),
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+      module_offset_matches_static_reference: true,
+      read_only_accessor: true,
+    };
+  } catch (error) {
+    sdGmDataAccessor = null;
+    sdGmDataAccessorStatus = {
+      status: "native_function_error",
+      symbol: SDGM_ACCESSOR_SYMBOL,
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+      read_only_accessor: true,
+      error: String(error),
+    };
+  }
+}
+
 function installHook(key, callbacks) {
   const spec = SYMBOLS[key];
+  if (spec.requiresGameProcIdentity && gameProcIdentityStatus.status !== "ready") {
+    hookStaticMatchByKey[key] = false;
+    hookStatusByKey[key] = {
+      status: "game_proc_identity_not_ready",
+      hook_key: key,
+      symbol: spec.name,
+      expected_module_offset: normalizeHex(spec.expectedOffset),
+      expected_game_proc_sha256: STATIC_REFERENCE.game_proc_sha256,
+      game_proc_identity_status: gameProcIdentityStatus.status,
+    };
+    emit("sound_logic_hook_unavailable", hookStatusByKey[key]);
+    return null;
+  }
   const address = findExport(spec.name);
   if (address === null) {
     hookStaticMatchByKey[key] = false;
-    emit("sound_logic_hook_unavailable", { hook_key: key, symbol: spec.name });
+    hookStatusByKey[key] = {
+      status: "symbol_unavailable",
+      hook_key: key,
+      symbol: spec.name,
+      expected_module_offset: normalizeHex(spec.expectedOffset),
+    };
+    emit("sound_logic_hook_unavailable", hookStatusByKey[key]);
     return null;
   }
   const location = describeAddress(address);
-  const actualOffset = normalizeHex(location.module_offset);
+  const actualOffset = spec.requiresGameProcIdentity
+    ? gameProcDerivedBase === null
+      ? ""
+      : normalizeHex(address.sub(gameProcDerivedBase).toString())
+    : normalizeHex(location.module_offset);
   const expectedOffset = normalizeHex(spec.expectedOffset);
-  hookStaticMatchByKey[key] = actualOffset === expectedOffset;
-  try {
-    const listener = Interceptor.attach(address, callbacks);
-    emit("sound_logic_hook_installed", {
+  const identityModuleMatches = !spec.requiresGameProcIdentity || (
+    location.module === gameProcIdentityStatus.container_module
+    && location.module_path === gameProcIdentityStatus.container_path
+    && gameProcDerivedBase !== null
+  );
+  hookStaticMatchByKey[key] = actualOffset === expectedOffset && identityModuleMatches;
+  if (actualOffset !== expectedOffset || !identityModuleMatches) {
+    hookStatusByKey[key] = {
+      status: "static_reference_mismatch",
       hook_key: key,
       symbol: spec.name,
       address: address.toString(),
       module: location.module || "",
       module_path: location.module_path || "",
+      derived_elf_base: spec.requiresGameProcIdentity
+        ? gameProcDerivedBase === null ? null : gameProcDerivedBase.toString()
+        : null,
+      offset_basis: spec.requiresGameProcIdentity
+        ? "known_export_minus_derived_game_proc_elf_base"
+        : "frida_reported_module_base",
       actual_module_offset: actualOffset,
       expected_module_offset: expectedOffset,
       module_offset_matches_static_reference: actualOffset === expectedOffset,
-    });
+      module_identity_matches_static_reference: identityModuleMatches,
+    };
+    emit("sound_logic_hook_unavailable", hookStatusByKey[key]);
+    return null;
+  }
+  try {
+    const listener = Interceptor.attach(address, callbacks);
+    hookStatusByKey[key] = {
+      status: "installed",
+      hook_key: key,
+      symbol: spec.name,
+      address: address.toString(),
+      module: location.module || "",
+      module_path: location.module_path || "",
+      derived_elf_base: spec.requiresGameProcIdentity
+        ? gameProcDerivedBase.toString()
+        : null,
+      offset_basis: spec.requiresGameProcIdentity
+        ? "known_export_minus_derived_game_proc_elf_base"
+        : "frida_reported_module_base",
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+      module_offset_matches_static_reference: true,
+      module_identity_matches_static_reference: identityModuleMatches,
+    };
+    emit("sound_logic_hook_installed", hookStatusByKey[key]);
     return listener;
   } catch (error) {
     hookStaticMatchByKey[key] = false;
-    emit("sound_logic_hook_attach_error", {
+    hookStatusByKey[key] = {
+      status: "attach_error",
       hook_key: key,
       symbol: spec.name,
       address: address.toString(),
       error: String(error),
-    });
+    };
+    emit("sound_logic_hook_attach_error", hookStatusByKey[key]);
     return null;
+  }
+}
+
+function prepareSoundPackPreGateHook() {
+  const spec = SYMBOLS.soundMngChangeVolume;
+  const address = findExport(spec.name);
+  if (address === null) {
+    soundPackPreGateStatus = {
+      status: "unavailable",
+      symbol: spec.name,
+      expected_module_offset: normalizeHex(spec.expectedOffset),
+    };
+    emit("sound_logic_sound_pack_pre_gate_unavailable", soundPackPreGateStatus);
+    return;
+  }
+  const location = describeAddress(address);
+  const actualOffset = normalizeHex(location.module_offset);
+  const expectedOffset = normalizeHex(spec.expectedOffset);
+  const moduleValue = Process.findModuleByAddress(address);
+  if (moduleValue === null || actualOffset !== expectedOffset) {
+    soundPackPreGateStatus = {
+      status: "static_reference_mismatch",
+      symbol: spec.name,
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+    };
+    emit("sound_logic_sound_pack_pre_gate_unavailable", soundPackPreGateStatus);
+    return;
+  }
+  const table = moduleValue.base.add(SOUND_PACK_GATE_TABLE_OFFSET);
+  const tableBytes = SOUND_PACK_GATE_ENTRY_COUNT * 4;
+  if (!readableSpan(table, tableBytes)) {
+    soundPackPreGateStatus = {
+      status: "gate_table_unreadable",
+      table_address: table.toString(),
+      table_byte_length: tableBytes,
+    };
+    emit("sound_logic_sound_pack_pre_gate_unavailable", soundPackPreGateStatus);
+    return;
+  }
+  const ids = [];
+  const seen = {};
+  let strictlyIncreasing = true;
+  for (let index = 0; index < SOUND_PACK_GATE_ENTRY_COUNT; index += 1) {
+    const soundId = table.add(index * 4).readU32();
+    if (index > 0 && soundId <= ids[index - 1]) {
+      strictlyIncreasing = false;
+    }
+    ids.push(soundId);
+    seen[String(soundId)] = true;
+  }
+  const keyChecks = Object.keys(SOUND_PACK_REFERENCE_KEYS).map((rawIndex) => {
+    const index = Number(rawIndex);
+    const expected = SOUND_PACK_REFERENCE_KEYS[index];
+    return { index, expected, actual: ids[index], matches: ids[index] === expected };
+  });
+  if (!strictlyIncreasing || !keyChecks.every((row) => row.matches)) {
+    soundPackPreGateStatus = {
+      status: "gate_table_reference_mismatch",
+      strictly_increasing_unique: strictlyIncreasing,
+      key_checks: keyChecks,
+    };
+    emit("sound_logic_sound_pack_pre_gate_unavailable", soundPackPreGateStatus);
+    return;
+  }
+  soundPackGateIds = seen;
+  try {
+    Interceptor.attach(address, {
+      onEnter(args) {
+        const soundId = toI32(args[1]);
+        if (soundId === null || soundPackGateIds[String(soundId)] !== true) {
+          return;
+        }
+        const volumeIndex = toI32(args[2]);
+        const categoryMap = readPointerSafe(
+          moduleValue.base.add(SOUND_PACK_CATEGORY_MAP_POINTER_SLOT_OFFSET),
+          0
+        );
+        const addonInstance = readPointerSafe(
+          moduleValue.base.add(SOUND_PACK_ADDON_POINTER_SLOT_OFFSET),
+          0
+        );
+        const volumeClass = categoryMap === null || !readable(categoryMap)
+          ? null
+          : readU8Safe(categoryMap, soundId);
+        const classVolume = volumeClass === null || volumeClass > 2
+          ? null
+          : readU16Safe(args[0], volumeClass * 2);
+        const indexedVolume = volumeIndex === null || volumeIndex < 0 || volumeIndex > 63
+          ? null
+          : readU16Safe(
+              args[0],
+              SOUND_MNG_INDEXED_VOLUME_BASE_OFFSET + volumeIndex * 2
+            );
+        const masterVolume = readU16Safe(args[0], SOUND_MNG_MASTER_VOLUME_OFFSET);
+        const activeAddon = addonInstance === null || !readable(addonInstance)
+          ? null
+          : readU32Safe(addonInstance, SOUND_PACK_ACTIVE_ADDON_OFFSET);
+        const stageVolume = classVolume === null || indexedVolume === null
+          ? null
+          : Math.floor((classVolume * indexedVolume) / 100);
+        const authorizedFinalVolume = stageVolume === null || masterVolume === null
+          ? null
+          : Math.floor((stageVolume * masterVolume) / 100);
+        const caller = callerFields(this.returnAddress);
+        const callerOffset = caller.return_module_offset || "";
+        const directRequestCall =
+          callerOffset === "0x425f160" || callerOffset === "0x425f31c";
+        const signature = [
+          activeAddon,
+          volumeClass,
+          classVolume,
+          indexedVolume,
+          masterVolume,
+          stageVolume,
+          authorizedFinalVolume,
+        ].join(":");
+        const signatureKey = [soundId, volumeIndex, callerOffset].join(":");
+        const previousSignature = lastSoundPackPreGateSignatureByKey[signatureKey];
+        if (!directRequestCall && previousSignature === signature) {
+          return;
+        }
+        lastSoundPackPreGateSignatureByKey[signatureKey] = signature;
+        emit(
+          "sound_logic_sound_pack_pre_gate_volume",
+          Object.assign(
+            {
+              sound_mng_pointer: args[0].toString(),
+              sound_resource_id_i32: soundId,
+              volume_index_i32: volumeIndex,
+              sound_pack_gate_member_static: true,
+              sound_pack_active_u32: activeAddon,
+              volume_class_u8: volumeClass,
+              class_volume_u16: classVolume,
+              indexed_volume_u16: indexedVolume,
+              master_volume_u16: masterVolume,
+              pre_gate_stage_volume_i32: stageVolume,
+              authorized_final_volume_i32: authorizedFinalVolume,
+              current_gate_will_zero: activeAddon === 0,
+              reconstruction_complete:
+                volumeClass !== null
+                && volumeClass <= 2
+                && stageVolume !== null
+                && authorizedFinalVolume !== null,
+              reconstruction_basis:
+                "changeVolume_arm64_integer_percent_chain_before_entitlement_zero",
+              emission_reason: directRequestCall
+                ? "direct_sound_request_call"
+                : previousSignature === undefined
+                ? "first_observed_volume_control_state"
+                : "volume_control_state_changed",
+              repeated_unchanged_volume_control_calls_suppressed: true,
+            },
+            caller
+          )
+        );
+      },
+    });
+    soundPackPreGateStatus = {
+      status: "ready",
+      symbol: spec.name,
+      address: address.toString(),
+      module: moduleValue.name,
+      module_path: moduleValue.path,
+      actual_module_offset: actualOffset,
+      expected_module_offset: expectedOffset,
+      module_offset_matches_static_reference: true,
+      gate_table_address: table.toString(),
+      gate_table_offset: "0x" + SOUND_PACK_GATE_TABLE_OFFSET.toString(16),
+      gate_table_entry_count: ids.length,
+      gate_table_strictly_increasing_unique: strictlyIncreasing,
+      gate_table_key_checks: keyChecks,
+      read_only_observer: true,
+      repeated_unchanged_volume_control_calls_suppressed: true,
+    };
+    emit("sound_logic_sound_pack_pre_gate_ready", soundPackPreGateStatus);
+  } catch (error) {
+    soundPackPreGateStatus = {
+      status: "attach_error",
+      symbol: spec.name,
+      error: String(error),
+    };
+    emit("sound_logic_sound_pack_pre_gate_unavailable", soundPackPreGateStatus);
   }
 }
 
@@ -1156,8 +1831,11 @@ function installPerformRequestHook() {
     onEnter(args) {
       const order = describeReqOrder(args[0], args[2]);
       const orderRequestId = order.raw_u32_at_0x28;
+      const performInvocationId = nextPerformInvocationId;
+      nextPerformInvocationId += 1;
       const fields = Object.assign(
         {
+          perform_invocation_id: performInvocationId,
           request_ctrl_pointer: args[1].toString(),
           perform_arg3_bool: (toU32(args[3]) & 1) !== 0,
           order_request_id_u32: orderRequestId,
@@ -1191,14 +1869,20 @@ function installSoundMngPlayRequestHook() {
     onEnter(args) {
       const soundResourceId = toI32(args[1]);
       const activePerform = activePerformForCurrentThread();
+      const playRequestCallId = nextSoundPlayCallId;
+      nextSoundPlayCallId += 1;
       this.fields = Object.assign(
         {
+          play_request_call_id: playRequestCallId,
           sound_mng_pointer: args[0].toString(),
           sound_resource_id_i32: soundResourceId,
           play_index_or_bank_i32: toI32(args[2]),
           request_arg3_i32: toI32(args[3]),
           perform_order_request_id_u32: activePerform
             ? activePerform.order_request_id_u32
+            : null,
+          perform_invocation_id: activePerform
+            ? activePerform.perform_invocation_id
             : null,
           perform_order_code: activePerform ? activePerform.order_code : "",
           perform_function_type_name: activePerform
@@ -1213,6 +1897,11 @@ function installSoundMngPlayRequestHook() {
         },
         callerFields(this.returnAddress)
       );
+      const threadKey = String(Process.getCurrentThreadId());
+      const stack = activeSoundPlayStackByThread[threadKey] || [];
+      stack.push(this.fields);
+      activeSoundPlayStackByThread[threadKey] = stack;
+      this.soundPlayThreadKey = threadKey;
       emit("sound_logic_sound_mng_snd_play_req_enter", this.fields);
     },
     onLeave(retval) {
@@ -1220,6 +1909,136 @@ function installSoundMngPlayRequestHook() {
         "sound_logic_sound_mng_snd_play_req_leave",
         Object.assign({}, this.fields, { return_i32: toI32(retval) })
       );
+      const stack = activeSoundPlayStackByThread[this.soundPlayThreadKey] || [];
+      if (stack.length > 0) {
+        stack.pop();
+      }
+      if (stack.length === 0) {
+        delete activeSoundPlayStackByThread[this.soundPlayThreadKey];
+      }
+    },
+  });
+}
+
+function installCslSndReqHook() {
+  installHook("cslMngSndReq", {
+    onEnter(args) {
+      rememberCslMngPointer(args[0], "cslMngSndReq");
+      const activeSoundPlay = activeSoundPlayForCurrentThread();
+      this.cslMngPointer = args[0];
+      this.requestedSoundResourceId = toI32(args[1]);
+      this.requestMode = toI32(args[2]);
+      this.caller = callerFields(this.returnAddress);
+      this.enqueueId = nextCslEnqueueId;
+      nextCslEnqueueId += 1;
+      this.activeSoundPlay = activeSoundPlay;
+    },
+    onLeave() {
+      const table = cslSoundDataTable(this.cslMngPointer);
+      const entry = table.valid && this.requestMode !== 1
+        ? table.by_id[String(this.requestedSoundResourceId)] || null
+        : null;
+      let pendingPointer = null;
+      let slotPointer = null;
+      let enqueueCommitted = false;
+      let replacedEnqueueId = null;
+      let enqueueKey = "";
+      if (entry !== null) {
+        const activeBegin = readPointerSafe(
+          this.cslMngPointer,
+          CSL_ACTIVE_VECTOR_BEGIN_OFFSET
+        );
+        const activeEnd = readPointerSafe(
+          this.cslMngPointer,
+          CSL_ACTIVE_VECTOR_END_OFFSET
+        );
+        const activeByteLength = pointerDistance(activeEnd, activeBegin);
+        const activeRowCount = activeByteLength !== null
+          && activeByteLength >= 0
+          && activeByteLength % CSL_ACTIVE_SLOT_STRIDE === 0
+          ? Math.floor(activeByteLength / CSL_ACTIVE_SLOT_STRIDE)
+          : -1;
+        if (
+          activeBegin !== null
+          && activeEnd !== null
+          && activeRowCount >= 0
+          && entry.slot_index_u16 < activeRowCount
+          && readableSpan(activeBegin, activeByteLength)
+        ) {
+          slotPointer = activeBegin.add(
+            entry.slot_index_u16 * CSL_ACTIVE_SLOT_STRIDE
+          );
+          pendingPointer = readPointerSafe(
+            slotPointer,
+            CSL_PENDING_SOUND_DATA_SLOT_OFFSET
+          );
+          enqueueCommitted = pendingPointer !== null
+            && pendingPointer.equals(entry.sound_data_pointer);
+        }
+      }
+      const activeSoundPlay = this.activeSoundPlay;
+      const fields = Object.assign(
+        {
+          csl_enqueue_id: this.enqueueId,
+          csl_mng_pointer: this.cslMngPointer.toString(),
+          requested_sound_resource_id_i32: this.requestedSoundResourceId,
+          request_mode_i32: this.requestMode,
+          callback_remap_possible: this.requestMode === 1,
+          request_table_valid: table.valid,
+          request_table_error: table.error,
+          request_table_begin_pointer: table.begin_pointer,
+          request_table_end_pointer: table.end_pointer,
+          request_table_byte_length: table.byte_length,
+          request_table_row_count: table.row_count,
+          request_table_row_index: entry ? entry.row_index : null,
+          request_table_entry_sound_resource_id_u16: entry
+            ? entry.sound_resource_id_u16
+            : null,
+          request_table_entry_slot_index_u16: entry ? entry.slot_index_u16 : null,
+          sound_data_pointer: entry ? entry.sound_data_pointer.toString() : null,
+          active_slot_pointer: pointerText(slotPointer),
+          pending_sound_data_pointer_after_request: pointerText(pendingPointer),
+          enqueue_committed: enqueueCommitted,
+          play_request_call_id: activeSoundPlay
+            ? activeSoundPlay.play_request_call_id
+            : null,
+          perform_invocation_id: activeSoundPlay
+            ? activeSoundPlay.perform_invocation_id
+            : null,
+          perform_order_request_id_u32: activeSoundPlay
+            ? activeSoundPlay.perform_order_request_id_u32
+            : null,
+          perform_order_code: activeSoundPlay ? activeSoundPlay.perform_order_code : "",
+          causal_association_basis: activeSoundPlay
+            ? "nested_within_sound_mng_snd_play_req"
+            : "none",
+        },
+        this.caller
+      );
+      if (enqueueCommitted) {
+        enqueueKey = cslPendingEnqueueKey(
+          this.cslMngPointer,
+          entry.slot_index_u16,
+          entry.sound_data_pointer
+        );
+        const slotKey = cslPendingSlotKey(
+          this.cslMngPointer,
+          entry.slot_index_u16
+        );
+        const previousEnqueueKey = pendingCslEnqueueKeyBySlot[slotKey] || "";
+        const replaced = previousEnqueueKey
+          ? pendingCslEnqueueByKey[previousEnqueueKey] || null
+          : null;
+        replacedEnqueueId = replaced ? replaced.csl_enqueue_id : null;
+        if (previousEnqueueKey) {
+          delete pendingCslEnqueueByKey[previousEnqueueKey];
+        }
+        pendingCslEnqueueByKey[enqueueKey] = Object.assign({}, fields);
+        pendingCslEnqueueKeyBySlot[slotKey] = enqueueKey;
+      }
+      fields.pending_enqueue_key = enqueueKey;
+      fields.replaced_pending_csl_enqueue_id = replacedEnqueueId;
+      emit("sound_logic_csl_mng_snd_req_enqueue", fields);
     },
   });
 }
@@ -1241,18 +2060,349 @@ function installCslPlayStartHook() {
     onEnter(args) {
       rememberCslMngPointer(args[0], "cslMngPlayStart");
       const sound = describeSoundData(args[1]);
+      const playIndex = toI32(args[2]);
+      const enqueueKey = playIndex === null || args[1].isNull()
+        ? ""
+        : cslPendingEnqueueKey(args[0], playIndex, args[1]);
+      const pendingEnqueue = enqueueKey
+        ? pendingCslEnqueueByKey[enqueueKey] || null
+        : null;
+      if (pendingEnqueue !== null) {
+        delete pendingCslEnqueueByKey[enqueueKey];
+        const slotKey = cslPendingSlotKey(args[0], playIndex);
+        if (pendingCslEnqueueKeyBySlot[slotKey] === enqueueKey) {
+          delete pendingCslEnqueueKeyBySlot[slotKey];
+        }
+      }
+      const activeSoundPlay = activeSoundPlayForCurrentThread();
       emit(
         "sound_logic_csl_mng_play_start",
         Object.assign(
           {
             csl_mng_pointer: args[0].toString(),
-            play_index_i32: toI32(args[2]),
+            play_index_i32: playIndex,
             sound,
-            causal_request_context: null,
-            causal_association_basis: "none_static_sound_id_join_required",
+            causal_csl_enqueue_id: pendingEnqueue
+              ? pendingEnqueue.csl_enqueue_id
+              : null,
+            causal_play_request_call_id: pendingEnqueue
+              ? pendingEnqueue.play_request_call_id
+              : activeSoundPlay
+              ? activeSoundPlay.play_request_call_id
+              : null,
+            causal_sound_resource_id_i32: pendingEnqueue
+              ? pendingEnqueue.requested_sound_resource_id_i32
+              : activeSoundPlay
+              ? activeSoundPlay.sound_resource_id_i32
+              : null,
+            causal_perform_invocation_id: pendingEnqueue
+              ? pendingEnqueue.perform_invocation_id
+              : activeSoundPlay
+              ? activeSoundPlay.perform_invocation_id
+              : null,
+            causal_perform_order_request_id_u32: pendingEnqueue
+              ? pendingEnqueue.perform_order_request_id_u32
+              : activeSoundPlay
+              ? activeSoundPlay.perform_order_request_id_u32
+              : null,
+            causal_perform_order_code: pendingEnqueue
+              ? pendingEnqueue.perform_order_code
+              : activeSoundPlay
+              ? activeSoundPlay.perform_order_code
+              : "",
+            causal_request_table_row_index: pendingEnqueue
+              ? pendingEnqueue.request_table_row_index
+              : null,
+            causal_association_basis: pendingEnqueue
+              ? "same_csl_slot_and_pending_sound_data_pointer_written_by_snd_req_then_consumed_by_calc"
+              : activeSoundPlay
+              ? "nested_within_sound_mng_snd_play_req"
+              : "none_static_sound_id_join_required",
           },
           callerFields(this.returnAddress)
         )
+      );
+    },
+  });
+}
+
+function currentSdGmDataPointer() {
+  if (sdGmDataAccessor === null || sdGmDataAccessorStatus.status !== "ready") {
+    return null;
+  }
+  try {
+    return sdGmDataAccessor();
+  } catch (_) {
+    return null;
+  }
+}
+
+function snapshotSdGmData(pointerValue) {
+  return {
+    current_kind_u16_at_0x13da: readU16Safe(pointerValue, 0x13da),
+    next_kind_u16_at_0x13dc: readU16Safe(pointerValue, 0x13dc),
+    current_no_u16_at_0x13de: readU16Safe(pointerValue, 0x13de),
+    next_no_u16_at_0x13e0: readU16Safe(pointerValue, 0x13e0),
+    restore_state_u16_at_0x1472: readU16Safe(pointerValue, 0x1472),
+    saved_kind_u16_at_0x1474: readU16Safe(pointerValue, 0x1474),
+    saved_no_u16_at_0x149a: readU16Safe(pointerValue, 0x149a),
+  };
+}
+
+function snapshotMstComCbkCommit(pointerValue) {
+  return {
+    committed_kind_u16_at_0x0a72: readU16Safe(pointerValue, 0xa72),
+    committed_no_u16_at_0x0a76: readU16Safe(pointerValue, 0xa76),
+  };
+}
+
+function snapshotObjNmlBgm(pointerValue) {
+  const cachedCodePointer = readPointerSafe(pointerValue, 0x800);
+  const cachedCode = readCStringSafe(cachedCodePointer, 64);
+  return {
+    direction_kind_u16_at_0x00ca: readU16Safe(pointerValue, 0xca),
+    direction_no_u16_at_0x011a: readU16Safe(pointerValue, 0x11a),
+    cached_code_pointer_at_0x0800: pointerText(cachedCodePointer),
+    cached_code_string_at_0x0800: cachedCode.text_utf8,
+    cached_code_text_error_at_0x0800: cachedCode.text_error,
+  };
+}
+
+function changedSnapshotFields(entry, leave) {
+  const keys = {};
+  for (const key of Object.keys(entry || {})) {
+    keys[key] = true;
+  }
+  for (const key of Object.keys(leave || {})) {
+    keys[key] = true;
+  }
+  return Object.keys(keys).filter(
+    (key) => JSON.stringify((entry || {})[key]) !== JSON.stringify((leave || {})[key])
+  );
+}
+
+function beginBgmUpstreamWindow(label) {
+  bgmUpstreamWindowEpoch += 1;
+  bgmUpstreamWindowActive = true;
+  bgmUpstreamWindowLabel = String(label || "").slice(0, 128);
+  bgmUpstreamWindowEventCount = 0;
+  bgmUpstreamWindowDroppedCount = 0;
+  bgmUpstreamWindowOverflowEmitted = false;
+  bgmUpstreamSignatureByHook = {};
+  return {
+    schema: "magireco-target-bgm-upstream-window-v1",
+    active: true,
+    label: bgmUpstreamWindowLabel,
+    epoch: bgmUpstreamWindowEpoch,
+    emitted_event_count: 0,
+    dropped_event_count: 0,
+    maximum_emitted_events: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+    read_only_observer: true,
+  };
+}
+
+function endBgmUpstreamWindow() {
+  const result = {
+    schema: "magireco-target-bgm-upstream-window-v1",
+    active: false,
+    label: bgmUpstreamWindowLabel,
+    epoch: bgmUpstreamWindowEpoch,
+    emitted_event_count: bgmUpstreamWindowEventCount,
+    dropped_event_count: bgmUpstreamWindowDroppedCount,
+    maximum_emitted_events: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+    read_only_observer: true,
+  };
+  bgmUpstreamWindowActive = false;
+  return result;
+}
+
+function emitBgmUpstream(hookKey, kind, fields, signature, everyCall, statePartition) {
+  if (!bgmUpstreamWindowActive) {
+    return;
+  }
+  const signatureKey = statePartition === undefined
+    ? hookKey
+    : hookKey + "@" + String(statePartition);
+  const previousSignature = bgmUpstreamSignatureByHook[signatureKey];
+  const emissionReason = everyCall
+    ? "every_entry_leave_pair"
+    : previousSignature === undefined
+    ? "first_observation_in_window"
+    : previousSignature !== signature
+    ? "state_changed_in_window"
+    : "unchanged_suppressed";
+  if (emissionReason === "unchanged_suppressed") {
+    return;
+  }
+  bgmUpstreamSignatureByHook[signatureKey] = signature;
+  if (bgmUpstreamWindowEventCount >= MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW) {
+    bgmUpstreamWindowDroppedCount += 1;
+    if (!bgmUpstreamWindowOverflowEmitted) {
+      bgmUpstreamWindowOverflowEmitted = true;
+      emit("sound_logic_bgm_upstream_trace_overflow", {
+        bgm_upstream_window_label: bgmUpstreamWindowLabel,
+        bgm_upstream_window_epoch: bgmUpstreamWindowEpoch,
+        maximum_emitted_events: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+        dropped_event_count: bgmUpstreamWindowDroppedCount,
+        overflow_policy: "fail_attempt",
+      });
+    }
+    return;
+  }
+  bgmUpstreamWindowEventCount += 1;
+  emit(
+    kind,
+    Object.assign(
+      {
+        bgm_upstream_hook: hookKey,
+        bgm_upstream_window_label: bgmUpstreamWindowLabel,
+        bgm_upstream_window_epoch: bgmUpstreamWindowEpoch,
+        bgm_upstream_window_event_index: bgmUpstreamWindowEventCount,
+        bgm_upstream_state_partition: signatureKey,
+        emission_reason: emissionReason,
+      },
+      fields
+    )
+  );
+}
+
+function installBgmUpstreamHooks() {
+  const installLotteryHook = function (hookKey, eventKind) {
+    installHook(hookKey, {
+      onEnter() {
+        this.captureBgmUpstream = bgmUpstreamWindowActive;
+        if (!this.captureBgmUpstream) {
+          return;
+        }
+        this.bgmUpstreamCallId = nextBgmUpstreamCallId;
+        nextBgmUpstreamCallId += 1;
+        this.sdgmEntryPointer = currentSdGmDataPointer();
+        this.sdgmEntry = snapshotSdGmData(this.sdgmEntryPointer);
+      },
+      onLeave() {
+        if (!this.captureBgmUpstream) {
+          return;
+        }
+        const leavePointer = currentSdGmDataPointer();
+        const leave = snapshotSdGmData(leavePointer);
+        const fields = {
+          bgm_upstream_call_id: this.bgmUpstreamCallId,
+          sdgm_pointer_entry: pointerText(this.sdgmEntryPointer),
+          sdgm_pointer_leave: pointerText(leavePointer),
+          entry: this.sdgmEntry,
+          leave,
+          changed_fields: changedSnapshotFields(this.sdgmEntry, leave),
+        };
+        emitBgmUpstream(
+          hookKey,
+          eventKind,
+          fields,
+          JSON.stringify(fields),
+          true
+        );
+      },
+    });
+  };
+
+  installLotteryHook(
+    "kndCalLotCcDirEnd",
+    "sound_logic_bgm_upstream_kndcal_cc_dir_end"
+  );
+  installLotteryHook(
+    "kndCalLotRlStart",
+    "sound_logic_bgm_upstream_kndcal_rl_start"
+  );
+
+  installHook("mstComCbkUpdateGmData", {
+    onEnter(args) {
+      this.captureBgmUpstream = bgmUpstreamWindowActive;
+      this.mstComCbkPointer = args[0];
+      if (this.captureBgmUpstream) {
+        this.bgmUpstreamCallId = nextBgmUpstreamCallId;
+        nextBgmUpstreamCallId += 1;
+      }
+    },
+    onLeave() {
+      if (!this.captureBgmUpstream) {
+        return;
+      }
+      const committed = snapshotMstComCbkCommit(this.mstComCbkPointer);
+      const fields = {
+        bgm_upstream_call_id: this.bgmUpstreamCallId,
+        mstcomcbk_pointer: pointerText(this.mstComCbkPointer),
+        committed,
+      };
+      emitBgmUpstream(
+        "mstComCbkUpdateGmData",
+        "sound_logic_bgm_upstream_update_gm_data_commit",
+        fields,
+        JSON.stringify(committed),
+        false,
+        pointerText(this.mstComCbkPointer)
+      );
+    },
+  });
+
+  installHook("anmBaseDataSetDir", {
+    onEnter(args) {
+      this.captureBgmUpstream = bgmUpstreamWindowActive;
+      this.objNmlPointer = args[0];
+      if (this.captureBgmUpstream) {
+        this.bgmUpstreamCallId = nextBgmUpstreamCallId;
+        nextBgmUpstreamCallId += 1;
+      }
+    },
+    onLeave() {
+      if (!this.captureBgmUpstream) {
+        return;
+      }
+      const committed = snapshotObjNmlBgm(this.objNmlPointer);
+      const fields = {
+        bgm_upstream_call_id: this.bgmUpstreamCallId,
+        obj_nml_pointer: pointerText(this.objNmlPointer),
+        committed,
+      };
+      emitBgmUpstream(
+        "anmBaseDataSetDir",
+        "sound_logic_bgm_upstream_data_set_dir_commit",
+        fields,
+        JSON.stringify(committed),
+        false,
+        pointerText(this.objNmlPointer)
+      );
+    },
+  });
+
+  installHook("objNmlSndRequestBgmDir", {
+    onEnter(args) {
+      this.captureBgmUpstream = bgmUpstreamWindowActive;
+      this.objNmlPointer = args[0];
+      if (!this.captureBgmUpstream) {
+        return;
+      }
+      this.bgmUpstreamCallId = nextBgmUpstreamCallId;
+      nextBgmUpstreamCallId += 1;
+      this.entry = snapshotObjNmlBgm(this.objNmlPointer);
+    },
+    onLeave() {
+      if (!this.captureBgmUpstream) {
+        return;
+      }
+      const leave = snapshotObjNmlBgm(this.objNmlPointer);
+      const fields = {
+        bgm_upstream_call_id: this.bgmUpstreamCallId,
+        obj_nml_pointer: pointerText(this.objNmlPointer),
+        entry: this.entry,
+        leave,
+        changed_fields: changedSnapshotFields(this.entry, leave),
+      };
+      emitBgmUpstream(
+        "objNmlSndRequestBgmDir",
+        "sound_logic_bgm_upstream_bgm_dir_request",
+        fields,
+        JSON.stringify({ entry: this.entry, leave }),
+        false,
+        pointerText(this.objNmlPointer)
       );
     },
   });
@@ -1270,8 +2420,12 @@ setImmediate(function () {
       request_metadata: "all_bounded_to_8_reqdata_rows",
       perform_orders: "all",
       sound_play_requests: "all_metadata_only",
+      sound_pack_pre_gate_volume: "gate_table_members_only_read_only_reconstruction",
+      csl_request_enqueue: "bounded_named_table_and_pending_slot_fields_only",
       csl_play_start: "all_metadata_only",
+      target_bgm_upstream: "named_fields_only_explicit_attempt_window",
       temporal_context_is_causal: false,
+      synchronous_nested_invocation_ids_are_causal: true,
     },
     constraints: {
       pcm_dump: false,
@@ -1291,6 +2445,9 @@ setImmediate(function () {
     return;
   }
 
+  verifyGameProcIdentity();
+  prepareSdGmDataAccessor();
+
   for (const key of Object.keys(ACTIVE_SOUND_ACCESSOR_TYPES)) {
     installActiveSoundAccessor(key, ACTIVE_SOUND_ACCESSOR_TYPES[key]);
   }
@@ -1301,17 +2458,45 @@ setImmediate(function () {
   installSetRequestListHook();
   installPerformRequestHook();
   installSoundMngPlayRequestHook();
+  installCslSndReqHook();
+  prepareSoundPackPreGateHook();
   prepareCslCalcSnapshotEntry();
   installCslPlayStartHook();
+  installBgmUpstreamHooks();
 
   emit("sound_logic_probe_ready", {
     installed_hook_event_count: eventCountByKind.sound_logic_hook_installed || 0,
     unavailable_hook_event_count: eventCountByKind.sound_logic_hook_unavailable || 0,
     attach_error_event_count: eventCountByKind.sound_logic_hook_attach_error || 0,
+    hook_status: hookStatusByKey,
     outer_bgm_snapshot_accessors_ready: allActiveSoundAccessorsReady(),
     outer_bgm_snapshot_accessor_status: activeSoundAccessorStatus,
     outer_bgm_snapshot_calc_entry_status: cslCalcSnapshotStatus,
     outer_bgm_snapshot_policy: "bounded_active_transport_state_not_semantic_bgm_classification",
+    sound_pack_pre_gate_status: soundPackPreGateStatus,
+    game_proc_identity_status: gameProcIdentityStatus,
+    bgm_upstream_sdgm_accessor_status: sdGmDataAccessorStatus,
+    bgm_upstream_field_schema: BGM_UPSTREAM_FIELD_SCHEMA,
+    bgm_upstream_window_rpc: {
+      schema: "magireco-target-bgm-upstream-window-v1",
+      begin_export: "beginbgmupstreamattempt",
+      end_export: "endbgmupstreamattempt",
+      status_export: "bgmupstreamstatus",
+      read_only_observer: true,
+    },
+    capture_scope: {
+      code_lookups: "all",
+      request_ids: "all",
+      request_metadata: "all_bounded_to_8_reqdata_rows",
+      perform_orders: "all",
+      sound_play_requests: "all_metadata_only",
+      sound_pack_pre_gate_volume: "gate_table_members_only_read_only_reconstruction",
+      csl_request_enqueue: "bounded_named_table_and_pending_slot_fields_only",
+      csl_play_start: "all_metadata_only",
+      target_bgm_upstream: "named_fields_only_explicit_attempt_window",
+      temporal_context_is_causal: false,
+      synchronous_nested_invocation_ids_are_causal: true,
+    },
   });
 });
 
@@ -1324,13 +2509,45 @@ rpc.exports = {
       remembered_request_pointer_count: Object.keys(requestMetadataByPointer).length,
       runtime_request_code_mapping_count: Object.keys(codeByRequestId).length,
       active_perform_thread_count: Object.keys(activePerformStackByThread).length,
+      active_sound_play_thread_count: Object.keys(activeSoundPlayStackByThread).length,
       capture_scope: "all_sound_logic_metadata",
       active_sound_accessors_ready: allActiveSoundAccessorsReady(),
       csl_mng_pointer: pointerText(lastCslMngPointer),
       csl_mng_pointer_source: lastCslMngPointerSource,
+      sound_pack_pre_gate_status: soundPackPreGateStatus,
+      game_proc_identity_status: gameProcIdentityStatus,
+      bgm_upstream_sdgm_accessor_status: sdGmDataAccessorStatus,
+      bgm_upstream_window: {
+        schema: "magireco-target-bgm-upstream-window-v1",
+        active: bgmUpstreamWindowActive,
+        label: bgmUpstreamWindowLabel,
+        epoch: bgmUpstreamWindowEpoch,
+        emitted_event_count: bgmUpstreamWindowEventCount,
+        dropped_event_count: bgmUpstreamWindowDroppedCount,
+        maximum_emitted_events: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+        read_only_observer: true,
+      },
     };
   },
   outerbgmsnapshot(label) {
     return requestActiveSoundSnapshot(label);
+  },
+  beginbgmupstreamattempt(label) {
+    return beginBgmUpstreamWindow(label);
+  },
+  endbgmupstreamattempt() {
+    return endBgmUpstreamWindow();
+  },
+  bgmupstreamstatus() {
+    return {
+      schema: "magireco-target-bgm-upstream-window-v1",
+      active: bgmUpstreamWindowActive,
+      label: bgmUpstreamWindowLabel,
+      epoch: bgmUpstreamWindowEpoch,
+      emitted_event_count: bgmUpstreamWindowEventCount,
+      dropped_event_count: bgmUpstreamWindowDroppedCount,
+      maximum_emitted_events: MAX_BGM_UPSTREAM_EVENTS_PER_WINDOW,
+      read_only_observer: true,
+    };
   },
 };

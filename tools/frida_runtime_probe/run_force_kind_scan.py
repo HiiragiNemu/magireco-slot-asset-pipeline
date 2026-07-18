@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import json
 import subprocess
 import sys
@@ -63,12 +64,15 @@ def repo_root() -> Path:
 
 
 def default_event_info_csv() -> Path | None:
+    research_root = os.environ.get("MAGIRECO_RESEARCH_ROOT")
     candidates = [
+        Path(research_root) / "manifests" / "event_info.csv"
+        if research_root
+        else None,
         Path(r"D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manifests\event_info.csv"),
-        Path(r"A:\magireco_corrected_research_20260612\manifests\event_info.csv"),
     ]
     for path in candidates:
-        if path.exists():
+        if path is not None and path.exists():
             return path
     return None
 

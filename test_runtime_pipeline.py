@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import subprocess
 import sys
@@ -13,10 +14,16 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
     lev_plan,
 )
 from tools.frida_runtime_probe.build_event_production_manifests import (
+    apply_path_prefix_maps,
     apply_runtime_voice_subtitle_overrides,
     filter_subtitle_rows_for_plan,
     load_voice_subtitle_overrides,
     merge_runtime_graphical_subtitle_rows,
+    parse_path_prefix_maps,
+    quantize_duration_to_frame_grid,
+)
+from tools.frida_runtime_probe.composition_contract import (
+    presentation_sample_count,
 )
 from tools.frida_runtime_probe.resolve_subtitle_voice_catalog import (
     request_speaker,
@@ -41,6 +48,98 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
 
 
 class CompositionPlanTests(unittest.TestCase):
+    def test_explicit_path_prefix_map_relocates_nested_backup_paths(self) -> None:
+        mappings = parse_path_prefix_maps(
+            [
+                "A:\\magireco_bili_fulltest_20260603="
+                "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+            ]
+        )
+        payload = {
+            "video_assets": [
+                {
+                    "target_mp4": (
+                        "a:/MAGIRECO_BILI_FULLTEST_20260603/"
+                        "cri_official_video_map/ac7116.mp4"
+                    )
+                }
+            ],
+            "unrelated": "A:\\magireco_bili_fulltest_202606030\\keep.txt",
+        }
+        relocated = apply_path_prefix_maps(payload, mappings)
+        self.assertEqual(
+            relocated["video_assets"][0]["target_mp4"],
+            "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\"
+            "cri_official_video_map\\ac7116.mp4",
+        )
+        self.assertEqual(relocated["unrelated"], payload["unrelated"])
+        self.assertEqual(
+            payload["video_assets"][0]["target_mp4"],
+            "a:/MAGIRECO_BILI_FULLTEST_20260603/"
+            "cri_official_video_map/ac7116.mp4",
+        )
+
+    def test_path_prefix_map_rejects_implicit_or_blank_relocation(self) -> None:
+        for value in ("A:\\old", "=D:\\new", "A:\\old="):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    parse_path_prefix_maps([value])
+
+    def test_render_duration_is_extended_to_complete_cfr_frame(self) -> None:
+        ac7116 = quantize_duration_to_frame_grid(13027, "30/1")
+        self.assertEqual(ac7116["frame_count"], 391)
+        self.assertEqual(ac7116["duration_ms"], 13033)
+        self.assertEqual(ac7116["padding_ms"], 6)
+        self.assertEqual(ac7116["exact_duration_ms_numerator"], 39100)
+        self.assertEqual(ac7116["exact_duration_ms_denominator"], 3)
+        self.assertEqual(ac7116["audio_sample_count"], 625600)
+
+        aligned = quantize_duration_to_frame_grid(1000, "30/1")
+        self.assertEqual(aligned["frame_count"], 30)
+        self.assertEqual(aligned["duration_ms"], 1000)
+        self.assertEqual(aligned["padding_ms"], 0)
+
+        ntsc = quantize_duration_to_frame_grid(1000, "30000/1001")
+        self.assertEqual(ntsc["frame_count"], 30)
+        self.assertEqual(ntsc["duration_ms"], 1001)
+        self.assertGreaterEqual(ntsc["duration_ms"], ntsc["content_end_ms"])
+
+    def test_render_duration_rejects_invalid_frame_grid(self) -> None:
+        for value in ("", "30", "0/1", "30/0", "bad/1"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    quantize_duration_to_frame_grid(13027, value)
+        with self.assertRaises(ValueError):
+            quantize_duration_to_frame_grid(0, "30/1")
+
+    def test_presentation_samples_follow_exact_frame_grid(self) -> None:
+        quantization = quantize_duration_to_frame_grid(13027, "30/1")
+        manifest = {
+            "native_frame_rate": "30/1",
+            "render_frame_count": quantization["frame_count"],
+            "render_duration_ms": quantization["duration_ms"],
+            "render_duration_quantization": quantization,
+        }
+        self.assertEqual(presentation_sample_count(manifest), 625600)
+
+        for field, value in (
+            ("frame_count", 390),
+            ("duration_ms", 13034),
+            ("audio_sample_count", 625599),
+            ("exact_duration_ms_numerator", 39000),
+        ):
+            with self.subTest(field=field):
+                tampered = json.loads(json.dumps(manifest))
+                tampered["render_duration_quantization"][field] = value
+                with self.assertRaises(RuntimeError):
+                    presentation_sample_count(tampered)
+
+    def test_legacy_presentation_samples_are_exact_at_48_khz(self) -> None:
+        self.assertEqual(
+            presentation_sample_count({"render_duration_ms": 13033}),
+            625584,
+        )
+
     def test_graphical_only_subtitle_keeps_text_without_false_voice_binding(self) -> None:
         rows = [
             {
@@ -465,6 +564,13 @@ class ManifestBuilderTests(unittest.TestCase):
                 )
             )
             self.assertEqual(len(manifest["subtitles"]), 0)
+            self.assertEqual(
+                manifest["clips"][0]["source_sha256"],
+                hashlib.sha256(clip.read_bytes()).hexdigest().upper(),
+            )
+            self.assertTrue(
+                manifest["quality_gates"]["all_clip_source_hashes_bound"]
+            )
             self.assertEqual(
                 [row["source"] for row in manifest["audio"]],
                 ["event_audio_component", "z2d_req_sound"],

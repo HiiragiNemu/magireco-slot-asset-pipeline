@@ -41,6 +41,9 @@ SAVED_SOUND_PACK_OFFSET = SAVED_ADDON_ARRAY_OFFSET + ENTITLEMENT_INDEX * 4
 REFERENCE_APPLICATION_ID = "com.universal777.magireco"
 REFERENCE_VERSION_NAME = "1.0.0"
 REFERENCE_VERSION_CODE = 31
+REFERENCE_LIBRARY_SHA256 = (
+    "5a0ae3ce7f25b89a3b9a13d11bf36aaa1de04faceb612357fa04f42426f17ebf"
+)
 REFERENCE_TABLE_SHA256 = (
     "c18955f4cd09f18cba179aa19d432864026c1591243c9ab7f134fc7347153fdc"
 )
@@ -765,6 +768,20 @@ def build_gate_report(
         duration_values_by_id=duration_values_by_id,
     )
     reference = compare_reference_table(table, ids)
+    actual_library_sha256 = hashlib.sha256(blob).hexdigest()
+    reference.update(
+        {
+            "reference_library_sha256": REFERENCE_LIBRARY_SHA256,
+            "actual_library_sha256": actual_library_sha256,
+            "library_sha256_matches": (
+                actual_library_sha256 == REFERENCE_LIBRARY_SHA256
+            ),
+        }
+    )
+    reference["audited_v31_library_and_table_match"] = bool(
+        reference["reference_vector_matches"]
+        and reference["library_sha256_matches"]
+    )
     document = {
         "schema_version": 1,
         "evidence_kind": "read_only_static_sound_pack_gate",
@@ -779,7 +796,7 @@ def build_gate_report(
         },
         "lib": lib_path,
         "lib_size": len(blob),
-        "lib_sha256": hashlib.sha256(blob).hexdigest(),
+        "lib_sha256": actual_library_sha256,
         "table": {
             "file_offset": f"0x{table_file_offset:x}",
             "file_offset_decimal": table_file_offset,
@@ -812,23 +829,66 @@ def build_gate_report(
     return document, rows, csv_fieldnames
 
 
+def is_audited_v31_reference_match(document: dict[str, Any]) -> bool:
+    """Return true only for the complete known library and its exact table."""
+
+    comparison = document.get("reference_comparison")
+    table = document.get("table")
+    if not isinstance(comparison, dict) or not isinstance(table, dict):
+        return False
+    return bool(
+        comparison.get("reference_vector_matches") is True
+        and comparison.get("library_sha256_matches") is True
+        and comparison.get("actual_library_sha256") == REFERENCE_LIBRARY_SHA256
+        and comparison.get("reference_library_sha256") == REFERENCE_LIBRARY_SHA256
+        and document.get("lib_sha256") == REFERENCE_LIBRARY_SHA256
+        and comparison.get("actual_table_sha256") == REFERENCE_TABLE_SHA256
+        and comparison.get("reference_table_sha256") == REFERENCE_TABLE_SHA256
+        and table.get("table_sha256") == REFERENCE_TABLE_SHA256
+    )
+
+
+def enforce_reference_policy(
+    document: dict[str, Any], *, allow_unmatched_reference: bool = False
+) -> None:
+    """Fail closed when fixed offsets do not match the audited library table."""
+
+    reference_matches = is_audited_v31_reference_match(document)
+    if reference_matches or allow_unmatched_reference:
+        return
+    comparison = document["reference_comparison"]
+    raise ValueError(
+        "library and fixed-offset table do not both match the audited "
+        "versionCode 31 reference fingerprints: "
+        f"actual_library={comparison.get('actual_library_sha256')}, "
+        f"expected_library={comparison.get('reference_library_sha256')}, "
+        f"actual={comparison['actual_table_sha256']}, "
+        f"expected={comparison['reference_table_sha256']}. "
+        "Refusing to label arbitrary bytes as the Sound Pack gate. Use "
+        "--allow-unmatched-reference only for an explicitly reviewed new build."
+    )
+
+
 def write_gate_outputs(
     out_dir: Path,
     document: dict[str, Any],
     rows: Sequence[dict[str, Any]],
     csv_fieldnames: Sequence[str],
+    *,
+    overwrite: bool = False,
 ) -> tuple[Path, Path]:
     """Write deterministic JSON and CSV audit artifacts."""
 
-    out_dir.mkdir(parents=True, exist_ok=True)
     json_path = out_dir / "sound_pack_gate.json"
     csv_path = out_dir / "sound_pack_gate.csv"
     existing = [path for path in (json_path, csv_path) if path.exists()]
-    if existing:
+    if existing and not overwrite:
         raise FileExistsError(
             "refusing to overwrite existing audit output(s): "
             + ", ".join(str(path) for path in existing)
+            + "; pass --overwrite-outputs only after reviewing provenance"
         )
+    out_dir.mkdir(parents=True, exist_ok=True)
     json_path.write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -865,6 +925,11 @@ def main() -> int:
     )
     parser.add_argument("--sound-id-column", default="sound_resource_id")
     parser.add_argument("--duration-id-column", default="sound_resource_id")
+    parser.add_argument(
+        "--overwrite-outputs",
+        action="store_true",
+        help="replace existing sound_pack_gate.json/csv after provenance review",
+    )
     parser.add_argument(
         "--allow-unmatched-reference",
         action="store_true",
@@ -911,17 +976,27 @@ def main() -> int:
             args.duration_records.read_bytes()
         ).hexdigest()
 
-    reference_matches = bool(
+    table_matches = bool(
         document["reference_comparison"]["reference_vector_matches"]
+    )
+    reference_matches = is_audited_v31_reference_match(document)
+    experimental_status = (
+        "experimental_table_match_only"
+        if table_matches
+        else "experimental_unmatched_reference"
     )
     document["reference_policy"] = {
         "audited_reference_required_by_default": True,
-        "reference_vector_matches": reference_matches,
+        "reference_vector_matches": table_matches,
+        "library_sha256_matches": document["reference_comparison"][
+            "library_sha256_matches"
+        ],
+        "audited_v31_library_and_table_match": reference_matches,
         "allow_unmatched_reference_requested": bool(args.allow_unmatched_reference),
         "audit_status": (
             "audited_v31_reference_match"
             if reference_matches
-            else "experimental_unmatched_reference"
+            else experimental_status
         ),
     }
     if not reference_matches and not args.allow_unmatched_reference:
@@ -929,7 +1004,9 @@ def main() -> int:
             json.dumps(
                 {
                     "ok": False,
-                    "error": "audited v31 gate-table reference fingerprint mismatch",
+                    "error": (
+                        "audited v31 library/table reference fingerprint mismatch"
+                    ),
                     "output_written": False,
                     "hint": (
                         "verify the version-matched library; use "
@@ -943,9 +1020,16 @@ def main() -> int:
         )
         return 4
 
-    json_path, csv_path = write_gate_outputs(
-        args.out_dir, document, rows, csv_fieldnames
-    )
+    try:
+        json_path, csv_path = write_gate_outputs(
+            args.out_dir,
+            document,
+            rows,
+            csv_fieldnames,
+            overwrite=args.overwrite_outputs,
+        )
+    except FileExistsError as error:
+        parser.error(str(error))
     print(
         json.dumps(
             {
@@ -965,6 +1049,10 @@ def main() -> int:
                 "reference_vector_matches": document["reference_comparison"][
                     "reference_vector_matches"
                 ],
+                "library_sha256_matches": document["reference_comparison"][
+                    "library_sha256_matches"
+                ],
+                "unmatched_reference_allowed": args.allow_unmatched_reference,
                 "json": str(json_path),
                 "csv": str(csv_path),
             },

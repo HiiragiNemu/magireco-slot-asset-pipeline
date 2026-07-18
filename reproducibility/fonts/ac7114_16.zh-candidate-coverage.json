@@ -1,0 +1,113 @@
+{
+  "schema": "magireco-subtitle-font-coverage-set-v1",
+  "id": "ac7114-16-zh-candidate-v1",
+  "translation_status": "NOT_HUMAN_APPROVED",
+  "release_eligible": false,
+  "source_review": "../../docs/review/2026-07-15-ac7114-16-chinese-subtitle-review.md",
+  "font_dependency": "noto-sans-cjk-sc-2.004-variable-ttf",
+  "expected_unique_visible_codepoints": 34,
+  "events": [
+    {
+      "event": "ac7114_001",
+      "cues": [
+        {
+          "start_ms": 1450,
+          "end_ms": 6137,
+          "text": "鹤乃酱是最强的，比任何人都强。"
+        },
+        {
+          "start_ms": 6081,
+          "end_ms": 8648,
+          "text": "不可以说谎啊！鹤乃酱！"
+        },
+        {
+          "start_ms": 8806,
+          "end_ms": 9629,
+          "text": "鹤乃……！"
+        }
+      ]
+    },
+    {
+      "event": "ac7115_001",
+      "cues": [
+        {
+          "start_ms": 2354,
+          "end_ms": 3450,
+          "text": "枫酱！"
+        },
+        {
+          "start_ms": 3357,
+          "end_ms": 3926,
+          "text": "那是……"
+        },
+        {
+          "start_ms": 4224,
+          "end_ms": 6754,
+          "text": "枫！振作一点！枫！"
+        },
+        {
+          "start_ms": 7622,
+          "end_ms": 12663,
+          "text": "玲奈酱……"
+        },
+        {
+          "start_ms": 9667,
+          "end_ms": 11533,
+          "text": "对不起……",
+          "role": "graphical_only"
+        },
+        {
+          "start_ms": 19821,
+          "end_ms": 22167,
+          "text": "枫……"
+        }
+      ]
+    },
+    {
+      "event": "ac7116_001",
+      "cues": [
+        {
+          "start_ms": 8783,
+          "end_ms": 13027,
+          "text": "唔……呃……"
+        }
+      ]
+    }
+  ],
+  "required_codepoints": [
+    "U+2026",
+    "U+3002",
+    "U+4E00",
+    "U+4E0D",
+    "U+4E43",
+    "U+4EBA",
+    "U+4EE5",
+    "U+4EFB",
+    "U+4F55",
+    "U+4F5C",
+    "U+53EF",
+    "U+5443",
+    "U+5514",
+    "U+554A",
+    "U+5948",
+    "U+5BF9",
+    "U+5F3A",
+    "U+632F",
+    "U+662F",
+    "U+6700",
+    "U+67AB",
+    "U+6BD4",
+    "U+70B9",
+    "U+73B2",
+    "U+7684",
+    "U+8BF4",
+    "U+8C0E",
+    "U+8D77",
+    "U+90A3",
+    "U+90FD",
+    "U+9171",
+    "U+9E64",
+    "U+FF01",
+    "U+FF0C"
+  ]
+}

@@ -9,6 +9,15 @@ const INSTANCE_SYMBOL = "_ZZN9CplayData11getInstanceEvE18mcplayDataInstance";
 const ACTIVE_ADDON_BASE_OFFSET = 0x14bf4;
 const SAVED_ADDON_BASE_OFFSET = 0x14a58;
 const ADDON_COUNT = 7;
+const ADDON_METADATA = [
+  { sku: "magireco_addon_01", label: "save_data", archive_impact: "operational_only" },
+  { sku: "magireco_addon_02", label: "wait_cut", archive_impact: "operational_only" },
+  { sku: "magireco_addon_03", label: "settings_change", archive_impact: "route_probability_control" },
+  { sku: "magireco_addon_04", label: "auto_play", archive_impact: "operational_only" },
+  { sku: "magireco_addon_05", label: "forced_role", archive_impact: "forced_route_control" },
+  { sku: "magireco_addon_06", label: "value_pack", archive_impact: "bundle_indices_0_through_4" },
+  { sku: "magireco_addon_07", label: "sound_pack", archive_impact: "audio_playback_gate" },
+];
 
 function hex(value) {
   return "0x" + value.toString(16);
@@ -69,6 +78,9 @@ function snapshot() {
     }
     rows.push({
       index: index,
+      sku: ADDON_METADATA[index].sku,
+      label: ADDON_METADATA[index].label,
+      archive_impact: ADDON_METADATA[index].archive_impact,
       active_offset: hex(activeOffset),
       active_u32: active.value,
       active_read_error: active.error,
@@ -101,6 +113,8 @@ function snapshot() {
     saved_addon_base_offset: hex(SAVED_ADDON_BASE_OFFSET),
     sound_pack_candidate_index: 6,
     sound_pack_index_basis: "version_specific_static_native_and_official_product_semantics",
+    addon_index_map_basis: "java_sku_order_plus_CplayData_SetAddonID_and_native_xrefs",
+    value_pack_policy: "index_5_sets_indices_0_through_5_but_not_index_6",
     read_policy: "seven_named_u32_active_and_saved_fields_no_calls_no_writes",
     rows: rows,
   };

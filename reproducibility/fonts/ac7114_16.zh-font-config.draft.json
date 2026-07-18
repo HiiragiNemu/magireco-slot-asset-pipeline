@@ -1,0 +1,21 @@
+{
+  "schema": "magireco-subtitle-fonts-v1",
+  "status": "DRAFT_COVERAGE_VERIFIED_NOT_RELEASE_ELIGIBLE",
+  "release_eligible": false,
+  "scope": "Chinese glyph binding for ac7114_001/ac7115_001/ac7116_001 only. Translation and game-layout approval remain open.",
+  "dependency_manifest": "dependencies.json",
+  "coverage_set": "ac7114_16.zh-candidate-coverage.json",
+  "fonts": {
+    "zh": {
+      "path": "../local_inputs/fonts/noto-sans-cjk-sc-2.004/NotoSansSC-VF.ttf",
+      "family": "Noto Sans SC",
+      "face_index": 0,
+      "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964",
+      "source": {
+        "kind": "audited_chinese_fallback",
+        "evidence": "notofonts/noto-cjk Sans2.004 commit 523d033d6cb47f4a80c58a35753646f5c3608a78; exact URL and bytes are locked in dependencies.json",
+        "license": "SIL Open Font License 1.1 (OFL-1.1); exact license text is fetched and SHA-256 checked with the font"
+      }
+    }
+  }
+}

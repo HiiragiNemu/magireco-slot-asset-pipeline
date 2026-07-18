@@ -5,11 +5,25 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import math
 import re
 import subprocess
 from collections import defaultdict
+from fractions import Fraction
 from pathlib import Path
+
+try:
+    from .output_path_contract import (
+        resolve_output_child,
+        validate_output_identifier,
+    )
+except ImportError:  # direct script execution
+    from output_path_contract import (  # type: ignore
+        resolve_output_child,
+        validate_output_identifier,
+    )
 
 
 JAPANESE_TEXT_RE = re.compile(
@@ -69,6 +83,14 @@ GRAPHICAL_SUBTITLE_CONFIDENCE = {
 }
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest().upper()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--event-catalog", required=True)
@@ -112,6 +134,16 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="optional directory containing official decoded OGG files",
     )
+    parser.add_argument(
+        "--path-prefix-map",
+        action="append",
+        default=[],
+        metavar="OLD=NEW",
+        help=(
+            "repeatable explicit relocation for paths embedded in backed-up "
+            "CSV/JSON evidence; source files are never rewritten"
+        ),
+    )
     parser.add_argument("--ffprobe", default="ffprobe")
     parser.add_argument("--out-dir", required=True)
     return parser.parse_args()
@@ -120,6 +152,48 @@ def parse_args() -> argparse.Namespace:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as source:
         return list(csv.DictReader(source))
+
+
+def parse_path_prefix_maps(values: list[str]) -> list[tuple[str, str]]:
+    mappings: list[tuple[str, str]] = []
+    for value in values:
+        if "=" not in value:
+            raise ValueError(f"path prefix map must be OLD=NEW: {value!r}")
+        old, new = (part.strip() for part in value.split("=", 1))
+        old = old.rstrip("\\/")
+        new = new.rstrip("\\/")
+        if not old or not new:
+            raise ValueError(f"path prefix map has a blank endpoint: {value!r}")
+        mappings.append((old, new))
+    return mappings
+
+
+def apply_path_prefix_maps(value, mappings: list[tuple[str, str]]):
+    """Relocate embedded evidence paths without mutating their source files."""
+
+    if isinstance(value, dict):
+        return {
+            key: apply_path_prefix_maps(item, mappings)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [apply_path_prefix_maps(item, mappings) for item in value]
+    if not isinstance(value, str):
+        return value
+    normalized_value = value.replace("\\", "/")
+    for old, new in mappings:
+        normalized_old = old.replace("\\", "/")
+        folded_value = normalized_value.casefold()
+        folded_old = normalized_old.casefold()
+        if folded_value != folded_old and not folded_value.startswith(
+            folded_old + "/"
+        ):
+            continue
+        relative = normalized_value[len(normalized_old) :].lstrip("/")
+        separator = "\\" if "\\" in new or re.match(r"^[A-Za-z]:", new) else "/"
+        relative = relative.replace("/", separator)
+        return new if not relative else new + separator + relative
+    return value
 
 
 def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
@@ -136,6 +210,45 @@ def number(value: str, default: int = 0) -> int:
         return default
 
 
+def quantize_duration_to_frame_grid(
+    content_end_ms: int, frame_rate: str
+) -> dict[str, int | str]:
+    """Extend, never trim, an integer-ms content tail to a whole video frame.
+
+    Event/audio/subtitle evidence is recorded in milliseconds, while a CFR
+    video can end only on a rational frame boundary.  Keeping the unquantized
+    value as the MP4 target creates false duration failures (for example,
+    13027 ms at 30 fps is necessarily 391 frames, or 13033.333... ms).
+    """
+
+    if content_end_ms <= 0:
+        raise ValueError("content_end_ms must be positive")
+    try:
+        numerator_text, denominator_text = str(frame_rate).split("/", 1)
+        rate = Fraction(int(numerator_text), int(denominator_text))
+    except (TypeError, ValueError, ZeroDivisionError) as error:
+        raise ValueError(f"invalid rational frame rate: {frame_rate!r}") from error
+    if rate <= 0:
+        raise ValueError(f"invalid non-positive frame rate: {frame_rate!r}")
+    frame_position = Fraction(content_end_ms, 1000) * rate
+    frame_count = math.ceil(frame_position)
+    exact_duration_ms = Fraction(frame_count * 1000, 1) / rate
+    audio_sample_count = math.ceil(Fraction(frame_count * 48000, 1) / rate)
+    rounded_duration_ms = max(content_end_ms, int(round(exact_duration_ms)))
+    return {
+        "policy": "ceil_content_tail_to_complete_cfr_frame",
+        "frame_rate": f"{rate.numerator}/{rate.denominator}",
+        "frame_count": frame_count,
+        "content_end_ms": content_end_ms,
+        "duration_ms": rounded_duration_ms,
+        "exact_duration_ms_numerator": exact_duration_ms.numerator,
+        "exact_duration_ms_denominator": exact_duration_ms.denominator,
+        "audio_sample_rate": 48000,
+        "audio_sample_count": audio_sample_count,
+        "padding_ms": rounded_duration_ms - content_end_ms,
+    }
+
+
 def load_composition_plans(path: Path) -> dict[str, dict]:
     if not path.is_dir():
         return {}
@@ -145,6 +258,9 @@ def load_composition_plans(path: Path) -> dict[str, dict]:
         event = str(plan.get("event", "")).strip()
         if not event:
             raise ValueError(f"composition plan has no event: {plan_path}")
+        event = validate_output_identifier(
+            event, label=f"composition plan event in {plan_path}"
+        )
         if event in plans:
             raise ValueError(f"duplicate composition plan for {event}")
         plan["_source_path"] = str(plan_path.resolve())
@@ -204,6 +320,9 @@ def load_runtime_event_manifests(paths: list[Path]) -> dict[str, dict]:
             event = str(payload.get("event", "")).strip()
             if not event:
                 raise ValueError(f"runtime event manifest has no event: {candidate}")
+            event = validate_output_identifier(
+                event, label=f"runtime event manifest event in {candidate}"
+            )
             payload["_source_path"] = str(candidate.resolve())
             manifests[event] = payload
     return manifests
@@ -847,11 +966,31 @@ def filter_subtitle_rows_for_plan(
 
 def main() -> int:
     args = parse_args()
-    catalog = read_csv(Path(args.event_catalog))
-    clips = read_csv(Path(args.event_clips))
-    audio_components = read_csv(Path(args.audio_components))
-    event_sounds = read_csv(Path(args.event_sounds))
-    subtitle_timeline = read_csv(Path(args.subtitle_timeline))
+    try:
+        path_prefix_maps = parse_path_prefix_maps(args.path_prefix_map)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    catalog = apply_path_prefix_maps(
+        read_csv(Path(args.event_catalog)), path_prefix_maps
+    )
+    for index, row in enumerate(catalog):
+        raw_event = str(row.get("event_name", "")).strip()
+        if raw_event:
+            row["event_name"] = validate_output_identifier(
+                raw_event, label=f"event catalog row {index} event_name"
+            )
+    clips = apply_path_prefix_maps(
+        read_csv(Path(args.event_clips)), path_prefix_maps
+    )
+    audio_components = apply_path_prefix_maps(
+        read_csv(Path(args.audio_components)), path_prefix_maps
+    )
+    event_sounds = apply_path_prefix_maps(
+        read_csv(Path(args.event_sounds)), path_prefix_maps
+    )
+    subtitle_timeline = apply_path_prefix_maps(
+        read_csv(Path(args.subtitle_timeline)), path_prefix_maps
+    )
     composition_plans = load_composition_plans(Path(args.composition_plans))
     audience_exclusions = load_audience_exclusions(
         Path(args.audience_exclusions)
@@ -859,8 +998,11 @@ def main() -> int:
     voice_subtitle_overrides = load_voice_subtitle_overrides(
         [Path(path) for path in args.voice_subtitle_overrides]
     )
-    runtime_event_manifests = load_runtime_event_manifests(
-        [Path(path) for path in args.runtime_event_manifests]
+    runtime_event_manifests = apply_path_prefix_maps(
+        load_runtime_event_manifests(
+            [Path(path) for path in args.runtime_event_manifests]
+        ),
+        path_prefix_maps,
     )
     runtime_media_cache: dict[str, dict] = {}
     ogg_search_roots = infer_ogg_search_roots(
@@ -870,8 +1012,9 @@ def main() -> int:
         [Path(path) for path in args.ogg_search_root],
     )
     ogg_path_cache: dict[str, str] = {}
-    out_dir = Path(args.out_dir)
-    event_dir = out_dir / "events"
+    clip_sha256_cache: dict[str, str] = {}
+    out_dir = Path(args.out_dir).resolve()
+    event_dir = resolve_output_child(out_dir, "events", label="events directory")
     event_dir.mkdir(parents=True, exist_ok=True)
 
     exact_sound_events = {
@@ -1012,6 +1155,22 @@ def main() -> int:
             errors.append("component_media_present")
         if any(not path or not Path(path).exists() for path in clip_paths):
             errors.append("missing_clip")
+        clip_source_sha256s: list[str] = []
+        for clip_path in clip_paths:
+            source_sha256 = ""
+            if clip_path and Path(clip_path).is_file():
+                resolved_clip = str(Path(clip_path).resolve())
+                try:
+                    if resolved_clip not in clip_sha256_cache:
+                        clip_sha256_cache[resolved_clip] = file_sha256(
+                            Path(resolved_clip)
+                        )
+                    source_sha256 = clip_sha256_cache[resolved_clip]
+                except OSError:
+                    source_sha256 = ""
+            clip_source_sha256s.append(source_sha256)
+        if any(not value for value in clip_source_sha256s):
+            errors.append("unbound_clip_source_sha256")
 
         if runtime_manifest:
             audio_rows = synthesize_runtime_audio_rows(
@@ -1347,7 +1506,21 @@ def main() -> int:
                 if error != "timeline_exceeds_video_without_loop"
             ]
 
-        render_duration_ms = max(video_duration_ms, duration_ms)
+        raw_render_duration_ms = max(video_duration_ms, duration_ms)
+        render_quantization: dict[str, int | str] = {}
+        if len(frame_rates) == 1:
+            try:
+                render_quantization = quantize_duration_to_frame_grid(
+                    raw_render_duration_ms, next(iter(frame_rates))
+                )
+            except ValueError:
+                errors.append("invalid_native_frame_rate")
+        else:
+            errors.append("invalid_native_frame_rate")
+        render_duration_ms = number(
+            render_quantization.get("duration_ms", raw_render_duration_ms),
+            raw_render_duration_ms,
+        )
         extension_ms = max(0, render_duration_ms - video_duration_ms)
         last_dgm_name = event_clips[-1].get("dgm_name", "") if event_clips else ""
         verified_extension_policy = (
@@ -1411,7 +1584,13 @@ def main() -> int:
             "native_frame_rate": next(iter(frame_rates)) if len(frame_rates) == 1 else "",
             "video_duration_ms": video_duration_ms,
             "timeline_duration_ms": duration_ms,
+            "timeline_content_end_ms": raw_render_duration_ms,
+            "raw_render_duration_ms": raw_render_duration_ms,
+            "render_frame_count": number(
+                render_quantization.get("frame_count", "")
+            ),
             "render_duration_ms": render_duration_ms,
+            "render_duration_quantization": render_quantization,
             "video_extension_policy": video_extension_policy,
             "video_composition_model": video_composition_model,
             "composition_plan": (
@@ -1437,11 +1616,14 @@ def main() -> int:
                     "dgm_name": row.get("dgm_name", ""),
                     "dgm_role": row.get("dgm_role", ""),
                     "path": path,
+                    "source_sha256": source_sha256,
                     "event_start_ms": number(row.get("event_start_ms", "")),
                     "event_end_ms": number(row.get("event_end_ms", "")),
                     "interval_confidence": row.get("interval_confidence", ""),
                 }
-                for index, (row, path) in enumerate(zip(event_clips, clip_paths))
+                for index, (row, path, source_sha256) in enumerate(
+                    zip(event_clips, clip_paths, clip_source_sha256s)
+                )
             ],
             "audio": audio_rows,
             "subtitles": subtitle_rows,
@@ -1452,6 +1634,9 @@ def main() -> int:
                 ),
                 "all_clips_exist": all(
                     path and Path(path).exists() for path in clip_paths
+                ),
+                "all_clip_source_hashes_bound": all(
+                    bool(value) for value in clip_source_sha256s
                 ),
                 "all_audio_exist": all(
                     row["path"] and Path(row["path"]).exists() for row in audio_rows
@@ -1495,7 +1680,9 @@ def main() -> int:
                 "ready": not errors and composition_resolved,
             },
         }
-        manifest_path = event_dir / f"{event}.json"
+        manifest_path = resolve_output_child(
+            event_dir, f"{event}.json", label="event production manifest"
+        )
         with manifest_path.open("w", encoding="utf-8") as output:
             json.dump(manifest, output, ensure_ascii=False, indent=2)
         summary_rows.append(
@@ -1534,6 +1721,10 @@ def main() -> int:
                 "gap_count": gap_count,
                 "video_duration_ms": video_duration_ms,
                 "timeline_duration_ms": duration_ms,
+                "timeline_content_end_ms": raw_render_duration_ms,
+                "render_frame_count": number(
+                    render_quantization.get("frame_count", "")
+                ),
                 "render_duration_ms": render_duration_ms,
                 "video_extension_policy": video_extension_policy,
                 "audio_timeline_ready": (
@@ -1576,6 +1767,8 @@ def main() -> int:
         "gap_count",
         "video_duration_ms",
         "timeline_duration_ms",
+        "timeline_content_end_ms",
+        "render_frame_count",
         "render_duration_ms",
         "video_extension_policy",
         "audio_timeline_ready",
