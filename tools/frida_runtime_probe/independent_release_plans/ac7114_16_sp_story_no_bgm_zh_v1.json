@@ -1,0 +1,515 @@
+{
+  "schema": "magireco-independent-scene-build-plan-v1",
+  "release_id": "ac7114_16_sp_story_no_bgm_zh_v1",
+  "release_contract": {
+    "schema": "magireco-independent-edition-release-contract-v1",
+    "release_profile": "bilibili_no_bgm_zh_v1",
+    "audio_profile": "no_bgm",
+    "subtitle_profile": "zh_dialogue_only",
+    "release_scope": "independent_edition",
+    "bgm_policy": "intentionally_excluded",
+    "voice_se_policy": "preserve_verified_original",
+    "archive_complete": false,
+    "six_edition_complete": false
+  },
+  "expected": {
+    "ordered_events": [
+      "ac7114_001",
+      "ac7115_001",
+      "ac7116_001"
+    ],
+    "width": 512,
+    "height": 288,
+    "frame_rate": "30/1",
+    "total_frames": 1346,
+    "total_presentation_samples": 2153600,
+    "sample_rate": 48000,
+    "audio_channels": 2,
+    "dialogue_cue_count": 9
+  },
+  "events": [
+    {
+      "event": "ac7114_001",
+      "frame_count": 289,
+      "presentation_samples": 462400,
+      "v20_manifest": {
+        "root": "research",
+        "path": "production_manifests_v20_frame_grid_20260715/events/ac7114_001.json",
+        "sha256": "07BAF3D26169DCC26C7C64B6F450004BE4C87E117FD13A50734959AB51F27A89"
+      },
+      "runtime_manifest": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7114_001_v1/event_manifest.json",
+        "sha256": "196A5F517FA1010B617AECB8D3DEABB24B7FD10BDA25D8591597480C15492CA2"
+      },
+      "composition_plan": {
+        "root": "repo",
+        "path": "tools/frida_runtime_probe/composition_plans/ac7114_001.json",
+        "sha256": "926B12065CF29FB329110CF731AE6EBF545253735FD4D3F20842EE931714ED5C"
+      },
+      "clean_visual": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7114_001/clean_visual/ac7114_001__clean_visual.mp4",
+        "sha256": "48F75B5DED3803E31D2ECEC35B8168A9538308E55824D0CB66D0D4BE0079CAF7"
+      },
+      "clean_render_manifest": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7114_001/render_manifest.json",
+        "sha256": "EF372AAEB39E2FBE13F266770DDF7C21D3D833D68A152E56A9E8F1CB11954140"
+      },
+      "official_ja_srt": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7114_001_v1/subtitles.srt",
+        "sha256": "E7BEE9530ADF5EF15D47F4E4A279C6CA0245F888825F3609D739DCA8853C6D4F"
+      },
+      "audio_layers": [
+        {
+          "role": "scene_se",
+          "request_id": "10329",
+          "ogg_name": "snd_42040_bank03_ogg_08887.ogg",
+          "start_ms": 104,
+          "duration_ms": 9233,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_42040_bank03_ogg_08887.ogg",
+            "sha256": "7DFCC8EAFD7DA6F1138402C89FB5C506190BA0827410DB7E860AABD742C352DA"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9300",
+          "ogg_name": "snd_30949_bank08_ogg_07770.ogg",
+          "start_ms": 1586,
+          "duration_ms": 4551,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30949_bank08_ogg_07770.ogg",
+            "sha256": "687826E939C423B76358B3DC6FB2A134FC53E03F1FFA8085C8E0D6EE079752E9"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9301",
+          "ogg_name": "snd_30950_bank08_ogg_07771.ogg",
+          "start_ms": 6162,
+          "duration_ms": 2486,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30950_bank08_ogg_07771.ogg",
+            "sha256": "D5BEA0DE1CD6AD0523F96789A14DD1CE2AD247C306E5538C8182600DCC5E2C02"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9302",
+          "ogg_name": "snd_30951_bank08_ogg_07772.ogg",
+          "start_ms": 8851,
+          "duration_ms": 778,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30951_bank08_ogg_07772.ogg",
+            "sha256": "148FC8D896A94C292A510DD1A3725A397D6CB0001FB5718F0DC328D8BA96BEFD"
+          }
+        }
+      ],
+      "dialogue_cues": [
+        {
+          "request_id": "9300",
+          "speaker_code": "tur",
+          "start_ms": 1450,
+          "end_ms": 6137,
+          "ja_text": "鶴乃ちゃんハ サイキョー ダレヨリモツヨイ",
+          "zh_text": "鹤乃酱是最强的，比任何人都强。",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9301",
+          "speaker_code": "iro",
+          "start_ms": 6081,
+          "end_ms": 8648,
+          "ja_text": "嘘ついちゃダメだよ！ 鶴乃ちゃん！",
+          "zh_text": "不可以说谎啊！鹤乃酱！",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9302",
+          "speaker_code": "yac",
+          "start_ms": 8806,
+          "end_ms": 9629,
+          "ja_text": "鶴乃…！",
+          "zh_text": "鹤乃……！",
+          "translation_status": "machine_draft_pending_owner"
+        }
+      ],
+      "excluded_voice_requests": [],
+      "excluded_source_cues": [],
+      "oracle": {
+        "user_verified_media": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7114_001/without_subtitles/ac7114_001.mp4",
+          "sha256": "7291D5F3A4FC51AAB04079293409C3486846096AD65213D023186F7A7C28B022"
+        },
+        "render_manifest": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7114_001/render_manifest.json",
+          "sha256": "0627C4772532D42B57C3D4AF53B3E22A40963D9A8655EC5933DF07127139D8EB"
+        },
+        "qa_summary": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_summary.json",
+          "sha256": "AD237DCC9B22C64854F300719391181136885282F6E26287735944A0AFEC7BDE"
+        },
+        "qa_audit": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_audit.csv",
+          "sha256": "723C4A78E7447D8968F1F967C3FB29A097E361EC37D4AF1C57EE8A38FD88A068"
+        }
+      }
+    },
+    {
+      "event": "ac7115_001",
+      "frame_count": 666,
+      "presentation_samples": 1065600,
+      "v20_manifest": {
+        "root": "research",
+        "path": "production_manifests_v20_frame_grid_20260715/events/ac7115_001.json",
+        "sha256": "F0444CB9E3686C0EB224C3E58F48C57C2A03A9BCCDA526D0EF692899EAE92A5F"
+      },
+      "runtime_manifest": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7115_001_v1/event_manifest.json",
+        "sha256": "2ECD0942F3B29E1ECEBABA199F06DD6E8BBA411BD65822F1A902F573311BEA27"
+      },
+      "composition_plan": {
+        "root": "repo",
+        "path": "tools/frida_runtime_probe/composition_plans/ac7115_001.json",
+        "sha256": "F7D62F33669DBBB0C25B65ABB2F4E35617D04AED68D09897DD4F054763FA482C"
+      },
+      "clean_visual": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7115_001/clean_visual/ac7115_001__clean_visual.mp4",
+        "sha256": "7422DF679DE9F7DF42F616F8AEF5E96967866068866A981407D5B7D5B986E96E"
+      },
+      "clean_render_manifest": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7115_001/render_manifest.json",
+        "sha256": "A2DA66E07CB513CC487CE88E412E2B91377E06D19AAD5F458BC5BC0E38C9E0C8"
+      },
+      "official_ja_srt": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7115_001_v1/subtitles.srt",
+        "sha256": "FCB3EB72E7C0E4ADC4A8D88165495E8B2CE147C9817F280F3B6FF545ABDA0E6A"
+      },
+      "audio_layers": [
+        {
+          "role": "scene_se",
+          "request_id": "10341",
+          "ogg_name": "snd_42060_bank03_ogg_08901.ogg",
+          "start_ms": 102,
+          "duration_ms": 21200,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_42060_bank03_ogg_08901.ogg",
+            "sha256": "04C510412ACD9AD48BD044C1E43FF43BE4984189425BFA297CE7FB0F304E23E3"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9097",
+          "ogg_name": "snd_30746_bank08_ogg_07567.ogg",
+          "start_ms": 194,
+          "duration_ms": 411,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30746_bank08_ogg_07567.ogg",
+            "sha256": "3EE766E9A99E325837A0DF2C1567106E0ADF425BA017A02E3DB2D840ADE2A48D"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9090",
+          "ogg_name": "snd_30739_bank08_ogg_07560.ogg",
+          "start_ms": 2339,
+          "duration_ms": 493,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30739_bank08_ogg_07560.ogg",
+            "sha256": "E1F0580748B6CCCCF9F395E6DB64424098F691FB11CD037A30096A38D1E9643B"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9091",
+          "ogg_name": "snd_30740_bank09_ogg_07561.ogg",
+          "start_ms": 2433,
+          "duration_ms": 1017,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30740_bank09_ogg_07561.ogg",
+            "sha256": "1A3BF61628C0396F736E4E52FBC70B2B7538B388F55CB1AAD5E12A5116C43081"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9092",
+          "ogg_name": "snd_30741_bank08_ogg_07562.ogg",
+          "start_ms": 3415,
+          "duration_ms": 511,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30741_bank08_ogg_07562.ogg",
+            "sha256": "4CBD492A37B02D541147E1C4FA85293985E8A75AC3250678CEB7F169B2A86D0D"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9093",
+          "ogg_name": "snd_30742_bank08_ogg_07563.ogg",
+          "start_ms": 4285,
+          "duration_ms": 2469,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30742_bank08_ogg_07563.ogg",
+            "sha256": "86CE98E854DA326713CF020435645D485073DE667D454A8AC6AF228AC55DC1F7"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9094",
+          "ogg_name": "snd_30743_bank08_ogg_07564.ogg",
+          "start_ms": 7679,
+          "duration_ms": 2994,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30743_bank08_ogg_07564.ogg",
+            "sha256": "D420F0C0D2FE3D7D33D3014CD5B36B4D1CFE84F2A29EC805C6EB38694B14100D"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9095",
+          "ogg_name": "snd_30744_bank09_ogg_07565.ogg",
+          "start_ms": 8966,
+          "duration_ms": 3697,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30744_bank09_ogg_07565.ogg",
+            "sha256": "55AA252016D96D89DD28D7B9050596860F6B27E83959395C14E732D68A3FAB9C"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9096",
+          "ogg_name": "snd_30745_bank08_ogg_07566.ogg",
+          "start_ms": 19860,
+          "duration_ms": 2307,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_30745_bank08_ogg_07566.ogg",
+            "sha256": "8E45D6ECC3AAE27A968A9CE445EC585E1805D616DFAC84CBDC6AD367EB7F1EA9"
+          }
+        }
+      ],
+      "dialogue_cues": [
+        {
+          "request_id": "9091",
+          "speaker_code": "iro",
+          "start_ms": 2354,
+          "end_ms": 3450,
+          "ja_text": "かえでちゃん！",
+          "zh_text": "枫酱！",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9092",
+          "speaker_code": "kuroe",
+          "start_ms": 3357,
+          "end_ms": 3926,
+          "ja_text": "あれは…",
+          "zh_text": "那是……",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9093",
+          "speaker_code": "rena",
+          "start_ms": 4224,
+          "end_ms": 6754,
+          "ja_text": "かえで！ しっかりして！ かえで！",
+          "zh_text": "枫！振作一点！枫！",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9094",
+          "speaker_code": "kae",
+          "start_ms": 7622,
+          "end_ms": 12663,
+          "ja_text": "レナちゃん…",
+          "zh_text": "玲奈酱……",
+          "translation_status": "machine_draft_pending_owner"
+        },
+        {
+          "request_id": "9096",
+          "speaker_code": "rena",
+          "start_ms": 19821,
+          "end_ms": 22167,
+          "ja_text": "かえで…",
+          "zh_text": "枫……",
+          "translation_status": "machine_draft_pending_owner"
+        }
+      ],
+      "excluded_voice_requests": [
+        {
+          "request_id": "9097",
+          "reason": "Nonverbal exclamation without a standalone official runtime dialogue cue."
+        },
+        {
+          "request_id": "9090",
+          "reason": "Nonverbal exclamation without a standalone official runtime dialogue cue."
+        },
+        {
+          "request_id": "9095",
+          "reason": "Already covered by the official merged-adjacent dialogue cue anchored to request 9094."
+        }
+      ],
+      "excluded_source_cues": [
+        {
+          "text": "ごめんね…",
+          "start_ms": 9667,
+          "end_ms": 11533,
+          "voice_request_id": "",
+          "z2d_name": "cap7115_sp4_kdpl_kae_006",
+          "subtitle_source": "graphical_display_text",
+          "reason": "graphical_only_no_voice_binding"
+        }
+      ],
+      "oracle": {
+        "user_verified_media": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7115_001/without_subtitles/ac7115_001.mp4",
+          "sha256": "CA603BEEDAD481E9E7019B9B5CFF77DC7E669F159A6A1CF000F3AF64F3E6191C"
+        },
+        "render_manifest": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7115_001/render_manifest.json",
+          "sha256": "67E56F874C9530FB37A21AB574CCE3A89E859D68A4DD364B5141A48C9D09C67E"
+        },
+        "qa_summary": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_summary.json",
+          "sha256": "AD237DCC9B22C64854F300719391181136885282F6E26287735944A0AFEC7BDE"
+        },
+        "qa_audit": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_audit.csv",
+          "sha256": "723C4A78E7447D8968F1F967C3FB29A097E361EC37D4AF1C57EE8A38FD88A068"
+        }
+      }
+    },
+    {
+      "event": "ac7116_001",
+      "frame_count": 391,
+      "presentation_samples": 625600,
+      "v20_manifest": {
+        "root": "research",
+        "path": "production_manifests_v20_frame_grid_20260715/events/ac7116_001.json",
+        "sha256": "F57DE76B29131E8373C0A604BFDDD85584EA9489E40795602F7C99FDDFF490D9"
+      },
+      "runtime_manifest": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7116_001_v1/event_manifest.json",
+        "sha256": "B3039FE2D15BBDEC6AC267E0582A4E3BB2F86DF33F409C6BB1DE4724A2E0D1D6"
+      },
+      "composition_plan": {
+        "root": "repo",
+        "path": "tools/frida_runtime_probe/composition_plans/ac7116_001.json",
+        "sha256": "68E5EB47566F3FE8513E014BEA2E549E6B130ABFC4E6EEFB7EF95954A8A65D3F"
+      },
+      "clean_visual": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7116_001/clean_visual/ac7116_001__clean_visual.mp4",
+        "sha256": "B18FB2EF4BD14D0C4D971FCB183619C49FDBDEF1F0E4C6DCFCCE0E8F4A5D0C4B"
+      },
+      "clean_render_manifest": {
+        "root": "research",
+        "path": "validation_outputs_v20_clean_visual_ac7114_16_20260715/ac7116_001/render_manifest.json",
+        "sha256": "91C33178D16CA0EA0EAFBA220661F0B540E4BAEE70474CED1B194908CCF28EC4"
+      },
+      "official_ja_srt": {
+        "root": "research",
+        "path": "runtime_sequence_20260618/resolved/ac7116_001_v1/subtitles.srt",
+        "sha256": "22D015EA0B3D9F31342684E58AE82B33A5BB729BFC6B771FFBDA800D95630337"
+      },
+      "audio_layers": [
+        {
+          "role": "scene_se",
+          "request_id": "10351",
+          "ogg_name": "snd_42080_bank03_ogg_08912.ogg",
+          "start_ms": 86,
+          "duration_ms": 11266,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_42080_bank03_ogg_08912.ogg",
+            "sha256": "CCF339E657E37DE64D18AA10FC06B76BF4B9162B8DCCB48B0EFEC7E08C26B8DB"
+          }
+        },
+        {
+          "role": "voice",
+          "request_id": "9537",
+          "ogg_name": "snd_31186_bank08_ogg_08008.ogg",
+          "start_ms": 8883,
+          "duration_ms": 4144,
+          "source": {
+            "root": "audio",
+            "path": "audio_assets/audio/ogg_raw/snd_31186_bank08_ogg_08008.ogg",
+            "sha256": "47623AC45805C8BEE72D5ED70298C87C5D16EA155C83E121F67AD58A0421D0E9"
+          }
+        }
+      ],
+      "dialogue_cues": [
+        {
+          "request_id": "9537",
+          "speaker_code": "mihu",
+          "start_ms": 8783,
+          "end_ms": 13027,
+          "ja_text": "く…ぐ…",
+          "zh_text": "唔……呃……",
+          "translation_status": "machine_draft_pending_owner"
+        }
+      ],
+      "excluded_voice_requests": [],
+      "excluded_source_cues": [],
+      "oracle": {
+        "user_verified_media": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7116_001/without_subtitles/ac7116_001.mp4",
+          "sha256": "7501BBF51E9FE66BCE14B9DB8FCA7ADE153AFEBC6E1541CA88D499FF24C9481E"
+        },
+        "render_manifest": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/ac7116_001/render_manifest.json",
+          "sha256": "801FF0A5D6989AD6FC9B88EF1936D03D64B7DB68F4D83ACA738827F4AC61A650"
+        },
+        "qa_summary": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_summary.json",
+          "sha256": "AD237DCC9B22C64854F300719391181136885282F6E26287735944A0AFEC7BDE"
+        },
+        "qa_audit": {
+          "root": "research",
+          "path": "validation_outputs_v19_clean_audio_gate_ac7114_16_001_20260628/full_qa_audit.csv",
+          "sha256": "723C4A78E7447D8968F1F967C3FB29A097E361EC37D4AF1C57EE8A38FD88A068"
+        }
+      }
+    }
+  ],
+  "layout_profile": {
+    "root": "repo",
+    "path": "tools/frida_runtime_probe/subtitle_layout_profiles/project_approved_zh_video_subtitle_layout_v1.json",
+    "sha256": "1E03D45962466EA95EFC4FEF49AB1245FF2E7C320D0D29610DFC227B673F8701"
+  },
+  "font": {
+    "root": "repo",
+    "path": "reproducibility/local_inputs/fonts/noto-sans-cjk-sc-2.004/NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  }
+}

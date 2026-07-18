@@ -9,6 +9,19 @@
 
 ## 当前状态
 
+> **2026-07-18 项目所有者最高优先级覆盖：** 首个独立 R1
+> `bilibili_no_bgm_zh_v1` 已生成自动 QA 通过的人工播放候选。它是 512x288、30 fps、
+> 44.867 秒的 ac7114_001 -> ac7115_001 -> ac7116_001 同场景长片，保留经证据绑定的
+> 角色对白与 SE，明确排除 BGM、金带 request 1681 和老虎机前景，只烧录 9 条中文
+> 对白字幕。`no_bgm_zh` 现在可以独立达到 `BUILD_READY` / `AUTOMATED_QA_PASSED`；
+> 旧六版原子合同不再阻塞该独立 edition，但完整 2x3 六版仍是
+> `archive_complete` / `six_edition_complete` 的最终目标。当前
+> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`，已停止等待项目
+> 所有者播放。合同、D: 路径、hash 与 QA 边界见
+> [首个独立 no_bgm_zh 候选](docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md)。
+> 本轮加入独立 edition、P1 和真实媒体构建测试后，全仓回归为 307/307 passed，
+> 0 skipped/failed/error。
+
 > 2026-07-16 存储约束：A: RAMDISK 已关闭，不再作为输入、scratch 或输出路径。
 > 耐久研究/媒体一律写入 `D:\magia\MyProducts\casino`，仓库和小型临时处理使用 C:
 > SSD。任何旧 A: 路径只可作为历史 provenance，必须通过显式、可哈希验证的 D: 路径
@@ -32,10 +45,11 @@
 > non-target 回合以 40/1024 条上游记录、0 drop/error 完成，证明 observer 已通过
 > 实际负载，但该回合没有目标 SP Story 或 835/836。
 >
-> 发布规格现为两条经证据约束的音频母版（`with_bgm` / `no_bgm`）乘三种字幕
-> （无字幕 / 日文 / 中文），共六版。clean visual、双音频母版、字幕六路以及 scene
-> 长片均采用失败关闭的 manifest/hash/逐帧逐样本 QA；仍缺证据的事件不会被标成
-> Bilibili 可投稿成品。合同与实现状态见
+> 完整归档规格仍为两条经证据约束的音频母版（`with_bgm` / `no_bgm`）乘三种字幕
+> （无字幕 / 日文 / 中文），共六版。项目所有者 2026-07-18 的覆盖允许满足自身证据
+> 合同的 `no_bgm_zh` R1 独立获得 BUILD_READY；人工播放批准仍是 Bilibili 投稿硬门禁。
+> clean visual、双音频母版、字幕六路以及 scene 长片均采用失败关闭的
+> manifest/hash/逐帧逐样本 QA。完整归档合同与实现状态见
 > [双音频母版与六版合同](docs/research/2026-07-14-two-audio-master-six-edition-contract.md)。
 > event/scene/series/material 的 AAC 样本边界、SRT 回读、source rehash、staging/READY、
 > 并发 no-replace 与失败回滚加固见
@@ -43,12 +57,13 @@
 >
 > 真实 v20 manifest 已在 D: 重建：926 个事件中 521 READY、405 fail-closed；
 > ac7114/15/16 的 512x288、30 fps、H.264 clean visual 已分别通过 289/666/391
-> 精确帧 QA。双母版和 scene 六版引擎已经实现，当前阻塞是自然目标同 run 的 BGM
-> ID/phase/volume/transitions、中文字幕人工审阅及游戏布局/字体，而不是继续按视觉
-> 手工拼 `ac`。设置 D: 真实资源根后，本检查点自动测试为 289/289 passed、
+> 精确帧 QA。双母版和 scene 六版引擎已经实现；完整六版归档仍阻塞于自然目标同 run
+> 的 BGM ID/phase/volume/transitions。独立 R1 已不再等待该 BGM 门禁，目前只等待项目
+> 所有者对首个中文候选的翻译、布局和完整播放确认。设置 D: 真实资源根后，前一检查点
+> 自动测试为 289/289 passed、
 > 0 skipped/failed/error。
-> 2026-07-18 的同步边界、已修复发布缺陷和仍未修复的重复 runtime-event
-> `last-wins` 风险见
+> 2026-07-18 的同步边界、已修复发布缺陷以及已经关闭的重复 runtime-event
+> `last-wins` P1 见
 > [上传前状态与已知问题](docs/research/2026-07-18-prepush-status-and-known-issues.md)。
 
 面向项目所有者和外部读者的最新中文进度、静态/动态机制边界、三版本字幕规格、
@@ -70,9 +85,10 @@ JM 位图字形的可复现导出/缺字门禁见
 校验及 ac7114/15/16 候选字符 34/34 覆盖见
 [reproducibility/fonts/README.md](reproducibility/fonts/README.md)。该字体明确标为
 `audited_chinese_fallback`，不是游戏原生字体；翻译与布局未人工批准前仍失败关闭。
-ac7114/15/16 的 10 条中文字幕候选、逐条人工审阅位和 JM 缺字实测见
+ac7114/15/16 的中文字幕原始审阅表与 JM 缺字实测见
 [docs/review/2026-07-15-ac7114-16-chinese-subtitle-review.md](docs/review/2026-07-15-ac7114-16-chinese-subtitle-review.md)；
-该表明确是未批准草案，不能直接进入发布 renderer。
+R1 已从中排除 `graphical-only` 的 `ごめんね…`，只渲染 9 条对白；翻译和布局仍是
+等待项目所有者播放批准的草案。
 
 接手或恢复工作时先读
 [docs/HANDOFF_NEXT_AI_MAGIRECO.md](docs/HANDOFF_NEXT_AI_MAGIRECO.md)；它是唯一
@@ -87,6 +103,7 @@ ac7114/15/16 的 10 条中文字幕候选、逐条人工审阅位和 JM 缺字�
 
 当前执行顺序以
 [核心交接](docs/HANDOFF_NEXT_AI_MAGIRECO.md)、
+[首个独立 no_bgm_zh 候选](docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md)、
 [人类可读报告](docs/HUMAN_PROGRESS_REPORT_2026-07-13.md) 和
 [双音频母版 × 三字幕合同](docs/research/2026-07-14-two-audio-master-six-edition-contract.md)
 为准。

@@ -81,6 +81,11 @@ GRAPHICAL_SUBTITLE_CONFIDENCE = {
     "exact_gdb_frame_and_official_ogg",
     "exact_gdb_frame_only",
 }
+RUNTIME_MANIFEST_LOADER_PROVENANCE_FIELDS = {
+    "_source_path",
+    "_source_paths",
+    "_source_provenance",
+}
 
 
 def file_sha256(path: Path) -> str:
@@ -316,15 +321,45 @@ def load_runtime_event_manifests(paths: list[Path]) -> dict[str, dict]:
         else:
             raise FileNotFoundError(f"runtime event manifest path not found: {path}")
         for candidate in candidates:
-            payload = json.loads(candidate.read_text(encoding="utf-8"))
+            candidate_bytes = candidate.read_bytes()
+            payload = json.loads(candidate_bytes.decode("utf-8"))
             event = str(payload.get("event", "")).strip()
             if not event:
                 raise ValueError(f"runtime event manifest has no event: {candidate}")
             event = validate_output_identifier(
                 event, label=f"runtime event manifest event in {candidate}"
             )
-            payload["_source_path"] = str(candidate.resolve())
-            manifests[event] = payload
+            content = {
+                key: value
+                for key, value in payload.items()
+                if key not in RUNTIME_MANIFEST_LOADER_PROVENANCE_FIELDS
+            }
+            source = {
+                "path": str(candidate.resolve()),
+                "sha256": hashlib.sha256(candidate_bytes).hexdigest().upper(),
+            }
+            if event in manifests:
+                existing = manifests[event]
+                existing_content = {
+                    key: value
+                    for key, value in existing.items()
+                    if key not in RUNTIME_MANIFEST_LOADER_PROVENANCE_FIELDS
+                }
+                if existing_content != content:
+                    existing_paths = existing.get("_source_paths", [])
+                    raise ValueError(
+                        f"conflicting runtime event manifests for {event}: "
+                        f"{', '.join([*existing_paths, source['path']])}"
+                    )
+                if source["path"] not in existing.get("_source_paths", []):
+                    existing["_source_paths"].append(source["path"])
+                    existing["_source_provenance"].append(source)
+                continue
+
+            content["_source_path"] = source["path"]
+            content["_source_paths"] = [source["path"]]
+            content["_source_provenance"] = [source]
+            manifests[event] = content
     return manifests
 
 
@@ -1606,6 +1641,11 @@ def main() -> int:
                 composition_plan.get("_source_path", "")
                 if composition_plan
                 else ""
+            ),
+            "runtime_event_manifest_sources": (
+                runtime_manifest.get("_source_provenance", [])
+                if runtime_manifest
+                else []
             ),
             "overlap_count": overlap_count,
             "gap_count": gap_count,

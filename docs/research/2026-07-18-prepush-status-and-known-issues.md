@@ -2,8 +2,9 @@
 
 ## 本次同步边界
 
-本检查点只同步已经完成的静态/动态研究、六版发布工具、审计文档和回归测试；不继续
-启动新的 MuMu 捕获、逆向、渲染或批量生产。正确分支是
+本检查点同步已经完成的静态/动态研究、六版归档工具、独立 R1 发布工具、首个 D: 人工
+播放候选、审计文档和回归测试；候选自动 QA 后不继续启动新的 MuMu 捕获、逆向、第二部
+渲染或批量生产。正确分支是
 `codex/corrected-runtime-pipeline`。D: 的 `main@50e4f5d` 是干净历史 checkout，
 `origin/main` 已不存在，不纳入本次提交，也不删除。
 
@@ -27,19 +28,22 @@
 - series/material 的 post-promotion 故障不会再删除旧 READY；scene/series/material
   音频按 sidecar 样本边界连续 PCM 合并，每个 profile 最终只编码一次 AAC。
 
-最终全仓回归：设置 `MAGIRECO_SLOT_ASSET_ROOT` 为耐久 D: 资源根后，289/289 tests
+最终全仓回归：设置 `MAGIRECO_SLOT_ASSET_ROOT` 为耐久 D: 资源根后，307/307 tests
 通过，0 skip/failure/error。负向测试会刻意输出若干 `ok:false`，最终 unittest 状态为
 `OK`。
 
-## 明确记录、尚未修复
+## 本轮新增关闭
 
-### P1：重复 runtime event 静默 last-wins
+### P1：重复 runtime event 静默 last-wins 已关闭
 
 `tools/frida_runtime_probe/build_event_production_manifests.py` 的
-`load_runtime_event_manifests()` 对来自多个 runtime-manifest roots 的同名 event 仍会
-用后读值覆盖先读值。若重复证据内容冲突，可能选择错误的语音/字幕/音频关系后继续生成
-READY。后续修改应 fail closed 拒绝冲突重复；若内容完全等价，也应显式保存全部
-provenance，而不是静默覆盖。
+`load_runtime_event_manifests()` 现在会先去除 loader 管理的 provenance 字段，再比较
+来自多个 runtime-manifest roots 的同名 event：内容冲突立即 fail closed；内容完全
+等价才允许继续，并保存每一份来源的绝对路径与 SHA-256。production manifest 通过
+`runtime_event_manifest_sources` 公开全部 provenance，禁止后读值静默覆盖先读值。
+新增正向/负向测试覆盖等价重复和冲突声音证据。
+
+## 明确记录、尚未修复
 
 ### 较低级：缩小集合重建可能残留旧 event JSON
 
@@ -48,4 +52,5 @@ production manifest output directory 目前不是整根 staging transaction。�
 一部分误用，但目录本身仍可能陈旧。后续应整批事务发布或按新 index 删除仅由该 builder
 拥有、且不再属于集合的旧文件。
 
-这些问题已公开记录，当前提交不把它们描述为已修复，也不据此生成新的正式成片。
+该较低级问题继续公开记录；首个独立 R1 使用全新的版本化 output root，未复用缩小集合
+的旧 production-manifest 目录。它不影响本轮 P1 已关闭的结论。

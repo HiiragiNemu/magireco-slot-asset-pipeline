@@ -1,5 +1,16 @@
 # Bilibili Production Workflow
 
+> **2026-07-18 OWNER OVERRIDE / CURRENT PRIORITY.** The first production gate is
+> now the named independent edition `bilibili_no_bgm_zh_v1`: original native-size
+> visual, evidence-bound voice/SE, intentionally no BGM, and Chinese subtitles
+> for spoken dialogue only. It may independently reach `BUILD_READY` and
+> `AUTOMATED_QA_PASSED`; the complete 2x3 six-edition matrix remains the final
+> `archive_complete` goal but no longer blocks this R1 candidate. Human playback
+> approval is still required before `BILIBILI_RELEASE_READY`. The authoritative
+> candidate record is
+> `docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md`. Everything
+> below remains superseded audit history and must not be executed.
+
 > **2026-07-15 SUPERSEDED / DO NOT EXECUTE FOR CURRENT PRODUCTION.** The bulk
 > `5,485`-row/294-part plan and every command below are retained only as audit
 > history. Current delivery is two audio masters (`with_bgm` and `no_bgm`) by

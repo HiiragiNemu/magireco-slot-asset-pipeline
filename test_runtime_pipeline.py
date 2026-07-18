@@ -16,7 +16,9 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
 from tools.frida_runtime_probe.build_event_production_manifests import (
     apply_path_prefix_maps,
     apply_runtime_voice_subtitle_overrides,
+    file_sha256,
     filter_subtitle_rows_for_plan,
+    load_runtime_event_manifests,
     load_voice_subtitle_overrides,
     merge_runtime_graphical_subtitle_rows,
     parse_path_prefix_maps,
@@ -48,6 +50,73 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
 
 
 class CompositionPlanTests(unittest.TestCase):
+    def test_runtime_manifest_equivalent_duplicates_preserve_all_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            first = root / "first" / "event_manifest.json"
+            second = root / "second" / "event_manifest.json"
+            first.parent.mkdir()
+            second.parent.mkdir()
+            payload = {
+                "event": "ac7114_001",
+                "video_assets": [{"target_mp4": "D:/verified/ac7114.mp4"}],
+                "sound_assets": [{"request_id": "9001", "relative_ms": 120}],
+                "subtitles": [{"text": "test", "relative_ms": 120}],
+                "_source_path": "stale-loader-value-one",
+            }
+            first.write_text(json.dumps(payload), encoding="utf-8")
+            second_payload = json.loads(json.dumps(payload))
+            second_payload["_source_path"] = "stale-loader-value-two"
+            second_payload["_source_paths"] = ["stale-loader-value-two"]
+            second.write_text(
+                json.dumps(second_payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            loaded = load_runtime_event_manifests([first.parent, second.parent])
+
+            self.assertEqual(list(loaded), ["ac7114_001"])
+            manifest = loaded["ac7114_001"]
+            expected_paths = [str(first.resolve()), str(second.resolve())]
+            self.assertEqual(manifest["_source_path"], expected_paths[0])
+            self.assertEqual(manifest["_source_paths"], expected_paths)
+            self.assertEqual(
+                [row["path"] for row in manifest["_source_provenance"]],
+                expected_paths,
+            )
+            self.assertEqual(
+                [row["sha256"] for row in manifest["_source_provenance"]],
+                [file_sha256(first), file_sha256(second)],
+            )
+            self.assertEqual(manifest["video_assets"], payload["video_assets"])
+
+    def test_runtime_manifest_conflicting_duplicate_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            first = root / "first" / "event_manifest.json"
+            second = root / "second" / "event_manifest.json"
+            first.parent.mkdir()
+            second.parent.mkdir()
+            payload = {
+                "event": "ac7114_001",
+                "video_assets": [{"target_mp4": "D:/verified/ac7114.mp4"}],
+                "sound_assets": [{"request_id": "9001", "relative_ms": 120}],
+            }
+            first.write_text(json.dumps(payload), encoding="utf-8")
+            conflicting = json.loads(json.dumps(payload))
+            conflicting["sound_assets"][0]["request_id"] = "9002"
+            second.write_text(json.dumps(conflicting), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                ValueError,
+                r"conflicting runtime event manifests for ac7114_001",
+            ) as raised:
+                load_runtime_event_manifests([first.parent, second.parent])
+
+            message = str(raised.exception)
+            self.assertIn(str(first.resolve()), message)
+            self.assertIn(str(second.resolve()), message)
+
     def test_explicit_path_prefix_map_relocates_nested_backup_paths(self) -> None:
         mappings = parse_path_prefix_maps(
             [

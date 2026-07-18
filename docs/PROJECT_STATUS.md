@@ -1,6 +1,36 @@
 # Project Status
 
-更新时间：2026-07-16
+更新时间：2026-07-18
+
+## 2026-07-18 首个独立 R1 中文长片候选
+
+项目所有者最新优先级允许 `bilibili_no_bgm_zh_v1` 在自身证据完整时独立达到
+`BUILD_READY`，不再等待 `with_bgm` 及另两种字幕一起闭合。完整两音频母版乘三字幕
+六版仍是最终 `archive_complete` 目标；本变化只解除了它对首个 R1 人工播放候选的
+原子阻塞。
+
+ac7114_001 -> ac7115_001 -> ac7116_001 已按证据顺序生成一个无自动黑场的长片：
+1346 帧、2,153,600 个 48 kHz presentation samples、44.867 秒、512x288、30/1 fps、
+H.264 1,053,224 bit/s 与 AAC 193,249 bit/s stereo。15 个 hash-bound OGG 组成 12 个
+voice 与 3 个 scene SE；`bgm_layers=[]`，金带 request 1681 排除。9 条中文对白进入
+SRT，`ごめんね…` 因 `graphical-only` 排除。
+
+自动 QA 的 21 项检查全部通过；三个用户已确认 v19 声音 oracle 的双声道 APSNR
+分别为 166.504/166.523、167.862/167.903、167.019/167.215 dB。P1 同名 runtime
+event 静默 `last-wins` 也已关闭：冲突内容 fail closed，完全等价内容保存全部路径与
+SHA-256 provenance。
+
+耐久候选位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_candidates_v21_no_bgm_zh_20260718\ac7114_16_sp_story_no_bgm_zh_v1
+```
+
+当前 `BUILD_READY=true`、`AUTOMATED_QA_PASSED=true`，但中文翻译和布局仍等待项目
+所有者播放确认，所以 `HUMAN_PLAYBACK_APPROVED=false`、
+`BILIBILI_RELEASE_READY=false`、`publishable=false`。已经停止第二部长片、批量生产、
+素材分类与 BGM 捕获，等待反馈。完整合同、hash 和审查边界见
+`docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md`。
 
 ## 2026-07-16 存储权威修正
 

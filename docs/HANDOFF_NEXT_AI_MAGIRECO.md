@@ -1,11 +1,31 @@
 # MagiaReco animation recovery handoff for the next AI
 
 Original date: 2026-06-28
-Current checkpoint: 2026-07-16
+Current checkpoint: 2026-07-18
 
 This is the core handoff document for continuing the project.  Treat it as the
 first file to read before touching any renders, manifests, probes, or GitHub
 state.
+
+The highest-priority delta is now:
+
+```text
+docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md
+```
+
+The project owner has overridden the old six-edition atomic blocker for one
+named R1 product. `bilibili_no_bgm_zh_v1` may independently reach BUILD_READY
+when its native visual, verified voice/SE, intentionally empty BGM layer and
+Chinese dialogue-only subtitles pass their own evidence contract. The complete
+two-audio by three-subtitle matrix remains the final archive target. This does
+not permit calling the R1 candidate a complete original-game mix.
+
+The ac7114_001 -> ac7115_001 -> ac7116_001 candidate has passed automated QA
+and is on durable D:. Translation/layout approval and full playback are still
+owned by the project owner: `HUMAN_PLAYBACK_APPROVED=false` and
+`BILIBILI_RELEASE_READY=false`. **Stop here and wait for owner playback. Do not
+start a second film, bulk production, material classification, BGM capture,
+CDN/addon work, or another release-architecture audit before that feedback.**
 
 Storage authority changed on 2026-07-16: A: RAMDISK is disabled and must not be
 used for scratch, input, or output. Durable research/media belongs under
@@ -14,7 +34,7 @@ may hold repository/small temporary files. Old A: strings are provenance only
 and may be resolved through an explicit, hash-verified D: prefix map; never make
 new work depend on A:.
 
-The newest authoritative delta, including the natural SP Story hunter, exact
+The newest BGM-research delta, including the natural SP Story hunter, exact
 STOP/calcStop/setStopAngle authority, static kind lottery, current runtime
 failure/reconnect point, surviving outputs, and quantified completion gap, is:
 
