@@ -74,6 +74,43 @@ class CleanVisualPlanValidationTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             render_event_manifest.validate_explicit_composition_plan(manifest)
 
+    def test_authored_timed_visual_tail_may_precede_audio_tail(self) -> None:
+        manifest = {
+            "event": "ac1103_013",
+            "native_dimensions": {"width": 416, "height": 232},
+            "video_duration_ms": 17567,
+            "timeline_content_end_ms": 17987,
+            "raw_render_duration_ms": 17987,
+            "render_duration_ms": 18000,
+            "video_extension_policy": "loop_last_clip",
+            "video_composition_model": "timed_full_frame_layers",
+            "composition_plan": {
+                "event": "ac1103_013",
+                "model": "timed_full_frame_layers",
+                "duration_ms": 17567,
+                "extension_policy": "loop_last_clip",
+                "native_dimensions": {"width": 416, "height": 232},
+                "clips": [
+                    {"dgm_name": "story", "role": "background", "start_ms": 0},
+                    {
+                        "dgm_name": "story_LP",
+                        "role": "loop_background",
+                        "start_ms": 13033,
+                    },
+                ],
+            },
+            "clips": [
+                {"dgm_name": "story", "event_start_ms": 0, "event_end_ms": 13033},
+                {
+                    "dgm_name": "story_LP",
+                    "event_start_ms": 13033,
+                    "event_end_ms": 17567,
+                },
+            ],
+        }
+        validated = render_event_manifest.validate_explicit_composition_plan(manifest)
+        self.assertEqual(validated["duration_ms"], 17567)
+
     def test_clean_visual_requires_bound_clip_hash_before_output_creation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

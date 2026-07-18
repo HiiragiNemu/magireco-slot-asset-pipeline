@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build auditable no-BGM Chinese review chapters for SP Story families.
+"""Build auditable no-BGM Chinese review chapters for reviewed story families.
 
 This is deliberately a review-candidate lane, not a release promotion lane.
-It rebuilds every clean visual from a hash-bound v20 manifest, reconstructs
-voice/SE from the v20 audio rows while rejecting known BGM and gold-band
+It rebuilds or revalidates every clean visual against a hash-bound v20 manifest,
+reconstructs voice/SE from the v20 audio rows while rejecting known BGM and gold-band
 requests, concatenates continuous PCM, burns only voice-bound Chinese cues,
-and leaves all human/publication flags false.
+and leaves all human/publication flags false.  Both verified linear full-frame
+events and authored timed full-frame compositions are supported.
 """
 
 from __future__ import annotations
@@ -77,8 +78,21 @@ MANIFEST_SCHEMA = "magireco-no-bgm-zh-chapter-review-v1"
 QA_SCHEMA = "magireco-no-bgm-zh-chapter-review-qa-v1"
 READY_SCHEMA = "magireco-chapter-review-ready-v1"
 TRANSLATION_SCHEMA = "magireco-sp-story-zh-dialogue-map-v1"
+GENERIC_TRANSLATION_SCHEMA = "magireco-reviewed-story-zh-dialogue-map-v1"
 FORBIDDEN_AUDIO_REQUESTS = {"835", "836", "1681"}
-ALLOWED_FAMILIES = {"ac7114", "ac7115", "ac7116"}
+DEFAULT_SP_FAMILIES = {"ac7114", "ac7115", "ac7116"}
+SUPPORTED_DIMENSIONS = {(416, 232), (512, 288)}
+SUPPORTED_COMPOSITION_MODELS = {
+    "linear_full_frame_sequence",
+    "timed_full_frame_layers",
+}
+SUPPORTED_EXTENSION_POLICIES = {
+    "none",
+    "hold_last_frame",
+    "loop_last_clip",
+    "composition_plan_loops",
+    "black_tail",
+}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -109,9 +123,43 @@ def rehash(rows: Sequence[Mapping[str, str]]) -> None:
             raise RuntimeError(f"source changed during build: {row['label']}: {path}")
 
 
+def validate_reusable_clean_visual(
+    *, event: str, prepared_path: Path, clean_visual: Path, clean_report: Path
+) -> None:
+    if not clean_visual.is_file() or not clean_report.is_file():
+        raise RuntimeError(f"{event} existing clean-visual release is incomplete")
+    report = read_json(clean_report)
+    source_manifest = report.get("source_manifest")
+    if (
+        report.get("event") != event
+        or report.get("status") != "passed"
+        or not isinstance(source_manifest, Mapping)
+    ):
+        raise RuntimeError(f"{event} existing clean-visual report is not reusable")
+    try:
+        bound_path = Path(str(source_manifest["path"])).resolve()
+        bound_sha256 = str(source_manifest["sha256"]).upper()
+    except (KeyError, TypeError, ValueError) as error:
+        raise RuntimeError(
+            f"{event} existing clean-visual report lacks source-manifest provenance"
+        ) from error
+    if bound_path != prepared_path.resolve() or bound_sha256 != file_sha256(
+        prepared_path
+    ):
+        raise RuntimeError(
+            f"{event} existing clean visual is stale for the prepared manifest; "
+            "rerun with --overwrite"
+        )
+    if (
+        Path(str(report.get("output", ""))).resolve() != clean_visual.resolve()
+        or str(report.get("output_sha256", "")).upper() != file_sha256(clean_visual)
+    ):
+        raise RuntimeError(f"{event} existing clean-visual artifact hash differs")
+
+
 def load_translation_map(path: Path) -> tuple[dict[str, str], dict[str, str]]:
     value = read_json(path)
-    if value.get("schema") != TRANSLATION_SCHEMA:
+    if value.get("schema") not in {TRANSLATION_SCHEMA, GENERIC_TRANSLATION_SCHEMA}:
         raise ValueError("unsupported translation-map schema")
     rows = value.get("translations")
     if not isinstance(rows, list) or not rows:
@@ -132,13 +180,32 @@ def load_translation_map(path: Path) -> tuple[dict[str, str], dict[str, str]]:
 
 def generated_linear_plan(manifest: Mapping[str, Any]) -> dict[str, Any]:
     clips = manifest.get("clips")
-    if not isinstance(clips, list) or len(clips) != 1:
-        raise ValueError(f"{manifest.get('event')} implicit plan is not one full-frame clip")
-    clip = clips[0]
-    if not isinstance(clip, Mapping) or int(clip.get("event_start_ms", -1)) != 0:
-        raise ValueError(f"{manifest.get('event')} implicit clip does not start at zero")
+    if not isinstance(clips, list) or not clips:
+        raise ValueError(f"{manifest.get('event')} implicit plan has no full-frame clips")
     if manifest.get("video_composition_model") != "linear_full_frame_sequence":
         raise ValueError(f"{manifest.get('event')} implicit model is not linear")
+    ordered = sorted(
+        clips,
+        key=lambda row: (
+            int(row.get("event_start_ms", -1)) if isinstance(row, Mapping) else -1,
+            int(row.get("order", -1)) if isinstance(row, Mapping) else -1,
+        ),
+    )
+    projected: list[dict[str, Any]] = []
+    previous_start = -1
+    names: set[str] = set()
+    for index, clip in enumerate(ordered):
+        if not isinstance(clip, Mapping):
+            raise ValueError(f"{manifest.get('event')} implicit clip {index} is invalid")
+        start_ms = int(clip.get("event_start_ms", -1))
+        name = str(clip.get("dgm_name", ""))
+        if (index == 0 and start_ms != 0) or start_ms <= previous_start or not name:
+            raise ValueError(f"{manifest.get('event')} implicit clip order is invalid")
+        if name in names:
+            raise ValueError(f"{manifest.get('event')} implicit clip name is duplicated")
+        names.add(name)
+        previous_start = start_ms
+        projected.append({"dgm_name": name, "role": "background", "start_ms": start_ms})
     return {
         "schema": "magireco-video-composition-v1",
         "event": manifest["event"],
@@ -147,18 +214,12 @@ def generated_linear_plan(manifest: Mapping[str, Any]) -> dict[str, Any]:
         "extension_policy": manifest["video_extension_policy"],
         "native_dimensions": manifest["native_dimensions"],
         "evidence": (
-            "deterministic explicit projection of the v20 single full-frame clip; "
-            "the clip identity, zero start, exact interval, native dimensions, "
+            "deterministic explicit projection of the v20 ordered full-frame clip "
+            "timeline; clip identities, starts, exact intervals, native dimensions, "
             "extension policy, and CFR presentation grid are bound by the copied "
             "v20 production manifest and source SHA-256"
         ),
-        "clips": [
-            {
-                "dgm_name": str(clip["dgm_name"]),
-                "role": "background",
-                "start_ms": 0,
-            }
-        ],
+        "clips": projected,
     }
 
 
@@ -182,28 +243,37 @@ def prepare_manifest(
         "verified_native_composite",
     }:
         raise ValueError(f"{event} is not a clean-story visual classification")
-    if manifest.get("native_frame_rate") != "30/1" or manifest.get(
-        "native_dimensions"
-    ) != {"width": 512, "height": 288}:
-        raise ValueError(f"{event} does not match the 512x288/30 chapter lane")
-    if manifest.get("video_composition_model") != "linear_full_frame_sequence":
-        raise ValueError(f"{event} is not a linear SP Story event")
-    if manifest.get("video_extension_policy") not in {"none", "hold_last_frame"}:
+    dimensions = manifest.get("native_dimensions")
+    if not isinstance(dimensions, Mapping):
+        raise ValueError(f"{event} lacks native dimensions")
+    dimension_tuple = (int(dimensions.get("width", 0)), int(dimensions.get("height", 0)))
+    if manifest.get("native_frame_rate") != "30/1" or dimension_tuple not in SUPPORTED_DIMENSIONS:
+        raise ValueError(f"{event} is outside the reviewed native-size 30 fps lanes")
+    model = str(manifest.get("video_composition_model", ""))
+    if model not in SUPPORTED_COMPOSITION_MODELS:
+        raise ValueError(f"{event} has an unsupported composition model")
+    if manifest.get("video_extension_policy") not in SUPPORTED_EXTENSION_POLICIES:
         raise ValueError(f"{event} has an unsupported extension policy")
 
     sources = [snapshot(source_path, label=f"{event} v20 production manifest")]
     prepared = copy.deepcopy(manifest)
     plan = prepared.get("composition_plan")
-    if (
+    plan_missing_clips = (
         not isinstance(plan, dict)
         or not plan
         or not isinstance(plan.get("clips"), list)
         or not plan["clips"]
-    ):
+    )
+    if plan_missing_clips:
+        if model != "linear_full_frame_sequence":
+            raise ValueError(f"{event} timed composition lacks authored clip rows")
         plan = generated_linear_plan(prepared)
-    if plan.get("event") != event or plan.get("model") != "linear_full_frame_sequence":
+    if plan.get("event") != event or plan.get("model") != model:
         raise ValueError(f"{event} composition identity mismatch")
-    if plan.get("extension_policy") != prepared.get("video_extension_policy"):
+    if plan.get("extension_policy") is None:
+        plan = copy.deepcopy(plan)
+        plan["extension_policy"] = prepared.get("video_extension_policy")
+    elif plan.get("extension_policy") != prepared.get("video_extension_policy"):
         raise ValueError(f"{event} extension policy mismatch")
 
     plan_dir.mkdir(parents=True, exist_ok=True)
@@ -242,11 +312,18 @@ def prepare_manifest(
     return prepared, prepared_path, sources
 
 
-def scene_audio_role(row: Mapping[str, Any]) -> str:
-    code = str(row.get("code_name", ""))
-    if row.get("source") == "event_audio_component" or "SPストーリー" in code:
+def scene_audio_role(
+    row: Mapping[str, Any], voice_request_ids: set[str] | None = None
+) -> str:
+    request_id = str(row.get("request_id", ""))
+    if voice_request_ids is not None and request_id in voice_request_ids:
+        return "voice"
+    if row.get("source") == "event_audio_component":
         return "scene_se"
-    return "voice"
+    if voice_request_ids is None:
+        code = str(row.get("code_name", ""))
+        return "scene_se" if "SPストーリー" in code else "voice"
+    return "unsubtitled_audio"
 
 
 def resolve_event(
@@ -267,6 +344,12 @@ def resolve_event(
     if str(report.get("output_sha256", "")).upper() != sources[0]["sha256"]:
         raise ValueError(f"{event} clean visual hash differs from report")
 
+    subtitle_rows = manifest.get("subtitles", [])
+    voice_request_ids = {
+        str(row.get("voice_request_id", "")).strip()
+        for row in subtitle_rows
+        if isinstance(row, Mapping) and str(row.get("voice_request_id", "")).strip()
+    }
     audio_rows = manifest["audio"]
     layers: list[dict[str, Any]] = []
     for row in audio_rows:
@@ -275,7 +358,7 @@ def resolve_event(
         sources.append(source)
         layers.append(
             {
-                "role": scene_audio_role(row),
+                "role": scene_audio_role(row, voice_request_ids),
                 "request_id": str(row["request_id"]),
                 "ogg_name": str(row["ogg_name"]),
                 "code_name": str(row.get("code_name", "")),
@@ -285,17 +368,18 @@ def resolve_event(
                 "source": source,
             }
         )
-    if sum(layer["role"] == "scene_se" for layer in layers) != 1:
-        raise ValueError(f"{event} does not have exactly one scene-SE layer")
+    if not any(layer["role"] == "scene_se" for layer in layers):
+        raise ValueError(f"{event} does not have an evidence-bound base scene-SE layer")
     if any(layer["request_id"] in FORBIDDEN_AUDIO_REQUESTS for layer in layers):
         raise ValueError(f"{event} contains a forbidden BGM/effect audio layer")
 
-    voice_by_id = {
-        layer["request_id"]: layer for layer in layers if layer["role"] == "voice"
-    }
+    voice_layers = [layer for layer in layers if layer["role"] == "voice"]
+    voice_by_id = {layer["request_id"]: layer for layer in voice_layers}
+    if len(voice_by_id) != len(voice_layers):
+        raise ValueError(f"{event} has duplicate voice request IDs")
     cues: list[dict[str, Any]] = []
     excluded_source: list[dict[str, Any]] = []
-    for row in manifest.get("subtitles", []):
+    for row in subtitle_rows:
         request_id = str(row.get("voice_request_id", "")).strip()
         text = str(row.get("text", "")).strip()
         if not request_id:
@@ -331,9 +415,13 @@ def resolve_event(
         {
             "request_id": request_id,
             "code_name": layer["code_name"],
-            "reason": "voice/nonverbal request retained in audio; no official subtitle row",
+            "reason": "audio retained; no official voice-bound subtitle row",
         }
-        for request_id, layer in voice_by_id.items()
+        for request_id, layer in {
+            layer["request_id"]: layer
+            for layer in layers
+            if layer["role"] == "unsubtitled_audio"
+        }.items()
         if request_id not in included_ids
     ]
     frame_count_value = int(manifest["render_frame_count"])
@@ -346,6 +434,9 @@ def resolve_event(
     return (
         {
             "event": event,
+            "width": int(manifest["native_dimensions"]["width"]),
+            "height": int(manifest["native_dimensions"]["height"]),
+            "composition_model": str(manifest["video_composition_model"]),
             "frame_count": frame_count_value,
             "presentation_samples": samples,
             "clean_visual": clean_visual,
@@ -407,6 +498,15 @@ def build_chapter(
     ffprobe: str,
     overwrite: bool,
 ) -> Path:
+    dimension_set = {(int(event["width"]), int(event["height"])) for event in events}
+    if len(dimension_set) != 1:
+        raise RuntimeError(f"{family} mixes native dimensions: {sorted(dimension_set)}")
+    width, height = next(iter(dimension_set))
+    if (
+        int(layout.get("target_width", 0)) != width
+        or int(layout.get("target_height", 0)) != height
+    ):
+        raise RuntimeError(f"{family} has no exact native-size subtitle layout")
     release_id = validate_output_identifier(
         f"{family}_full_no_bgm_zh_review_v1", label="chapter release id"
     )
@@ -509,8 +609,8 @@ def build_chapter(
         clean_video = media_streams(clean_probe, "video")[0]
         if (
             frame_count(clean_video) != total_frames
-            or int(clean_video.get("width", 0)) != 512
-            or int(clean_video.get("height", 0)) != 288
+            or int(clean_video.get("width", 0)) != width
+            or int(clean_video.get("height", 0)) != height
             or clean_video.get("r_frame_rate") != "30/1"
         ):
             raise RuntimeError("chapter clean visual grid mismatch")
@@ -558,8 +658,8 @@ def build_chapter(
         final_audio_stream = audios[0]
         if (
             frame_count(final_video_stream) != total_frames
-            or int(final_video_stream.get("width", 0)) != 512
-            or int(final_video_stream.get("height", 0)) != 288
+            or int(final_video_stream.get("width", 0)) != width
+            or int(final_video_stream.get("height", 0)) != height
             or final_video_stream.get("r_frame_rate") != "30/1"
             or final_audio_stream.get("codec_name") != "aac"
             or int(final_audio_stream.get("sample_rate", 0)) != 48000
@@ -641,10 +741,10 @@ def build_chapter(
                 "all_events_v20_technical_ready": True,
                 "explicit_clean_visual_compositions": True,
                 "forbidden_bgm_and_gold_requests_absent": True,
-                "one_scene_se_per_event": True,
+                "evidence_bound_scene_audio_per_event": True,
                 "all_voice_layers_accounted": True,
                 "zero_inserted_black_frames": True,
-                "native_512x288_30fps": True,
+                "native_dimensions_30fps": True,
                 "exact_frame_and_sample_grid": True,
                 "aac_encoded_once_and_packet_copied": True,
                 "dialogue_only_chinese_srt_round_trip": True,
@@ -705,8 +805,8 @@ def build_chapter(
             "timeline": timeline,
             "media": {
                 "duration_ms": round(Fraction(total_samples * 1000, 48000)),
-                "width": 512,
-                "height": 288,
+                "width": width,
+                "height": height,
                 "frame_rate": "30/1",
                 "video_codec": "h264",
                 "video_bit_rate": stream_bit_rate(final_video_stream, label="chapter video"),
@@ -764,13 +864,19 @@ def build_chapter(
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest-root", required=True)
-    parser.add_argument("--series-root", required=True)
+    parser.add_argument("--series-root")
+    parser.add_argument(
+        "--series-manifest",
+        action="append",
+        metavar="FAMILY=PATH",
+        help="explicit passed family series manifest; repeat for a mixed batch",
+    )
     parser.add_argument("--translation-map", required=True)
-    parser.add_argument("--layout-profile", required=True)
+    parser.add_argument("--layout-profile", action="append", required=True)
     parser.add_argument("--font", required=True)
     parser.add_argument("--out-root", required=True)
     parser.add_argument("--renderer", required=True)
-    parser.add_argument("--family", action="append", choices=sorted(ALLOWED_FAMILIES))
+    parser.add_argument("--family", action="append")
     parser.add_argument("--ffmpeg", default="ffmpeg")
     parser.add_argument("--ffprobe", default="ffprobe")
     parser.add_argument("--overwrite", action="store_true")
@@ -778,29 +884,73 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def resolve_series_manifests(args: argparse.Namespace) -> dict[str, Path]:
+    if args.series_manifest:
+        if args.family or args.series_root:
+            raise ValueError(
+                "explicit --series-manifest cannot be combined with --family/--series-root"
+            )
+        result: dict[str, Path] = {}
+        for spec in args.series_manifest:
+            family_text, separator, path_text = str(spec).partition("=")
+            if not separator or not path_text:
+                raise ValueError(f"invalid --series-manifest value: {spec!r}")
+            family = validate_output_identifier(family_text, label="series family")
+            if family in result:
+                raise ValueError(f"duplicate series family: {family}")
+            result[family] = Path(path_text).resolve()
+        return dict(sorted(result.items()))
+    if not args.series_root:
+        raise ValueError("--series-root is required without --series-manifest")
+    root = Path(args.series_root).resolve()
+    families = args.family or sorted(DEFAULT_SP_FAMILIES)
+    result = {}
+    for value in families:
+        family = validate_output_identifier(value, label="series family")
+        if family in result:
+            raise ValueError(f"duplicate series family: {family}")
+        result[family] = root / family / "series_manifest.json"
+    return result
+
+
+def load_layout_profiles(paths: Sequence[str]) -> tuple[dict[tuple[int, int], dict[str, Any]], list[dict[str, str]]]:
+    layouts: dict[tuple[int, int], dict[str, Any]] = {}
+    sources: list[dict[str, str]] = []
+    for value in paths:
+        path = Path(value).resolve()
+        layout = read_json(path)
+        dimensions = (
+            int(layout.get("target_width", 0)),
+            int(layout.get("target_height", 0)),
+        )
+        if (
+            dimensions not in SUPPORTED_DIMENSIONS
+            or layout.get("approval_status") != "pending_owner_review"
+            or layout.get("original_game_layout") is not False
+        ):
+            raise ValueError(f"subtitle layout is not an audited pending-owner profile: {path}")
+        if dimensions in layouts:
+            raise ValueError(f"duplicate subtitle layout dimensions: {dimensions}")
+        layouts[dimensions] = layout
+        sources.append(snapshot(path, label=f"Chinese subtitle layout {dimensions[0]}x{dimensions[1]}"))
+    return layouts, sources
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    families = args.family or sorted(ALLOWED_FAMILIES)
     manifest_root = Path(args.manifest_root).resolve()
-    series_root = Path(args.series_root).resolve()
+    series_manifests = resolve_series_manifests(args)
+    families = list(series_manifests)
     translation_path = Path(args.translation_map).resolve()
-    layout_path = Path(args.layout_profile).resolve()
     font_path = Path(args.font).resolve()
     renderer_path = Path(args.renderer).resolve()
     out_root = Path(args.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     translations, translation_snapshot = load_translation_map(translation_path)
-    layout = read_json(layout_path)
-    if (
-        layout.get("target_width") != 512
-        or layout.get("target_height") != 288
-        or layout.get("approval_status") != "pending_owner_review"
-        or layout.get("original_game_layout") is not False
-    ):
-        raise ValueError("subtitle layout is not the audited pending-owner 512x288 profile")
+    layouts, layout_sources = load_layout_profiles(args.layout_profile)
     shared_sources = [
         translation_snapshot,
-        snapshot(layout_path, label="Chinese subtitle layout"),
+        *layout_sources,
         snapshot(font_path, label="Chinese subtitle font"),
         snapshot(renderer_path, label="clean visual renderer"),
     ]
@@ -811,7 +961,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     batch_rows: dict[str, list[dict[str, Any]]] = {}
     all_sources = list(shared_sources)
     for family in families:
-        series_path = series_root / family / "series_manifest.json"
+        series_path = series_manifests[family]
         series = read_json(series_path)
         all_sources.append(snapshot(series_path, label=f"{family} series ordering manifest"))
         if series.get("status") != "passed" or series.get("series") != family:
@@ -849,7 +999,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
     missing = sorted(required_texts - set(translations))
     unused = sorted(set(translations) - required_texts)
-    if missing or (set(families) == ALLOWED_FAMILIES and unused):
+    if missing or unused:
         raise ValueError(f"translation coverage differs: missing={missing}, unused={unused}")
     if args.validate_only:
         print(
@@ -880,8 +1030,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     for family, rows in batch_rows.items():
         for row in rows:
-            if row["clean_visual"].is_file() and row["clean_report"].is_file():
+            clean_exists = row["clean_visual"].is_file()
+            report_exists = row["clean_report"].is_file()
+            if clean_exists and report_exists and not args.overwrite:
+                validate_reusable_clean_visual(
+                    event=row["event"],
+                    prepared_path=row["prepared_path"],
+                    clean_visual=row["clean_visual"],
+                    clean_report=row["clean_report"],
+                )
                 continue
+            if clean_exists != report_exists and not args.overwrite:
+                raise RuntimeError(
+                    f"{row['event']} existing clean-visual release is incomplete; "
+                    "rerun with --overwrite"
+                )
             command = [
                 sys.executable,
                 str(renderer_path),
@@ -898,6 +1061,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.overwrite:
                 command.append("--overwrite")
             subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
+            validate_reusable_clean_visual(
+                event=row["event"],
+                prepared_path=row["prepared_path"],
+                clean_visual=row["clean_visual"],
+                clean_report=row["clean_report"],
+            )
     resolved_by_family: dict[str, list[dict[str, Any]]] = {}
     media_sources = list(all_sources)
     for family, rows in batch_rows.items():
@@ -916,11 +1085,17 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     destinations = []
     for family in families:
+        dimensions = {
+            (int(event["width"]), int(event["height"]))
+            for event in resolved_by_family[family]
+        }
+        if len(dimensions) != 1 or next(iter(dimensions)) not in layouts:
+            raise RuntimeError(f"{family} lacks one exact native-size subtitle layout")
         destination = build_chapter(
             family,
             resolved_by_family[family],
             out_root=out_root,
-            layout=layout,
+            layout=layouts[next(iter(dimensions))],
             font_path=font_path,
             source_snapshots=media_sources,
             ffmpeg=args.ffmpeg,

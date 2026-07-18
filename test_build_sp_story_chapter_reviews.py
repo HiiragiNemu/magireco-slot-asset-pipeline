@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -7,11 +8,13 @@ from pathlib import Path
 
 from tools.frida_runtime_probe.build_sp_story_chapter_reviews import (
     FORBIDDEN_AUDIO_REQUESTS,
+    GENERIC_TRANSLATION_SCHEMA,
     TRANSLATION_SCHEMA,
     generated_linear_plan,
     load_translation_map,
     prepare_manifest,
     scene_audio_role,
+    validate_reusable_clean_visual,
 )
 
 
@@ -94,6 +97,25 @@ class SpStoryChapterReviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate Japanese"):
                 load_translation_map(path)
 
+    def test_generic_story_translation_schema_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "translations.json"
+            write_json(
+                path,
+                {
+                    "schema": GENERIC_TRANSLATION_SCHEMA,
+                    "translations": [
+                        {
+                            "ja": "行くよ！",
+                            "zh": "要上了！",
+                            "status": "machine_draft_pending_owner",
+                        }
+                    ],
+                },
+            )
+            translations, _ = load_translation_map(path)
+            self.assertEqual(translations, {"行くよ！": "要上了！"})
+
     def test_generated_plan_is_exact_single_full_frame_projection(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             manifest = self.minimal_manifest(Path(temp_dir))
@@ -112,8 +134,37 @@ class SpStoryChapterReviewTests(unittest.TestCase):
                 ],
             )
             manifest["clips"].append(dict(manifest["clips"][0]))
-            with self.assertRaisesRegex(ValueError, "not one full-frame clip"):
+            with self.assertRaisesRegex(ValueError, "duplicated|order is invalid"):
                 generated_linear_plan(manifest)
+
+    def test_generated_plan_projects_multiple_ordered_full_frame_clips(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            manifest = self.minimal_manifest(Path(temp_dir))
+            second = dict(manifest["clips"][0])
+            second.update(
+                {
+                    "order": 1,
+                    "dgm_name": "ac7114_AT_SP_story3_03",
+                    "event_start_ms": 5000,
+                    "event_end_ms": 12500,
+                }
+            )
+            manifest["clips"].append(second)
+            self.assertEqual(
+                generated_linear_plan(manifest)["clips"],
+                [
+                    {
+                        "dgm_name": "ac7114_AT_SP_story3_02",
+                        "role": "background",
+                        "start_ms": 0,
+                    },
+                    {
+                        "dgm_name": "ac7114_AT_SP_story3_03",
+                        "role": "background",
+                        "start_ms": 5000,
+                    },
+                ],
+            )
 
     def test_prepare_manifest_binds_sources_and_writes_explicit_plan(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -178,6 +229,47 @@ class SpStoryChapterReviewTests(unittest.TestCase):
                         manifest_dir=root / "prepared",
                     )
 
+    def test_reused_clean_visual_must_bind_current_prepared_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            prepared = root / "prepared.json"
+            visual = root / "clean.mp4"
+            report = root / "report.json"
+            prepared.write_text("{}\n", encoding="utf-8")
+            visual.write_bytes(b"clean visual")
+
+            def digest(path: Path) -> str:
+                return hashlib.sha256(path.read_bytes()).hexdigest().upper()
+
+            write_json(
+                report,
+                {
+                    "event": "ac0001_001",
+                    "status": "passed",
+                    "source_manifest": {
+                        "path": str(prepared.resolve()),
+                        "sha256": digest(prepared),
+                    },
+                    "output": str(visual.resolve()),
+                    "output_sha256": digest(visual),
+                },
+            )
+            validate_reusable_clean_visual(
+                event="ac0001_001",
+                prepared_path=prepared,
+                clean_visual=visual,
+                clean_report=report,
+            )
+
+            prepared.write_text('{"changed": true}\n', encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "stale"):
+                validate_reusable_clean_visual(
+                    event="ac0001_001",
+                    prepared_path=prepared,
+                    clean_visual=visual,
+                    clean_report=report,
+                )
+
     def test_scene_audio_role_uses_business_identity(self) -> None:
         self.assertEqual(
             scene_audio_role(
@@ -199,6 +291,28 @@ class SpStoryChapterReviewTests(unittest.TestCase):
                 {"source": "z2d_req_sound", "code_name": "30952_231_tur"}
             ),
             "voice",
+        )
+
+    def test_scene_audio_role_uses_subtitle_bound_request_ids(self) -> None:
+        voice_ids = {"30952"}
+        self.assertEqual(
+            scene_audio_role(
+                {"source": "z2d_req_sound", "request_id": "30952"}, voice_ids
+            ),
+            "voice",
+        )
+        self.assertEqual(
+            scene_audio_role(
+                {"source": "event_audio_component", "request_id": "42040"},
+                voice_ids,
+            ),
+            "scene_se",
+        )
+        self.assertEqual(
+            scene_audio_role(
+                {"source": "z2d_req_sound", "request_id": "99999"}, voice_ids
+            ),
+            "unsubtitled_audio",
         )
 
 

@@ -10,20 +10,31 @@ state.
 The highest-priority delta is now:
 
 ```text
-docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md
+docs/research/2026-07-18-mixed-composition-expansion-review-batch.md
 ```
 
-The owner confirmed the first 44.867-second ac7114_001 -> ac7115_001 ->
-ac7116_001 R1 candidate was good and authorized expansion. The exact statement
-and artifact hashes are preserved in `tools/frida_runtime_probe/owner_attestations/`;
-it is not represented as cue-by-cue translation approval or upload authority.
-The same fail-closed contract has now produced complete Story 3/4/5 family
-review chapters: 34 events, 107 voice-bound Chinese cues, 144 voice/scene-SE
-layers and 516.933 seconds. All three passed automated QA on durable D:, but
-their owner flags remain false. **Stop here and wait for full owner playback of
-the three chapter candidates. Do not start Story 1/2/6, another family, bulk
-production, material classification, BGM capture, CDN/addon work, or another
-release-architecture audit before that feedback.**
+The owner has now played and approved all three complete Story 3/4/5 chapters,
+and explicitly authorized full production while asking for prompt coverage
+beyond single-full-frame linear SP Story. The exact statement and the three
+approved artifact sets are hash-bound in
+`tools/frida_runtime_probe/owner_attestations/sp_story_3_5_full_chapters_owner_playback_20260718.json`.
+
+The first mixed-composition checkpoint has therefore been built on durable D::
+`ac1102`, `ac1103`, `ac1104`, and `ac5208`, totaling 40 events, 99 voice-bound
+Chinese cues, 175 audio layers, and 315.067 seconds. It includes 21 linear and
+19 `timed_full_frame_layers` events, multiple ordered clips, loop backgrounds,
+screen/loop overlays, and both 416x232 and 512x288 native media. All four passed
+automated frame/sample/source/subtitle QA. **Stop here and wait for owner playback
+of these four mixed-composition candidates. Do not start the next families,
+material classification, BGM capture, CDN/addon work, or another architecture
+audit before that feedback.** The owner should especially decide whether the
+authored runtime sparkle/logo layers belong in clean-story releases, whether
+simultaneous `ac5208` cues are readable, and whether the new 416x232 subtitle
+layout is acceptable.
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_mixed_composition_reviews_v22_20260718
+```
 
 The old six-edition atomic blocker remains overridden for the named independent
 no-BGM Chinese lane. The complete two-audio by three-subtitle matrix is still

@@ -126,6 +126,23 @@ def duration_metadata_matches_cfr_grid(actual_ms: int, expected_ms: int) -> bool
     return abs(actual_ms - expected_ms) <= 1
 
 
+def audited_video_frame_count(path: Path, ffprobe: str) -> int:
+    payload = production_probe(path, ffprobe)
+    streams = [
+        row for row in payload.get("streams", []) if row.get("codec_type") == "video"
+    ]
+    if len(streams) != 1:
+        raise RuntimeError(f"expected one video stream while counting frames: {path}")
+    value = streams[0].get("nb_read_frames") or streams[0].get("nb_frames")
+    try:
+        result = int(value)
+    except (TypeError, ValueError) as error:
+        raise RuntimeError(f"video frame count is unavailable: {path}") from error
+    if result <= 0:
+        raise RuntimeError(f"video frame count is not positive: {path}")
+    return result
+
+
 def run(command: list[str], cwd: Path | None = None) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
@@ -476,6 +493,8 @@ def validate_explicit_composition_plan(manifest: dict) -> dict:
         manifest.get("raw_render_duration_ms"),
         manifest.get("timeline_content_end_ms"),
     }
+    if manifest.get("video_composition_model") == "timed_full_frame_layers":
+        accepted_plan_durations.add(manifest.get("video_duration_ms"))
     if plan_duration_ms is not None and plan_duration_ms not in accepted_plan_durations:
         raise RuntimeError(
             "composition_plan.duration_ms does not match the content or CFR "
@@ -829,6 +848,14 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
     render_duration_ms = int(
         manifest.get("render_duration_ms", manifest["video_duration_ms"])
     )
+    target_frame_count = int(
+        manifest.get(
+            "render_frame_count",
+            round(render_duration_ms * int(str(frame_rate).split("/", 1)[0]) / 1000),
+        )
+    )
+    if target_frame_count <= 0:
+        raise SystemExit("render_frame_count must be positive")
     extension_policy = str(
         plan.get("extension_policy")
         or manifest.get("video_extension_policy", "none")
@@ -1045,8 +1072,10 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
             current_label = output_label
             input_index += 1
         video_filters.append(
-            f"[{current_label}]trim=duration={render_duration_ms / 1000:.6f},"
-            f"fps={frame_rate},format={pixel_format}[v]"
+            f"[{current_label}]fps={frame_rate},"
+            "tpad=stop_mode=clone:stop=2,"
+            f"trim=end_frame={target_frame_count},setpts=PTS-STARTPTS,"
+            f"format={pixel_format}[v]"
         )
         run(
             [
@@ -1068,6 +1097,8 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                 "14",
                 "-pix_fmt",
                 str(pixel_format),
+                "-frames:v",
+                str(target_frame_count),
                 "-movflags",
                 "+faststart",
                 str(video_only),
@@ -1151,7 +1182,13 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
             )
         elif extension_policy == "loop_last_clip":
             extension_path = work_dir / f"{event}__loop_extension.mp4"
-            extension_sec = extension_ms / 1000.0
+            base_frame_count = audited_video_frame_count(base_video_only, args.ffprobe)
+            extension_frames = target_frame_count - base_frame_count
+            if extension_frames <= 0:
+                raise SystemExit(
+                    "loop extension has no positive CFR frame budget: "
+                    f"target={target_frame_count}, base={base_frame_count}"
+                )
             run(
                 [
                     args.ffmpeg,
@@ -1164,8 +1201,8 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                     "-i",
                     str(clips[-1]),
                     "-an",
-                    "-t",
-                    f"{extension_sec:.6f}",
+                    "-frames:v",
+                    str(extension_frames),
                     "-c:v",
                     "libx264",
                     "-preset",
@@ -1200,6 +1237,8 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                     "14",
                     "-pix_fmt",
                     str(pixel_format),
+                    "-frames:v",
+                    str(target_frame_count),
                     str(video_only),
                 ]
             )
@@ -1227,6 +1266,8 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                     "14",
                     "-pix_fmt",
                     str(pixel_format),
+                    "-frames:v",
+                    str(target_frame_count),
                     str(video_only),
                 ]
             )
@@ -1254,6 +1295,8 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                     "14",
                     "-pix_fmt",
                     str(pixel_format),
+                    "-frames:v",
+                    str(target_frame_count),
                     str(video_only),
                 ]
             )
@@ -1322,14 +1365,16 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
             ):
                 qa_errors.append(
                     "clean visual stream duration differs from the CFR grid by "
-                    "more than the 1 ms metadata rounding allowance"
+                    "more than the 1 ms metadata rounding allowance: "
+                    f"actual={stream_duration_ms} ms, expected={render_duration_ms} ms"
                 )
             if not duration_metadata_matches_cfr_grid(
                 container_duration_ms, render_duration_ms
             ):
                 qa_errors.append(
                     "clean visual container duration differs from the CFR grid by "
-                    "more than the 1 ms metadata rounding allowance"
+                    "more than the 1 ms metadata rounding allowance: "
+                    f"actual={container_duration_ms} ms, expected={render_duration_ms} ms"
                 )
         if qa_errors:
             raise SystemExit("clean visual QA failed: " + "; ".join(qa_errors))

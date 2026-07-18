@@ -1,5 +1,11 @@
 # 2026-07-18 SP Story 完整章节首轮扩产审查批次
 
+> **后续人工结论：** 项目所有者已完整播放并确认“这三部完整章节都通过，允许全面
+> 生产”。该原话和本页三部 MP4/SRT/manifest/QA/READY hash 已绑定到
+> `tools/frida_runtime_probe/owner_attestations/sp_story_3_5_full_chapters_owner_playback_20260718.json`。
+> 本页下方“等待播放”文字是生成当时的历史状态；当前扩产检查点已转到
+> [非线性／多层剧情首轮扩产审查批次](2026-07-18-mixed-composition-expansion-review-batch.md)。
+
 ## 所有者授权与本轮停止边界
 
 项目所有者确认首个 44.867 秒 `ac7114_001 -> ac7115_001 -> ac7116_001`

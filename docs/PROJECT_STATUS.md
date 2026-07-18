@@ -2,7 +2,33 @@
 
 更新时间：2026-07-18
 
-## 2026-07-18 首轮完整章节扩产等待人工播放
+## 2026-07-18 非线性／多层剧情扩产等待人工播放
+
+项目所有者已确认 Story 3/4/5 三部完整章节全部通过并授权全面生产，同时要求尽快
+覆盖单全画面线性 SP Story 之外的内容。原话与三部 artifact hash 已保存为
+`sp_story_3_5_full_chapters_owner_playback_20260718.json`。
+
+首批跨 composition-class 候选已经生成：`ac1102`、`ac1103`、`ac1104`、`ac5208`
+共 4 部、40 event、99 cue、175 audio layer 和 315.067 秒。其中 21 event 为
+`linear_full_frame_sequence`，19 event 为 `timed_full_frame_layers`；覆盖多段全画面、
+loop background、screen/loop overlay、416x232 与 512x288。四部均保持原生尺寸、
+30/1 fps、H.264 与 AAC 48 kHz stereo，明确排除 BGM，自动 QA 全部通过。
+
+耐久输出根：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_mixed_composition_reviews_v22_20260718
+```
+
+本轮同时修复了 `_LP` 浮点时长多一帧和 timed framesync 少一帧的 CFR 边界，均改为
+manifest 目标帧数驱动并保留逐帧失败关闭。全仓回归为 319 passed、4 skipped、
+0 failed/error。四部仍为 `HUMAN_PLAYBACK_APPROVED=false`、
+`BILIBILI_RELEASE_READY=false`；当前停止其余批量生产，等待项目所有者重点检查
+runtime sparkle/logo 的 clean-story 归属、并发对白字幕、416x232 布局及 voice/SE。
+完整 hash、统计和下一扩产边界见
+`docs/research/2026-07-18-mixed-composition-expansion-review-batch.md`。
+
+## 2026-07-18 首轮完整章节扩产已人工通过
 
 项目所有者已确认首个 44.867 秒 `ac7114_001 -> ac7115_001 -> ac7116_001`
 候选状态良好并授权生产更多视频。该授权按原话和首个候选 artifact hash 保存于
@@ -20,11 +46,10 @@ stereo；835/836 BGM 和 1681 金带声音失败关闭，无自动黑场或老�
 D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_expansion_reviews_v21_sp_story_20260718
 ```
 
-三部均为 `AUTOMATED_QA_PASSED`，但人审/投稿状态仍为 false。本轮全仓回归为
-314/314 passed；当前已停止 Story 1/2/6、其他 family、素材与 BGM 工作，等待项目
-所有者完整播放。通过后三部所代表的“单全画面线性 SP Story”类别可以批量化；该结论
-不自动覆盖多层、loop、gameplay/result、material 或证据未闭合的 event。完整路径、
-hash、QA 和生产判断见
+三部自动 QA 均通过，项目所有者现已完成播放并明确确认“三部完整章节都通过”；
+`HUMAN_PLAYBACK_APPROVED=true` 已作为 hash-bound owner attestation 保存，但这仍不
+冒充上传授权或 `with_bgm` 批准。该结果正式证明“单全画面线性 SP Story”类别可以
+批量化，并触发了上方的非线性／多层首批扩产。完整路径、hash、QA 和生产判断见
 `docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md`。
 
 ## 2026-07-18 首个独立 R1 中文长片候选

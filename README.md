@@ -9,16 +9,20 @@
 
 ## 当前状态
 
-> **2026-07-18 首轮扩产检查点：** 项目所有者已确认首个 44.867 秒独立 R1 候选
-> “状态良好，可以继续生产更多视频”；该原话、首个候选 artifact hash 和授权边界已写入
-> owner attestation。随后没有直接盲跑 926 event，而是用同一证据合同生成 Story 3/4/5
-> 三个完整 `no_bgm_zh` family 章节：34 event、107 条有声中文字幕、144 个 voice/SE
-> 层、总计 8 分 36.933 秒。三部均为原生 512x288、30 fps、H.264、AAC 48 kHz stereo，
-> 明确排除 BGM 与金带 request 1681，自动 QA 全部通过；当前仍为
-> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`、
-> `publishable=false`，已停止等待项目所有者完整播放。路径、hash、构建合同和全面生产
-> 判断见 [SP Story 完整章节首轮扩产审查批次](docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md)。
-> 设置 D: 耐久资源根后的全仓回归为 314/314 passed，0 skipped/failed/error。
+> **2026-07-18 非线性／多层扩产检查点：** 项目所有者已确认 Story 3/4/5 三部完整
+> 章节全部通过并授权全面生产；原话和三部 artifact hash 已写入 owner attestation。
+> 随后构建器已越过“单全画面线性 SP Story”：首批 `ac1102/ac1103/ac1104/ac5208`
+> 覆盖 40 event、99 条 voice-bound 中文字幕、175 个声音层、21 个 linear event 与
+> 19 个 `timed_full_frame_layers`，包括多片段、loop background、screen overlay、
+> loop overlay、416x232 与 512x288，总时长 315.067 秒。四部长片均通过精确帧／样本
+> 自动 QA，保持原生尺寸、30 fps、H.264、AAC 48 kHz stereo，明确排除 BGM；当前仍为
+> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`，已停止等待项目
+> 所有者播放，尤其检查运行时 sparkle/logo 是否应留在 clean-story、并发对白字幕和
+> 416x232 布局。详见
+> [非线性／多层剧情首轮扩产审查批次](docs/research/2026-07-18-mixed-composition-expansion-review-batch.md)。
+> 已通过的前三部完整章节及其旧检查点见
+> [SP Story 完整章节首轮扩产审查批次](docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md)。
+> 本轮全仓回归为 319 tests passed、4 skipped、0 failed/error。
 
 > 2026-07-16 存储约束：A: RAMDISK 已关闭，不再作为输入、scratch 或输出路径。
 > 耐久研究/媒体一律写入 `D:\magia\MyProducts\casino`，仓库和小型临时处理使用 C:

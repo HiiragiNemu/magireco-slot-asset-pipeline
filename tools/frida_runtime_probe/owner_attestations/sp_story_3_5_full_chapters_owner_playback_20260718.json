@@ -1,0 +1,46 @@
+{
+  "schema": "magireco-owner-playback-attestation-v1",
+  "attestation_id": "sp_story_3_5_full_chapters_owner_playback_20260718",
+  "recorded_date": "2026-07-18",
+  "source": "project_owner_statement_in_codex_thread",
+  "statement": "这三部完整章节都通过，允许全面生产，不过我希望尽快将生产内容覆盖到单全画面线性 SP Story之外的视频",
+  "review_scope": "three_complete_family_chapters_as_rendered",
+  "releases": [
+    {
+      "release_id": "ac7114_full_no_bgm_zh_review_v1",
+      "video_sha256": "9FD511B3E8171D3A13EC0A02D94ED82398024AB7DC46ADE2B4E3E67ED49278A2",
+      "subtitle_sha256": "42AF0C9DB07453A69E195E7374BFE9C82D82296B9B4A6811F88CFE419B61FE21",
+      "manifest_sha256": "411A403A528382F87F8264D7EC3137B242F1F76485544A71746D4D4E0E1DA622",
+      "qa_sha256": "D121E7CB34367A76BF52D307F3F38755950044A0C309C1E89F3D60B6997F2EB0",
+      "ready_sha256": "CDA8F270B52646DCC5AC99507EA1B85272D6246D0FE376FBE824359C2491764B"
+    },
+    {
+      "release_id": "ac7115_full_no_bgm_zh_review_v1",
+      "video_sha256": "15F9920065FBDEE048229D7C289C9046FAEED7DA1B7E83FC0B8B6338FF2E82E5",
+      "subtitle_sha256": "26322EB2FCCD24E85E475AB75F2CA011B55CCAD0093C2074F445FE641348BEBF",
+      "manifest_sha256": "FD6733F33F9810D5E51F11D8B4FFB0AEDA66AF71E7AC571C501827FA7E283DD6",
+      "qa_sha256": "1A80C2212326E65DC0E429BFE4D119BE9FA9106DF61F98F908BDB5A8B4E4EFD1",
+      "ready_sha256": "D2E9081654942E00E8148B611940A924AA250ACFA9471A73512E850E1B6B998E"
+    },
+    {
+      "release_id": "ac7116_full_no_bgm_zh_review_v1",
+      "video_sha256": "11128187D65D4CBA00B88EDE556D19602495E3E87BBE4CE389BA87BF2FCC35FA",
+      "subtitle_sha256": "E0F71ACF50D718D728119885D12DCD6BD02B84B2FF54E35414245D8DF0964528",
+      "manifest_sha256": "9EEDA59F176789DDAF898582C251FA732C92F575178058467D116A0AB37A0863",
+      "qa_sha256": "6E19566928393CB79AC67875EF508E11B4219206F2C5490AD1ACD111CFCA3926",
+      "ready_sha256": "5DCE0D19B676984A90CD81F40AB2E93316B5B8CA4040257C5F4A995819AFD260"
+    }
+  ],
+  "decisions": {
+    "HUMAN_PLAYBACK_APPROVED": true,
+    "BATCH_EXPANSION_AUTHORIZED": true,
+    "FULL_PRODUCTION_AUTHORIZED": true,
+    "EXPAND_BEYOND_LINEAR_SP_STORY_REQUESTED": true,
+    "BILIBILI_RELEASE_READY": false
+  },
+  "not_claimed": [
+    "authorization_to_upload_or_publish",
+    "approval_of_unrendered_families",
+    "approval_of_with_bgm_editions"
+  ]
+}

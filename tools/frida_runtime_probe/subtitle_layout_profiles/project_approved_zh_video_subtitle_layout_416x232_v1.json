@@ -1,0 +1,26 @@
+{
+  "schema": "magireco-project-zh-video-subtitle-layout-v1",
+  "profile_id": "project_approved_zh_video_subtitle_layout_416x232_v1",
+  "approval_status": "pending_owner_review",
+  "original_game_layout": false,
+  "target_width": 416,
+  "target_height": 232,
+  "alignment": "bottom_center",
+  "font_family": "Noto Sans SC",
+  "font_size": 15,
+  "primary_colour": "&H00FFFFFF",
+  "outline_colour": "&H00000000",
+  "border_style": 1,
+  "outline": 2,
+  "shadow": 0,
+  "margin_v": 11,
+  "margin_lr": 10,
+  "max_lines": 2,
+  "safe_area": {
+    "left_px": 10,
+    "right_px": 10,
+    "top_px": 10,
+    "bottom_px": 11
+  },
+  "notes": "Pending-owner 416x232 companion to the accepted 512x288 review layout. It uses the audited Noto Sans SC fallback, preserves native media dimensions, and is not an original-game glyph or layout claim."
+}
