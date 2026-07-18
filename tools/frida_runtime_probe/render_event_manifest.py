@@ -113,6 +113,19 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def duration_metadata_matches_cfr_grid(actual_ms: int, expected_ms: int) -> bool:
+    """Accept only the sub-millisecond MP4 duration-metadata rounding window.
+
+    Exact CFR correctness is checked immediately afterwards from every decoded
+    frame and encoded packet.  FFmpeg can serialize an otherwise exact 30 fps
+    presentation duration just below the nearest millisecond (for example,
+    14.566016 seconds for an exact 437/30-second packet grid), so the rounded
+    container metadata can differ from the manifest's rounded value by 1 ms.
+    """
+
+    return abs(actual_ms - expected_ms) <= 1
+
+
 def run(command: list[str], cwd: Path | None = None) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
@@ -1304,13 +1317,19 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
         else:
             if start_ms != 0:
                 qa_errors.append(f"clean visual starts at {start_ms} ms")
-            if stream_duration_ms != render_duration_ms:
+            if not duration_metadata_matches_cfr_grid(
+                stream_duration_ms, render_duration_ms
+            ):
                 qa_errors.append(
-                    "clean visual stream duration does not equal render_duration_ms"
+                    "clean visual stream duration differs from the CFR grid by "
+                    "more than the 1 ms metadata rounding allowance"
                 )
-            if container_duration_ms != render_duration_ms:
+            if not duration_metadata_matches_cfr_grid(
+                container_duration_ms, render_duration_ms
+            ):
                 qa_errors.append(
-                    "clean visual container duration does not equal render_duration_ms"
+                    "clean visual container duration differs from the CFR grid by "
+                    "more than the 1 ms metadata rounding allowance"
                 )
         if qa_errors:
             raise SystemExit("clean visual QA failed: " + "; ".join(qa_errors))

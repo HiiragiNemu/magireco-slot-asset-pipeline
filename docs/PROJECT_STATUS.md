@@ -2,6 +2,31 @@
 
 更新时间：2026-07-18
 
+## 2026-07-18 首轮完整章节扩产等待人工播放
+
+项目所有者已确认首个 44.867 秒 `ac7114_001 -> ac7115_001 -> ac7116_001`
+候选状态良好并授权生产更多视频。该授权按原话和首个候选 artifact hash 保存于
+`tools/frida_runtime_probe/owner_attestations/`；它不冒充逐 cue 翻译批准或投稿授权。
+
+现已把同一 no-BGM、voice/SE、中文字幕合同扩大到三个完整 family：Story 3
+`ac7114` 12 event/35 cue/174.333 秒，Story 4 `ac7115` 9 event/34 cue/154.700 秒，
+Story 5 `ac7116` 13 event/38 cue/187.900 秒。合计 34 event、107 cue、144 audio
+layer、15,508 帧和 516.933 秒。三部均保持 512x288、30/1 fps、H.264 与 AAC 48 kHz
+stereo；835/836 BGM 和 1681 金带声音失败关闭，无自动黑场或老虎机前景。
+
+耐久输出根为：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_expansion_reviews_v21_sp_story_20260718
+```
+
+三部均为 `AUTOMATED_QA_PASSED`，但人审/投稿状态仍为 false。本轮全仓回归为
+314/314 passed；当前已停止 Story 1/2/6、其他 family、素材与 BGM 工作，等待项目
+所有者完整播放。通过后三部所代表的“单全画面线性 SP Story”类别可以批量化；该结论
+不自动覆盖多层、loop、gameplay/result、material 或证据未闭合的 event。完整路径、
+hash、QA 和生产判断见
+`docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md`。
+
 ## 2026-07-18 首个独立 R1 中文长片候选
 
 项目所有者最新优先级允许 `bilibili_no_bgm_zh_v1` 在自身证据完整时独立达到

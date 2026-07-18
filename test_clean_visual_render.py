@@ -25,6 +25,17 @@ def run(command: list[str]) -> None:
 
 
 class CleanVisualPlanValidationTests(unittest.TestCase):
+    def test_mp4_duration_metadata_allows_only_one_ms_cfr_rounding(self) -> None:
+        self.assertTrue(
+            render_event_manifest.duration_metadata_matches_cfr_grid(14566, 14567)
+        )
+        self.assertTrue(
+            render_event_manifest.duration_metadata_matches_cfr_grid(14567, 14567)
+        )
+        self.assertFalse(
+            render_event_manifest.duration_metadata_matches_cfr_grid(14565, 14567)
+        )
+
     def test_authored_content_tail_may_precede_quantized_frame_tail(self) -> None:
         manifest = {
             "event": "ac7116_001",

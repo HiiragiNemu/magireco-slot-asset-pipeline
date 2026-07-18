@@ -1,5 +1,12 @@
 # 2026-07-18 首个独立 `no_bgm_zh` 长片候选
 
+> 后续状态：项目所有者已于同日确认该候选“状态良好，可以继续生产更多视频”。原话和
+> artifact hash 已保存为
+> `tools/frida_runtime_probe/owner_attestations/ac7114_16_sp_story_no_bgm_zh_v1_owner_playback_20260718.json`。
+> 该确认按“整体候选播放通过、授权扩产”记录，不冒充逐 cue 翻译批准或投稿授权。
+> 当前人工审查点已移到
+> [SP Story 完整章节首轮扩产审查批次](2026-07-18-sp-story-chapter-expansion-review-batch.md)。
+
 ## 项目所有者发布优先级覆盖
 
 项目所有者已把首个可人工观看的 Bilibili 中文剧情长片置于最高优先级。旧的

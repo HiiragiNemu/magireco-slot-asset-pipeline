@@ -9,18 +9,16 @@
 
 ## 当前状态
 
-> **2026-07-18 项目所有者最高优先级覆盖：** 首个独立 R1
-> `bilibili_no_bgm_zh_v1` 已生成自动 QA 通过的人工播放候选。它是 512x288、30 fps、
-> 44.867 秒的 ac7114_001 -> ac7115_001 -> ac7116_001 同场景长片，保留经证据绑定的
-> 角色对白与 SE，明确排除 BGM、金带 request 1681 和老虎机前景，只烧录 9 条中文
-> 对白字幕。`no_bgm_zh` 现在可以独立达到 `BUILD_READY` / `AUTOMATED_QA_PASSED`；
-> 旧六版原子合同不再阻塞该独立 edition，但完整 2x3 六版仍是
-> `archive_complete` / `six_edition_complete` 的最终目标。当前
-> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`，已停止等待项目
-> 所有者播放。合同、D: 路径、hash 与 QA 边界见
-> [首个独立 no_bgm_zh 候选](docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md)。
-> 本轮加入独立 edition、P1 和真实媒体构建测试后，全仓回归为 307/307 passed，
-> 0 skipped/failed/error。
+> **2026-07-18 首轮扩产检查点：** 项目所有者已确认首个 44.867 秒独立 R1 候选
+> “状态良好，可以继续生产更多视频”；该原话、首个候选 artifact hash 和授权边界已写入
+> owner attestation。随后没有直接盲跑 926 event，而是用同一证据合同生成 Story 3/4/5
+> 三个完整 `no_bgm_zh` family 章节：34 event、107 条有声中文字幕、144 个 voice/SE
+> 层、总计 8 分 36.933 秒。三部均为原生 512x288、30 fps、H.264、AAC 48 kHz stereo，
+> 明确排除 BGM 与金带 request 1681，自动 QA 全部通过；当前仍为
+> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`、
+> `publishable=false`，已停止等待项目所有者完整播放。路径、hash、构建合同和全面生产
+> 判断见 [SP Story 完整章节首轮扩产审查批次](docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md)。
+> 设置 D: 耐久资源根后的全仓回归为 314/314 passed，0 skipped/failed/error。
 
 > 2026-07-16 存储约束：A: RAMDISK 已关闭，不再作为输入、scratch 或输出路径。
 > 耐久研究/媒体一律写入 `D:\magia\MyProducts\casino`，仓库和小型临时处理使用 C:

@@ -10,22 +10,25 @@ state.
 The highest-priority delta is now:
 
 ```text
-docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md
+docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md
 ```
 
-The project owner has overridden the old six-edition atomic blocker for one
-named R1 product. `bilibili_no_bgm_zh_v1` may independently reach BUILD_READY
-when its native visual, verified voice/SE, intentionally empty BGM layer and
-Chinese dialogue-only subtitles pass their own evidence contract. The complete
-two-audio by three-subtitle matrix remains the final archive target. This does
-not permit calling the R1 candidate a complete original-game mix.
+The owner confirmed the first 44.867-second ac7114_001 -> ac7115_001 ->
+ac7116_001 R1 candidate was good and authorized expansion. The exact statement
+and artifact hashes are preserved in `tools/frida_runtime_probe/owner_attestations/`;
+it is not represented as cue-by-cue translation approval or upload authority.
+The same fail-closed contract has now produced complete Story 3/4/5 family
+review chapters: 34 events, 107 voice-bound Chinese cues, 144 voice/scene-SE
+layers and 516.933 seconds. All three passed automated QA on durable D:, but
+their owner flags remain false. **Stop here and wait for full owner playback of
+the three chapter candidates. Do not start Story 1/2/6, another family, bulk
+production, material classification, BGM capture, CDN/addon work, or another
+release-architecture audit before that feedback.**
 
-The ac7114_001 -> ac7115_001 -> ac7116_001 candidate has passed automated QA
-and is on durable D:. Translation/layout approval and full playback are still
-owned by the project owner: `HUMAN_PLAYBACK_APPROVED=false` and
-`BILIBILI_RELEASE_READY=false`. **Stop here and wait for owner playback. Do not
-start a second film, bulk production, material classification, BGM capture,
-CDN/addon work, or another release-architecture audit before that feedback.**
+The old six-edition atomic blocker remains overridden for the named independent
+no-BGM Chinese lane. The complete two-audio by three-subtitle matrix is still
+the final archive target; none of these candidates claims a complete original-
+game mix.
 
 Storage authority changed on 2026-07-16: A: RAMDISK is disabled and must not be
 used for scratch, input, or output. Durable research/media belongs under

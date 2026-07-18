@@ -1,0 +1,27 @@
+{
+  "schema": "magireco-owner-playback-attestation-v1",
+  "attestation_id": "ac7114_16_sp_story_no_bgm_zh_v1_owner_playback_20260718",
+  "release_id": "ac7114_16_sp_story_no_bgm_zh_v1",
+  "recorded_date": "2026-07-18",
+  "source": "project_owner_statement_in_codex_thread",
+  "statement": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_candidates_v21_no_bgm_zh_20260718\\ac7114_16_sp_story_no_bgm_zh_v1\\video中的视频已经确认状态良好 可以继续生产更多视频 请你分析是否展开全部视频生产",
+  "review_scope": "overall_candidate_as_rendered",
+  "artifacts": {
+    "video_sha256": "E4A5F8D8B4621FCD256B1E4471F4E2EA6116C1BC382A21D8F07B8DEFB7719D3B",
+    "subtitle_sha256": "5FA6851A4F12DAB38FF4145B0AFE319169EC713D807B801FBA373F898277E9C9",
+    "manifest_sha256": "06AF2D23DCAB258536422ABDC82373117B8649B9E15F0A6ACC88F85A06135BCB",
+    "qa_sha256": "05B2F39B02459B50353C1D25768AF2DFE2BEA1E9B4CC279AC38C93C0BD4E249C",
+    "build_ready_sha256": "DEF8ADEA197BA49FE5CCB0A1F2D470D661767ECD68B237C44011A0B93AEDE0EC"
+  },
+  "decisions": {
+    "HUMAN_PLAYBACK_APPROVED": true,
+    "BATCH_EXPANSION_AUTHORIZED": true,
+    "BILIBILI_RELEASE_READY": false
+  },
+  "not_claimed": [
+    "cue_by_cue_translation_approval",
+    "individual_checklist_item_attestation",
+    "authorization_to_upload_or_publish"
+  ]
+}
+
