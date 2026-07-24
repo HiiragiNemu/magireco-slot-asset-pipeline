@@ -1,0 +1,37 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac0908",
+  "proposal_id": "ac0908_dirinfo_route_57_v1",
+  "status": "timing_risk_manual_candidate",
+  "errors": [
+    "ac0908_007/ac0908_008/ac0908_009 use child-local Z2D callback timing without a resolved parent DGM-to-child instantiation offset."
+  ],
+  "ordering": "DirInfo-v3 kind-33 row 57",
+  "event_count": 3,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "route_label": "四千年套餐选项",
+  "timing_policy": "fail-closed for production; retain only as a finite human timing-risk candidate",
+  "source_series_manifest": {
+    "path": "ac0908_dirinfo_route_catalog_v1.json",
+    "sha256": "A409707C7E7DE35E723F9DE901AAA09C4EA90F70498A5C1842B5BBE23470F5F6",
+    "evidence": "DirInfo-v3 kind-33 row 57 selects ac0908_009 -> ac0908_007 -> ac0908_008."
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "ready_event_names": [
+      "ac0908_009",
+      "ac0908_007",
+      "ac0908_008"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac0908_009": "05FBA679501854D74193BC0C5374731BF03914003679A759ADD5EE81254DFC2F",
+    "ac0908_007": "13904A930EFA5500CCA09FE14B6DB932FFCBE6C2C2B2DA922A8D5C9BCACEAE7B",
+    "ac0908_008": "CCA52F6EE670116C31941E6DB4E6CADF986DFD5F93CB124EFC3BF4CF4713FE46"
+  }
+}

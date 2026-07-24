@@ -1,0 +1,54 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac0908",
+  "proposal_id": "ac0908_dirinfo_route_catalog_v1",
+  "status": "timing_risk_manual_candidate",
+  "errors": [
+    "ac0908_002 through ac0908_009 lack a resolved runtime event manifest and parent DGM-to-child Z2D event-global instantiation offset."
+  ],
+  "ordering": "DirInfo-v3 route alternative catalog; not an audience concat order",
+  "event_count": 8,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "route_evidence": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01",
+    "kind": 33,
+    "rows": [52, 53, 54, 55, 56, 57],
+    "meaning": "six distinct lower-resolution option routes sharing ac0908_009 as the entry and ac0908_008 as the result"
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "source_event_names_not_event_global_timing_ready": [
+      "ac0908_009",
+      "ac0908_002",
+      "ac0908_003",
+      "ac0908_004",
+      "ac0908_005",
+      "ac0908_006",
+      "ac0908_007",
+      "ac0908_008"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac0908_009": "05FBA679501854D74193BC0C5374731BF03914003679A759ADD5EE81254DFC2F",
+    "ac0908_002": "4109E2EB3555EC73BC6111A0A6105171F3D2C4FD50AA43B8614CEDCFD748AF7D",
+    "ac0908_003": "F267B1BA110792C1013378E22C14787E831F8915C63A21751CB6FD5AEBB96531",
+    "ac0908_004": "518EBAED5FCE02704C152D5114CFE05448DB2D43BC2A3010C65629ED75D4498C",
+    "ac0908_005": "B5D644D9C604A49396D48D85D14A6D60E339C69022349675DD8983FDAA25A45C",
+    "ac0908_006": "88DAD29D4C60BB3EDD984B3BDCB5FA35908B902602F2242FF0F3BF3014428F62",
+    "ac0908_007": "13904A930EFA5500CCA09FE14B6DB932FFCBE6C2C2B2DA922A8D5C9BCACEAE7B",
+    "ac0908_008": "CCA52F6EE670116C31941E6DB4E6CADF986DFD5F93CB124EFC3BF4CF4713FE46"
+  },
+  "timing_evidence": {
+    "runtime_event_manifest_sources": null,
+    "parent_dgm_to_child_z2d_instantiation_offset": null,
+    "child_local_confidence": "exact_gdb_child_frame_callback_frame_and_official_ogg",
+    "policy": "Fail closed for production; retain existing v27 outputs only as finite human timing-risk candidates."
+  },
+  "audience_policy": "Use one DirInfo row per audience product. Never concatenate the catalog itself."
+}

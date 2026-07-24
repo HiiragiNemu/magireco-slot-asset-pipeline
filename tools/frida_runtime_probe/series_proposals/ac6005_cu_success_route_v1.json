@@ -2,8 +2,13 @@
   "schema": "magireco-series-editions-v1",
   "series": "ac6005_cu_success",
   "proposal_id": "ac6005_cu_success_route_v1",
-  "status": "finite_review_candidate",
-  "errors": [],
+  "status": "rejected_by_project_owner",
+  "errors": [
+    "Human playback found voice-to-mouth mismatch.",
+    "Dialogue timing between speakers appears incorrect.",
+    "Subtitle timing is incorrect.",
+    "Dialogue may be missing."
+  ],
   "ordering": "DirInfo-v3 kind-173 row 10",
   "event_count": 3,
   "events": [
@@ -40,5 +45,11 @@
     "automated_qa_sha256": "6DB18E8D9BDD5AEF4230642ECCD3A5211EC8F23CFB2FAE2235C90C55FA16ABAE",
     "human_playback": false,
     "publication": false
+  },
+  "human_review_rejection": {
+    "date": "2026-07-25",
+    "policy": "fail_closed; do not render or publish this route proposal until dialogue, voice, mouth-motion, and subtitle timing are evidence-closed",
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\QUARANTINE_REJECTED_P18_20260725\\REJECTION_STATUS.json",
+    "sha256": "35BC5419986A5A2D45478E731E7260022BD428E260C7F0D7675C29F166CD5736"
   }
 }

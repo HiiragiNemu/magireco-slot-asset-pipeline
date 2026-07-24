@@ -1,0 +1,62 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac0908_dirinfo_option_routes_52_57",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {
+      "ja": "桃まんになりますっ",
+      "zh": "寿桃包来啦！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "中華クラゲです",
+      "zh": "凉拌海蜇来啦！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "天津飯あがりましたーっ",
+      "zh": "天津饭做好啦——！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "レバニラどうぞ",
+      "zh": "请用韭菜炒肝！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "特製麻婆豆腐だよ",
+      "zh": "这是特制麻婆豆腐！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "これが究極四千年定食だー",
+      "zh": "这就是究极四千年套餐——！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "なんてん？\nなんてん？",
+      "zh": "多少分？\n多少分？",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "さ…\n50点？",
+      "zh": "五……\n50分？",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "たったごじゅってえぇぇん！？",
+      "zh": "才五十分——！？",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "火力最大",
+      "zh": "火力全开！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "ちゃらあああっ",
+      "zh": "呀啊啊啊——！",
+      "status": "machine_draft_pending_owner"
+    }
+  ]
+}

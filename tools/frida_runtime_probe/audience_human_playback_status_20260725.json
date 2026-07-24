@@ -1,0 +1,124 @@
+{
+  "schema": "magireco-audience-human-playback-status-v1",
+  "recorded_date": "2026-07-25",
+  "approval_policy": "Only exact media files explicitly watched by the project owner are approved. Approval never propagates across none, JA, or ZH editions.",
+  "approved_media": [
+    {
+      "part": "P11",
+      "edition": "zh",
+      "filename": "P11 黑江邀请彩羽前往神滨与挑战演出 ac0911__zh.mp4",
+      "sha256": "64C320112F813644D848F8AFB81D9FF4D56E0A10D7CDC03668B81E4A3B171EFD"
+    },
+    {
+      "part": "P13",
+      "edition": "zh",
+      "filename": "P13 Magius启动魔法少女解放计划 ac4903__zh.mp4",
+      "sha256": "CE7B7B7D7646437464DC84B9700F86C2A0F7C241E5AB904D833603FB84070A7C"
+    },
+    {
+      "part": "P14",
+      "edition": "zh",
+      "filename": "P14 阿莉娜的艺术宣言 ac5301__zh.mp4",
+      "sha256": "0B51784AA891C3AA332A75AA12A81CE75CB6E985F60E23216057D8104A33505F"
+    },
+    {
+      "part": "P15",
+      "edition": "zh",
+      "filename": "P15 阿莉娜的愤怒 ac5303__zh.mp4",
+      "sha256": "83AB75F0E453AC98000C693D79F10A0B8393429B7E49BEEC06A8DA85D034F618"
+    },
+    {
+      "part": "P19",
+      "edition": "zh",
+      "filename": "P19 菲莉希亚与莎奈驰援彩羽 ac6007__zh.mp4",
+      "sha256": "28D58FED9909D65D73FFFC50F9B771D3DB39739DBFFF80E5C12FE82B136C87A8"
+    },
+    {
+      "part": "P20",
+      "edition": "zh",
+      "filename": "P20 见泷原魔法少女在神滨并肩作战 ac7112__zh.mp4",
+      "sha256": "2D625DB0032D156031D44BFFB08A644472A7D64B774C143A52CE28456C9B90B8"
+    },
+    {
+      "part": "P21",
+      "edition": "zh",
+      "filename": "P21 ac7113开场独立画幅片段【512×416】__zh.mp4",
+      "sha256": "1F85B0BB9CE52E114CAF1AFC77734777A83188C7667A0C1F914B2A91DAE4C16D"
+    },
+    {
+      "part": "P22",
+      "edition": "zh",
+      "filename": "P22 众人救回圣麻美与魔女之夜转向 ac7113__zh.mp4",
+      "sha256": "E6E03FEA4CC109A716FA7D4192D8DA929361C59EAF5E1E6CAA7416C625C49882"
+    },
+    {
+      "part": "P24",
+      "edition": "zh",
+      "filename": "P24 阿莉娜与Magius之翼 ac7206__zh.mp4",
+      "sha256": "E1189A4C7CC3A07A9A474ABE5099D81023EF0B5533C974FF22AD7924A005E2D6"
+    },
+    {
+      "part": "P25",
+      "edition": "zh",
+      "filename": "P25 八千代与鹤乃的火箭突击 ac7210__zh.mp4",
+      "sha256": "02EC2353B3130E7A911BBAD2966BA1DB312E47E168894680EEDB8A9856830B15"
+    }
+  ],
+  "failed_products": [
+    {
+      "part": "P17",
+      "family": "ac6004",
+      "status": "human_playback_failed",
+      "failure": "Character mouth motion is seriously misaligned with voice and subtitles.",
+      "root_cause": "In 005 -> 006 -> 008 -> 011 -> 012, only request 3265 has resolved runtime timing. Six other dialogue starts use unresolved child-local Z2D callback times, and request 3260 in ac6004_006 was omitted entirely because its parent-level start was unresolved.",
+      "missing_dialogue": "request 3260, Z2D cap6004_mb_yac_005, official voice duration 7.899 seconds",
+      "policy": "Quarantine none/JA/ZH because all share the at-risk presentation timeline. Verify the expected request set and bind a parent offset per request and child Z2D; do not guess or apply a uniform visual shift.",
+      "editions": {
+        "none": {
+          "filename": "P17 八千代等人拯救谣鹤乃 ac6004__none.mp4",
+          "sha256": "0B94F6F4F89AD91301406378FB4A1B2DCD559EE105381681060F72EEA2664AC3"
+        },
+        "ja": {
+          "filename": "P17 八千代等人拯救谣鹤乃 ac6004__ja.mp4",
+          "sha256": "9BCF0D762DD70DCE86864965838EA82C6EC60D512929D62FE6537D8C58DA9EF8"
+        },
+        "zh": {
+          "filename": "P17 八千代等人拯救谣鹤乃 ac6004__zh.mp4",
+          "sha256": "5C91E0BF29EE13707C3A8C5350FE6FBFF5DD0F1B53F7EF6CC82760391E1A9A19"
+        }
+      }
+    },
+    {
+      "part": "P18",
+      "family": "ac6005",
+      "status": "human_playback_failed",
+      "failure": "Voice and mouth motion do not match; speaker, subtitle timing, and dialogue completeness are unresolved.",
+      "policy": "The rejected 010 -> 013 -> 014 finite candidate remains fail-closed."
+    }
+  ],
+  "timing_gate_correction": {
+    "unsafe_confidence": "exact_gdb_child_frame_callback_frame_and_official_ogg",
+    "meaning": "This confidence proves the child Z2D callback frame and official OGG identity, but does not prove the parent DGM-to-child event-global instantiation offset.",
+    "required_for_ready": "A resolved runtime event manifest or hash-bound parent DGM-to-child instantiation offset, plus a complete expected request set.",
+    "fail_closed_error": "unresolved_parent_dgm_to_child_z2d_instantiation_offset",
+    "v24_risk_inventory": {
+      "events_previously_promoted_ready": 93,
+      "native_416x232_events": 63,
+      "interpretation": "Risk inventory only; it does not prove all 93 rendered products are visibly wrong."
+    }
+  },
+  "durable_sources": {
+    "approved_zh_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\audit\\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json",
+      "sha256": "62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C"
+    },
+    "p17_failure_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\quarantine_human_playback_failed_p17_20260725\\HUMAN_PLAYBACK_FAILED.json",
+      "sha256": "B41799DDBF7B927D7191DFEB34BAA362954D444AA4A4CC5AB520F4456E2308E7"
+    },
+    "active_exclusions": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\audit\\ACTIVE_UPLOAD_EXCLUSIONS_20260725.json",
+      "sha256": "2FFBB9A4F9FC418ABFED3F6FE1ED7828007638BBC7F6D94717014042C75AD802"
+    }
+  }
+}

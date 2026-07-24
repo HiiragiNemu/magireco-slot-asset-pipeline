@@ -271,9 +271,10 @@ S/L、Kuroe add、CU、win/revival/CLEAR 等真实路线变体。不要自动删
 1,563 MP4。现代素材／玩法／效果合集预计最终约 40–55 组，目前只约 6 个旧逻辑
 合集，仍有约 34–49 组需要现代化生产。
 
-下一批证据较成熟的是 `ac7101–ac7107`、`ac0908`、`ac6002`，约 9 个产品。
-`ac7101–7107` 的 `_001→_002` 是干净故事，`_003` 是 1 秒控制／停止事件，应
-排除；共约 19:50。先完成当前 P12/P16/P18/P23 纠错验收，再批量进入该组。
+较早的候选池曾列出 `ac7101–ac7107`、`ac0908`、`ac6002`。该优先级已被
+项目所有者覆盖：停止新增 512 尺寸生产，`ac7101–7107` 暂停；只先推进有
+DirInfo 路线证据的 416x232 选项产品。ac0908 rows 52–57 已完成有限批次，
+ac6002 仍待逐路线建模。
 
 ## 6. 当前代码状态
 
@@ -343,12 +344,42 @@ device frida-server 17.5.2 污染 zygote64/32，子进程在继承的
 过早注入。收到项目所有者明确的 `runtime recovered` 前，不得连接、重启、注入或
 attach MuMu。P16 继续隔离，本地 no-BGM 生产不受影响。
 
-当前有限纠错批次已经完成并停止：P12 JA/ZH、P18 none/JA/ZH、P23 JA/ZH 共
-7 个 MP4 位于
-`manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_7_MP4`。
-P12/P16/P18/P23 的 12 个旧投稿链接全部隔离，活跃投稿目录各剩 11 个不受影响
-family。完整 hash 和审查区间见
+当前有限纠错批次最初包含 P12 JA/ZH、P18 none/JA/ZH、P23 JA/ZH 共 7 个
+MP4。项目所有者播放后否决 P18：语音与嘴型不符、角色声音与字幕时序错误，并
+疑似漏对白。P18 三版现位于
+`manual_review_candidates_v26_corrections_20260725\
+QUARANTINE_REJECTED_P18_20260725`，禁止投稿；当前审查入口只剩
+`REVIEW_NOW_4_MP4` 中的 P12/P23 四版。
+P12/P16/P18/P23 的 12 个旧投稿链接全部隔离。项目所有者随后人工否决 P17
+`ac6004`，其 none/JA/ZH 三版也已隔离；活跃投稿目录各剩 10 个 family。
+其中 P11/P13/P14/P15/P19/P20/P21/P22/P24/P25 的具体 ZH 文件已获人工播放
+批准，none/JA 未获连带批准。完整 hash 和审查区间见
 `docs/research/2026-07-25-correction-review-batch.md`。
+
+416x232 优先级已经落地：ac0908 DirInfo kind 33 rows 52–57 的六条独立选项
+路线已完成 none/JA/ZH 共 18 个审查 MP4，入口为
+`manual_review_candidates_v27_ac0908_option_routes_20260725\
+REVIEW_NOW_18_MP4`。旧规格自动 QA 通过，但 `_002` 至 `_009` 全部只有
+child-local Z2D callback 时点，没有 resolved runtime event manifest 或父 DGM→
+子 Z2D 的 event-global 实例化偏移。它们现为 timing-risk 有限人工候选，不是
+READY；不要把 42 个内部 MP4 统计当成 42 个交付片，最终审查成品只有 18 个。
+
+P17 `ac6004` 的人工错位也已闭合为同类证据提升错误：顺序
+`005→006→008→011→012` 中仅 request 3265 有 resolved runtime timing；其余
+6 个对白起点只有 child-local 时点，且 `_006` 的 request 3260（7.899 秒官方
+语音）被旧管线整条漏掉。不要目测平移。manifest builder 现要求 resolved runtime
+event manifest 或父子实例化偏移，否则
+`event_global_z2d_timing_ready=false`、`render_ready=false`；修复还必须校验
+expected request set。
+
+范围审计发现 v24 曾有 93 个事件按相同 child-local 证据获 READY，其中 63 个为
+416x232。这是待重验风险清单，不代表全部已经观察到错误；新量产必须先通过收紧后
+的 fail-closed 门禁。
+
+未来 416 内容合同：首选 ac1102 同类的自然 family 长片，并保留原有分段。
+ac0908 的 18 个 MP4 是 6 条内容路线 × 3 个 edition，不是 18 部不同内容。只有六条
+路线人工时序通过后，才可在保留六个分段的同时，额外做一部“六种菜品路线合集”
+长版；本轮不启动该合集。
 
 ## 8. 接手后的立即执行顺序
 
@@ -357,10 +388,13 @@ family。完整 hash 和审查区间见
    route-aware proposal。
 3. 隔离 P16，取得 `ac6003_009` 父 DGM→子 Z2D 的精确实例化偏移后重建，并
    改标题；不要靠 467 ms lead-in 猜值。
-4. 先建立 P18 的 `010→013→014` CU 成功路线；为 `_014` 做多层 component
-   composition plan，排除另属玩法展示的 `ac8040` 效果层。
+4. P18 的 `010→013→014` CU 成功路线静态候选已被人工否决。重新开始前必须为
+   每句对白、嘴型、声音和字幕取得事件全局调度证据；旧 composition plan
+   fail-closed，不得直接重渲染。
 5. 把候选放入一个新的 D: 人工审查根，给出只需观看的明确 MP4 清单并停止。
-6. 只有项目所有者回报通过后，才继续 `ac7101–7107/ac0908/ac6002` 和更大批量。
+6. 停止新增 512 尺寸生产，暂停 `ac7101–ac7107`；优先原生 416x232 选项路线。
+   ac0908 六条有限路线已经交审，先等人工结果；ac6002 也必须先证明路线，不能
+   机械 concat。
 7. 每批同步 GitHub 文档、manifest/hash 摘要和自动 QA；上传 Bilibili 仍由所有者
    自己完成。
 

@@ -81,6 +81,9 @@ GRAPHICAL_SUBTITLE_CONFIDENCE = {
     "exact_gdb_frame_and_official_ogg",
     "exact_gdb_frame_only",
 }
+CHILD_LOCAL_Z2D_SOUND_CONFIDENCE = (
+    "exact_gdb_child_frame_callback_frame_and_official_ogg"
+)
 RUNTIME_MANIFEST_LOADER_PROVENANCE_FIELDS = {
     "_source_path",
     "_source_paths",
@@ -1204,6 +1207,8 @@ def graphical_subtitle_row(row: dict) -> dict:
         "speaker_code": "",
         "subtitle_source": "graphical_display_text",
         "evidence": str(row.get("timeline_confidence", "")),
+        "timing_scope": "child_z2d_local_only",
+        "event_global_start_resolved": False,
     }
 
 
@@ -1416,8 +1421,7 @@ def main() -> int:
         row.get("event_name", "")
         for row in event_sounds
         if row.get("ogg_exists") == "yes"
-        and row.get("timeline_confidence")
-        == "exact_gdb_child_frame_callback_frame_and_official_ogg"
+        and row.get("timeline_confidence") == CHILD_LOCAL_Z2D_SOUND_CONFIDENCE
     }
     selected = {
         row["event_name"]: row
@@ -1472,7 +1476,7 @@ def main() -> int:
             event in selected
             and row.get("ogg_exists") == "yes"
             and row.get("timeline_confidence")
-            == "exact_gdb_child_frame_callback_frame_and_official_ogg"
+            == CHILD_LOCAL_Z2D_SOUND_CONFIDENCE
         ):
             sounds_by_event[event].append(row)
     subtitles_by_event: dict[str, list[dict[str, str]]] = defaultdict(list)
@@ -1545,6 +1549,11 @@ def main() -> int:
             for row in event_clips
         ]
         errors: list[str] = []
+        child_local_sound_rows = sounds_by_event.get(event, [])
+        child_local_subtitle_rows = subtitles_by_event.get(event, [])
+        event_global_z2d_timing_ready = bool(runtime_manifest) or not (
+            child_local_sound_rows or child_local_subtitle_rows
+        )
         audience_exclusion_reason = audience_exclusions.get(event, "")
         if audience_exclusion_reason:
             errors.append("audience_component_only")
@@ -1679,6 +1688,8 @@ def main() -> int:
                             "absolute_start_frame", ""
                         ),
                         "evidence": row.get("timeline_confidence", ""),
+                        "timing_scope": "child_z2d_local_only",
+                        "event_global_start_resolved": False,
                     }
                 )
 
@@ -1821,6 +1832,15 @@ def main() -> int:
                 row["subtitle_source"],
             )
         )
+        if any(
+            row.get("event_global_start_resolved") is False
+            for row in [*audio_rows, *subtitle_rows]
+        ):
+            event_global_z2d_timing_ready = False
+        if not event_global_z2d_timing_ready:
+            errors.append(
+                "unresolved_parent_dgm_to_child_z2d_instantiation_offset"
+            )
         duration_ms = max(
             [number(row.get("event_end_ms", "")) for row in event_clips]
             + [
@@ -2143,6 +2163,9 @@ def main() -> int:
                     row["source"] == "z2d_req_sound"
                     for row in audio_rows
                 ),
+                "event_global_z2d_timing_ready": (
+                    event_global_z2d_timing_ready
+                ),
                 "linear_video_timeline": (
                     video_composition_model == "linear_full_frame_sequence"
                     and "video_timeline_nonzero_start" not in errors
@@ -2155,6 +2178,7 @@ def main() -> int:
                 ),
                 "audio_timeline_ready": (
                     bool(audio_rows)
+                    and event_global_z2d_timing_ready
                     and all(
                         row["path"] and Path(row["path"]).exists()
                         for row in audio_rows
@@ -2215,6 +2239,7 @@ def main() -> int:
                 "audio_timeline_ready": (
                     "yes"
                     if audio_rows
+                    and event_global_z2d_timing_ready
                     and all(
                         row["path"] and Path(row["path"]).exists()
                         for row in audio_rows

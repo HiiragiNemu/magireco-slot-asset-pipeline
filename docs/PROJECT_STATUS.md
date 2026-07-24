@@ -16,27 +16,45 @@ docs/HANDOFF_CODEX_2026-07-25.md
 工具现改用 event + request + code name + audio SHA-256 的精确身份覆盖，未列出的
 歧义 `kuro` 不自动加角色名前缀。
 
-本轮纠错候选已收束为 7 个 MP4，并已停止继续扩产：
+本轮纠错候选最初为 7 个 MP4；P18 人工播放失败后，当前审查入口已收束为
+P12/P23 共 4 个 MP4：
 
 ```text
 D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
-  manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_7_MP4
+  manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_4_MP4
 ```
 
 - P12：去重、route-aware 的 JA/ZH 两版，24 个唯一 occurrence、330.733 秒；
   `ac4902_003/_059` request 8340 两句只按已授权证据显示黑羽；
-- P18：DirInfo kind-173 row 10 证明的 `010 → 013 → 014` CU 成功路线
-  none/JA/ZH 三版，31.367 秒；`_014` 用六个 512x416 故事片段建立有限静态
-  composition 候选，320x256 `ac8040` 胜利／玩法效果与 request 225 胜利 jingle
-  排除；前两事件只居中补黑边，不缩放；
+- P18：DirInfo 只证明 `010 → 013 → 014` 是 CU 成功路线，未证明现有静态
+  composition 的声音与画面全局时间。项目所有者播放后确认三版均失败：语音与嘴型
+  不符、角色间声音时序和字幕时序错误，并疑似漏对白；三版已 fail-closed 隔离；
 - P23：JA/ZH 两版，146.033 秒；只对授权的 9634/9635/9638/9663 标注黑，
   `kuroe` 仍为黑江，标题候选为“黑江与黑的相遇 ac7117”。
 
-三组自动 QA 均通过，但 `HUMAN_PLAYBACK_APPROVED=false`、
-`publication_approved=false`。P12/P18/P23 旧版与尚未修复的 P16 旧版共 12 个
+P12/P23 自动 QA 通过但仍是 `HUMAN_PLAYBACK_APPROVED=false`、
+`publication_approved=false`。自动规格 QA 未能发现 P18 的语义时序错误，不能覆盖
+人工播放否决。P12/P18/P23 旧版与尚未修复的 P16 旧版共 12 个
 none/JA/ZH MP4 已全部移出活跃投稿目录，保存在
-`quarantine_pending_fix_20260725`。上传准备根现在只保留 11 个不受本轮纠错影响的
-family、33 个 MP4；明确清单见 `UPLOAD_NOW_STATUS_20260725.md`。
+`quarantine_pending_fix_20260725`。项目所有者随后人工否决 P17 `ac6004`：
+角色嘴型与语音／字幕严重错位，共用风险时间线的 none/JA/ZH 三版已移至
+`quarantine_human_playback_failed_p17_20260725`。上传准备根现在只保留 10 个
+family、30 个 MP4；明确清单见 `UPLOAD_NOW_STATUS_20260725.md`。
+
+P17 根因已经闭合为证据层级错误，而非编码随机漂移：长片顺序为
+`005 → 006 → 008 → 011 → 012`；仅 request 3265 有 resolved runtime timing。
+其余 6 个对白起点只有 child Z2D callback 局部时点，旧管线还因父级播放起点未
+解析而整条漏掉 `_006` 的 request 3260（官方语音 7.899 秒）。因此禁止按肉眼
+统一平移；修复必须校验 expected request set，并逐 request／逐 child Z2D 绑定
+hash-bound parent offset。production manifest builder 现对此 fail-closed：
+缺 resolved runtime event manifest 或父子实例化偏移时，
+`event_global_z2d_timing_ready=false`、`render_ready=false`。
+
+项目所有者已完整确认其中 10 个具体 ZH 文件可投稿：P11、P13、P14、P15、P19、
+P20、P21、P22、P24、P25。精确文件名与 SHA-256 位于
+`audit\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json`，文件 SHA-256 为
+`62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C`。
+此批准不扩展到未观看的 none/JA。
 
 项目所有者另报告 P16 `ac6003` 约 47 秒起语音领先画面、P18 `ac6005` 缺少彩羽
 扑向灯花和音梦的 512x416 后半故事，并质疑若干线性 family 的完全重复或分支
@@ -44,12 +62,51 @@ family、33 个 MP4；明确清单见 `UPLOAD_NOW_STATUS_20260725.md`。
 现有 267 个事件 occurrence 中确认 26 个完全重复，去重可减少 389.500 秒，但
 原始单事件档案全部保留。
 
+P18 被否决的三版另位于
+`manual_review_candidates_v26_corrections_20260725\
+QUARANTINE_REJECTED_P18_20260725`；`REJECTION_STATUS.json` SHA-256 为
+`35BC5419986A5A2D45478E731E7260022BD428E260C7F0D7675C29F166CD5736`。
+
 P16 当前继续隔离且没有修复候选。`ac6003_009` request 5843 的身份正确，但仍缺父
 DGM 到子 Z2D 的事件全局实例化偏移，禁止根据 467 ms 片头猜值。2026-07-25 的
 运行时故障已由 tombstone 定位为 device frida-server 17.5.2 注入 zygote64/32 后，
 子进程在继承的 `/memfd:frida-agent-64.so` 内 fault；另一次 Gadget 又在真实 slot
-主画面出现前过早注入。收到项目所有者明确的 `runtime recovered` 前，当前任务禁止
-连接、重启、注入或 attach MuMu；本地媒体生产不依赖该环境。
+主画面出现前过早注入。运行时现已恢复为统一 Frida 17.16.4，zygote 清洁，且真实
+slot 画面上的 numeric-PID Gadget attach 已验证；P16 仍只允许一次单 session
+轻量父 DGM→子 Z2D probe，禁止进程枚举和宽泛 observer。恢复记录：
+`D:\magia\MyProducts\casino\runtime_recovery_20260725\
+RUNTIME_RECOVERY_FRIDA_17_16_4.md`，SHA-256
+`3B62A80DA4C26D4CB5EF2D1CB8D128DB41CC8E75C810C1C094C79D5272A03880`。
+
+项目所有者最新调整产品优先级：以“菲莉希亚牧场”同类的原生 416x232
+老虎机动画／选项路线为核心，停止新增 512 尺寸生产。`ac7101–ac7107` 暂停。
+ac0908 已按 DirInfo kind 33 rows 52–57 建立六条独立路线，每条保持
+`009 → 单一菜品选项 → 008`，共完成 none/JA/ZH 18 个审查 MP4。旧规格自动 QA
+全部通过，但后续只读审计确认 `_002` 至 `_009` 都没有 resolved runtime event
+manifest 或父 DGM→子 Z2D 的事件全局实例化偏移；全部对白仍只是 child-local
+callback 时点。因此 18 个文件现为 timing-risk 有限人工候选，不是 READY 或量产
+成功。人工播放与投稿批准仍为 false，ZH 翻译仍是待所有者确认的机器草案。
+审查入口：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v27_ac0908_option_routes_20260725\
+  REVIEW_NOW_18_MP4
+```
+
+审查目录 `MANIFEST_SHA256.json` SHA-256 为
+`8DD03A8D8C7EFBEDC515F0EB7D78F8B1BC80CDD61449210B2D643F6007D079AF`；
+根目录 `TIMING_RISK_STATUS.json` SHA-256 为
+`91D44761921497807FE253D577D3C578D63A37B203AE49865AC10E36609C1950`。
+
+范围审计还发现 v24 曾有 93 个事件使用相同 child-local 证据获 READY，其中
+63 个为 416x232。这只是待重验风险清单，不等于 93 个成片全部已观察到错误；
+以后量产必须先经过新 fail-closed 门禁。
+
+未来 416 产品合同以 ac1102 同类“保留自然分段的 family 长片”为首选。
+ac0908 当前是 6 条路线 × none/JA/ZH 3 edition = 18 个文件，不是 18 部内容；
+仅在六条路线人工时序通过后，才可保留六个分段并额外制作一部“六种菜品路线
+合集”长版。
 
 ## 2026-07-24 系统重装恢复与 no-BGM 全面扩产
 

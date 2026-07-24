@@ -1,17 +1,23 @@
 # 2026-07-25 P12/P18/P23 纠错人工审查批次
 
+> 2026-07-25 人工播放更新：P18 已被项目所有者判定失败并 fail-closed 隔离。
+> 当前审查入口只剩 P12/P23 共 4 个 MP4；下文 P18 的自动 QA 结果仅保留为
+> 被否决候选的技术记录，不能解释为可投稿。
+
 ## 结果
 
-本轮按项目所有者要求只完成一个有限批次后停止：P12 JA/ZH、P18
-none/JA/ZH、P23 JA/ZH，共 7 个 MP4。统一审查入口：
+本轮最初产出 P12 JA/ZH、P18 none/JA/ZH、P23 JA/ZH，共 7 个 MP4。P18
+人工播放失败后，当前统一审查入口仅保留 P12/P23 共 4 个 MP4：
 
 ```text
 D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
-  manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_7_MP4
+  manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_4_MP4
 ```
 
-`README_REVIEW_NOW.md` 给出逐片重点区间；`MANIFEST_SHA256.json` 绑定全部 7 个
-成品。大型媒体不进入 GitHub。
+`README_REVIEW_NOW.md` 给出逐片重点区间；`MANIFEST_SHA256.json`
+SHA-256 为
+`847DB95371651651EA8921E66485F016356E83B4ED3101768355542FB1801369`，
+绑定当前 4 个成品。大型媒体不进入 GitHub。
 
 ## P12
 
@@ -67,8 +73,20 @@ ZH   DE095E2BC8F1A56D09FF9B642A092B14D00DACEF33B3C706B2DD71A83629B438
 QA   6DB18E8D9BDD5AEF4230642ECCD3A5211EC8F23CFB2FAE2235C90C55FA16ABAE
 ```
 
-这是有限静态证据 composition 候选，不是人工批准的最终版。必须完整观看并重点检查
-00:10.633、00:16.033 两个边界，以及 `_014` 是否完整且没有玩法特效。
+这是有限静态证据 composition 候选，不是人工批准的最终版。项目所有者完整播放后
+确认它严重失败：语音与嘴型不符、两人声音时序疑似错误、字幕时序错误，并疑似漏掉
+对白。因此三版均已从审查入口移至：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v26_corrections_20260725\
+  QUARANTINE_REJECTED_P18_20260725
+```
+
+`REJECTION_STATUS.json` SHA-256 为
+`35BC5419986A5A2D45478E731E7260022BD428E260C7F0D7675C29F166CD5736`。
+`ac6005_cu_success_route_v1` 现为 fail-closed，禁止渲染或投稿，直到各对白、
+声音、嘴型和字幕的事件全局时间全部用证据闭合。
 
 ## P23
 
@@ -86,15 +104,32 @@ QA 2DA06F2A3F6D9646B17B580FB2B9C9BD1E91CFA2BCF7305B35FD0C48002BC7C2
 ## 投稿隔离与继续生产边界
 
 P12、P16、P18、P23 的旧 none/JA/ZH 共 12 个硬链接已移至
-`quarantine_pending_fix_20260725`。活跃目录各剩 11 个 family；本轮没有已知
-阻断的 P11/P13/P14/P15/P17/P19/P20/P21/P22/P24/P25 保持原位，但未看过的片仍需
-项目所有者投稿前快看。
+`quarantine_pending_fix_20260725`。P17 `ac6004` 随后因人工播放发现嘴型与
+语音／字幕严重错位而整体隔离；活跃目录各剩 10 个 family。
 
-P16 尚未修复。运行时当前受 zygote Frida agent 污染，收到明确
-`runtime recovered` 前不得操作 MuMu。恢复后也只能使用统一版本、真实 slot 主画面
-出现后、最新 PID、单 host/session 的轻量定向 probe；不得使用旧的
-inject-before-Simulation 顺序。
+P17 的精确根因不是编码漂移：`005→006→008→011→012` 中仅 request 3265
+有 resolved runtime timing；其余 6 个对白起点只有 child-local callback 时点。
+旧管线还漏掉 `_006` 的 request 3260（7.899 秒官方语音）。新的 production
+manifest 门禁会在缺少父 DGM→子 Z2D 实例化偏移时 fail-closed；修复必须校验
+expected request set 并逐 request 绑定父级偏移，禁止统一目测平移。
+
+项目所有者已完整确认 P11/P13/P14/P15/P19/P20/P21/P22/P24/P25 的 10 个具体
+ZH MP4 可投稿。精确文件名、字节数和 SHA-256 见上传根
+`audit\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json`；文件自身 SHA-256 为
+`62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C`。
+none/JA 未获自动批准。
+
+P16 尚未修复。运行时已完成恢复，但仍只能使用统一 Frida 17.16.4、真实 slot
+主画面出现后、ADB 最新 PID、单 host/session 的轻量定向 probe；不得使用旧的
+inject-before-Simulation 顺序或任何进程枚举。恢复记录位于
+`D:\magia\MyProducts\casino\runtime_recovery_20260725\
+RUNTIME_RECOVERY_FRIDA_17_16_4.md`，文件 SHA-256 为
+`3B62A80DA4C26D4CB5EF2D1CB8D128DB41CC8E75C810C1C094C79D5272A03880`。
 
 不受影响 family 的恢复提案保存在
 `series_proposals/no_bgm_unaffected_families_resume_v1.json`。下一扩产
-`ac7101–ac7107/ac0908/ac6002` 继续等待本批人工反馈。
+项目所有者停止新增 512 尺寸生产；后续以原生 416x232 选项路线为核心。
+`ac7101–ac7107` 暂停。ac0908 六条 DirInfo 路线已完成有限批次，详见
+`docs/research/2026-07-25-ac0908-option-route-review-batch.md`。它们同样只有
+child-local cue，现仅为 timing-risk 人工候选，不是 READY；ac6002 仍须先证明
+选项、路线结构与 event-global 声音时序，不能按 event 编号机械串接。

@@ -6,10 +6,11 @@
   "current_upload_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families",
   "active_exclusions": {
     "path": "audit\\ACTIVE_UPLOAD_EXCLUSIONS_20260725.json",
-    "sha256": "F3A62C1BECD60BD06B8A8225C5B3DAABDFF3A93506C7D62AF5FB72AE6AE14DF8",
+    "sha256": "2FFBB9A4F9FC418ABFED3F6FE1ED7828007638BBC7F6D94717014042C75AD802",
     "excluded_families": [
       "ac4902",
       "ac6003",
+      "ac6004",
       "ac6005",
       "ac7117"
     ]
@@ -19,7 +20,6 @@
     {"part": "P13", "family": "ac4903"},
     {"part": "P14", "family": "ac5301"},
     {"part": "P15", "family": "ac5303"},
-    {"part": "P17", "family": "ac6004"},
     {"part": "P19", "family": "ac6007"},
     {"part": "P20", "family": "ac7112"},
     {"part": "P21", "family": "ac7113", "scope": "native 512x416 opening segment"},
@@ -28,25 +28,38 @@
     {"part": "P25", "family": "ac7210"}
   ],
   "edition_count": {
-    "none": 11,
-    "ja": 11,
-    "zh": 11,
-    "total_mp4": 33
+    "none": 10,
+    "ja": 10,
+    "zh": 10,
+    "total_mp4": 30
   },
-  "technical_state": "passed current aggregate media and hash audit; no owner-corrected blocker is currently recorded",
-  "human_playback_state": "not inferred; owner review remains required where not already performed",
+  "technical_state": "the ten remaining active families passed the current aggregate media and hash audit; P17 ac6004 is excluded after owner playback failure",
+  "human_playback_state": {
+    "approved_scope": "exact ZH files only for P11/P13/P14/P15/P19/P20/P21/P22/P24/P25",
+    "path": "audit\\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json",
+    "sha256": "62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C",
+    "none_or_ja_approval_inferred": false
+  },
   "next_expansion_after_current_human_review": [
+    "ac6002_dirinfo_route_variants"
+  ],
+  "finite_timing_risk_review_only": [
+    {
+      "family": "ac0908",
+      "routes": "DirInfo kind 33 rows 52-57",
+      "state": "18 none/JA/ZH candidates retained for human timing review; not READY because every route lacks parent DGM-to-child Z2D event-global offset evidence"
+    }
+  ],
+  "deprioritized_expansion": [
     "ac7101",
     "ac7102",
     "ac7103",
     "ac7104",
     "ac7105",
     "ac7106",
-    "ac7107",
-    "ac0908",
-    "ac6002"
+    "ac7107"
   ],
-  "next_expansion_state": "deferred_until_owner_confirms_current_review_batch",
+  "next_expansion_state": "owner_priority_updated_2026-07-25; prefer lower-resolution choice and multi-route products, but require resolved event-global Z2D timing before production; do not mechanically concatenate events",
   "forbidden_actions": [
     "do not use A:",
     "do not mix old historical outputs into current production inputs",

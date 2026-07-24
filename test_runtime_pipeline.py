@@ -976,8 +976,24 @@ class ManifestBuilderTests(unittest.TestCase):
                 [row["source"] for row in manifest["audio"]],
                 ["event_audio_component", "z2d_req_sound"],
             )
-            self.assertTrue(manifest["quality_gates"]["audio_timeline_ready"])
-            self.assertTrue(manifest["quality_gates"]["render_ready"])
+            self.assertEqual(
+                manifest["audio"][1]["timing_scope"],
+                "child_z2d_local_only",
+            )
+            self.assertFalse(
+                manifest["audio"][1]["event_global_start_resolved"]
+            )
+            self.assertFalse(
+                manifest["quality_gates"]["event_global_z2d_timing_ready"]
+            )
+            self.assertFalse(
+                manifest["quality_gates"]["audio_timeline_ready"]
+            )
+            self.assertFalse(manifest["quality_gates"]["render_ready"])
+            self.assertIn(
+                "unresolved_parent_dgm_to_child_z2d_instantiation_offset",
+                manifest["quality_gates"]["errors"],
+            )
 
     def test_explicit_audience_component_is_not_render_ready(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
