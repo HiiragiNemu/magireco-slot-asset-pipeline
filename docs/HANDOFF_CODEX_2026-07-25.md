@@ -337,6 +337,19 @@ C:\Users\proje\AppData\Local\Microsoft\WinGet\Links\ffprobe.exe
 MuMu 和 Slot 游戏已在主界面，可用于必要的最小运行时验证；当前优先级仍是修正
 已报告产品并交付人工审查，不应先扩展新的宽泛动态 hunt。
 
+后续纠正（2026-07-25）：以上 MuMu 状态已经失效。tombstone 证明旧
+device frida-server 17.5.2 污染 zygote64/32，子进程在继承的
+`/memfd:frida-agent-64.so` 内 fault；另有一次 Gadget 在真实 slot 主画面出现前
+过早注入。收到项目所有者明确的 `runtime recovered` 前，不得连接、重启、注入或
+attach MuMu。P16 继续隔离，本地 no-BGM 生产不受影响。
+
+当前有限纠错批次已经完成并停止：P12 JA/ZH、P18 none/JA/ZH、P23 JA/ZH 共
+7 个 MP4 位于
+`manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_7_MP4`。
+P12/P16/P18/P23 的 12 个旧投稿链接全部隔离，活跃投稿目录各剩 11 个不受影响
+family。完整 hash 和审查区间见
+`docs/research/2026-07-25-correction-review-batch.md`。
+
 ## 8. 接手后的立即执行顺序
 
 1. 复核并提交本轮 aggregate、duplicate、三身份 speaker 改动。

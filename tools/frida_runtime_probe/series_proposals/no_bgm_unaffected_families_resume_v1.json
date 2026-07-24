@@ -1,0 +1,56 @@
+{
+  "schema": "magireco-no-bgm-production-resume-proposal-v1",
+  "proposal_id": "no_bgm_unaffected_families_resume_v1",
+  "status": "ready_to_reuse_existing_outputs",
+  "policy": "do not rerender or rescan historical roots; reuse only the current manifest/hash-bound durable outputs",
+  "current_upload_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families",
+  "active_exclusions": {
+    "path": "audit\\ACTIVE_UPLOAD_EXCLUSIONS_20260725.json",
+    "sha256": "F3A62C1BECD60BD06B8A8225C5B3DAABDFF3A93506C7D62AF5FB72AE6AE14DF8",
+    "excluded_families": [
+      "ac4902",
+      "ac6003",
+      "ac6005",
+      "ac7117"
+    ]
+  },
+  "unaffected_active_families": [
+    {"part": "P11", "family": "ac0911"},
+    {"part": "P13", "family": "ac4903"},
+    {"part": "P14", "family": "ac5301"},
+    {"part": "P15", "family": "ac5303"},
+    {"part": "P17", "family": "ac6004"},
+    {"part": "P19", "family": "ac6007"},
+    {"part": "P20", "family": "ac7112"},
+    {"part": "P21", "family": "ac7113", "scope": "native 512x416 opening segment"},
+    {"part": "P22", "family": "ac7113", "scope": "main story product"},
+    {"part": "P24", "family": "ac7206"},
+    {"part": "P25", "family": "ac7210"}
+  ],
+  "edition_count": {
+    "none": 11,
+    "ja": 11,
+    "zh": 11,
+    "total_mp4": 33
+  },
+  "technical_state": "passed current aggregate media and hash audit; no owner-corrected blocker is currently recorded",
+  "human_playback_state": "not inferred; owner review remains required where not already performed",
+  "next_expansion_after_current_human_review": [
+    "ac7101",
+    "ac7102",
+    "ac7103",
+    "ac7104",
+    "ac7105",
+    "ac7106",
+    "ac7107",
+    "ac0908",
+    "ac6002"
+  ],
+  "next_expansion_state": "deferred_until_owner_confirms_current_review_batch",
+  "forbidden_actions": [
+    "do not use A:",
+    "do not mix old historical outputs into current production inputs",
+    "do not delete old evidence before manifest-reference and unique-hash coverage audits",
+    "do not start BGM/addon/runtime research as part of this resume proposal"
+  ]
+}

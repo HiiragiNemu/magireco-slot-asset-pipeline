@@ -1,0 +1,44 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac6005_cu_success",
+  "proposal_id": "ac6005_cu_success_route_v1",
+  "status": "finite_review_candidate",
+  "errors": [],
+  "ordering": "DirInfo-v3 kind-173 row 10",
+  "event_count": 3,
+  "events": [
+    "ac6005_010",
+    "ac6005_013",
+    "ac6005_014"
+  ],
+  "route_evidence": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01",
+    "row": 10,
+    "meaning": "CU success"
+  },
+  "presentation_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "dimension_policy": "no_resize; center 416x232 events on the 512x416 route canvas with black padding; preserve the native 512x416 ac6005_014 event exactly",
+  "effect_policy": "exclude all 320x256 ac8040 victory/gameplay layers from the clean story candidate and preserve them for a separate effects collection",
+  "subtitle_projection": {
+    "request_id": "2795",
+    "ogg_name": "snd_15553_bank08_ogg_01054.ogg",
+    "audio_sha256": "42EBF296ACD7E98C24DEF7750324DE5EF70F36D47585B10172455D0AC6E99393",
+    "voice_interval_ms": [
+      9833,
+      14258
+    ],
+    "ja": "１秒でも長く\n大好きなふたりのお姉ちゃんでいさせて",
+    "zh": "哪怕只多一秒，\n也让我继续做最喜欢的你们两人的姐姐。",
+    "evidence": "official request 15553 supplies １秒でも長く大好きな; same-event graphical cap6005_mb_iro_015_02 supplies １秒でも長く and cap6005_mb_iro_015_03 supplies 大好きなふたりのお姉ちゃんでいさせて; the graphical continuation's child-local frame zero is not promoted to event-global timing, and the completed review subtitle is instead shown only over the exact hash-bound request-2795 voice interval"
+  },
+  "approval": {
+    "automated_qa": true,
+    "automated_qa_sha256": "6DB18E8D9BDD5AEF4230642ECCD3A5211EC8F23CFB2FAE2235C90C55FA16ABAE",
+    "human_playback": false,
+    "publication": false
+  }
+}

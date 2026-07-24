@@ -1,0 +1,50 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac7117",
+  "proposal_id": "ac7117_identity_corrected_series_v1",
+  "status": "passed",
+  "errors": [],
+  "ordering": "hash-bound upstream source-series order",
+  "event_count": 11,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "identity_policy": "ambiguous raw kuro cues use only exact contextual overrides; kuroe remains distinct",
+  "source_series_manifest": {
+    "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac7112_13_17_20260619\\ac7117\\series_manifest.json",
+    "sha256": "92F611953A49301828A053C89C98CB9DDB457722659791B02C22154A2C73F044",
+    "evidence": "The passed source manifest contains these eleven production-ready events in this exact order."
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "ready_event_names": [
+      "ac7117_001",
+      "ac7117_003",
+      "ac7117_006",
+      "ac7117_008",
+      "ac7117_010",
+      "ac7117_013",
+      "ac7117_016",
+      "ac7117_020",
+      "ac7117_022",
+      "ac7117_025",
+      "ac7117_028"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac7117_001": "801243B714ED8D172A6E4E9617F629DDF4715263A08796F7E48834EC60201C75",
+    "ac7117_003": "CE3AFFDCFE8BDF1C91042E0EADA90492C1FB14064F90DD15BA82284B1D511EDB",
+    "ac7117_006": "D08B4394FD895B2E494B48F9F7BEDA68A172DC2C417F5217BFE586C7BA46C883",
+    "ac7117_008": "0B9BCD47ECA00325885C601B2331FFECDCD7A378334A2F9FAB3A304D11530947",
+    "ac7117_010": "FC0731CEF06175D5AE0C56CF18207E9BAC444BA275A4F8BE6964C7DEAB4CA034",
+    "ac7117_013": "42FF98A734B61C77D645F7DD7A5B86F098988734C9299E8218096D9BA6ACA3CC",
+    "ac7117_016": "87373CBE7CD4EB5AE99FDBCBAC621F678062E30C3AAFA0C67A13453E24CF9D8B",
+    "ac7117_020": "1A5293A04E8185AB660A0934BA897266346C21DCB60A856F22EE5ACA58CB5F82",
+    "ac7117_022": "C6825E746A4C6DF8C9BF914E3C9BB54CF2EF168172596DE23CEB5C76F500E5F2",
+    "ac7117_025": "665FE237B6D4FE56E955DFAD7D60AF3DB7635ABEEA8B79B0C4594072BBEE6EF0",
+    "ac7117_028": "CB749FA89D1BDD821AD06B221AAB083343A9051B2D7B3B79C9E42FCB7D3D0BF0"
+  }
+}

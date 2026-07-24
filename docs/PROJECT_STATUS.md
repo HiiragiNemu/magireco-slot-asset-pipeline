@@ -16,11 +16,40 @@ docs/HANDOFF_CODEX_2026-07-25.md
 工具现改用 event + request + code name + audio SHA-256 的精确身份覆盖，未列出的
 歧义 `kuro` 不自动加角色名前缀。
 
+本轮纠错候选已收束为 7 个 MP4，并已停止继续扩产：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v26_corrections_20260725\REVIEW_NOW_7_MP4
+```
+
+- P12：去重、route-aware 的 JA/ZH 两版，24 个唯一 occurrence、330.733 秒；
+  `ac4902_003/_059` request 8340 两句只按已授权证据显示黑羽；
+- P18：DirInfo kind-173 row 10 证明的 `010 → 013 → 014` CU 成功路线
+  none/JA/ZH 三版，31.367 秒；`_014` 用六个 512x416 故事片段建立有限静态
+  composition 候选，320x256 `ac8040` 胜利／玩法效果与 request 225 胜利 jingle
+  排除；前两事件只居中补黑边，不缩放；
+- P23：JA/ZH 两版，146.033 秒；只对授权的 9634/9635/9638/9663 标注黑，
+  `kuroe` 仍为黑江，标题候选为“黑江与黑的相遇 ac7117”。
+
+三组自动 QA 均通过，但 `HUMAN_PLAYBACK_APPROVED=false`、
+`publication_approved=false`。P12/P18/P23 旧版与尚未修复的 P16 旧版共 12 个
+none/JA/ZH MP4 已全部移出活跃投稿目录，保存在
+`quarantine_pending_fix_20260725`。上传准备根现在只保留 11 个不受本轮纠错影响的
+family、33 个 MP4；明确清单见 `UPLOAD_NOW_STATUS_20260725.md`。
+
 项目所有者另报告 P16 `ac6003` 约 47 秒起语音领先画面、P18 `ac6005` 缺少彩羽
 扑向灯花和音梦的 512x416 后半故事，并质疑若干线性 family 的完全重复或分支
 机械串接。本轮新增面向观众产品的 exact AV+subtitle duplicate fail-closed 门禁；
 现有 267 个事件 occurrence 中确认 26 个完全重复，去重可减少 389.500 秒，但
 原始单事件档案全部保留。
+
+P16 当前继续隔离且没有修复候选。`ac6003_009` request 5843 的身份正确，但仍缺父
+DGM 到子 Z2D 的事件全局实例化偏移，禁止根据 467 ms 片头猜值。2026-07-25 的
+运行时故障已由 tombstone 定位为 device frida-server 17.5.2 注入 zygote64/32 后，
+子进程在继承的 `/memfd:frida-agent-64.so` 内 fault；另一次 Gadget 又在真实 slot
+主画面出现前过早注入。收到项目所有者明确的 `runtime recovered` 前，当前任务禁止
+连接、重启、注入或 attach MuMu；本地媒体生产不依赖该环境。
 
 ## 2026-07-24 系统重装恢复与 no-BGM 全面扩产
 

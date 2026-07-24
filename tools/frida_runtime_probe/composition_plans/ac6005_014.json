@@ -1,0 +1,50 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac6005_014",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 15333,
+  "extension_policy": "none",
+  "excluded_audio_request_ids": [
+    "225"
+  ],
+  "excluded_subtitle_z2d_names": [
+    "cap6005_mb_iro_015_03"
+  ],
+  "native_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "evidence": "finite clean-story review candidate for the DirInfo-v3 CU-success route: the static audience clip table resolves six native 512x416 ac6005_014 story layers at exact boundaries 0, 1333, 2667, 4167, 9833, and 14467 ms through 15333 ms; the separate 320x256 ac8040_shouri_EF_large/middle layers and unresolved add layers are gameplay/victory effects and are deliberately excluded from this story composition; request 225 is the independently named battle-victory jingle beginning at 18315 ms and is excluded from no-BGM, while requests 1029/2184 and exact voice callbacks 2793/2794/2795 are retained; cap6005_mb_iro_015_03 has only child-local graphical frame timing and is excluded as a separate cue, while its text is used only as static evidence to complete the hash-bound request-2795 voice subtitle; human playback approval remains required for this static component composition",
+  "clips": [
+    {
+      "dgm_name": "ac6005_014_c01",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac6005_014_c03",
+      "role": "background",
+      "start_ms": 1333
+    },
+    {
+      "dgm_name": "ac6005_014_c04",
+      "role": "background",
+      "start_ms": 2667
+    },
+    {
+      "dgm_name": "ac6005_014_c05",
+      "role": "background",
+      "start_ms": 4167
+    },
+    {
+      "dgm_name": "ac6005_014_c06",
+      "role": "background",
+      "start_ms": 9833
+    },
+    {
+      "dgm_name": "ac6005_014_c06_LP",
+      "role": "loop_background",
+      "start_ms": 14467
+    }
+  ]
+}
