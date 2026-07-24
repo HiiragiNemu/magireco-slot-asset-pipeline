@@ -1,0 +1,20 @@
+{
+  "schema": "magireco-dialogue-relationship-rules-v1",
+  "status": "project_owner_authorized",
+  "rules": [
+    {
+      "id": "iroha_to_kuroe_san_as_classmate_v1",
+      "speaker_codes": ["iro"],
+      "ja_addressee_pattern": "黒江さん",
+      "required_zh_form": "黑江同学",
+      "forbidden_zh_forms": ["黑江小姐"]
+    },
+    {
+      "id": "yachiyo_or_kuroe_to_tamaki_san_as_classmate_v1",
+      "speaker_codes": ["yac", "yach", "kuro", "kuroe"],
+      "ja_addressee_pattern": "環さん",
+      "required_zh_form": "环同学",
+      "forbidden_zh_forms": ["环小姐"]
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac4902_voice_bound_dialogue",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {
+      "ja": "！",
+      "zh": "！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "本当なんでしょうか…\n神浜に魔女を呼ぶって…",
+      "zh": "这是真的吗……\n说要把魔女引到神滨……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "待っててね\nうい…！",
+      "zh": "等着我，\n忧……！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "倒さねーといけねーんだ！\n父ちゃんと母ちゃんを殺した魔女を！",
+      "zh": "我非打倒它不可！\n那个杀害爸爸妈妈的魔女！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "急がないと…",
+      "zh": "得快点……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔法少女は救われなきゃだめなんだよ…",
+      "zh": "魔法少女必须得到救赎才行……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔法少女は救われなくてはいけない",
+      "zh": "魔法少女必须得到救赎。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔女が全部いなくなるんなら\nなんだって構わねえよ",
+      "zh": "只要魔女能全部消失，\n怎么样都无所谓。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔女にならなくて済む方法が\n分かるまでオレは帰らねー",
+      "zh": "在找到不会变成魔女的方法之前，\n我不会回去。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔女は一匹残らず\nぶっ殺す！",
+      "zh": "魔女一个不留，\n全部宰掉！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔女を育ててるとは聞いてましたが\nまさかこんなに…",
+      "zh": "虽然听说你们在培育魔女，\n没想到竟有这么多……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "私の願いはこんなところで負けない…！",
+      "zh": "我的愿望不会在这种地方输掉……！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "運命を変えられなかったとしても…\n私が最後に居たい場所はここじゃない",
+      "zh": "即使没能改变命运……\n我最后想待的地方也不是这里。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "キリがないわね…",
+      "zh": "没完没了呢……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "くそっ！",
+      "zh": "可恶！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "マギウスはいったい何をする気なの…",
+      "zh": "Magius到底想做什么……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "みんなは大丈夫かな…",
+      "zh": "大家没事吧……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "もうこれ以上…\n家族が危ない目に\nあっていた事すら知らないなんて嫌",
+      "zh": "我不想再这样了……\n连家人遇到危险都一无所知。",
+      "status": "machine_draft_pending_owner"
+    }
+  ]
+}

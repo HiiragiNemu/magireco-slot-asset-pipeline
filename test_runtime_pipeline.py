@@ -16,13 +16,18 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
 from tools.frida_runtime_probe.build_event_production_manifests import (
     apply_path_prefix_maps,
     apply_runtime_voice_subtitle_overrides,
+    composition_plan_uses_authored_timing,
     file_sha256,
     filter_subtitle_rows_for_plan,
+    load_reviewed_subtitle_manifests,
     load_runtime_event_manifests,
     load_voice_subtitle_overrides,
     merge_runtime_graphical_subtitle_rows,
     parse_path_prefix_maps,
+    production_content_end_ms,
     quantize_duration_to_frame_grid,
+    reconcile_reviewed_subtitle_rows,
+    synthesize_static_event_clips_from_plan,
 )
 from tools.frida_runtime_probe.composition_contract import (
     presentation_sample_count,
@@ -50,6 +55,321 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
 
 
 class CompositionPlanTests(unittest.TestCase):
+    def test_reviewed_subtitles_keep_current_timing_and_restore_missing_voice(self) -> None:
+        current = [
+            {
+                "text": "アリナが代わりにマ",
+                "start_ms": 100,
+                "end_ms": 900,
+                "voice_request_id": "5324",
+                "voice_start_ms": 100,
+                "subtitle_source": "official_voice_label",
+            },
+            {
+                "text": "ヌル\n3",
+                "start_ms": 1200,
+                "end_ms": 1700,
+                "voice_request_id": "451",
+                "voice_start_ms": 1200,
+                "subtitle_source": "graphical_display_text",
+            },
+            {
+                "text": "graphical-only",
+                "start_ms": 0,
+                "end_ms": 500,
+                "voice_request_id": "",
+                "subtitle_source": "graphical_display_text",
+            },
+        ]
+        audio = [
+            {
+                "request_id": "5324",
+                "start_ms": 100,
+                "duration_ms": 860,
+                "z2d_name": "cap7206_ari_say",
+            },
+            {
+                "request_id": "7856",
+                "start_ms": 833,
+                "duration_ms": 6220,
+                "z2d_name": "cap5203_mam_attack_say_005",
+            },
+            {
+                "request_id": "451",
+                "start_ms": 1200,
+                "duration_ms": 500,
+                "z2d_name": "chance_button",
+            },
+        ]
+        reviewed = {
+            "subtitles": [
+                {
+                    "text": "アリナが代わりにマギウスを…",
+                    "start_ms": 100,
+                    "end_ms": 960,
+                    "voice_request_id": "5324",
+                    "voice_start_ms": 100,
+                    "speaker_code": "ari",
+                    "subtitle_source": "official_voice_asr_verified",
+                    "evidence": "reviewed-full-text",
+                },
+                {
+                    "text": "負けるもんか！",
+                    "start_ms": 833,
+                    "end_ms": 7053,
+                    "voice_request_id": "7856",
+                    "voice_start_ms": 833,
+                    "speaker_code": "mam",
+                    "subtitle_source": "official_voice_asr_verified",
+                    "evidence": "reviewed-asr",
+                },
+            ],
+            "_source_provenance": [
+                {"path": "D:/reviewed/ac.json", "sha256": "A" * 64}
+            ],
+        }
+
+        rows, audit = reconcile_reviewed_subtitle_rows(
+            "ac_test",
+            current,
+            audio,
+            reviewed,
+        )
+
+        self.assertEqual([row["voice_request_id"] for row in rows], ["5324", "7856"])
+        self.assertEqual(rows[0]["text"], "アリナが代わりにマギウスを…")
+        self.assertEqual((rows[0]["start_ms"], rows[0]["end_ms"]), (100, 900))
+        self.assertEqual(rows[1]["text"], "負けるもんか！")
+        self.assertEqual((rows[1]["start_ms"], rows[1]["end_ms"]), (833, 7053))
+        self.assertEqual(audit["matched_voice_cue_count"], 1)
+        self.assertEqual(audit["carried_voice_cue_count"], 1)
+        self.assertEqual(
+            audit["excluded_current_voice_candidates"][0]["voice_request_id"],
+            "451",
+        )
+        self.assertEqual(
+            audit["excluded_current_graphical_candidates"][0]["text"],
+            "graphical-only",
+        )
+
+    def test_reviewed_subtitle_without_current_audio_fails_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "has no current verified audio row"):
+            reconcile_reviewed_subtitle_rows(
+                "ac_test",
+                [],
+                [],
+                {
+                    "subtitles": [
+                        {
+                            "text": "missing",
+                            "start_ms": 0,
+                            "end_ms": 500,
+                            "voice_request_id": "999",
+                        }
+                    ]
+                },
+            )
+
+    def test_reviewed_subtitles_accept_exact_curated_current_only_voice(self) -> None:
+        current = [
+            {
+                "text": "私もチャレンジした方がいいのかな",
+                "start_ms": 333,
+                "end_ms": 2786,
+                "voice_request_id": "8041",
+                "voice_start_ms": 333,
+                "speaker_code": "kur",
+                "subtitle_source": "official_voice_asr_verified",
+                "evidence": "curated_official_prefix_and_asr",
+            },
+            {
+                "text": "unreviewed",
+                "start_ms": 500,
+                "end_ms": 1000,
+                "voice_request_id": "9999",
+                "voice_start_ms": 500,
+                "subtitle_source": "official_voice_label",
+            },
+        ]
+        audio = [
+            {"request_id": "8041", "start_ms": 333, "duration_ms": 2453},
+            {"request_id": "9999", "start_ms": 500, "duration_ms": 500},
+        ]
+        rows, audit = reconcile_reviewed_subtitle_rows(
+            "ac0911_010",
+            current,
+            audio,
+            {"subtitles": []},
+            {
+                "8041": {
+                    "text": "私もチャレンジした方がいいのかな",
+                    "source": "curated_official_prefix_and_asr",
+                }
+            },
+        )
+        self.assertEqual(
+            [row["voice_request_id"] for row in rows],
+            ["8041"],
+        )
+        self.assertEqual(
+            audit["accepted_current_voice_override_candidates"][0][
+                "voice_request_id"
+            ],
+            "8041",
+        )
+        self.assertEqual(
+            audit["excluded_current_voice_candidates"][0]["voice_request_id"],
+            "9999",
+        )
+
+    def test_reviewed_subtitles_reject_changed_curated_current_only_voice(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "differs from its accepted voice override",
+        ):
+            reconcile_reviewed_subtitle_rows(
+                "ac0911_010",
+                [
+                    {
+                        "text": "truncated",
+                        "start_ms": 0,
+                        "end_ms": 500,
+                        "voice_request_id": "8041",
+                    }
+                ],
+                [{"request_id": "8041", "start_ms": 0, "duration_ms": 500}],
+                {"subtitles": []},
+                {"8041": {"text": "full dialogue"}},
+            )
+
+    def test_reviewed_subtitle_loader_hashes_and_rejects_conflicts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            first = root / "one" / "events" / "ac_test.json"
+            second = root / "two" / "events" / "ac_test.json"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            payload = {
+                "event": "ac_test",
+                "subtitles": [{"text": "approved"}],
+                "quality_gates": {"ready": True},
+            }
+            first.write_text(json.dumps(payload), encoding="utf-8")
+            second.write_text(json.dumps(payload), encoding="utf-8")
+            loaded = load_reviewed_subtitle_manifests(
+                [first.parent.parent, second.parent.parent]
+            )
+            self.assertEqual(
+                len(loaded["ac_test"]["_source_provenance"]),
+                2,
+            )
+            self.assertEqual(
+                loaded["ac_test"]["_source_provenance"][0]["sha256"],
+                file_sha256(first),
+            )
+            payload["subtitles"][0]["text"] = "conflict"
+            second.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(
+                ValueError,
+                "conflicting reviewed subtitle manifests for ac_test",
+            ):
+                load_reviewed_subtitle_manifests(
+                    [first.parent.parent, second.parent.parent]
+                )
+
+    def test_timed_plan_duration_bounds_static_loop_and_overlay_sources(self) -> None:
+        sources = [
+            {
+                "dgm_name": "scene_intro",
+                "media_duration_sec": "8.0",
+                "event_start_ms": "0",
+                "event_end_ms": "8000",
+            },
+            {
+                "dgm_name": "scene_loop",
+                "media_duration_sec": "8.0",
+                "event_start_ms": "8000",
+                "event_end_ms": "16000",
+            },
+            {
+                "dgm_name": "scene_overlay",
+                "media_duration_sec": "16.0",
+                "event_start_ms": "0",
+                "event_end_ms": "16000",
+            },
+        ]
+        for duration_ms in (8654, 8958, 9661, 9381, 11610):
+            with self.subTest(duration_ms=duration_ms):
+                plan = {
+                    "event": "sample_event",
+                    "model": "timed_full_frame_layers",
+                    "duration_ms": duration_ms,
+                    "evidence": "reviewed runtime timing evidence",
+                    "clips": [
+                        {
+                            "dgm_name": "scene_intro",
+                            "role": "background",
+                            "start_ms": 0,
+                        },
+                        {
+                            "dgm_name": "scene_loop",
+                            "role": "loop_background",
+                            "start_ms": 8000,
+                        },
+                        {
+                            "dgm_name": "scene_overlay",
+                            "role": "screen_overlay",
+                            "start_ms": 0,
+                        },
+                    ],
+                }
+
+                self.assertTrue(composition_plan_uses_authored_timing(plan))
+                clips = synthesize_static_event_clips_from_plan(sources, plan)
+
+                self.assertEqual(clips[0]["event_end_ms"], "8000")
+                self.assertEqual(clips[1]["event_end_ms"], str(duration_ms))
+                self.assertEqual(clips[2]["event_end_ms"], str(duration_ms))
+                self.assertEqual(
+                    max(int(row["event_end_ms"]) for row in clips), duration_ms
+                )
+
+    def test_timed_plan_authored_timing_fails_closed_without_evidence(self) -> None:
+        plan = {
+            "event": "sample_event",
+            "model": "timed_full_frame_layers",
+            "duration_ms": 8654,
+            "evidence": "",
+            "clips": [
+                {"dgm_name": "scene", "role": "background", "start_ms": 0}
+            ],
+        }
+        with self.assertRaisesRegex(ValueError, "no evidence statement"):
+            composition_plan_uses_authored_timing(plan)
+
+    def test_plan_duration_is_a_floor_without_truncating_proven_av_tails(self) -> None:
+        def plan(duration_ms: int, extension_policy: str = "") -> dict:
+            return {
+                "event": "sample_event",
+                "model": "linear_full_frame_sequence",
+                "duration_ms": duration_ms,
+                "extension_policy": extension_policy,
+                "evidence": "reviewed runtime timing evidence",
+                "clips": [
+                    {"dgm_name": "scene", "role": "background", "start_ms": 0}
+                ],
+            }
+
+        # A short visual is extended through the complete authored black tail.
+        self.assertEqual(
+            production_content_end_ms(2000, 7053, plan(7118, "black_tail")),
+            7118,
+        )
+        # A proven subtitle tail remains authoritative when it exceeds the plan.
+        self.assertEqual(production_content_end_ms(6160, 6200, plan(6160)), 6200)
+        # A plan remains the floor when indexed AV ends slightly earlier.
+        self.assertEqual(production_content_end_ms(9565, 9538, plan(9565)), 9565)
+
     def test_runtime_manifest_equivalent_duplicates_preserve_all_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

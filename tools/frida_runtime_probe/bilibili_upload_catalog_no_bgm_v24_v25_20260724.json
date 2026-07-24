@@ -1,0 +1,100 @@
+{
+  "schema": "magireco-bilibili-no-bgm-upload-catalog-v1",
+  "updated": "2026-07-24",
+  "status": "automated_qa_passed_upload_names_prepared",
+  "source_audit": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_aggregate_audits_20260724\\final_audit_v24_v25_strict_media_20260724_230000\\aggregate_audit.json",
+    "sha256": "1F80589A4F3CE047CCD8A61CB4098DC97E6A422CBEE4EF4A1F2E6DD86F52DD0D",
+    "family_count": 16,
+    "event_count": 176,
+    "edition_video_count": 48
+  },
+  "target_editions": {
+    "zh": {
+      "bvid": "BV13bKN6nEsd",
+      "title": "魔法纪录 街机版 动画整合 无BGM中文版｜游戏资源解包与技术还原"
+    },
+    "ja": {
+      "bvid": "BV1zQKN6eEC6",
+      "title": "魔法纪录 街机版 动画整合 无BGM原始日文官方字幕版｜游戏资源解包与技术还原"
+    },
+    "none": {
+      "bvid": "BV1rUKN6iEcj",
+      "title": "魔法纪录 街机版 动画整合 无BGM无字幕版｜游戏资源解包与技术还原"
+    }
+  },
+  "part_order": [
+    {
+      "family": "ac0911",
+      "part_title": "黑江邀请彩羽前往神滨与挑战演出 ac0911"
+    },
+    {
+      "family": "ac4902",
+      "part_title": "魔法少女们迎战神滨魔女群 ac4902"
+    },
+    {
+      "family": "ac4903",
+      "part_title": "Magius启动魔法少女解放计划 ac4903"
+    },
+    {
+      "family": "ac5203",
+      "part_title": "圣麻美VS沙耶香【修正版】 ac5203",
+      "supersedes_existing_part": "圣麻美VS沙耶香 ac5203",
+      "reason": "旧版遗漏 request 7856 对白并混入 chance-button presentation text"
+    },
+    {
+      "family": "ac5301",
+      "part_title": "阿莉娜的艺术宣言 ac5301"
+    },
+    {
+      "family": "ac5303",
+      "part_title": "阿莉娜的愤怒 ac5303"
+    },
+    {
+      "family": "ac6003",
+      "part_title": "彩羽等人与Magius的冲突 ac6003"
+    },
+    {
+      "family": "ac6004",
+      "part_title": "八千代等人拯救谣鹤乃 ac6004"
+    },
+    {
+      "family": "ac6005",
+      "part_title": "神滨消失危机与Magius计划 ac6005"
+    },
+    {
+      "family": "ac6007",
+      "part_title": "菲莉希亚与莎奈驰援彩羽 ac6007"
+    },
+    {
+      "family": "ac7112",
+      "part_title": "见泷原魔法少女在神滨并肩作战 ac7112"
+    },
+    {
+      "family": "ac7113_opening_512x416",
+      "part_title": "ac7113开场独立画幅片段【512×416】"
+    },
+    {
+      "family": "ac7113_main_512x288",
+      "part_title": "众人救回圣麻美与魔女之夜转向 ac7113"
+    },
+    {
+      "family": "ac7117",
+      "part_title": "黑江与陌生魔法少女的相遇 ac7117"
+    },
+    {
+      "family": "ac7206",
+      "part_title": "阿莉娜与Magius之翼 ac7206"
+    },
+    {
+      "family": "ac7210",
+      "part_title": "八千代与鹤乃的火箭突击 ac7210"
+    }
+  ],
+  "publication_boundary": {
+    "no_bgm_meaning": "保留证据绑定的原始角色对白与场景音效，并明确排除 BGM",
+    "with_bgm_complete": false,
+    "new_family_human_playback_approved": false,
+    "part_titles_may_be_refined_by_owner": true
+  }
+}

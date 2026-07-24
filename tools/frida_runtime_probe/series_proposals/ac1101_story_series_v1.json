@@ -1,0 +1,242 @@
+{
+  "schema": "magireco-story-series-proposal-v1",
+  "series": "ac1101",
+  "proposal_id": "ac1101_story_series_v1",
+  "status": "fail_closed",
+  "classification": "branched_minigame_story_family_not_yet_resolved_to_natural_playthroughs",
+  "decision": "The nine v20 READY events must not be concatenated as one natural story chapter.",
+  "ordered_events": null,
+  "ready_event_subset_in_event_table_order": [
+    "ac1101_001",
+    "ac1101_003",
+    "ac1101_004",
+    "ac1101_005",
+    "ac1101_007",
+    "ac1101_008",
+    "ac1101_009",
+    "ac1101_010",
+    "ac1101_011"
+  ],
+  "complete_family_event_registration_order": [
+    "ac1101_001",
+    "ac1101_002",
+    "ac1101_003",
+    "ac1101_004",
+    "ac1101_005",
+    "ac1101_006",
+    "ac1101_007",
+    "ac1101_008",
+    "ac1101_009",
+    "ac1101_010",
+    "ac1101_011",
+    "ac1101_012",
+    "ac1101_013"
+  ],
+  "registration_order_policy": "evidence_only_not_a_runtime_playback_order",
+  "ready_coverage": {
+    "v20_ready_events": 9,
+    "registered_family_events": 13,
+    "missing_from_v20_and_v23_production_manifests": [
+      "ac1101_002",
+      "ac1101_006",
+      "ac1101_012",
+      "ac1101_013"
+    ],
+    "v23_scope_note": "production_manifests_v23_timing_fix_20260718 contains 22 selective timing-fix events and no ac1101 event; it does not supersede v20 for this family."
+  },
+  "blocking_reasons": [
+    {
+      "code": "family_incomplete",
+      "detail": "Four of the thirteen registered ac1101 events have no READY production manifest in v20 or v23, so the nine-event subset omits content that static event and Z2D evidence assigns to the same family."
+    },
+    {
+      "code": "mutually_exclusive_title_variants",
+      "detail": "ac1101_001, ac1101_008, ac1101_009 and ac1101_010 repeat the same title dialogue while selecting white/red and S/L-plus-Kuroe presentation variants. A single linear concatenation would play alternative title variants consecutively."
+    },
+    {
+      "code": "win_lose_and_recovery_branches_unresolved",
+      "detail": "Official DGM and sound labels distinguish ac1101_005 as a lose outcome, ac1101_006 as a win outcome, ac1101_011 as a second-game introduction, and ac1101_012/ac1101_013 as recovery-win content. No accepted runtime transition trace identifies the valid branch paths and joins."
+    },
+    {
+      "code": "ac1101_002_voice_timing_unresolved",
+      "detail": "The ac1101_002 voice-bound Z2D row is marked gdb_relation_without_decoded_frame, and no v20/v23 production manifest binds its final presentation time."
+    },
+    {
+      "code": "mixed_layer_compositions_missing",
+      "detail": "ac1101_006, ac1101_012 and ac1101_013 are catalogued as mixed_full_frame_and_components and have no accepted composition plan. Their victory sparkle/logo layers and loop intervals require evidence-bound composition before any natural branch can close."
+    },
+    {
+      "code": "registration_order_is_not_playback_order",
+      "detail": "event_info.csv proves only contiguous registration indices. It contains no transition edges and therefore cannot justify natural playback order by itself."
+    }
+  ],
+  "static_branch_indicators_not_promoted_to_order": {
+    "title_variant_set": [
+      {
+        "event": "ac1101_001",
+        "background_variant": "S",
+        "title_overlay": "white",
+        "kuroe_add_sound": false
+      },
+      {
+        "event": "ac1101_008",
+        "background_variant": "S",
+        "title_overlay": "red",
+        "kuroe_add_sound": false
+      },
+      {
+        "event": "ac1101_009",
+        "background_variant": "L",
+        "title_overlay": "white",
+        "kuroe_add_sound": true
+      },
+      {
+        "event": "ac1101_010",
+        "background_variant": "L",
+        "title_overlay": "red",
+        "kuroe_add_sound": true
+      }
+    ],
+    "outcome_labels": {
+      "ac1101_005": "3off_c011_lose",
+      "ac1101_006": "3off_c009_c010_win",
+      "ac1101_011": "2G second-game introduction",
+      "ac1101_012": "lev_c012_c013_fukkatu_win",
+      "ac1101_013": "1on_c014_c015_c016_fukkatu_win"
+    },
+    "policy": "These labels establish semantic alternatives and missing branch content, but do not establish transition order."
+  },
+  "title_overlay_policy": {
+    "classification": "presentation_effect",
+    "production_policy": "dual_visual_when_a_branch_is_eventually_resolved",
+    "variants": [
+      {
+        "dgm_name": "ac1101_lev_title_wht",
+        "events": [
+          "ac1101_001",
+          "ac1101_009"
+        ],
+        "source_path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac1101\\ac1101_lev_title_wht.mp4",
+        "source_sha256": "6D89528A95288C315814BE294A7554A160D6E9D9F3CB38F12665A27CCB6F790B",
+        "source_size_bytes": 192268
+      },
+      {
+        "dgm_name": "ac1101_lev_title_red",
+        "events": [
+          "ac1101_008",
+          "ac1101_010"
+        ],
+        "source_path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac1101\\ac1101_lev_title_red.mp4",
+        "source_sha256": "3B48D513A34F15AC2F73AEBB921304036982E38D8F13A1DCEBDFEBC42D3C7AD0",
+        "source_size_bytes": 190242
+      }
+    ],
+    "with_effects": "Retain the exact title overlay interval from the accepted event composition plan.",
+    "without_effects": "Remove only the explicitly named title overlay while preserving the story background layers.",
+    "collection_policy": "Preserve the title overlays as independently hash-bound presentation-effect sources; do not classify the underlying story animation as material."
+  },
+  "ready_event_evidence": [
+    {
+      "event": "ac1101_001",
+      "production_manifest_sha256": "17D7BAC9085C4F002AEE2A95A5F63FE5D64CC2925CF3191164343EC4F5C7F267",
+      "composition_plan_sha256": "A0A7F1C3875FA99C9CDA638DB68BEB53D7533878720FCD46E527B5ECA5F360F5"
+    },
+    {
+      "event": "ac1101_003",
+      "production_manifest_sha256": "6970B4EF0B5B0F198CCCA7B058D7D94172860AA54BD9F451E7FD4081AD25A916",
+      "composition_plan_sha256": null
+    },
+    {
+      "event": "ac1101_004",
+      "production_manifest_sha256": "B7E92A69A2DE47EE0AA9A2BEF87870FB4A4F6E419FA8943E5E11FA038CD088A7",
+      "composition_plan_sha256": null
+    },
+    {
+      "event": "ac1101_005",
+      "production_manifest_sha256": "7823AC85C75CDBECA8B56A08087540447A99A8E5460248C22D350B5F6C98DAA5",
+      "composition_plan_sha256": null
+    },
+    {
+      "event": "ac1101_007",
+      "production_manifest_sha256": "2205F5ADB83E53EF4114B72D06FE1CDD4F97CA1EB1DB3E812AC74780AAAA193A",
+      "composition_plan_sha256": null
+    },
+    {
+      "event": "ac1101_008",
+      "production_manifest_sha256": "FDE3C669E949FC42A7776CBFB006D66B73EF78A2ECBF3ADC13696C8FA57AA86D",
+      "composition_plan_sha256": "CC7650ACA79030F2FC8E973CFCDB61A76382B8BC26A53D4A51C441533E1E3A86"
+    },
+    {
+      "event": "ac1101_009",
+      "production_manifest_sha256": "3D0B55F90683E3B43F140BAAF66C71BECD1471B9800B76BB3116CC8E7766CAD8",
+      "composition_plan_sha256": "23487E2946D0551058EAA24C2606EE2A506DEDB18EFF418E3A86A3A721B5A30F"
+    },
+    {
+      "event": "ac1101_010",
+      "production_manifest_sha256": "F95796C3633EFE1A68930A8EE8C2ACB83CEA88DB5CD55CFAFBD05FAE911C51FF",
+      "composition_plan_sha256": "F756A9B6E156655EEEF11E08045A241267508276DF107D05EA19733908B28F4C"
+    },
+    {
+      "event": "ac1101_011",
+      "production_manifest_sha256": "B0F550B5387BEDAC81FF6F633F180F32C9AFD9F0FF2B308712E796D688826599",
+      "composition_plan_sha256": null
+    }
+  ],
+  "evidence_sources": [
+    {
+      "role": "v20_production_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\event_production_catalog.csv",
+      "sha256": "6E6D7C01CD98B11704543266D7E523254CBDCE37BA9A2C21CA8FCE90AC06A927"
+    },
+    {
+      "role": "v20_production_summary",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\event_production_summary.json",
+      "sha256": "9025608499EE13760A817CF8DF630AC08EE92F539EF6C13E1E2042835C2A58B2"
+    },
+    {
+      "role": "v23_selective_timing_fix_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v23_timing_fix_20260718\\event_production_catalog.csv",
+      "sha256": "7D4F74A12B49997B0471998CF188D3D96994A8C526FEAF76AF3F88BDDE602872"
+    },
+    {
+      "role": "event_registration_table",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\event_info.csv",
+      "sha256": "49A494ECDEE5DD9BA4AD9177DFEA031C720CCDA63270417F1FA25A928B9E19B4"
+    },
+    {
+      "role": "audience_family_classification",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+      "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+    },
+    {
+      "role": "official_named_clip_and_interval_inventory",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "role": "voice_bound_z2d_timeline",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    },
+    {
+      "role": "event_sound_timeline",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    {
+      "role": "runtime_and_static_composition_research",
+      "path": "docs/research/2026-06-13-z2d-reqsound-production.md",
+      "sha256": "939A31C53C7D0B281474D9FAF0CB1E9F80F896D393A28A55F783009EE5DAD41B"
+    }
+  ],
+  "subtitle_translation_map": {
+    "created": false,
+    "reason": "A family translation map is withheld because the natural event paths are unresolved and voice-bound cues for ac1101_002/ac1101_006/ac1101_012/ac1101_013 are not all represented by accepted production manifests. Creating a nine-event map would normalize an incomplete, branch-colliding sequence."
+  },
+  "requirements_to_promote": [
+    "Resolve evidence-bound production manifests and composition plans for ac1101_002, ac1101_006, ac1101_012 and ac1101_013.",
+    "Capture or recover static transition logic that identifies title/entry/outcome/recovery branches without using event suffix order as a proxy.",
+    "Create separate branch-specific ordered series manifests, not one concatenation of mutually exclusive variants.",
+    "Only then extract the complete voice-bound JA cue sets and create branch-scoped Chinese translation maps."
+  ]
+}

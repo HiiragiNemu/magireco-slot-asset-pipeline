@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import multiprocessing
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,9 +11,11 @@ from tools.frida_runtime_probe.build_sp_story_chapter_reviews import (
     FORBIDDEN_AUDIO_REQUESTS,
     GENERIC_TRANSLATION_SCHEMA,
     TRANSLATION_SCHEMA,
+    _chapter_promotion_mutex,
     generated_linear_plan,
     load_translation_map,
     prepare_manifest,
+    promote,
     scene_audio_role,
     validate_reusable_clean_visual,
 )
@@ -23,6 +26,48 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(
         json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+
+
+def promotion_lock_holder(
+    staging_value: str,
+    destination_value: str,
+    root_value: str,
+    locked,
+    release,
+    results,
+) -> None:
+    staging = Path(staging_value)
+    destination = Path(destination_value)
+    root = Path(root_value)
+    lock_path = root / f".{destination.name}.chapter-promotion.lock"
+    try:
+        with _chapter_promotion_mutex(lock_path):
+            locked.set()
+            if not release.wait(15):
+                raise TimeoutError("test promotion lock release timed out")
+        promote(staging, destination, root, overwrite=False)
+        results.put(("published", staging.name))
+    except BaseException as error:
+        results.put(("error", type(error).__name__, str(error)))
+
+
+def concurrent_promoter(
+    staging_value: str,
+    destination_value: str,
+    root_value: str,
+    results,
+) -> None:
+    try:
+        staging = Path(staging_value)
+        promote(
+            staging,
+            Path(destination_value),
+            Path(root_value),
+            overwrite=False,
+        )
+        results.put(("published", staging.name))
+    except BaseException as error:
+        results.put(("error", type(error).__name__, str(error)))
 
 
 class SpStoryChapterReviewTests(unittest.TestCase):
@@ -70,6 +115,80 @@ class SpStoryChapterReviewTests(unittest.TestCase):
                 "composition_resolved": True,
             },
         }
+
+    def make_promotion_staging(self, root: Path, name: str, payload: str) -> Path:
+        staging = root / name
+        staging.mkdir()
+        artifact = staging / "payload.txt"
+        artifact.write_text(payload, encoding="utf-8")
+        write_json(
+            staging / "BATCH_REVIEW_READY.json",
+            {
+                "status": "AUTOMATED_QA_PASSED",
+                "artifacts": {
+                    "payload": {
+                        "path": "payload.txt",
+                        "sha256": hashlib.sha256(artifact.read_bytes())
+                        .hexdigest()
+                        .upper(),
+                    }
+                },
+            },
+        )
+        return staging
+
+    def test_two_processes_cannot_delete_same_target_release(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            destination = root / "shared_release"
+            first_staging = self.make_promotion_staging(root, "first", "first")
+            second_staging = self.make_promotion_staging(root, "second", "second")
+
+            context = multiprocessing.get_context("spawn")
+            locked = context.Event()
+            release = context.Event()
+            results = context.Queue()
+            first = context.Process(
+                target=promotion_lock_holder,
+                args=(
+                    str(first_staging),
+                    str(destination),
+                    str(root),
+                    locked,
+                    release,
+                    results,
+                ),
+            )
+            second = context.Process(
+                target=concurrent_promoter,
+                args=(
+                    str(second_staging),
+                    str(destination),
+                    str(root),
+                    results,
+                ),
+            )
+            first.start()
+            self.assertTrue(locked.wait(15), "first process did not acquire the lock")
+            second.start()
+            second.join(15)
+            self.assertFalse(second.is_alive(), "concurrent promoter did not exit")
+            second_result = results.get(timeout=5)
+            self.assertEqual(second_result[0], "error")
+            self.assertEqual(second_result[1], "RuntimeError")
+            self.assertFalse(destination.exists())
+
+            release.set()
+            first.join(15)
+            self.assertFalse(first.is_alive(), "lock holder did not publish")
+            first_result = results.get(timeout=5)
+            self.assertEqual(first_result, ("published", "first"))
+            self.assertEqual(
+                (destination / "payload.txt").read_text(encoding="utf-8"),
+                "first",
+            )
+            self.assertTrue((destination / "BATCH_REVIEW_READY.json").is_file())
+            self.assertTrue(second_staging.is_dir())
 
     def test_translation_map_requires_unique_pending_rows(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -229,6 +348,31 @@ class SpStoryChapterReviewTests(unittest.TestCase):
                         manifest_dir=root / "prepared",
                     )
 
+    def test_prepare_manifest_only_permits_explicit_registered_exclusion(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = self.minimal_manifest(root)
+            manifest["audio"][0]["request_id"] = "1681"
+            source_path = root / "source.json"
+            write_json(source_path, manifest)
+            prepared, _, _ = prepare_manifest(
+                source_path,
+                plan_dir=root / "plans",
+                manifest_dir=root / "prepared",
+                permitted_forbidden_audio_request_ids={"1681"},
+            )
+            self.assertEqual(prepared["audio"][0]["request_id"], "1681")
+            with self.assertRaisesRegex(
+                ValueError,
+                "outside the forbidden registry",
+            ):
+                prepare_manifest(
+                    source_path,
+                    plan_dir=root / "plans2",
+                    manifest_dir=root / "prepared2",
+                    permitted_forbidden_audio_request_ids={"9999"},
+                )
+
     def test_reused_clean_visual_must_bind_current_prepared_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -304,6 +448,17 @@ class SpStoryChapterReviewTests(unittest.TestCase):
         self.assertEqual(
             scene_audio_role(
                 {"source": "event_audio_component", "request_id": "42040"},
+                voice_ids,
+            ),
+            "scene_se",
+        )
+        self.assertEqual(
+            scene_audio_role(
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "10329",
+                    "code_name": "42040_SPストーリー3_01_2G",
+                },
                 voice_ids,
             ),
             "scene_se",

@@ -9,7 +9,30 @@
 
 ## 当前状态
 
-> **2026-07-18 非线性／多层扩产检查点：** 项目所有者已确认 Story 3/4/5 三部完整
+> **2026-07-24 无 BGM 全面扩产检查点：** 系统重装后的生产环境已经恢复。机器现有
+> Python 3.14.6、Git 2.55.0 和 GitHub CLI 2.96.0；本轮恢复 FFmpeg 8.1.2、
+> Node.js LTS 24.18.0、npm 11.16.0、Frida 17.16.4、frida-tools 14.10.4 以及
+> `requirements.txt` 依赖。项目所有者已经将先前通过审查的内容分别发布为
+> [无 BGM 中文版](https://www.bilibili.com/video/BV13bKN6nEsd/)、
+> [无 BGM 原始日文官方字幕版](https://www.bilibili.com/video/BV1zQKN6eEC6/) 和
+> [无 BGM 无字幕版](https://www.bilibili.com/video/BV1rUKN6iEcj/)，后续沿用其
+> edition 标题和分 P 分类／命名风格。
+>
+> v24 已完成 11 个 family、95 个 event、33 个 none/JA/ZH MP4，全部通过自动 QA；
+> v25 又完成 `ac4902`、`ac7117`、`ac7112`，并将 `ac7113` 按原生画幅拆成
+> 512x288 主章节与 512x416 opening，共 5 个 family、81 个 event、15 个 MP4。
+> 合计 16 个 family、176 个 event、48 个 MP4、1,920.099 秒，均保持原生
+> 416x232、512x288 或 512x416、30 fps、H.264、AAC 48 kHz stereo，无 upscale、无自动黑场，
+> BGM 明确排除且 voice/SE 证据绑定。旧 v23 `ac5203` 因漏掉 request 7856 对白而
+> 失效，v24 已携带完整 reviewed cue 正确重建。`ac4901`、`ac7204`、`ac1101`
+> 继续失败关闭，没有为追求数量强行归入线性剧情。完整路径、规格、环境和边界见
+> [2026-07-24 扩产与环境恢复](docs/research/2026-07-24-mass-no-bgm-production-and-environment-recovery.md)。
+> `no_bgm_none/no_bgm_ja/no_bgm_zh` 继续作为独立生产轨道；`with_bgm` 仍等待
+> 场景级继承曲目、入口相位、音量和切换证据闭合。
+> 最新全仓回归为 354 tests passed、5 skipped、0 failed/error；真实 FFmpeg
+> 集成测试与严格 v24/v25 媒体审计均已实际执行。
+
+> **2026-07-18 非线性／多层扩产历史检查点：** 项目所有者已确认 Story 3/4/5 三部完整
 > 章节全部通过并授权全面生产；原话和三部 artifact hash 已写入 owner attestation。
 > 随后构建器已越过“单全画面线性 SP Story”：首批 `ac1102/ac1103/ac1104/ac5208`
 > 覆盖 40 event、99 条 voice-bound 中文字幕、175 个声音层、21 个 linear event 与

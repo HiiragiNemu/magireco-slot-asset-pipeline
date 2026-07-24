@@ -1,0 +1,41 @@
+{
+  "schema": "magireco-audited-speaker-display-registry-v1",
+  "status": "project_owner_authorized_for_evidence_bound_speakers",
+  "policy": {
+    "prefix_only_when_speaker_identity_is_evidence_bound": true,
+    "omit_for_multiple_narration_unknown_or_conflicting": true,
+    "separator_ja": "：",
+    "separator_zh": "："
+  },
+  "speakers": {
+    "iro": {"ja": "環いろは", "zh": "环彩羽"},
+    "kuro": {"ja": "黒江", "zh": "黑江"},
+    "kuroe": {"ja": "黒江", "zh": "黑江"},
+    "yac": {"ja": "七海やちよ", "zh": "七海八千代"},
+    "yach": {"ja": "七海やちよ", "zh": "七海八千代"},
+    "tur": {"ja": "由比鶴乃", "zh": "由比鹤乃"},
+    "fer": {"ja": "深月フェリシア", "zh": "深月菲莉希亚"},
+    "fel": {"ja": "深月フェリシア", "zh": "深月菲莉希亚"},
+    "mad": {"ja": "鹿目まどか", "zh": "鹿目圆"},
+    "hom": {"ja": "暁美ほむら", "zh": "晓美焰"},
+    "mami": {"ja": "巴マミ", "zh": "巴麻美"},
+    "mam": {"ja": "巴マミ", "zh": "巴麻美"},
+    "say": {"ja": "美樹さやか", "zh": "美树沙耶香"},
+    "kyo": {"ja": "佐倉杏子", "zh": "佐仓杏子"},
+    "kae": {"ja": "秋野かえで", "zh": "秋野枫"},
+    "rena": {"ja": "水波レナ", "zh": "水波玲奈"},
+    "ren": {"ja": "水波レナ", "zh": "水波玲奈"},
+    "mom": {"ja": "十咎ももこ", "zh": "十咎桃子"},
+    "sana": {"ja": "二葉さな", "zh": "二叶莎奈"},
+    "mif": {"ja": "梓みふゆ", "zh": "梓美冬"},
+    "mihu": {"ja": "梓みふゆ", "zh": "梓美冬"},
+    "toka": {"ja": "里見灯花", "zh": "里见灯花"},
+    "nem": {"ja": "柊ねむ", "zh": "柊音梦"},
+    "nemu": {"ja": "柊ねむ", "zh": "柊音梦"},
+    "ui": {"ja": "環うい", "zh": "环忧"},
+    "qb": {"ja": "キュゥべえ", "zh": "丘比"},
+    "sqb": {"ja": "小さいキュゥべえ", "zh": "小丘比"},
+    "ari": {"ja": "アリナ・グレイ", "zh": "阿莉娜·格雷"},
+    "nag": {"ja": "百江なぎさ", "zh": "百江渚"}
+  }
+}

@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from contextlib import contextmanager
 from fractions import Fraction
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -81,7 +82,7 @@ TRANSLATION_SCHEMA = "magireco-sp-story-zh-dialogue-map-v1"
 GENERIC_TRANSLATION_SCHEMA = "magireco-reviewed-story-zh-dialogue-map-v1"
 FORBIDDEN_AUDIO_REQUESTS = {"835", "836", "1681"}
 DEFAULT_SP_FAMILIES = {"ac7114", "ac7115", "ac7116"}
-SUPPORTED_DIMENSIONS = {(416, 232), (512, 288)}
+SUPPORTED_DIMENSIONS = {(416, 232), (512, 288), (512, 416)}
 SUPPORTED_COMPOSITION_MODELS = {
     "linear_full_frame_sequence",
     "timed_full_frame_layers",
@@ -228,6 +229,7 @@ def prepare_manifest(
     *,
     plan_dir: Path,
     manifest_dir: Path,
+    permitted_forbidden_audio_request_ids: set[str] | None = None,
 ) -> tuple[dict[str, Any], Path, list[dict[str, str]]]:
     source_path = source_path.resolve()
     manifest = read_json(source_path)
@@ -297,7 +299,17 @@ def prepare_manifest(
     if not isinstance(audio, list) or not audio:
         raise ValueError(f"{event} has no audio rows")
     request_ids = {str(row.get("request_id")) for row in audio if isinstance(row, Mapping)}
-    forbidden = sorted(request_ids & FORBIDDEN_AUDIO_REQUESTS)
+    permitted_forbidden_audio_request_ids = (
+        permitted_forbidden_audio_request_ids or set()
+    )
+    if not permitted_forbidden_audio_request_ids <= FORBIDDEN_AUDIO_REQUESTS:
+        raise ValueError(
+            f"{event} permits audio requests outside the forbidden registry"
+        )
+    forbidden = sorted(
+        (request_ids & FORBIDDEN_AUDIO_REQUESTS)
+        - permitted_forbidden_audio_request_ids
+    )
     if forbidden:
         raise ValueError(f"{event} contains forbidden BGM/effect requests: {forbidden}")
     for index, row in enumerate(audio):
@@ -320,10 +332,29 @@ def scene_audio_role(
         return "voice"
     if row.get("source") == "event_audio_component":
         return "scene_se"
+    code = str(row.get("code_name", ""))
+    if "SPストーリー" in code:
+        return "scene_se"
     if voice_request_ids is None:
-        code = str(row.get("code_name", ""))
-        return "scene_se" if "SPストーリー" in code else "voice"
+        return "voice"
     return "unsubtitled_audio"
+
+
+def validate_audio_layer_roles(
+    event: str,
+    roles: Sequence[str],
+    *,
+    require_scene_se: bool,
+    reject_unsubtitled_audio: bool,
+) -> None:
+    """Fail before encoding when retained audio semantics are incomplete."""
+
+    if not roles:
+        raise ValueError(f"{event} has no retained evidence-bound audio layers")
+    if require_scene_se and "scene_se" not in roles:
+        raise ValueError(f"{event} does not have an evidence-bound base scene-SE layer")
+    if reject_unsubtitled_audio and "unsubtitled_audio" in roles:
+        raise ValueError(f"{event} contains unresolved unsubtitled audio layers")
 
 
 def resolve_event(
@@ -332,6 +363,8 @@ def resolve_event(
     clean_visual: Path,
     clean_report: Path,
     translations: Mapping[str, str],
+    require_scene_se: bool = True,
+    reject_unsubtitled_audio: bool = False,
 ) -> tuple[dict[str, Any], list[dict[str, str]]]:
     event = str(manifest["event"])
     sources = [
@@ -368,8 +401,26 @@ def resolve_event(
                 "source": source,
             }
         )
-    if not any(layer["role"] == "scene_se" for layer in layers):
-        raise ValueError(f"{event} does not have an evidence-bound base scene-SE layer")
+    validate_audio_layer_roles(
+        event,
+        [str(layer["role"]) for layer in layers],
+        require_scene_se=require_scene_se,
+        reject_unsubtitled_audio=reject_unsubtitled_audio,
+    )
+    unresolved_audio = [
+        {
+            "request_id": layer["request_id"],
+            "code_name": layer["code_name"],
+            "ogg_name": layer["ogg_name"],
+        }
+        for layer in layers
+        if layer["role"] == "unsubtitled_audio"
+    ]
+    if reject_unsubtitled_audio and unresolved_audio:
+        raise ValueError(
+            f"{event} contains unresolved unsubtitled audio layers: "
+            f"{unresolved_audio}"
+        )
     if any(layer["request_id"] in FORBIDDEN_AUDIO_REQUESTS for layer in layers):
         raise ValueError(f"{event} contains a forbidden BGM/effect audio layer")
 
@@ -394,6 +445,20 @@ def resolve_event(
             )
             continue
         if request_id not in voice_by_id:
+            if row.get("subtitle_source") == "graphical_display_text":
+                excluded_source.append(
+                    {
+                        "text": text,
+                        "start_ms": int(row["start_ms"]),
+                        "end_ms": int(row["end_ms"]),
+                        "subtitle_source": str(row.get("subtitle_source", "")),
+                        "reason": (
+                            "graphical text references no retained voice layer; "
+                            "excluded from dialogue-only subtitles"
+                        ),
+                    }
+                )
+                continue
             raise ValueError(f"{event} subtitle request {request_id} lacks one voice layer")
         if text not in translations:
             raise ValueError(f"{event} lacks Chinese translation for {text!r}")
@@ -454,36 +519,145 @@ def ffconcat_quote(path: Path) -> str:
     return path.resolve().as_posix().replace("'", "'\\''")
 
 
+def _path_lexists(path: Path) -> bool:
+    """Return true for every directory entry, including dangling symlinks."""
+
+    return os.path.lexists(path)
+
+
+@contextmanager
+def _chapter_promotion_mutex(lock_path: Path):
+    """Serialize one destination's check, promotion, verification, and rollback."""
+
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = lock_path.open("a+b")
+    locked = False
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            handle.seek(0, os.SEEK_END)
+            if handle.tell() == 0:
+                handle.write(b"\0")
+                handle.flush()
+            handle.seek(0)
+            try:
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError as error:
+                raise RuntimeError(
+                    f"chapter promotion is already active: {lock_path}"
+                ) from error
+        else:
+            import fcntl
+
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as error:
+                raise RuntimeError(
+                    f"chapter promotion is already active: {lock_path}"
+                ) from error
+        locked = True
+        yield
+    finally:
+        if locked:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
+
+
+def _rollback_owned_chapter(
+    destination: Path, *, owner_marker_name: str, owner_token: str
+) -> bool:
+    """Remove a failed destination only while its private owner marker matches."""
+
+    marker = destination / owner_marker_name
+    try:
+        if marker.is_symlink() or not marker.is_file():
+            return False
+        if marker.read_text(encoding="ascii") != owner_token:
+            return False
+    except OSError:
+        return False
+    shutil.rmtree(destination)
+    return True
+
+
 def promote(staging: Path, destination: Path, root: Path, *, overwrite: bool) -> None:
     ensure_resolved_containment(root, staging, label="chapter staging")
     ensure_resolved_containment(root, destination, label="chapter destination")
     backup = resolve_output_child(
         root, f".{destination.name}.backup.{uuid.uuid4().hex}", label="chapter backup"
     )
-    if destination.exists() and not overwrite:
-        raise FileExistsError(f"chapter already exists: {destination}")
-    had_previous = destination.exists()
+    lock_path = resolve_output_child(
+        root,
+        f".{destination.name}.chapter-promotion.lock",
+        label="chapter promotion lock",
+    )
+    owner_token = uuid.uuid4().hex
+    owner_marker_name = f".chapter-promotion-owner.{owner_token}"
+    staged_owner_marker = staging / owner_marker_name
+    if _path_lexists(staged_owner_marker):
+        raise RuntimeError(f"unexpected chapter owner marker: {staged_owner_marker}")
+    staged_owner_marker.write_text(owner_token, encoding="ascii")
     try:
-        if had_previous:
-            destination.rename(backup)
-        staging.rename(destination)
-        marker = read_json(destination / "BATCH_REVIEW_READY.json")
-        if marker.get("status") != "AUTOMATED_QA_PASSED":
-            raise RuntimeError("promoted review marker is invalid")
-        for artifact in marker["artifacts"].values():
-            path = (destination / artifact["path"]).resolve()
-            ensure_resolved_containment(destination, path, label="review artifact")
-            if not path.is_file() or file_sha256(path) != artifact["sha256"]:
-                raise RuntimeError(f"promoted artifact hash mismatch: {path}")
-    except Exception:
-        if destination.exists():
-            shutil.rmtree(destination)
-        if backup.exists():
-            backup.rename(destination)
-        raise
-    else:
-        if backup.exists():
-            shutil.rmtree(backup)
+        with _chapter_promotion_mutex(lock_path):
+            if _path_lexists(destination) and not overwrite:
+                raise FileExistsError(f"chapter already exists: {destination}")
+            had_previous = _path_lexists(destination)
+            promoted_by_this_call = False
+            try:
+                if had_previous:
+                    destination.rename(backup)
+                staging.rename(destination)
+                promoted_by_this_call = True
+                marker = read_json(destination / "BATCH_REVIEW_READY.json")
+                if marker.get("status") != "AUTOMATED_QA_PASSED":
+                    raise RuntimeError("promoted review marker is invalid")
+                for artifact in marker["artifacts"].values():
+                    path = (destination / artifact["path"]).resolve()
+                    ensure_resolved_containment(
+                        destination, path, label="review artifact"
+                    )
+                    if not path.is_file() or file_sha256(path) != artifact["sha256"]:
+                        raise RuntimeError(f"promoted artifact hash mismatch: {path}")
+                (destination / owner_marker_name).unlink()
+                promoted_by_this_call = False
+            except BaseException as error:
+                if promoted_by_this_call:
+                    _rollback_owned_chapter(
+                        destination,
+                        owner_marker_name=owner_marker_name,
+                        owner_token=owner_token,
+                    )
+                if _path_lexists(backup):
+                    if _path_lexists(destination):
+                        raise RuntimeError(
+                            "chapter promotion failed and the previous release "
+                            f"was preserved at {backup}; destination is now owned "
+                            "by another writer"
+                        ) from error
+                    backup.rename(destination)
+                raise
+            else:
+                if _path_lexists(backup):
+                    shutil.rmtree(backup)
+    finally:
+        if _path_lexists(staged_owner_marker):
+            try:
+                if (
+                    not staged_owner_marker.is_symlink()
+                    and staged_owner_marker.read_text(encoding="ascii") == owner_token
+                ):
+                    staged_owner_marker.unlink()
+            except OSError:
+                pass
 
 
 def build_chapter(
@@ -999,8 +1173,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
     missing = sorted(required_texts - set(translations))
     unused = sorted(set(translations) - required_texts)
-    if missing or unused:
-        raise ValueError(f"translation coverage differs: missing={missing}, unused={unused}")
+    if missing:
+        raise ValueError(f"translation coverage is incomplete: missing={missing}")
     if args.validate_only:
         print(
             json.dumps(
@@ -1021,6 +1195,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         for family, rows in batch_rows.items()
                     },
                     "source_snapshot_count": len(all_sources),
+                    "unused_translation_count": len(unused),
                 },
                 ensure_ascii=False,
                 indent=2,

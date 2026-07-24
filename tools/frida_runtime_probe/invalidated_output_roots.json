@@ -1,6 +1,6 @@
 {
   "schema": "magireco-invalidated-output-roots-v1",
-  "updated": "2026-06-26",
+  "updated": "2026-07-18",
   "invalidated_roots": [
     {
       "path": "A:\\magireco_corrected_research_20260612\\validation_outputs_v18_generic_strategy_sample_20260626",
@@ -31,6 +31,11 @@
       "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac7204_character_subset_20260626",
       "scope": "coverage_and_delivery",
       "reason": "Built from the pre-correction ac7204 subset. Do not count as a verified same-scene Bilibili long edition until runtime-complete audio/subtitle gates are satisfied."
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v23_20260718\\ac5203_full_no_bgm_editions_v1",
+      "scope": "subtitle_completeness_and_delivery",
+      "reason": "The first v23 timing-fix rebuild omitted the previously reviewed ac5203_2_001 voice-bound cue for request 7856 (負けるもんか！) while importing chance-button presentation text. Automated media QA passed, but this artifact is not content-complete. Preserve it for audit only and supersede it with the reviewed-subtitle carry-forward rebuild."
     }
   ]
 }

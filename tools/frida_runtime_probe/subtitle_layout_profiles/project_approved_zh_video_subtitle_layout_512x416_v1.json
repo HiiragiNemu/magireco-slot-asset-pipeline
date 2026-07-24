@@ -1,0 +1,26 @@
+{
+  "schema": "magireco-project-zh-video-subtitle-layout-v1",
+  "profile_id": "project_approved_zh_video_subtitle_layout_512x416_v1",
+  "approval_status": "pending_owner_review",
+  "original_game_layout": false,
+  "target_width": 512,
+  "target_height": 416,
+  "alignment": "bottom_center",
+  "font_family": "Noto Sans SC",
+  "font_size": 18,
+  "primary_colour": "&H00FFFFFF",
+  "outline_colour": "&H00000000",
+  "border_style": 1,
+  "outline": 2,
+  "shadow": 0,
+  "margin_v": 14,
+  "margin_lr": 12,
+  "max_lines": 2,
+  "safe_area": {
+    "left_px": 12,
+    "right_px": 12,
+    "top_px": 12,
+    "bottom_px": 14
+  },
+  "notes": "Pending-owner 512x416 profile for the native ac7113 opening canvas. It preserves the native picture without resizing, padding, cropping, or upscaling, uses the audited Noto Sans SC fallback, and is not an original-game glyph or layout claim."
+}

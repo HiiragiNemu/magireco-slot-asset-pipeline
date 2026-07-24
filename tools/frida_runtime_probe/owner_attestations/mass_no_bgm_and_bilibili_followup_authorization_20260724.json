@@ -1,0 +1,42 @@
+{
+  "schema": "magireco-owner-production-authorization-v1",
+  "attestation_id": "mass_no_bgm_and_bilibili_followup_authorization_20260724",
+  "recorded_date": "2026-07-24",
+  "source": "project_owner_statements_in_codex_thread",
+  "statements": [
+    "在目标完成前不要停止，我刚刚说的不变，先产出无bgm全部版本",
+    "黑江称呼 環さん也是环同学 先把全局生产启动 中日对照版在完成中文版生产后再启动页来得及",
+    "继续推进项目 你之前只生产了10个视频 我已经投产到b站 并且进行了分类和命名。你可以直接使用我的Chrome 这样是直接登录了我的b站账号的状态。我为每个视频进行了命名，你可以同样后续处理你生产的视频。继续大规模投产这些无bgm视频。"
+  ],
+  "existing_bilibili_publications": [
+    {
+      "bvid": "BV1zQKN6eEC6",
+      "edition": "no_bgm_ja",
+      "url": "https://www.bilibili.com/video/BV1zQKN6eEC6/"
+    },
+    {
+      "bvid": "BV1rUKN6iEcj",
+      "edition": "no_bgm_none",
+      "url": "https://www.bilibili.com/video/BV1rUKN6iEcj/"
+    }
+  ],
+  "decisions": {
+    "FULL_NO_BGM_NONE_PRODUCTION_AUTHORIZED": true,
+    "FULL_NO_BGM_JA_PRODUCTION_AUTHORIZED": true,
+    "FULL_NO_BGM_ZH_PRODUCTION_AUTHORIZED": true,
+    "START_JA_ZH_AFTER_ZH_COVERAGE": true,
+    "BILIBILI_FOLLOWUP_PROCESSING_AUTHORIZED": true,
+    "REUSE_OWNER_NAMING_STYLE": true,
+    "CONTINUE_WITHOUT_PER_FAMILY_REVIEW_STOP": true
+  },
+  "translation_policy": {
+    "kuroe_addressing_iroha_when_japanese_is_tamaki_san": "环同学",
+    "iroha_addressing_kuroe": "黑江同学",
+    "yachiyo_addressing_iroha_when_japanese_is_tamaki_san": "环同学"
+  },
+  "not_claimed": [
+    "human_playback_approval_of_new_20260724_outputs",
+    "approval_of_with_bgm_editions",
+    "proof_that_unresolved_families_are_story_content"
+  ]
+}

@@ -1,6 +1,112 @@
 # Project Status
 
-更新时间：2026-07-18
+更新时间：2026-07-24
+
+## 2026-07-24 系统重装恢复与 no-BGM 全面扩产
+
+项目所有者已把此前通过播放审查的内容正式投产到 Bilibili，并手工完成分 P 分类与
+命名。当前三个公开 edition 及页面标题为：
+
+- `BV13bKN6nEsd`：`魔法纪录 街机版 动画整合 无BGM中文版｜游戏资源解包与技术还原`
+- `BV1zQKN6eEC6`：`魔法纪录 街机版 动画整合 无BGM原始日文官方字幕版｜游戏资源解包与技术还原`
+- `BV1rUKN6iEcj`：`魔法纪录 街机版 动画整合 无BGM无字幕版｜游戏资源解包与技术还原`
+
+后续投稿准备可以沿用这一 edition 级标题格式和项目所有者的分 P 命名风格，但不得
+仅根据 `ac` 编号虚构剧情标题。两项既有投稿也不自动构成对新 v24/v25 输出的逐部
+人工批准。
+
+系统重装后已经直接核验 Python 3.14.6、Git 2.55.0.windows.3、GitHub CLI 2.96.0；
+本轮恢复 FFmpeg 8.1.2 full build、Node.js LTS 24.18.0、npm 11.16.0、
+Frida 17.16.4、frida-tools 14.10.4，以及 `requirements.txt` 的 requests 2.34.2、
+tqdm 4.69.0、mitmproxy 12.2.3、fonttools 4.63.0。FFmpeg/ffprobe 位于
+`C:\Users\proje\AppData\Local\Microsoft\WinGet\Links`，Node 位于
+`C:\Program Files\nodejs`；旧终端看不到新 PATH 时必须显式使用这些路径或重新开
+终端。
+
+v24 耐久输出根：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_editions_v24_mass_20260724
+```
+
+`ac0911/ac4903/ac5203/ac5301/ac5303/ac6003/ac6004/ac6005/ac6007/ac7206/ac7210`
+共 11 个 family、95 个 event、111 条对白、116 个 scene SE、22,308 帧、
+743.599 秒及 33 个 none/JA/ZH MP4，全部通过当前 family 和 aggregate 自动 QA。
+八个 family 保持 416x232，三个保持 512x288；全体为 30/1 fps、H.264、AAC
+48 kHz stereo，无 upscale、无插入黑场、无 BGM layer、无 unresolved audio。
+
+旧 v23 `ac5203_full_no_bgm_editions_v1` 虽通过媒体流 QA，但遗漏
+`ac5203_2_001` request 7856 的 `負けるもんか！`，同时错误携入 chance-button
+presentation text，已列入 `invalidated_output_roots.json`。权威 v24 重建位于
+`batch02_ac5203_ac6005`，含 7 event、7 个 reviewed dialogue cue、14 个
+evidence-bound audio layer、1,216 帧、40.533 秒，三版均通过。
+
+v25 耐久输出根：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_editions_v25_next_story_20260724
+```
+
+- `ac4902`：46 event、46 cue、98 audio layer、20,708 帧、690.267 秒、416x232；
+- `ac7117`：11 event、32 cue、43 audio layer、4,381 帧、146.033 秒、512x288；
+- `ac7112`：14 event、45 cue、59 audio layer、5,916 帧、197.200 秒、512x288。
+- `ac7113_main_512x288`：9 event、32 cue、41 audio layer、3,948 帧、
+  131.600 秒、512x288；
+- `ac7113_opening_512x416`：1 event、2 cue、3 audio layer、342 帧、
+  11.400 秒、512x416。
+
+五组共 81 event、157 cue、35,295 帧、1,176.500 秒及 15 个 edition MP4，全部
+通过同一 native-size/frame/sample/source/subtitle/audio-role 门禁。v24+v25 的
+权威 aggregate audit 位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_aggregate_audits_20260724\
+  final_audit_v24_v25_strict_media_20260724_230000\aggregate_audit.json
+```
+
+它整体通过 16 family、176 event、48 MP4、268 条对白、57,603 帧和
+1,920.099 秒；471 个音频层为 268 voice + 203 scene SE，未解析音频为 0。
+尺寸分布为 9 个 416x232、6 个 512x288、1 个 512x416。此次严格重跑还逐份解析
+JA/ZH SRT，并独立重算 audio master 与三版 MP4 的 AAC packet hash、
+presentation timeline、精确 decoded sample 数和 PCM hash。
+
+供项目所有者手动投稿的 NTFS 硬链接包位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  bilibili_upload_ready_v25_no_bgm_20260724_16families
+```
+
+其中 `zh/ja/none` 已按 P11-P25 排列；三个
+`replace_old_p10_ac5203` 子目录单列正确的 P10 替换文件。45 个 P11-P25 新增投稿
+链接和 3 个 P10 替换链接（合计对应 aggregate 中的 48 个 edition MP4）已逐文件
+复算 SHA-256，与最终 aggregate CSV 完全一致。
+
+没有闭合的 family 继续失败关闭：
+
+- `ac4901` 的旧 v18 clean-story 候选仍是短小、近似重复且存在语音/可见说话动作
+  不一致的无效提升；
+- `ac7204` 是带角色语音的 gameplay/result family，尚未完成 story/result/effect
+  的可靠拆分；
+- `ac1101` 的 13 个注册 event 中 4 个仍缺生产 manifest，且存在替代 title/result
+  分支碰撞、`ac1101_002` voice timing 和 mixed win/recovery composition 未闭合。
+
+当前 `no_bgm_none/no_bgm_ja/no_bgm_zh` 是已获批继续扩产的独立轨道，含义始终是
+“保留经证明的原始 voice/SE，明确排除 BGM”，不是“原游戏没有 BGM”。
+`with_bgm` 仍等待具体 family 的继承曲目、入口 phase、volume、
+fade/duck/replacement/stop 同 run 证据，不计入本轮成品。
+
+提交前的内容正确性审查还关闭了四个发布风险：同目标并发 promotion 不再能删除
+另一进程的有效输出；aggregate auditor 不再只信任自报的 SRT/AAC QA；series
+proposal 必须绑定当前逐事件和上游 series hash；`環さん`／`黒江さん` 的项目所有者
+称呼规则已进入构建与 QA。最新全仓回归为 354 passed、5 skipped、0
+failed/error，真实 FFmpeg 集成测试已执行。
+
+完整环境、路径、统计及语义边界见
+`docs/research/2026-07-24-mass-no-bgm-production-and-environment-recovery.md`。
 
 ## 2026-07-18 非线性／多层剧情扩产等待人工播放
 

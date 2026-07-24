@@ -72,6 +72,56 @@
         "unprompted large-v3-turbo confirms the emphatic sentence ending"
       ]
     },
+    "8041": {
+      "text": "私もチャレンジした方がいいのかな",
+      "speaker_code": "kuroe",
+      "source": "curated_official_prefix_and_large_v3_consensus",
+      "official_prefix": "私もチャレンジした方がい",
+      "asr_consensus": "私もチャレンジした方がいいのかな",
+      "evidence": [
+        "official sound request 26043 / request id 8041 supplies the prefix 私もチャレンジした方がい",
+        "voice_asr_v1 truncated audit records exact Japanese large-v3 consensus",
+        "Z2D cap0911_takara_kur_008 binds the line to Kuroe"
+      ]
+    },
+    "5172": {
+      "text": "ふざけるなふざけるなふざけるな",
+      "speaker_code": "ari",
+      "source": "curated_official_prefix_and_large_v3_consensus",
+      "official_prefix": "ふざけるなふざける",
+      "asr_consensus": "ふざけるなふざけるなふざけるな",
+      "evidence": [
+        "official sound request 20064 / request id 5172 supplies the repeated prefix",
+        "voice_asr_v1 truncated audit records exact Japanese large-v3 consensus",
+        "Z2D cap5303_funu_ari_003 binds the line to Alina"
+      ]
+    },
+    "8906": {
+      "text": "っ…！",
+      "speaker_code": "say",
+      "source": "curated_official_sound_request_code_name",
+      "official_prefix": "っ…！",
+      "ogg_name": "snd_30555_bank08_ogg_07376.ogg",
+      "audio_sha256": "8C5043AD6454478BDCD253792AFBDA42DCFC0E66E3B1E8BED4290A3B647A961C",
+      "evidence": [
+        "official sound request code 30555_378_say_っ…！ contains the complete vocalization",
+        "request id 8906 is bound to ac7112_001 at 12716 ms",
+        "the official say speaker code identifies Miki Sayaka"
+      ]
+    },
+    "8907": {
+      "text": "！",
+      "speaker_code": "say",
+      "source": "curated_official_sound_request_code_name",
+      "official_prefix": "！",
+      "ogg_name": "snd_30556_bank08_ogg_07377.ogg",
+      "audio_sha256": "3E94EC22B6AEFC84FB4DA066D22EDC49EA5428B1551071F02B5D6666FE7F65DC",
+      "evidence": [
+        "official sound request code 30556_381_say_！ contains the complete vocalization",
+        "request id 8907 is bound to ac7112_001 at 25557 ms",
+        "the official say speaker code identifies Miki Sayaka"
+      ]
+    },
     "5278": {
       "text": "押してよネ",
       "speaker_code": "ari",

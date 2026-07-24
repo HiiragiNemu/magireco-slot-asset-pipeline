@@ -1,13 +1,110 @@
 # MagiaReco animation recovery handoff for the next AI
 
 Original date: 2026-06-28
-Current checkpoint: 2026-07-18
+Current checkpoint: 2026-07-24
 
 This is the core handoff document for continuing the project.  Treat it as the
 first file to read before touching any renders, manifests, probes, or GitHub
 state.
 
-The highest-priority delta is now:
+The highest-priority delta is:
+
+```text
+docs/research/2026-07-24-mass-no-bgm-production-and-environment-recovery.md
+```
+
+The owner has published the earlier approved material as three manually named,
+multi-part Bilibili editions:
+
+```text
+BV13bKN6nEsd  no_bgm_zh
+魔法纪录 街机版 动画整合 无BGM中文版｜游戏资源解包与技术还原
+
+BV1zQKN6eEC6  no_bgm_ja
+魔法纪录 街机版 动画整合 无BGM原始日文官方字幕版｜游戏资源解包与技术还原
+
+BV1rUKN6iEcj  no_bgm_none
+魔法纪录 街机版 动画整合 无BGM无字幕版｜游戏资源解包与技术还原
+```
+
+Reuse the owner's edition-title and per-part classification/naming style during
+future upload preparation. Do not invent a human story title from an `ac`
+identifier, and do not treat these three publications as playback approval for
+newly rendered families.
+
+After the Windows reinstall, the live production environment is restored:
+Python 3.14.6, Git 2.55.0.windows.3, GitHub CLI 2.96.0, FFmpeg 8.1.2,
+Node.js LTS 24.18.0, npm 11.16.0, Frida 17.16.4, frida-tools 14.10.4, and all
+`requirements.txt` packages. FFmpeg/ffprobe are in the WinGet links directory;
+Node is under `C:\Program Files\nodejs`. A terminal inherited before installation
+may require an explicit PATH prefix or restart.
+
+The current durable no-BGM expansion is:
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_editions_v24_mass_20260724
+```
+
+v24 passed 11 families, 95 events, 111 dialogue cues, 116 scene-SE layers,
+22,308 frames, 743.599 seconds, and 33 none/JA/ZH MP4s. The families are
+`ac0911/ac4903/ac5203/ac5301/ac5303/ac6003/ac6004/ac6005/ac6007/ac7206/ac7210`.
+All retain native 416x232 or 512x288, 30/1 fps H.264, and AAC 48 kHz stereo,
+with no inserted black frame, upscale, BGM layer, or unresolved audio role.
+
+The next-story expansion is:
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_editions_v25_next_story_20260724
+```
+
+- `ac4902`: 46 events, 46 cues, 690.267 seconds, 416x232;
+- `ac7117`: 11 events, 32 cues, 146.033 seconds, 512x288;
+- `ac7112`: 14 events, 45 cues, 197.200 seconds, 512x288.
+- `ac7113_main_512x288`: 9 events, 32 cues, 131.600 seconds,
+  native 512x288;
+- `ac7113_opening_512x416`: 1 event, 2 cues, 11.400 seconds,
+  native 512x416 and intentionally preserved separately.
+
+All fifteen v25 MP4s passed the same exact source/frame/sample/subtitle/audio-role
+gates. The combined authoritative audit passed 16 families, 176 events, 48
+edition MP4s, 268 dialogue cues, and 1,920.099 seconds:
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_aggregate_audits_20260724\
+  final_audit_v24_v25_strict_media_20260724_230000\aggregate_audit.json
+```
+
+This strict rerun parses every JA/ZH SRT and independently recalculates AAC
+packet identity, packet presentation timing, exact decoded sample count, and
+decoded PCM identity for each audio master and all three edition MP4s.
+
+The old v23 `ac5203` artifact is invalid because it omitted request 7856
+(`負けるもんか！`) and imported chance-button presentation text. The v24
+`batch02_ac5203_ac6005` rebuild carries the reviewed `ac5203_2_001` cue and is
+the only current ac5203 production edition.
+
+Do not force unresolved inventory into the production count. `ac4901` remains
+invalidated for repeated short variants and unproven visible speaking;
+`ac7204` remains gameplay/result with role voice pending a story/result/effect
+split; `ac1101` remains blocked by missing manifests, branch collisions,
+unresolved voice timing, and unclosed mixed win/recovery compositions.
+
+The no-BGM none/JA/ZH lane is independently authorized for continued
+production. The with-BGM lane is still unclosed and none of the v24/v25 outputs
+claims a complete original-game BGM mix.
+
+The final correctness review closed four additional release hazards:
+same-target concurrent promotion now uses an OS lock and owned-only rollback;
+the aggregate auditor independently parses SRT and recomputes AAC/PCM evidence;
+series proposals bind the current event and upstream-series hashes; and the
+owner's `環さん`/`黒江さん` Chinese relationship forms are enforced during
+build and QA. The current full repository regression is 354 passed, 5 skipped,
+and 0 failed/errors with the real FFmpeg integration enabled.
+
+The previous 2026-07-18 expansion delta is:
 
 ```text
 docs/research/2026-07-18-mixed-composition-expansion-review-batch.md
@@ -19,18 +116,15 @@ beyond single-full-frame linear SP Story. The exact statement and the three
 approved artifact sets are hash-bound in
 `tools/frida_runtime_probe/owner_attestations/sp_story_3_5_full_chapters_owner_playback_20260718.json`.
 
-The first mixed-composition checkpoint has therefore been built on durable D::
+The first mixed-composition checkpoint was built on durable D:
 `ac1102`, `ac1103`, `ac1104`, and `ac5208`, totaling 40 events, 99 voice-bound
 Chinese cues, 175 audio layers, and 315.067 seconds. It includes 21 linear and
 19 `timed_full_frame_layers` events, multiple ordered clips, loop backgrounds,
 screen/loop overlays, and both 416x232 and 512x288 native media. All four passed
-automated frame/sample/source/subtitle QA. **Stop here and wait for owner playback
-of these four mixed-composition candidates. Do not start the next families,
-material classification, BGM capture, CDN/addon work, or another architecture
-audit before that feedback.** The owner should especially decide whether the
-authored runtime sparkle/logo layers belong in clean-story releases, whether
-simultaneous `ac5208` cues are readable, and whether the new 416x232 subtitle
-layout is acceptable.
+automated frame/sample/source/subtitle QA. The owner subsequently completed
+playback and approved all four, including the 416x232 layout and overlapping
+`ac5208` dialogue. The former stop instruction is historical and has been
+superseded by the 2026-07-24 mass-production authorization.
 
 ```text
 D:\magia\MyProducts\casino\magireco_corrected_research_20260612\bilibili_mixed_composition_reviews_v22_20260718

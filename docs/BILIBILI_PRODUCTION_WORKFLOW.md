@@ -1,7 +1,67 @@
 # Bilibili Production Workflow
 
-> **2026-07-18 OWNER OVERRIDE / CURRENT PRIORITY.** The first production gate is
-> now the named independent edition `bilibili_no_bgm_zh_v1`: original native-size
+> **2026-07-24 CURRENT NO-BGM MASS-PRODUCTION WORKFLOW.** The owner has published
+> the earlier approved material as
+> [BV13bKN6nEsd](https://www.bilibili.com/video/BV13bKN6nEsd/)
+> (`魔法纪录 街机版 动画整合 无BGM中文版｜游戏资源解包与技术还原`),
+> [BV1zQKN6eEC6](https://www.bilibili.com/video/BV1zQKN6eEC6/)
+> (`魔法纪录 街机版 动画整合 无BGM原始日文官方字幕版｜游戏资源解包与技术还原`)
+> and [BV1rUKN6iEcj](https://www.bilibili.com/video/BV1rUKN6iEcj/)
+> (`魔法纪录 街机版 动画整合 无BGM无字幕版｜游戏资源解包与技术还原`).
+> Reuse those edition-title forms and the owner's manual per-part
+> classification/naming style; do not derive a public story name from an `ac`
+> number alone.
+>
+> Full independent production is now authorized for `no_bgm_none`,
+> `no_bgm_ja`, and `no_bgm_zh`. Each family must still close its own
+> composition, event order, source hashes, voice/SE roles, subtitles, native
+> dimensions, exact frame/sample grid, and aggregate QA. “No BGM” means BGM is
+> intentionally excluded while verified original voice/SE are retained; it is
+> not a claim that the game scene had no BGM.
+>
+> Current passed durable production:
+>
+> ```text
+> v24: D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+>        no_bgm_editions_v24_mass_20260724
+>      11 families / 95 events / 33 MP4s / 743.599 s
+>
+> v25: D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+>        no_bgm_editions_v25_next_story_20260724
+>      ac4902 + ac7117 + ac7112 + ac7113 native-size split
+>      5 families / 81 events / 15 MP4s / 1,176.500 s
+> ```
+>
+> The combined aggregate audit passed 16 families, 176 events, 48 MP4s, and
+> 1,920.099 seconds. All outputs remain native 416x232, 512x288, or 512x416, 30/1 fps
+> H.264, AAC 48 kHz stereo, with no upscale, inserted black separator, BGM
+> layer, or unresolved audio role. The authoritative report is:
+>
+> ```text
+> D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+>   no_bgm_aggregate_audits_20260724\
+>   final_audit_v24_v25_strict_media_20260724_230000\aggregate_audit.json
+> ```
+>
+> This strict rerun parses every JA/ZH SRT and independently recalculates the
+> AAC packet hash, presentation timeline, exact decoded sample count, and PCM
+> hash for the audio master and all three edition MP4s.
+>
+> Do not use the old v23 ac5203 edition: it omitted request 7856
+> (`負けるもんか！`) and imported chance-button presentation text. Use only the
+> v24 `batch02_ac5203_ac6005` rebuild. `ac4901`, `ac7204`, and `ac1101`
+> remain fail-closed for the semantic and composition reasons recorded in
+> [the 2026-07-24 recovery report](research/2026-07-24-mass-no-bgm-production-and-environment-recovery.md).
+> The authorized JA/ZH bilingual edition follows Chinese coverage. The
+> `with_bgm` editions remain blocked until event-specific inherited BGM
+> identity/phase/volume/transition evidence is closed.
+>
+> The current 15 new-part order plus one corrected existing P10, three target
+> BVIDs, and the explicit corrected-ac5203 supersession are recorded in
+> `tools/frida_runtime_probe/bilibili_upload_catalog_no_bgm_v24_v25_20260724.json`.
+
+> **2026-07-18 PREVIOUS OWNER OVERRIDE.** The first production gate was the
+> named independent edition `bilibili_no_bgm_zh_v1`: original native-size
 > visual, evidence-bound voice/SE, intentionally no BGM, and Chinese subtitles
 > for spoken dialogue only. It may independently reach `BUILD_READY` and
 > `AUTOMATED_QA_PASSED`; the complete 2x3 six-edition matrix remains the final
@@ -9,7 +69,8 @@
 > approval is still required before `BILIBILI_RELEASE_READY`. The authoritative
 > candidate record is
 > `docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md`. Everything
-> below remains superseded audit history and must not be executed.
+> below that historical checkpoint remains superseded audit history and must not
+> be executed.
 
 > **2026-07-15 SUPERSEDED / DO NOT EXECUTE FOR CURRENT PRODUCTION.** The bulk
 > `5,485`-row/294-part plan and every command below are retained only as audit

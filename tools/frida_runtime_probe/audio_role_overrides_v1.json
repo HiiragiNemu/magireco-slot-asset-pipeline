@@ -1,0 +1,168 @@
+{
+  "schema": "magireco-evidence-bound-audio-role-overrides-v1",
+  "status": "audited",
+  "overrides": [
+    {
+      "event": "ac6005_013",
+      "request_id": "2183",
+      "code_name": "9808_いろはCI【CU】_013",
+      "ogg_name": "snd_09808_bank03_ogg_09945.ogg",
+      "source_sha256": "C790C8EA3F2F4AA2BE77498B26BEBC995D105C323FBA8F7A022F615972E046C1",
+      "role": "scene_se",
+      "evidence": "official runtime capture binds request 2183 to the non-dialogue base CU sound; the voice-bound request in the same event is independently identified as 2791"
+    },
+    {
+      "event": "ac5301_018",
+      "request_id": "1641",
+      "code_name": "7505_ｾﾘﾌ_【告強】",
+      "ogg_name": "snd_07505_bank03_ogg_09511.ogg",
+      "source_sha256": "B639EF6977A099C5C69835F920AEA68D62719EF08A2B5601DA25FBDAF1A4FE3B",
+      "role": "scene_se",
+      "evidence": "official event timeline binds the same request 1641 asset as the base non-dialogue scene sound in the other ac5301 branch events; request 5158 is the independently voice-bound Alina dialogue in ac5301_018"
+    },
+    {
+      "event": "ac5303_004",
+      "request_id": "1658",
+      "code_name": "7603_ｸﾞｰﾊﾟﾝ【上乗せ】_004",
+      "ogg_name": "snd_07603_bank03_ogg_09525.ogg",
+      "source_sha256": "39DD0DB38B45B5C01572FD1D8E7788E37A2BB9A543D86CAF198AD10CA6813CEC",
+      "role": "scene_se",
+      "evidence": "official code name identifies the event punch and continuation presentation sound, while request 5176 is the independently voice-bound Alina dialogue"
+    },
+    {
+      "event": "ac6003_005",
+      "request_id": "2139",
+      "code_name": "9604_2G目_やちよ変身_005",
+      "ogg_name": "snd_09604_bank03_ogg_09905.ogg",
+      "source_sha256": "3587EDD16AA8BD531D2CE04C43F9461BFC40CB68A9927D64A13ED5BBFAA35DCE",
+      "role": "scene_se",
+      "evidence": "official code name and event binding identify the Yachiyo transformation scene sound; the event has no voice-bound subtitle request"
+    },
+    {
+      "event": "ac6004_011",
+      "request_id": "2169",
+      "code_name": "9711_失敗_011",
+      "ogg_name": "snd_09711_bank03_ogg_09933.ogg",
+      "source_sha256": "E3932782043D09904C527552D78B836AE30312E6BC4121A1A14CA6E0D88027E9",
+      "role": "scene_se",
+      "evidence": "official code name identifies the event failure scene sound and no dialogue subtitle is bound to request 2169"
+    },
+    {
+      "event": "ac6004_011",
+      "request_id": "1040",
+      "code_name": "4025_汎用暗転音",
+      "ogg_name": "snd_04025_bank05_ogg_08809.ogg",
+      "source_sha256": "42987D5351D0C291914346BEEB291E20A17DFDA9B1DB3D718D520CDB7403D004",
+      "role": "scene_se",
+      "evidence": "official code name identifies the generic blackout transition sound and no dialogue subtitle is bound to request 1040"
+    },
+    {
+      "event": "ac6007_004",
+      "request_id": "2199",
+      "code_name": "10010_負け_004",
+      "ogg_name": "snd_10010_bank03_ogg_00366.ogg",
+      "source_sha256": "56530852A409CBF537C8F47102CA76E0EA7F727A59B70D92DB229BB958ED72D1",
+      "role": "scene_se",
+      "evidence": "official code name identifies the event defeat scene sound and no dialogue subtitle is bound to request 2199"
+    },
+    {
+      "event": "ac6007_004",
+      "request_id": "1040",
+      "code_name": "4025_汎用暗転音",
+      "ogg_name": "snd_04025_bank05_ogg_08809.ogg",
+      "source_sha256": "42987D5351D0C291914346BEEB291E20A17DFDA9B1DB3D718D520CDB7403D004",
+      "role": "scene_se",
+      "evidence": "official code name identifies the generic blackout transition sound and no dialogue subtitle is bound to request 1040"
+    },
+    {
+      "event": "ac7210_001",
+      "request_id": "2257",
+      "code_name": "11200_ﾛｹｯﾄ特攻_001",
+      "ogg_name": "snd_11200_bank03_ogg_00470.ogg",
+      "source_sha256": "BCB00C72B328532B0B99A65EC204729B33639D5899C6B36AFDF6028BE0320493",
+      "role": "scene_se",
+      "evidence": "official code name identifies the rocket charge scene sound and no dialogue subtitle is bound to request 2257"
+    },
+    {
+      "event": "ac5203_005",
+      "request_id": "7788",
+      "code_name": "25700",
+      "ogg_name": "snd_25700_bank29_ogg_06176.ogg",
+      "source_sha256": "D701D80D7C0B1CDDDEBB25438F5CCDBBBA7BA845E37B8FE47F84420FB851D5A4",
+      "role": "exclude_slot_effect",
+      "evidence": "Z2D identity cap5102_say_oshite_001 and the exact chance-button start bind this short Sayaka push prompt to the separate slot interaction excluded by the reviewed clean-animation composition plan"
+    },
+    {
+      "event": "ac5203_015",
+      "request_id": "7788",
+      "code_name": "25700",
+      "ogg_name": "snd_25700_bank29_ogg_06176.ogg",
+      "source_sha256": "D701D80D7C0B1CDDDEBB25438F5CCDBBBA7BA845E37B8FE47F84420FB851D5A4",
+      "role": "exclude_slot_effect",
+      "evidence": "Z2D identity cap5102_say_oshite_001 and the exact chance-button start bind this short Sayaka push prompt to the separate slot interaction excluded by the reviewed clean-animation composition plan"
+    },
+    {
+      "event": "ac5203_017",
+      "request_id": "7788",
+      "code_name": "25700",
+      "ogg_name": "snd_25700_bank29_ogg_06176.ogg",
+      "source_sha256": "D701D80D7C0B1CDDDEBB25438F5CCDBBBA7BA845E37B8FE47F84420FB851D5A4",
+      "role": "exclude_slot_effect",
+      "evidence": "Z2D identity cap5102_say_oshite_001 and the exact chance-button start bind this short Sayaka push prompt to the separate slot interaction excluded by the reviewed clean-animation composition plan"
+    },
+    {
+      "event": "ac5203_005",
+      "request_id": "451",
+      "code_name": "1070_ボタンPUSH表示音",
+      "ogg_name": "snd_01070_bank25_ogg_00418.ogg",
+      "source_sha256": "66D2BE1B6A4580882956D8D39A806B00AD35EED1A58A7BE36BA08F70162E8C75",
+      "role": "exclude_slot_effect",
+      "evidence": "official code name and Z2D identity ac5203_chance_btn bind this request to the excluded chance-button presentation, not story dialogue or scene ambience"
+    },
+    {
+      "event": "ac5203_015",
+      "request_id": "451",
+      "code_name": "1070_ボタンPUSH表示音",
+      "ogg_name": "snd_01070_bank25_ogg_00418.ogg",
+      "source_sha256": "66D2BE1B6A4580882956D8D39A806B00AD35EED1A58A7BE36BA08F70162E8C75",
+      "role": "exclude_slot_effect",
+      "evidence": "official code name and Z2D identity ac5203_chance_btn bind this request to the excluded chance-button presentation, not story dialogue or scene ambience"
+    },
+    {
+      "event": "ac5203_017",
+      "request_id": "451",
+      "code_name": "1070_ボタンPUSH表示音",
+      "ogg_name": "snd_01070_bank25_ogg_00418.ogg",
+      "source_sha256": "66D2BE1B6A4580882956D8D39A806B00AD35EED1A58A7BE36BA08F70162E8C75",
+      "role": "exclude_slot_effect",
+      "evidence": "official code name and Z2D identity ac5203_chance_btn bind this request to the excluded chance-button presentation, not story dialogue or scene ambience"
+    },
+    {
+      "event": "ac7112_001",
+      "request_id": "1681",
+      "code_name": "8040_シネスコ変化音_金帯",
+      "ogg_name": "snd_08040_bank21_ogg_09544.ogg",
+      "source_sha256": "5AC894AC84981841C3DFFB1208AE1484E680CCE32C0605A0144E240E693F2B9F",
+      "role": "exclude_slot_effect",
+      "evidence": "official request identity and reviewed clean-story composition exclude the gold-frame transition sound together with the gold-frame presentation layer"
+    },
+    {
+      "event": "ac7113_001",
+      "request_id": "1681",
+      "code_name": "8040_シネスコ変化音_金帯",
+      "ogg_name": "snd_08040_bank21_ogg_09544.ogg",
+      "source_sha256": "5AC894AC84981841C3DFFB1208AE1484E680CCE32C0605A0144E240E693F2B9F",
+      "role": "exclude_slot_effect",
+      "evidence": "official request identity and reviewed clean-story composition exclude the gold-frame transition sound together with the gold-frame presentation layer"
+    },
+    {
+      "event": "ac7117_001",
+      "request_id": "1681",
+      "code_name": "8040_シネスコ変化音_金帯",
+      "ogg_name": "snd_08040_bank21_ogg_09544.ogg",
+      "source_sha256": "5AC894AC84981841C3DFFB1208AE1484E680CCE32C0605A0144E240E693F2B9F",
+      "role": "exclude_slot_effect",
+      "evidence": "official request identity and reviewed clean-story composition exclude the gold-frame transition sound together with the gold-frame presentation layer"
+    }
+  ]
+}

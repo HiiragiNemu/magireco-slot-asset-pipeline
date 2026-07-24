@@ -1,0 +1,64 @@
+{
+  "schema": "magireco-owner-playback-attestation-v1",
+  "attestation_id": "mixed_composition_4_chapters_owner_playback_20260718",
+  "recorded_date": "2026-07-18",
+  "source": "project_owner_statement_in_codex_thread",
+  "statement": "已完整观看这 4 部，目前情况完美，继续扩产，拥有sparkle/logo的视频允许制作无sparkle/logo版和有sparkle/logo版，同时也将其加入效果／玩法合集，ac5208 同时出现多角色对白时，重叠中文字幕可读，416×232 字幕大小、遮挡和描边正常，如果有官方说话人的话，允许在前面加说话人名字和冒号【在这种判断下，如果遇到环彩羽称呼黑江的时候，不要叫黑江小姐，叫黑江同学，同理八千代叫环彩羽的时候如果是tamaki san则叫环同学，目前对这两个角色关系做翻译修正】所有语音、SE、画面层、循环和事件边界正确，允许继续产出，同时允许产出中日对照字幕版，现在开始进一步扩产，进行大规模全面产出，如果bgm问题已解决，允许产出bgm版本 同样是新规则下全面产出",
+  "review_scope": "four_complete_mixed_composition_family_chapters_as_rendered",
+  "releases": [
+    {
+      "release_id": "ac1102_full_no_bgm_zh_review_v1",
+      "video_sha256": "F2236AC4B3235C645E7408539E37AF2422077D8300C9EED2339CE73E15561BD2",
+      "subtitle_sha256": "F409AADFC07287C1DD54D4465F234515A41F7A79C3C0E2BA193E8732CB739E0C",
+      "manifest_sha256": "92B3A62ECCC0A695C4D61B994C9DBD94B750E57C84E1F566B0E6C5E67461FD4E",
+      "qa_sha256": "2754876A7AC5FAE612395E4034E58E310056197231BA769E0881E58A7B5C8CB5",
+      "ready_sha256": "0889A77D450D2E8C30A7CB6070077F70FD219C5F3D0A06A2DFF88B74D7289716"
+    },
+    {
+      "release_id": "ac1103_full_no_bgm_zh_review_v1",
+      "video_sha256": "C1789C88415FEE6F52A4702B62A2F79ABB5877BAC55BE4681F56E27AC2BE5B1C",
+      "subtitle_sha256": "71023863EC3C4741438926BC08B541C607C4545C403C04B434AB2B70BBAA98C9",
+      "manifest_sha256": "F4E561EAE0A01F2277E7BA9592318DE03B0F9117364B9499BD601B3837827C05",
+      "qa_sha256": "EF313EB644E2EB3A1D7082F9AD391AA10977AB29CCBC65614024E26236AE024E",
+      "ready_sha256": "39608C5E68C9D38500377B11088B60991E8FD17904A56116B55A417028850506"
+    },
+    {
+      "release_id": "ac1104_full_no_bgm_zh_review_v1",
+      "video_sha256": "44CB183FE70CB384995582453D76F06F2CEFD95216D888245566D961AAA51053",
+      "subtitle_sha256": "BB46E2CFE9431626879FA5E7713810C4A66A12C032B94AECB28C8CF90F0C89E8",
+      "manifest_sha256": "009D2529977CBDD62507345276BFE578D24118485C94889578CC0BB1BF413F50",
+      "qa_sha256": "D653B3FC8E5EB8E18EB7F6714AB45B0B1FBDFF67335A3D6A9CD3CB1D5B91781D",
+      "ready_sha256": "06BFA7AC45F1B8DA51834B056CE4A361DD73802691B9EA492414C12811D394D0"
+    },
+    {
+      "release_id": "ac5208_full_no_bgm_zh_review_v1",
+      "video_sha256": "55875D4C661B2A6A5FEC077A2D3235C04AF98DC264DA104A2258C29E7392626D",
+      "subtitle_sha256": "1C674A946CC9EBB1F34D68E1233484793D30A44F2992EB5828C8F85ACA0CC706",
+      "manifest_sha256": "AA9F616D93B7D0235213D37662464D77E024BF909A19A3C7EDC0CC7DF57EA1CA",
+      "qa_sha256": "42B0F233BECD3D32457C5754FB4407D8AD496016214C04E84581E7B652A1DF74",
+      "ready_sha256": "48D760286FDFED2A8B5E622C780F54A57A90B36B0B14A32BF20DC366886EFA8E"
+    }
+  ],
+  "decisions": {
+    "HUMAN_PLAYBACK_APPROVED": true,
+    "FULL_NO_BGM_PRODUCTION_AUTHORIZED": true,
+    "RUNTIME_EFFECTS_AND_CLEAN_DUAL_VISUALS_AUTHORIZED": true,
+    "EFFECT_GAMEPLAY_COLLECTION_AUTHORIZED": true,
+    "OVERLAPPING_DIALOGUE_SUBTITLES_APPROVED": true,
+    "NATIVE_416X232_SUBTITLE_LAYOUT_APPROVED": true,
+    "OFFICIAL_SPEAKER_PREFIX_AUTHORIZED": true,
+    "JA_ZH_BILINGUAL_EDITION_AUTHORIZED": true,
+    "WITH_BGM_PRODUCTION_AUTHORIZED_ONLY_AFTER_EVIDENCE_GATE": true,
+    "CONTINUE_WITHOUT_NEXT_REVIEW_STOP": true
+  },
+  "translation_policy": {
+    "iroha_addressing_kuroe": "黑江同学",
+    "forbidden_iroha_addressing_kuroe": "黑江小姐",
+    "yachiyo_addressing_iroha_when_japanese_is_tamaki_san": "环同学"
+  },
+  "not_claimed": [
+    "authorization_to_upload_or_publish",
+    "proof_that_unreviewed_families_are_correct",
+    "proof_that_event_specific_bgm_identity_phase_and_transitions_are_closed"
+  ]
+}

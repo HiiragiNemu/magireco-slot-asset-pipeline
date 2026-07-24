@@ -134,6 +134,15 @@ def parse_args() -> argparse.Namespace:
         help="directories or event_manifest.json files resolved from official runtime captures",
     )
     parser.add_argument(
+        "--reviewed-subtitle-manifests",
+        action="append",
+        default=[],
+        help=(
+            "prior event-production roots or JSON files whose reviewed subtitle "
+            "identity/text is authoritative; current evidence timing is retained"
+        ),
+    )
+    parser.add_argument(
         "--ogg-search-root",
         action="append",
         default=[],
@@ -363,6 +372,273 @@ def load_runtime_event_manifests(paths: list[Path]) -> dict[str, dict]:
     return manifests
 
 
+def load_reviewed_subtitle_manifests(paths: list[Path]) -> dict[str, dict]:
+    """Load a hash-bound, conflict-intolerant reviewed subtitle baseline."""
+
+    manifests: dict[str, dict] = {}
+    for path in paths:
+        if path.is_file():
+            candidates = [path]
+        elif path.is_dir():
+            event_dir = path / "events"
+            candidates = sorted(
+                (event_dir if event_dir.is_dir() else path).glob("*.json")
+            )
+        else:
+            raise FileNotFoundError(
+                f"reviewed subtitle manifest path not found: {path}"
+            )
+        for candidate in candidates:
+            candidate_bytes = candidate.read_bytes()
+            payload = json.loads(candidate_bytes.decode("utf-8"))
+            event = str(payload.get("event", "")).strip()
+            if not event:
+                raise ValueError(
+                    f"reviewed subtitle manifest has no event: {candidate}"
+                )
+            event = validate_output_identifier(
+                event, label=f"reviewed subtitle manifest event in {candidate}"
+            )
+            quality_gates = payload.get("quality_gates")
+            quality_ready = (
+                isinstance(quality_gates, dict)
+                and quality_gates.get("ready") is True
+            )
+            subtitles = payload.get("subtitles")
+            if not isinstance(subtitles, list) or any(
+                not isinstance(row, dict) for row in subtitles
+            ):
+                raise ValueError(
+                    f"reviewed subtitle manifest has invalid subtitles: {candidate}"
+                )
+            source = {
+                "path": str(candidate.resolve()),
+                "sha256": hashlib.sha256(candidate_bytes).hexdigest().upper(),
+            }
+            if event in manifests:
+                existing = manifests[event]
+                if (
+                    existing["subtitles"] != subtitles
+                    or existing["_quality_ready"] != quality_ready
+                ):
+                    existing_paths = [
+                        row["path"]
+                        for row in existing.get("_source_provenance", [])
+                    ]
+                    raise ValueError(
+                        f"conflicting reviewed subtitle manifests for {event}: "
+                        f"{', '.join([*existing_paths, source['path']])}"
+                    )
+                if source not in existing["_source_provenance"]:
+                    existing["_source_provenance"].append(source)
+                continue
+            manifests[event] = {
+                "event": event,
+                "subtitles": subtitles,
+                "_quality_ready": quality_ready,
+                "_source_provenance": [source],
+            }
+    return manifests
+
+
+def reconcile_reviewed_subtitle_rows(
+    event: str,
+    current_rows: list[dict],
+    audio_rows: list[dict],
+    reviewed_manifest: dict,
+    accepted_current_voice_overrides: Mapping[str, dict] | None = None,
+) -> tuple[list[dict], dict]:
+    """Carry reviewed dialogue forward without reverting corrected AV timing.
+
+    The reviewed manifest owns cue identity and text.  A matching current cue
+    owns start/end timing, so a later timing repair is not discarded.  If a
+    reviewed voice cue disappeared from the current subtitle extraction, its
+    timing is reconstructed relative to the current hash-bound audio row.
+    Current-only subtitle candidates are intentionally excluded pending review,
+    except for request IDs supplied by the explicit curated voice-override
+    registry.  Those rows are accepted only when their generated text matches
+    the registry exactly.
+    """
+
+    reviewed_rows = reviewed_manifest.get("subtitles")
+    if not isinstance(reviewed_rows, list):
+        raise ValueError(f"{event} reviewed subtitle baseline is invalid")
+
+    current_voice: dict[str, list[dict]] = defaultdict(list)
+    reviewed_voice: dict[str, list[dict]] = defaultdict(list)
+    audio_by_request: dict[str, list[dict]] = defaultdict(list)
+    for row in current_rows:
+        request_id = str(row.get("voice_request_id", "")).strip()
+        if request_id:
+            current_voice[request_id].append(row)
+    for row in reviewed_rows:
+        request_id = str(row.get("voice_request_id", "")).strip()
+        if request_id:
+            reviewed_voice[request_id].append(row)
+    for row in audio_rows:
+        request_id = str(row.get("request_id", "")).strip()
+        if request_id:
+            audio_by_request[request_id].append(row)
+
+    sort_key = lambda row: (
+        number(row.get("start_ms", "")),
+        number(row.get("end_ms", "")),
+        str(row.get("text", "")),
+    )
+    for rows in current_voice.values():
+        rows.sort(key=sort_key)
+    for rows in reviewed_voice.values():
+        rows.sort(key=sort_key)
+    for rows in audio_by_request.values():
+        rows.sort(key=lambda row: number(row.get("start_ms", "")))
+
+    output: list[dict] = []
+    matched_voice_cues = 0
+    carried_voice_cues = 0
+    for request_id, prior_rows in sorted(reviewed_voice.items()):
+        audio_candidates = audio_by_request.get(request_id, [])
+        if not audio_candidates:
+            raise ValueError(
+                f"{event} reviewed subtitle request {request_id} has no "
+                "current verified audio row"
+            )
+        current_candidates = current_voice.get(request_id, [])
+        for index, prior in enumerate(prior_rows):
+            current = (
+                current_candidates[index]
+                if index < len(current_candidates)
+                else None
+            )
+            if current is not None:
+                reconciled = dict(current)
+                matched_voice_cues += 1
+            else:
+                audio = audio_candidates[min(index, len(audio_candidates) - 1)]
+                audio_start = number(audio.get("start_ms", ""))
+                prior_start = number(prior.get("start_ms", ""))
+                prior_end = number(prior.get("end_ms", ""))
+                prior_voice_start = number(
+                    prior.get("voice_start_ms", ""),
+                    prior_start,
+                )
+                start_ms = max(0, audio_start + prior_start - prior_voice_start)
+                end_ms = max(
+                    start_ms + 500,
+                    audio_start + prior_end - prior_voice_start,
+                )
+                reconciled = {
+                    "start_ms": start_ms,
+                    "end_ms": end_ms,
+                    "voice_request_id": request_id,
+                    "voice_start_ms": audio_start,
+                    "z2d_name": str(
+                        audio.get("z2d_name", prior.get("z2d_name", ""))
+                    ),
+                }
+                carried_voice_cues += 1
+            reconciled.update(
+                {
+                    "text": str(prior.get("text", "")).strip(),
+                    "voice_request_id": request_id,
+                    "speaker_code": str(prior.get("speaker_code", "")).strip(),
+                    "subtitle_source": str(
+                        prior.get("subtitle_source", "")
+                    ).strip(),
+                    "evidence": str(prior.get("evidence", "")).strip(),
+                }
+            )
+            if not reconciled["text"]:
+                raise ValueError(
+                    f"{event} reviewed subtitle request {request_id} has blank text"
+                )
+            output.append(reconciled)
+
+    accepted_current_voice_overrides = accepted_current_voice_overrides or {}
+    accepted_current_voice: list[dict] = []
+    for request_id in sorted(set(current_voice) - set(reviewed_voice)):
+        override = accepted_current_voice_overrides.get(request_id)
+        if override is None:
+            continue
+        current_candidates = current_voice[request_id]
+        override_cues = override.get("cues", [])
+        if isinstance(override_cues, list) and override_cues:
+            expected_texts = [
+                str(cue.get("text", "")).strip()
+                for cue in override_cues
+                if isinstance(cue, dict) and str(cue.get("text", "")).strip()
+            ]
+        else:
+            expected_text = str(override.get("text", "")).strip()
+            expected_texts = [expected_text] if expected_text else []
+        observed_texts = [
+            str(row.get("text", "")).strip() for row in current_candidates
+        ]
+        if not expected_texts or observed_texts != expected_texts:
+            raise ValueError(
+                f"{event} curated current-only subtitle request {request_id} "
+                "differs from its accepted voice override"
+            )
+        for row in current_candidates:
+            output.append(dict(row))
+            accepted_current_voice.append(
+                {
+                    "voice_request_id": request_id,
+                    "text": str(row.get("text", "")).strip(),
+                    "subtitle_source": str(
+                        row.get("subtitle_source", "")
+                    ).strip(),
+                }
+            )
+
+    reviewed_graphical = [
+        dict(row)
+        for row in reviewed_rows
+        if not str(row.get("voice_request_id", "")).strip()
+    ]
+    output.extend(reviewed_graphical)
+    accepted_request_ids = {
+        row["voice_request_id"] for row in accepted_current_voice
+    }
+    reviewed_request_ids = set(reviewed_voice) | accepted_request_ids
+    excluded_current_voice = [
+        {
+            "voice_request_id": str(row.get("voice_request_id", "")).strip(),
+            "text": str(row.get("text", "")).strip(),
+            "subtitle_source": str(row.get("subtitle_source", "")).strip(),
+        }
+        for row in current_rows
+        if str(row.get("voice_request_id", "")).strip()
+        and str(row.get("voice_request_id", "")).strip()
+        not in reviewed_request_ids
+    ]
+    excluded_current_graphical = [
+        {
+            "text": str(row.get("text", "")).strip(),
+            "subtitle_source": str(row.get("subtitle_source", "")).strip(),
+        }
+        for row in current_rows
+        if not str(row.get("voice_request_id", "")).strip()
+        and row not in reviewed_graphical
+    ]
+    audit = {
+        "policy": (
+            "reviewed_identity_and_text_with_current_timing;"
+            "reviewed_missing_voice_reconstructed_from_current_audio;"
+            "curated_voice_overrides_expand_reviewed_baseline;"
+            "other_current_only_candidates_excluded"
+        ),
+        "source_provenance": reviewed_manifest.get("_source_provenance", []),
+        "reviewed_cue_count": len(reviewed_rows),
+        "matched_voice_cue_count": matched_voice_cues,
+        "carried_voice_cue_count": carried_voice_cues,
+        "reviewed_graphical_cue_count": len(reviewed_graphical),
+        "accepted_current_voice_override_candidates": accepted_current_voice,
+        "excluded_current_voice_candidates": excluded_current_voice,
+        "excluded_current_graphical_candidates": excluded_current_graphical,
+    }
+    return output, audit
+
+
 def probe_runtime_video(path: Path, ffprobe: str, cache: dict[str, dict]) -> dict:
     resolved = str(path.resolve())
     if resolved in cache:
@@ -589,6 +865,8 @@ def synthesize_runtime_event_clips(
             end_ms = video_duration_ms
         else:
             end_ms = start_ms + probe["duration_ms"]
+        if not linear_clean_plan:
+            end_ms = min(end_ms, video_duration_ms)
         synthesized.append(
             {
                 "event_name": str(runtime_manifest.get("event", "")),
@@ -623,6 +901,80 @@ def source_clip_duration_ms(row: dict[str, str]) -> int:
         0,
         number(row.get("event_end_ms", "")) - number(row.get("event_start_ms", "")),
     )
+
+
+def composition_plan_authored_duration_ms(composition_plan: dict | None) -> int:
+    """Return the evidence-bound duration floor authored by a plan."""
+
+    if not composition_plan:
+        return 0
+    event = str(composition_plan.get("event", "<unknown>"))
+    duration_ms = number(composition_plan.get("duration_ms", ""))
+    if duration_ms <= 0:
+        raise ValueError(
+            f"composition plan {event} has no positive authored duration_ms"
+        )
+    if not str(composition_plan.get("evidence", "")).strip():
+        raise ValueError(f"composition plan {event} has no evidence statement")
+    return duration_ms
+
+
+def production_content_end_ms(
+    video_duration_ms: int,
+    evidence_timeline_end_ms: int,
+    composition_plan: dict | None,
+) -> int:
+    """Keep both the authored duration floor and every proven AV tail.
+
+    A plan duration is a lower bound for the clean presentation, not a license
+    to truncate a later verified voice, SE, or subtitle.  Conversely, a short
+    encoded visual may intentionally be extended by a plan's hold/loop/black
+    policy even when its currently indexed audio ends a few milliseconds early.
+    """
+
+    return max(
+        video_duration_ms,
+        evidence_timeline_end_ms,
+        composition_plan_authored_duration_ms(composition_plan),
+    )
+
+
+def composition_plan_uses_authored_timing(composition_plan: dict) -> bool:
+    """Return whether static clips must use the plan's authored intervals.
+
+    ``timed_full_frame_layers`` is itself an explicit timing contract.  Falling
+    back to source-media intervals for that model can incorrectly append an LP
+    source at its full encoded duration, even when the verified plan ends part
+    way through the loop.  Legacy plan models retain their opt-in
+    ``use_plan_timing`` behaviour.
+
+    Timed plans fail closed unless the authored duration, evidence statement,
+    and every clip start are present and internally bounded.  This keeps the
+    duration preference tied to a reviewed composition plan rather than to a
+    filename or source-media heuristic.
+    """
+
+    if composition_plan.get("model") != "timed_full_frame_layers":
+        return bool(composition_plan.get("use_plan_timing"))
+
+    event = str(composition_plan.get("event", "<unknown>"))
+    duration_ms = composition_plan_authored_duration_ms(composition_plan)
+
+    plan_rows = composition_plan.get("clips", [])
+    if not isinstance(plan_rows, list) or not plan_rows:
+        raise ValueError(f"timed composition plan {event} has no clips")
+    for index, row in enumerate(plan_rows):
+        if not isinstance(row, dict) or "start_ms" not in row:
+            raise ValueError(
+                f"timed composition plan {event} clip {index} has no start_ms"
+            )
+        start_ms = number(row.get("start_ms", ""), -1)
+        if start_ms < 0 or start_ms > duration_ms:
+            raise ValueError(
+                f"timed composition plan {event} clip {index} start_ms "
+                f"{start_ms} is outside 0..{duration_ms}"
+            )
+    return True
 
 
 def synthesize_static_event_clips_from_plan(
@@ -681,6 +1033,8 @@ def synthesize_static_event_clips_from_plan(
             end_ms = video_duration_ms
         else:
             end_ms = start_ms + source_duration
+        if not linear_clean_plan:
+            end_ms = min(end_ms, video_duration_ms)
 
         row = dict(source)
         row.update(
@@ -1039,6 +1393,12 @@ def main() -> int:
         ),
         path_prefix_maps,
     )
+    reviewed_subtitle_manifests = apply_path_prefix_maps(
+        load_reviewed_subtitle_manifests(
+            [Path(path) for path in args.reviewed_subtitle_manifests]
+        ),
+        path_prefix_maps,
+    )
     runtime_media_cache: dict[str, dict] = {}
     ogg_search_roots = infer_ogg_search_roots(
         event_sounds,
@@ -1079,6 +1439,23 @@ def main() -> int:
             )
         )
     }
+    if args.reviewed_subtitle_manifests:
+        missing_reviewed = sorted(set(selected) - set(reviewed_subtitle_manifests))
+        if missing_reviewed:
+            raise ValueError(
+                "reviewed subtitle baseline lacks selected events: "
+                + ", ".join(missing_reviewed)
+            )
+        unready_reviewed = sorted(
+            event
+            for event in selected
+            if reviewed_subtitle_manifests[event].get("_quality_ready") is not True
+        )
+        if unready_reviewed:
+            raise ValueError(
+                "reviewed subtitle baseline is not READY for selected events: "
+                + ", ".join(unready_reviewed)
+            )
     clips_by_event: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in clips:
         if row.get("event_name") in selected:
@@ -1113,6 +1490,11 @@ def main() -> int:
         event_row = selected[event]
         composition_plan = composition_plans.get(event)
         runtime_manifest = runtime_event_manifests.get(event)
+        reviewed_subtitle_manifest = reviewed_subtitle_manifests.get(event)
+        reviewed_subtitle_reconciliation: dict = {}
+        authored_plan_timing = bool(composition_plan) and (
+            composition_plan_uses_authored_timing(composition_plan)
+        )
         if runtime_manifest and composition_plan:
             event_clips = synthesize_runtime_event_clips(
                 runtime_manifest,
@@ -1134,7 +1516,7 @@ def main() -> int:
                     str(row.get("dgm_name", ""))
                     for row in composition_plan.get("clips", [])
                 }
-                if composition_plan.get("use_plan_timing"):
+                if authored_plan_timing:
                     event_clips = synthesize_static_event_clips_from_plan(
                         [
                             row
@@ -1415,6 +1797,23 @@ def main() -> int:
             subtitle_rows,
             composition_plan,
         )
+        if reviewed_subtitle_manifest:
+            reviewed_projection = {
+                **reviewed_subtitle_manifest,
+                "subtitles": filter_subtitle_rows_for_plan(
+                    reviewed_subtitle_manifest["subtitles"],
+                    composition_plan,
+                ),
+            }
+            subtitle_rows, reviewed_subtitle_reconciliation = (
+                reconcile_reviewed_subtitle_rows(
+                    event,
+                    subtitle_rows,
+                    audio_rows,
+                    reviewed_projection,
+                    voice_subtitle_overrides,
+                )
+            )
         subtitle_rows.sort(
             key=lambda row: (
                 row["start_ms"],
@@ -1541,7 +1940,11 @@ def main() -> int:
                 if error != "timeline_exceeds_video_without_loop"
             ]
 
-        raw_render_duration_ms = max(video_duration_ms, duration_ms)
+        raw_render_duration_ms = production_content_end_ms(
+            video_duration_ms,
+            duration_ms,
+            composition_plan,
+        )
         render_quantization: dict[str, int | str] = {}
         if len(frame_rates) == 1:
             try:
@@ -1563,9 +1966,28 @@ def main() -> int:
             if composition_plan
             else ""
         )
-        if verified_extension_policy not in {"", "hold_last_frame", "black_tail"}:
+        if verified_extension_policy not in {
+            "",
+            "none",
+            "loop_last_clip",
+            "hold_last_frame",
+            "black_tail",
+        }:
             errors.append("composition_plan_extension_policy_invalid")
-        if verified_extension_policy == "hold_last_frame":
+        if verified_extension_policy == "none":
+            if extension_ms > 0:
+                errors.append("composition_plan_none_extension_conflict")
+                video_extension_policy = "unsupported_timeline_overrun"
+            else:
+                video_extension_policy = "none"
+        elif verified_extension_policy == "loop_last_clip":
+            video_extension_policy = "loop_last_clip"
+            errors = [
+                error
+                for error in errors
+                if error != "timeline_exceeds_video_without_loop"
+            ]
+        elif verified_extension_policy == "hold_last_frame":
             video_extension_policy = "hold_last_frame"
         elif verified_extension_policy == "black_tail":
             video_extension_policy = "black_tail"
@@ -1647,6 +2069,14 @@ def main() -> int:
                 if runtime_manifest
                 else []
             ),
+            "reviewed_subtitle_manifest_sources": (
+                reviewed_subtitle_manifest.get("_source_provenance", [])
+                if reviewed_subtitle_manifest
+                else []
+            ),
+            "reviewed_subtitle_reconciliation": (
+                reviewed_subtitle_reconciliation
+            ),
             "overlap_count": overlap_count,
             "gap_count": gap_count,
             "timeline_tolerance_ms": timeline_tolerance_ms,
@@ -1693,6 +2123,21 @@ def main() -> int:
                 "asr_verified_subtitle_count": sum(
                     row["subtitle_source"] == "official_voice_asr_verified"
                     for row in subtitle_rows
+                ),
+                "reviewed_subtitle_baseline_applied": bool(
+                    reviewed_subtitle_manifest
+                ),
+                "reviewed_subtitle_current_only_voice_candidate_count": len(
+                    reviewed_subtitle_reconciliation.get(
+                        "excluded_current_voice_candidates",
+                        [],
+                    )
+                ),
+                "reviewed_subtitle_current_only_graphical_candidate_count": len(
+                    reviewed_subtitle_reconciliation.get(
+                        "excluded_current_graphical_candidates",
+                        [],
+                    )
                 ),
                 "exact_z2d_req_sound_count": sum(
                     row["source"] == "z2d_req_sound"

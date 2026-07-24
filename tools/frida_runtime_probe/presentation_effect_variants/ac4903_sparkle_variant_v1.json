@@ -1,0 +1,232 @@
+{
+  "schema": "magireco-presentation-effect-variant-v1",
+  "variant_id": "ac4903_sparkle_variant_v1",
+  "status": "fail_closed",
+  "render_authorized": false,
+  "family": "ac4903",
+  "visual_profiles": {
+    "base": "clean_story_without_slot_presentation_effects",
+    "requested": "story_with_runtime_sparkle_presentation_effect"
+  },
+  "classification": {
+    "semantic_class": "slot_presentation_effect",
+    "collection_class": "effect_gameplay_presentation",
+    "audience_story_required": false,
+    "basis": "The five official runtime captures instantiate the same separate black-matte AT sparkle DGM beside the story animation; the verified clean-story plans intentionally exclude it."
+  },
+  "source_asset": {
+    "dgm_name": "ac4903_at_magius_monitor_ef_01",
+    "canonical_path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4903\\ac4903_at_magius_monitor_ef_01.mp4",
+    "canonical_sha256": "ABE18ED8DCF034196379164F85451D55B51DF399F31298BD3A5422B3355D2BE9",
+    "original_slice_alias": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\main_video_4119.mp4",
+    "original_slice_sha256": "ABE18ED8DCF034196379164F85451D55B51DF399F31298BD3A5422B3355D2BE9",
+    "codec": "h264",
+    "pixel_format": "yuv420p",
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "duration_ms": 2000,
+    "frame_count": 60,
+    "audio_stream_count": 0,
+    "probe_status": "verified"
+  },
+  "known_runtime_facts": {
+    "instantiated_in_all_five_events": true,
+    "z2d_asset_sequence": 0,
+    "runtime_string_set_relative_ms_range": [
+      50,
+      56
+    ],
+    "candidate_event_interval_ms": [
+      0,
+      2000
+    ],
+    "candidate_interval_basis": "All five legacy manifests place this non-looping 60-frame asset at event t=0 through t=2000, and each resolved runtime manifest records it as the first DGM instantiated with the story Z2D. This is sufficient provenance for the candidate interval but not for final compositing authorization.",
+    "native_canvas_match": true,
+    "black_matte_asset": true
+  },
+  "events": [
+    {
+      "event": "ac4903_009",
+      "clean_composition_plan": {
+        "path": "tools/frida_runtime_probe/composition_plans/ac4903_009.json",
+        "sha256": "8F19A4A24B034DEA4CD4DABB47EF6B6057ECFDC2076D2B553E3F3993334D6F6B"
+      },
+      "candidate_addition": {
+        "dgm_name": "ac4903_at_magius_monitor_ef_01",
+        "role": "foreground_presentation_effect",
+        "start_ms": 0,
+        "end_ms": 2000,
+        "interval_confidence": "candidate_from_runtime_instantiation_and_legacy_manifest",
+        "z_order": "unresolved",
+        "placement": "unresolved",
+        "blend_mode": "unresolved"
+      },
+      "runtime_provenance": {
+        "context_unix_ms": 1781898548755,
+        "scene_request_unix_ms": 1781898548799,
+        "resolved_event_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\resolved\\ac4903_009_v1\\event_manifest.json",
+        "resolved_event_manifest_sha256": "4023C38E2E3060FEAD5F497DBACD0D0ADD6EC92634E81D970454DBC77B0ACF66",
+        "resolved_video_asset_line": 19,
+        "resolved_relative_ms": 50,
+        "raw_runtime_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_009__runtime.jsonl",
+        "raw_runtime_log_sha256": "49CA51629996E675086DE3A0D96CE47F04AE983A6B36DB01CF0EB8A84DF4717F",
+        "raw_runtime_string_set_line": 19,
+        "raw_event_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_009__event.jsonl",
+        "raw_event_log_sha256": "65CE3CBEF02E122CA731CBEEEF373DC9DCE2C6262316611A1790868234FE1E39"
+      }
+    },
+    {
+      "event": "ac4903_010",
+      "clean_composition_plan": {
+        "path": "tools/frida_runtime_probe/composition_plans/ac4903_010.json",
+        "sha256": "BF0D3BCB2EED8C0A5DC24FA4F1AA1249D1F3C039C4D498B6434A3898CF77F2DA"
+      },
+      "candidate_addition": {
+        "dgm_name": "ac4903_at_magius_monitor_ef_01",
+        "role": "foreground_presentation_effect",
+        "start_ms": 0,
+        "end_ms": 2000,
+        "interval_confidence": "candidate_from_runtime_instantiation_and_legacy_manifest",
+        "z_order": "unresolved",
+        "placement": "unresolved",
+        "blend_mode": "unresolved"
+      },
+      "runtime_provenance": {
+        "context_unix_ms": 1781898573997,
+        "scene_request_unix_ms": 1781898574043,
+        "resolved_event_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\resolved\\ac4903_010_v1\\event_manifest.json",
+        "resolved_event_manifest_sha256": "8C02103AB9129E2230A92429A911EFB8318BEEA7EADA39C1C197CE4D74444DA6",
+        "resolved_video_asset_line": 19,
+        "resolved_relative_ms": 56,
+        "raw_runtime_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_010__runtime.jsonl",
+        "raw_runtime_log_sha256": "7B823C7839343A0EF1A304D5B3CE10C7B3F3C899A752BCDFBBA10D844C03CD63",
+        "raw_runtime_string_set_line": 19,
+        "raw_event_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_010__event.jsonl",
+        "raw_event_log_sha256": "8390D70A20EB947384EA75898F155F3C9D95A34895F9A6BCFFCB34FCEF98776C"
+      }
+    },
+    {
+      "event": "ac4903_011",
+      "clean_composition_plan": {
+        "path": "tools/frida_runtime_probe/composition_plans/ac4903_011.json",
+        "sha256": "F7B91C44A2D36C7C830705457BC31D2006F5B8B32062DF6B6A7AB679D1434A17"
+      },
+      "candidate_addition": {
+        "dgm_name": "ac4903_at_magius_monitor_ef_01",
+        "role": "foreground_presentation_effect",
+        "start_ms": 0,
+        "end_ms": 2000,
+        "interval_confidence": "candidate_from_runtime_instantiation_and_legacy_manifest",
+        "z_order": "unresolved",
+        "placement": "unresolved",
+        "blend_mode": "unresolved"
+      },
+      "runtime_provenance": {
+        "context_unix_ms": 1781898599247,
+        "scene_request_unix_ms": 1781898599290,
+        "resolved_event_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\resolved\\ac4903_011_v1\\event_manifest.json",
+        "resolved_event_manifest_sha256": "7BA938C56734F52C9C5479D88D18A8E900CC14508837FA4C80FEA1B60F3148AE",
+        "resolved_video_asset_line": 19,
+        "resolved_relative_ms": 52,
+        "raw_runtime_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_011__runtime.jsonl",
+        "raw_runtime_log_sha256": "04725C709A6A7F120370FF6610CA326ABC78720DD55576B9B2EBCA9E50D2F4E8",
+        "raw_runtime_string_set_line": 19,
+        "raw_event_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_011__event.jsonl",
+        "raw_event_log_sha256": "1B5306B904BDDB3D537090C5E5492E602EBE27BABAF933A16B2BB2EA4A3EAEC6"
+      }
+    },
+    {
+      "event": "ac4903_012",
+      "clean_composition_plan": {
+        "path": "tools/frida_runtime_probe/composition_plans/ac4903_012.json",
+        "sha256": "68D9AA5D02FF2131E50AA0A891EC4B11B7603AB0DD9A5370CBFD339025F52947"
+      },
+      "candidate_addition": {
+        "dgm_name": "ac4903_at_magius_monitor_ef_01",
+        "role": "foreground_presentation_effect",
+        "start_ms": 0,
+        "end_ms": 2000,
+        "interval_confidence": "candidate_from_runtime_instantiation_and_legacy_manifest",
+        "z_order": "unresolved",
+        "placement": "unresolved",
+        "blend_mode": "unresolved"
+      },
+      "runtime_provenance": {
+        "context_unix_ms": 1781898624495,
+        "scene_request_unix_ms": 1781898624540,
+        "resolved_event_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\resolved\\ac4903_012_v1\\event_manifest.json",
+        "resolved_event_manifest_sha256": "ED2C8A0673901C07C160EA88DCF0777F0AFFB6C62626659A450A8A77487921F1",
+        "resolved_video_asset_line": 19,
+        "resolved_relative_ms": 55,
+        "raw_runtime_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_012__runtime.jsonl",
+        "raw_runtime_log_sha256": "29DE2E1E47F95784B86190FB594A925A7A10B987052CD4B7793B025688EED9B5",
+        "raw_runtime_string_set_line": 19,
+        "raw_event_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_012__event.jsonl",
+        "raw_event_log_sha256": "DEC4980B12BD8C4B9163D3119CD54E6B4BDBBCA3F6D0DEF1838427F574EB3A68"
+      }
+    },
+    {
+      "event": "ac4903_013",
+      "clean_composition_plan": {
+        "path": "tools/frida_runtime_probe/composition_plans/ac4903_013.json",
+        "sha256": "F446B25ABFE61D9BEF16BDABCDD8C5F6B20FD3EE43ADC7030B819AF3820DE039"
+      },
+      "candidate_addition": {
+        "dgm_name": "ac4903_at_magius_monitor_ef_01",
+        "role": "foreground_presentation_effect",
+        "start_ms": 0,
+        "end_ms": 2000,
+        "interval_confidence": "candidate_from_runtime_instantiation_and_legacy_manifest",
+        "z_order": "unresolved",
+        "placement": "unresolved",
+        "blend_mode": "unresolved"
+      },
+      "runtime_provenance": {
+        "context_unix_ms": 1781898649727,
+        "scene_request_unix_ms": 1781898649772,
+        "resolved_event_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\resolved\\ac4903_013_v1\\event_manifest.json",
+        "resolved_event_manifest_sha256": "B7E804A0B53B03D168D9B137930B73EF5AA6145A92AB45C2C866D78137CDF73A",
+        "resolved_video_asset_line": 19,
+        "resolved_relative_ms": 53,
+        "raw_runtime_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_013__runtime.jsonl",
+        "raw_runtime_log_sha256": "A089FBFD16CDB60A5602C104C75608974953A65BE8AB460E6549B3089C1458D0",
+        "raw_runtime_string_set_line": 19,
+        "raw_event_log": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260619_round2\\raw\\ac4903_013__event.jsonl",
+        "raw_event_log_sha256": "1692A152CFA6893DBD983884622B418A3883619CAF2B44FB379489EB2863203A"
+      }
+    }
+  ],
+  "collection_policy": {
+    "physical_asset_identity": "sha256:ABE18ED8DCF034196379164F85451D55B51DF399F31298BD3A5422B3355D2BE9",
+    "emit_physical_asset_once": true,
+    "collection_target": "effect_gameplay_collection",
+    "event_provenance_count": 5,
+    "event_provenance": [
+      "ac4903_009",
+      "ac4903_010",
+      "ac4903_011",
+      "ac4903_012",
+      "ac4903_013"
+    ]
+  },
+  "blocking_gaps": [
+    {
+      "gate": "native_blend_mode",
+      "detail": "The source is an opaque yuv420p black-matte video. The current evidence proves instantiation but does not decode whether the game uses additive, screen, luma-key, chroma-key, shader-specific, or another blend rule. Ordinary alpha overlay would incorrectly cover the story with black."
+    },
+    {
+      "gate": "native_z_order",
+      "detail": "The runtime resolver records DGM discovery order, not the renderer's final draw order. The semantic description 'sparkle overlay' is insufficient to bind a production z-order without the Z2D element/render-state fields."
+    },
+    {
+      "gate": "native_placement_transform",
+      "detail": "The asset matches the 416x232 canvas, but the current resolver did not decode the element transform, crop, origin, or viewport fields. Full-canvas placement remains a candidate, not a verified rule."
+    },
+    {
+      "gate": "presentation_frame_interval",
+      "detail": "A 0-2000 ms candidate interval is consistently present in legacy manifests, while runtime string construction occurs approximately 50-56 ms after the request. A renderer-authoritative start/stop or decoded Z2D frame interval is still required before this variant can be promoted."
+    }
+  ],
+  "promotion_rule": "Keep fail_closed until native blend mode, final z-order, placement transform, and presentation frame interval are bound from decoded Z2D/static renderer state or an equivalent instrumented runtime capture. Do not substitute visual matching."
+}
