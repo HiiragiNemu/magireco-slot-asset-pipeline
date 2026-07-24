@@ -1,0 +1,39 @@
+{
+  "schema": "magireco-owner-content-correction-attestation-v1",
+  "attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725",
+  "recorded_date": "2026-07-25",
+  "source": "project_owner_statement_in_codex_thread",
+  "verbatim_statement": "P12 魔法少女们迎战神滨魔女群 ac4902__zh.mp4这里面两次说“可恶”的都不是黑江 而是黑羽。P23 黑江与陌生魔法少女的相遇 ac7117__zh.mp4这个视频中白色衣服奔跑喘息的是黑 而不是黑江。黑羽 黑 黑江 3个角色记得分清。",
+  "normalized_interpretation": "原始 speaker_code=kuro 具有上下文歧义，禁止全局映射。P12 ac4902 的两句「くそっ！」由黒羽（黑羽）说出；P23 ac7117 的白衣奔跑喘息角色是黒（黑）；speaker_code=kuroe 是黒江（黑江）。三者必须保持独立。",
+  "corrections": [
+    {
+      "product": "P12",
+      "family": "ac4902",
+      "japanese_text": "くそっ！",
+      "occurrence_count": 2,
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_black_feather",
+      "speaker_ja": "黒羽",
+      "speaker_zh": "黑羽",
+      "rejected_speaker_code": "kuroe"
+    },
+    {
+      "product": "P23",
+      "family": "ac7117",
+      "scene_description": "white-clad running and panting character",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_character",
+      "speaker_ja": "黒",
+      "speaker_zh": "黑",
+      "rejected_speaker_code": "kuroe"
+    }
+  ],
+  "identity_contract": {
+    "ambiguous_raw_code": "kuro",
+    "global_mapping_for_ambiguous_raw_code": false,
+    "kuro_black_feather": {"ja": "黒羽", "zh": "黑羽"},
+    "kuro_character": {"ja": "黒", "zh": "黑"},
+    "kuroe": {"ja": "黒江", "zh": "黑江"},
+    "must_remain_distinct": true
+  }
+}

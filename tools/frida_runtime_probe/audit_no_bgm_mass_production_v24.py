@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import uuid
+from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,17 @@ RELEASE_DIR_RE = re.compile(
     rf"^{FAMILY_NAME_PATTERN}_full_no_bgm_editions_v[0-9]+$"
 )
 FAMILY_RE = re.compile(rf"^{FAMILY_NAME_PATTERN}$")
-EVENT_RE = re.compile(r"^(ac[0-9]+)(?:_[0-9]+)+$")
+EVENT_NAME_PATTERN = r"ac[0-9]+(?:_[0-9]+)+"
+EVENT_RE = re.compile(rf"^({EVENT_NAME_PATTERN})$")
+SOURCE_EVENT_MANIFEST_RE = re.compile(
+    rf"^(?P<event>{EVENT_NAME_PATTERN}) v[0-9]+ production manifest$"
+)
+SOURCE_CLIP_RE = re.compile(
+    rf"^(?P<event>{EVENT_NAME_PATTERN}) clip (?P<index>[0-9]+)$"
+)
+SOURCE_AUDIO_RE = re.compile(
+    rf"^(?P<event>{EVENT_NAME_PATTERN}) audio (?P<request>[^\s]+)$"
+)
 SHA256_RE = re.compile(r"^[0-9A-Fa-f]{64}$")
 SRT_TIMING_RE = re.compile(
     r"^(?P<start>\d{2,}:\d{2}:\d{2},\d{3})\s*-->\s*"
@@ -194,6 +205,74 @@ def _positive_int(value: Any, *, label: str) -> int:
     result = _nonnegative_int(value, label=label)
     _require(result > 0, f"{label} must be positive")
     return result
+
+
+def _source_snapshots(
+    manifest: Mapping[str, Any], *, label: str
+) -> list[dict[str, str]]:
+    raw_rows = manifest.get("source_snapshots")
+    _require(
+        isinstance(raw_rows, list) and raw_rows,
+        f"{label} lacks source snapshots",
+    )
+    rows: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for index, raw in enumerate(raw_rows):
+        _require(
+            isinstance(raw, Mapping)
+            and set(raw) == {"label", "path", "sha256"},
+            f"{label} source snapshot {index} fields differ",
+        )
+        source_label = str(raw["label"]).strip()
+        raw_path = Path(str(raw["path"]))
+        _require(source_label, f"{label} source snapshot {index} label is blank")
+        _require(
+            raw_path.is_absolute(),
+            f"{label} source snapshot {index} path is not absolute",
+        )
+        try:
+            path = raw_path.resolve(strict=True)
+        except OSError as error:
+            raise AuditError(
+                f"{label} source snapshot {index} is inaccessible: {raw_path}: {error}"
+            ) from error
+        _require(path.is_file(), f"{label} source snapshot {index} is not a file")
+        digest = _sha256(
+            raw["sha256"],
+            label=f"{label} source snapshot {index} SHA-256",
+        )
+        actual = file_sha256(path)
+        _require(
+            actual == digest,
+            f"{label} source snapshot SHA-256 differs: {source_label}: "
+            f"expected {digest}, got {actual}",
+        )
+        identity = (source_label, str(path))
+        _require(
+            identity not in seen,
+            f"{label} has a duplicate source snapshot: {source_label}: {path}",
+        )
+        seen.add(identity)
+        rows.append(
+            {
+                "label": source_label,
+                "path": str(path),
+                "sha256": actual,
+            }
+        )
+    return rows
+
+
+def _rehash_source_snapshots(
+    rows: Sequence[Mapping[str, str]], *, label: str
+) -> None:
+    for index, row in enumerate(rows):
+        path = Path(row["path"])
+        _require(
+            path.is_file() and file_sha256(path) == row["sha256"],
+            f"{label} source snapshot changed during audit: "
+            f"{row.get('label', index)}: {path}",
+        )
 
 
 def _nonnegative_number(value: Any, *, label: str) -> float:
@@ -674,6 +753,7 @@ def _audit_family(
     artifact_paths, artifact_hashes = _artifact_paths(family_root, marker)
     manifest = read_json(artifact_paths["manifest"])
     qa = read_json(artifact_paths["qa"])
+    source_snapshots = _source_snapshots(manifest, label=str(family_root))
 
     _require(
         manifest.get("schema") == MANIFEST_SCHEMA,
@@ -966,6 +1046,7 @@ def _audit_family(
             "sha256": artifact_hashes["qa"],
         },
         "ready": {"path": str(marker_path), "sha256": marker_hash},
+        "_source_snapshots": source_snapshots,
     }
 
 
@@ -1114,11 +1195,220 @@ def _audit_required_voice_binding(
     }
 
 
+def _require_referenced_event_ready(
+    manifest_path: Path, manifest: Mapping[str, Any]
+) -> None:
+    gates = manifest.get("quality_gates")
+    _require(
+        isinstance(gates, Mapping),
+        f"{manifest_path} lacks quality gates",
+    )
+    for gate in (
+        "all_clips_exist",
+        "all_audio_exist",
+        "composition_resolved",
+        "audio_timeline_ready",
+        "render_ready",
+        "ready",
+    ):
+        _require(
+            gates.get(gate) is True,
+            f"{manifest_path} referenced quality gate {gate} is not true",
+        )
+    errors = gates.get("errors")
+    _require(
+        isinstance(errors, list) and not errors,
+        f"{manifest_path} referenced event has production errors",
+    )
+
+
+def _declared_source_path(
+    value: Any, *, manifest_path: Path, label: str
+) -> Path:
+    raw = Path(str(value))
+    _require(raw.is_absolute(), f"{manifest_path} {label} path is not absolute")
+    try:
+        path = raw.resolve(strict=True)
+    except OSError as error:
+        raise AuditError(
+            f"{manifest_path} {label} path is inaccessible: {raw}: {error}"
+        ) from error
+    _require(path.is_file(), f"{manifest_path} {label} path is not a file")
+    return path
+
+
+def _source_snapshot_kind(label: str) -> tuple[str, str] | None:
+    for kind, pattern in (
+        ("event_manifest", SOURCE_EVENT_MANIFEST_RE),
+        ("clip", SOURCE_CLIP_RE),
+        ("audio", SOURCE_AUDIO_RE),
+    ):
+        match = pattern.fullmatch(label)
+        if match:
+            return kind, match.group("event")
+    return None
+
+
+def _audit_family_source_binding(
+    family: Mapping[str, Any],
+    event_records_by_path: Mapping[Path, Mapping[str, Any]],
+) -> tuple[dict[str, Any], dict[str, Mapping[str, Any]]]:
+    family_root = str(family["family_root"])
+    ordered_events = [str(event) for event in family["ordered_events"]]
+    snapshots = family.get("_source_snapshots")
+    _require(
+        isinstance(snapshots, list) and snapshots,
+        f"{family_root} lacks audited source snapshots",
+    )
+    ordered_set = set(ordered_events)
+    classified: list[tuple[str, str, str, str]] = []
+    for snapshot in snapshots:
+        source_kind = _source_snapshot_kind(str(snapshot["label"]))
+        if source_kind is None:
+            continue
+        kind, event = source_kind
+        _require(
+            event in ordered_set,
+            f"{family_root} source snapshot references an unordered event: {event}",
+        )
+        classified.append(
+            (
+                kind,
+                str(snapshot["label"]),
+                str(Path(snapshot["path"]).resolve()),
+                str(snapshot["sha256"]),
+            )
+        )
+
+    expected_pairs: list[tuple[str, str]] = []
+    expected_hashes: dict[tuple[str, str], str] = {}
+    selected_records: dict[str, Mapping[str, Any]] = {}
+    clip_count = 0
+    audio_count = 0
+    for event in ordered_events:
+        manifest_candidates = [
+            snapshot
+            for snapshot in snapshots
+            if _source_snapshot_kind(str(snapshot["label"]))
+            == ("event_manifest", event)
+        ]
+        _require(
+            len(manifest_candidates) == 1,
+            f"{family_root} does not have exactly one source snapshot for "
+            f"ordered event {event}",
+        )
+        manifest_snapshot = manifest_candidates[0]
+        manifest_label = str(manifest_snapshot["label"])
+        manifest_path = Path(str(manifest_snapshot["path"])).resolve()
+        record = event_records_by_path.get(manifest_path)
+        _require(
+            record is not None,
+            f"{family_root} ordered event manifest is outside declared manifest roots: "
+            f"{event}: {manifest_path}",
+        )
+        _require(
+            record["event"] == event,
+            f"{family_root} ordered event/source manifest identity differs: {event}",
+        )
+        _require(
+            record["sha256"] == manifest_snapshot["sha256"],
+            f"{family_root} ordered event/source manifest SHA-256 differs: {event}",
+        )
+        manifest = record["manifest"]
+        _require_referenced_event_ready(manifest_path, manifest)
+        selected_records[event] = record
+        manifest_pair = (manifest_label, str(manifest_path))
+        expected_pairs.append(manifest_pair)
+        expected_hashes[manifest_pair] = str(record["sha256"])
+
+        clips = manifest.get("clips")
+        _require(
+            isinstance(clips, list) and clips,
+            f"{manifest_path} referenced event has no clips",
+        )
+        for index, clip in enumerate(clips):
+            _require(
+                isinstance(clip, Mapping),
+                f"{manifest_path} clip {index} is invalid",
+            )
+            clip_path = _declared_source_path(
+                clip.get("path"),
+                manifest_path=manifest_path,
+                label=f"clip {index}",
+            )
+            clip_pair = (f"{event} clip {index}", str(clip_path))
+            expected_pairs.append(clip_pair)
+            declared_clip_hash = str(clip.get("source_sha256", "")).strip()
+            if declared_clip_hash:
+                expected_hashes[clip_pair] = _sha256(
+                    declared_clip_hash,
+                    label=f"{manifest_path} clip {index} source SHA-256",
+                )
+            clip_count += 1
+
+        audio = manifest.get("audio")
+        _require(
+            isinstance(audio, list),
+            f"{manifest_path} referenced event audio rows are invalid",
+        )
+        for index, audio_row in enumerate(audio):
+            _require(
+                isinstance(audio_row, Mapping),
+                f"{manifest_path} audio row {index} is invalid",
+            )
+            request_id = str(audio_row.get("request_id", "")).strip()
+            _require(
+                request_id and not any(character.isspace() for character in request_id),
+                f"{manifest_path} audio row {index} request ID is invalid",
+            )
+            audio_path = _declared_source_path(
+                audio_row.get("path"),
+                manifest_path=manifest_path,
+                label=f"audio row {index}",
+            )
+            expected_pairs.append((f"{event} audio {request_id}", str(audio_path)))
+            audio_count += 1
+
+    actual_pairs = Counter((label, path) for _kind, label, path, _sha in classified)
+    required_pairs = Counter(expected_pairs)
+    _require(
+        actual_pairs == required_pairs,
+        f"{family_root} source snapshot coverage differs: "
+        f"missing={sorted((required_pairs - actual_pairs).elements())}, "
+        f"extra={sorted((actual_pairs - required_pairs).elements())}",
+    )
+    classified_hashes = {
+        (label, path): digest for _kind, label, path, digest in classified
+    }
+    for identity, expected_hash in expected_hashes.items():
+        _require(
+            classified_hashes.get(identity) == expected_hash,
+            f"{family_root} source snapshot binding SHA-256 differs: {identity[0]}",
+        )
+
+    category_counts = Counter(kind for kind, _label, _path, _sha in classified)
+    return (
+        {
+            "status": "passed",
+            "source_snapshot_count": len(snapshots),
+            "ordered_event_manifest_count": category_counts["event_manifest"],
+            "clip_source_count": clip_count,
+            "audio_source_count": audio_count,
+            "source_snapshot_set_sha256": canonical_sha256(snapshots),
+        },
+        selected_records,
+    )
+
+
 def _audit_manifest_roots(
     manifest_roots: Sequence[Path],
     *,
-    audited_events: set[str],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    family_rows: Sequence[dict[str, Any]],
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, str]],
+]:
     _require(bool(manifest_roots), "at least one event-production manifest root is required")
     resolved_roots: list[Path] = []
     for raw_root in manifest_roots:
@@ -1133,7 +1423,8 @@ def _audit_manifest_roots(
         resolved_roots.append(root)
 
     root_rows: list[dict[str, Any]] = []
-    event_records: dict[str, tuple[Path, dict[str, Any], str]] = {}
+    event_records_by_path: dict[Path, dict[str, Any]] = {}
+    root_source_snapshots: list[dict[str, str]] = []
     for root in resolved_roots:
         summary_path = root / "event_production_summary.json"
         events_dir = root / "events"
@@ -1154,8 +1445,8 @@ def _audit_manifest_roots(
             summary.get("failed_events"), label=f"{root} summary failed events"
         )
         _require(
-            ready_count == event_count and failed_count == 0,
-            f"{root} is not an all-ready event-production manifest root",
+            ready_count + failed_count == event_count,
+            f"{root} summary ready/failed counts do not sum to events",
         )
         paths = sorted(events_dir.glob("*.json"), key=lambda path: path.name)
         _require(
@@ -1163,13 +1454,23 @@ def _audit_manifest_roots(
             f"{root} summary/event-manifest counts differ",
         )
         root_hashes: dict[str, str] = {}
+        actual_ready_count = 0
         for event_path in paths:
+            try:
+                event_path = event_path.resolve(strict=True)
+            except OSError as error:
+                raise AuditError(
+                    f"event manifest is inaccessible: {event_path}: {error}"
+                ) from error
+            _require(
+                event_path.parent == events_dir.resolve(),
+                f"event manifest is not a direct child of {events_dir}: {event_path}",
+            )
             event = event_path.stem
             _require(
                 EVENT_RE.fullmatch(event) is not None,
                 f"{event_path} has an invalid event name",
             )
-            _require(event not in event_records, f"duplicate event across manifest roots: {event}")
             manifest = read_json(event_path)
             _require(
                 manifest.get("event") == event,
@@ -1180,30 +1481,43 @@ def _audit_manifest_roots(
                 isinstance(gates, Mapping),
                 f"{event_path} lacks quality gates",
             )
-            for gate in (
-                "all_clips_exist",
-                "all_clip_source_hashes_bound",
-                "all_audio_exist",
-                "composition_resolved",
-                "audio_timeline_ready",
-                "render_ready",
-                "ready",
-            ):
-                _require(
-                    gates.get(gate) is True,
-                    f"{event_path} quality gate {gate} is not true",
-                )
-            errors = gates.get("errors")
             _require(
-                isinstance(errors, list) and not errors,
-                f"{event_path} has production errors",
+                isinstance(gates.get("ready"), bool),
+                f"{event_path} quality gate ready is not boolean",
             )
+            is_ready = gates["ready"] is True
+            actual_ready_count += int(is_ready)
             digest = file_sha256(event_path)
-            event_records[event] = (event_path, manifest, digest)
+            _require(
+                event_path not in event_records_by_path,
+                f"duplicate event manifest path across roots: {event_path}",
+            )
+            event_records_by_path[event_path] = {
+                "event": event,
+                "path": event_path,
+                "manifest": manifest,
+                "sha256": digest,
+                "ready": is_ready,
+            }
             root_hashes[event] = digest
+            root_source_snapshots.append(
+                {
+                    "label": f"{root.name} event manifest {event}",
+                    "path": str(event_path),
+                    "sha256": digest,
+                }
+            )
+        _require(actual_ready_count == ready_count, f"{root} ready event count differs")
         _require(
-            file_sha256(summary_path) == summary_hash,
-            f"{summary_path} changed during audit",
+            event_count - actual_ready_count == failed_count,
+            f"{root} failed event count differs",
+        )
+        root_source_snapshots.append(
+            {
+                "label": f"{root.name} event production summary",
+                "path": str(summary_path.resolve()),
+                "sha256": summary_hash,
+            }
         )
         root_rows.append(
             {
@@ -1217,6 +1531,26 @@ def _audit_manifest_roots(
             }
         )
 
+    audited_events: set[str] = set()
+    selected_event_records: dict[str, Mapping[str, Any]] = {}
+    for family in family_rows:
+        source_audit, selected = _audit_family_source_binding(
+            family, event_records_by_path
+        )
+        family["source_snapshot_audit"] = source_audit
+        audited_events.update(selected)
+        for event, record in selected.items():
+            previous = selected_event_records.get(event)
+            _require(
+                previous is None
+                or (
+                    previous["path"] == record["path"]
+                    and previous["sha256"] == record["sha256"]
+                ),
+                f"audited families bind {event} to conflicting event manifests",
+            )
+            selected_event_records[event] = record
+
     accepted: list[dict[str, Any]] = []
     for expected in REQUIRED_VOICE_SUBTITLE_BINDINGS:
         event = expected["event"]
@@ -1225,20 +1559,17 @@ def _audit_manifest_roots(
             f"required voice-subtitle event is absent from audited batches: {event}",
         )
         _require(
-            event in event_records,
+            event in selected_event_records,
             f"required voice-subtitle event is absent from manifest roots: {event}",
         )
-        event_path, manifest, _ = event_records[event]
+        record = selected_event_records[event]
         accepted.append(
-            _audit_required_voice_binding(event_path, manifest, expected)
+            _audit_required_voice_binding(
+                Path(record["path"]), record["manifest"], expected
+            )
         )
 
-    for event, (path, _manifest, digest) in event_records.items():
-        _require(
-            file_sha256(path) == digest,
-            f"{event} event manifest changed during audit",
-        )
-    return root_rows, accepted
+    return root_rows, accepted, root_source_snapshots
 
 
 def audit_batch_roots(
@@ -1310,18 +1641,22 @@ def audit_batch_roots(
         )
 
     family_rows.sort(key=lambda row: (row["family"], row["release_id"]))
-    audited_events = {
-        event for row in family_rows for event in row["ordered_events"]
-    }
-    manifest_root_rows, accepted_voice_candidates = _audit_manifest_roots(
+    (
+        manifest_root_rows,
+        accepted_voice_candidates,
+        manifest_root_source_snapshots,
+    ) = _audit_manifest_roots(
         manifest_roots,
-        audited_events=audited_events,
+        family_rows=family_rows,
     )
+    family_source_snapshots: list[dict[str, str]] = []
+    for row in family_rows:
+        family_source_snapshots.extend(row.pop("_source_snapshots"))
     dimension_counts: dict[str, int] = {}
     for row in family_rows:
         key = f"{row['width']}x{row['height']}"
         dimension_counts[key] = dimension_counts.get(key, 0) + 1
-    return {
+    report = {
         "schema": REPORT_SCHEMA,
         "status": "passed",
         "required_editions": list(REQUIRED_EDITIONS),
@@ -1342,6 +1677,15 @@ def audit_batch_roots(
         "manifest_roots": manifest_root_rows,
         "families": family_rows,
     }
+    _rehash_source_snapshots(
+        family_source_snapshots,
+        label="family release",
+    )
+    _rehash_source_snapshots(
+        manifest_root_source_snapshots,
+        label="event-production root",
+    )
+    return report
 
 
 def _csv_rows(report: Mapping[str, Any]) -> list[dict[str, Any]]:

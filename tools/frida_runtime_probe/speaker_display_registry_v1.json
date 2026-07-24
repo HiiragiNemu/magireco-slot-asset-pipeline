@@ -9,7 +9,8 @@
   },
   "speakers": {
     "iro": {"ja": "環いろは", "zh": "环彩羽"},
-    "kuro": {"ja": "黒江", "zh": "黑江"},
+    "kuro_black_feather": {"ja": "黒羽", "zh": "黑羽"},
+    "kuro_character": {"ja": "黒", "zh": "黑"},
     "kuroe": {"ja": "黒江", "zh": "黑江"},
     "yac": {"ja": "七海やちよ", "zh": "七海八千代"},
     "yach": {"ja": "七海やちよ", "zh": "七海八千代"},

@@ -30,7 +30,7 @@ SPEAKER_ALIASES = {
     "kan": "kan",
     "kyo": "kyo",
     "kuro": "kuro",
-    "kuroe": "kuro",
+    "kuroe": "kuroe",
     "mad": "mad",
     "mam": "mam",
     "mami": "mam",

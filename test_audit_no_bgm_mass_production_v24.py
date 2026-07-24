@@ -80,22 +80,6 @@ class Fixture:
         self.manifest_root = root / "production_manifests_v24"
         self.release_roots: dict[str, Path] = {}
         self._make_media_templates()
-        self._make_family("ac0911", "ac0911_010")
-        self._make_family("ac5303", "ac5303_003")
-        write_json(
-            self.batch / "BATCH_SUMMARY.json",
-            {
-                "schema": "magireco-no-bgm-story-family-editions-batch-v1",
-                "status": "AUTOMATED_QA_PASSED",
-                "selected_editions": list(REQUIRED_EDITIONS),
-                "families": [
-                    str(path.resolve())
-                    for path in sorted(self.release_roots.values())
-                ],
-                "human_playback_approved": False,
-                "bilibili_release_ready": False,
-            },
-        )
         self._make_event_manifest(
             "ac0911_010",
             "8041",
@@ -113,6 +97,22 @@ class Fixture:
             "9999",
             "multi-suffix event fixture",
             "fixture",
+        )
+        self._make_family("ac0911", "ac0911_010")
+        self._make_family("ac5303", "ac5303_003")
+        write_json(
+            self.batch / "BATCH_SUMMARY.json",
+            {
+                "schema": "magireco-no-bgm-story-family-editions-batch-v1",
+                "status": "AUTOMATED_QA_PASSED",
+                "selected_editions": list(REQUIRED_EDITIONS),
+                "families": [
+                    str(path.resolve())
+                    for path in sorted(self.release_roots.values())
+                ],
+                "human_playback_approved": False,
+                "bilibili_release_ready": False,
+            },
         )
         write_json(
             self.manifest_root / "event_production_summary.json",
@@ -229,6 +229,40 @@ class Fixture:
         release_id = f"{family}_full_no_bgm_editions_v1"
         release_root = self.batch / release_id
         self.release_roots[family] = release_root
+        event_path = self.manifest_root / "events" / f"{event}.json"
+        event_manifest = json.loads(event_path.read_text(encoding="utf-8"))
+        source_snapshots = [
+            {
+                "label": f"{event} v20 production manifest",
+                "path": str(event_path.resolve()),
+                "sha256": file_sha256(event_path),
+            }
+        ]
+        for index, clip in enumerate(event_manifest["clips"]):
+            clip_path = Path(clip["path"]).resolve()
+            source_snapshots.append(
+                {
+                    "label": f"{event} clip {index}",
+                    "path": str(clip_path),
+                    "sha256": file_sha256(clip_path),
+                }
+            )
+        for audio in event_manifest["audio"]:
+            audio_path = Path(audio["path"]).resolve()
+            source_snapshots.extend(
+                [
+                    {
+                        "label": f"{event} audio {audio['request_id']}",
+                        "path": str(audio_path),
+                        "sha256": file_sha256(audio_path),
+                    },
+                    {
+                        "label": f"{event} audio request {audio['request_id']}",
+                        "path": str(audio_path),
+                        "sha256": file_sha256(audio_path),
+                    },
+                ]
+            )
         timeline = [
             {
                 "event": event,
@@ -353,6 +387,7 @@ class Fixture:
                 },
             },
             "dialogue_cue_count": 1,
+            "source_snapshots": source_snapshots,
             "artifacts": artifacts,
         }
         manifest_relpath = "manifests/family_editions_manifest.json"
@@ -384,13 +419,26 @@ class Fixture:
         text: str,
         speaker: str,
     ) -> None:
+        clip_path = self.root / "source_clips" / f"{event}.mp4"
+        clip_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(self.clean_template, clip_path)
+        audio_path = self.root / "source_audio" / f"{request_id}.ogg"
+        audio_path.parent.mkdir(parents=True, exist_ok=True)
+        audio_path.write_bytes(f"fixture audio {request_id}".encode("utf-8"))
         manifest = {
             "event": event,
+            "clips": [
+                {
+                    "order": 0,
+                    "path": str(clip_path.resolve()),
+                    "source_sha256": file_sha256(clip_path),
+                }
+            ],
             "audio": [
                 {
                     "source": "z2d_req_sound",
                     "request_id": request_id,
-                    "path": f"audio/{request_id}.ogg",
+                    "path": str(audio_path.resolve()),
                     "start_ms": 200,
                     "duration_ms": 2000,
                     "evidence": "official_runtime_capture",
@@ -431,6 +479,23 @@ class Fixture:
         }
         write_json(self.manifest_root / "events" / f"{event}.json", manifest)
 
+    def refresh_family_source_event(self, family: str, event: str) -> None:
+        release_root = self.release_roots[family]
+        marker = json.loads(
+            (release_root / "BATCH_REVIEW_READY.json").read_text(encoding="utf-8")
+        )
+        manifest_path = release_root / marker["artifacts"]["manifest"]["path"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        source_path = self.manifest_root / "events" / f"{event}.json"
+        for snapshot in manifest["source_snapshots"]:
+            if (
+                snapshot["label"].startswith(f"{event} v")
+                and snapshot["label"].endswith(" production manifest")
+            ):
+                snapshot["sha256"] = file_sha256(source_path)
+        write_json(manifest_path, manifest)
+        self.refresh_release_bindings(family)
+
     def refresh_release_bindings(self, family: str) -> None:
         release_root = self.release_roots[family]
         marker_path = release_root / "BATCH_REVIEW_READY.json"
@@ -448,17 +513,45 @@ class Fixture:
         marker["artifact_set_sha256"] = canonical_sha256(marker["artifacts"])
         write_json(marker_path, marker)
 
-    def audit(self, probe=fake_probe) -> dict:
+    def audit(self, probe=fake_probe, manifest_roots=None) -> dict:
         kwargs = {}
         if probe is not None:
             kwargs["probe_func"] = probe
         return audit_batch_roots(
             [self.batch],
-            manifest_roots=[self.manifest_root],
+            manifest_roots=(
+                [self.manifest_root] if manifest_roots is None else manifest_roots
+            ),
             ffmpeg=str(FFMPEG),
             ffprobe=str(FFPROBE),
             **kwargs,
         )
+
+    def make_mixed_v20_root(self) -> Path:
+        root = self.root / "production_manifests_v20"
+        ready_source = self.manifest_root / "events" / "ac0911_010.json"
+        ready_target = root / "events" / "ac0911_010.json"
+        ready_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ready_source, ready_target)
+        write_json(
+            root / "events" / "ac9999_001.json",
+            {
+                "event": "ac9999_001",
+                "quality_gates": {
+                    "errors": ["fixture unresolved event"],
+                    "ready": False,
+                },
+            },
+        )
+        write_json(
+            root / "event_production_summary.json",
+            {
+                "events": 2,
+                "ready_events": 1,
+                "failed_events": 1,
+            },
+        )
+        return root
 
 
 class NoBgmMassProductionAuditTests(unittest.TestCase):
@@ -487,6 +580,13 @@ class NoBgmMassProductionAuditTests(unittest.TestCase):
                 for row in accepted
             )
         )
+        for family in report["families"]:
+            source_audit = family["source_snapshot_audit"]
+            self.assertEqual(source_audit["status"], "passed")
+            self.assertEqual(source_audit["source_snapshot_count"], 4)
+            self.assertEqual(source_audit["ordered_event_manifest_count"], 1)
+            self.assertEqual(source_audit["clip_source_count"], 1)
+            self.assertEqual(source_audit["audio_source_count"], 1)
 
         json_path = self.fixture.root / "audit.json"
         csv_path = self.fixture.root / "audit.csv"
@@ -500,6 +600,124 @@ class NoBgmMassProductionAuditTests(unittest.TestCase):
             {row["unresolved_audio_layer_count"] for row in rows},
             {"0"},
         )
+
+    def test_accepts_overlapping_v24_and_mixed_v20_roots(self) -> None:
+        v20_root = self.fixture.make_mixed_v20_root()
+
+        report = self.fixture.audit(
+            manifest_roots=[self.fixture.manifest_root, v20_root]
+        )
+
+        self.assertEqual(report["manifest_root_count"], 2)
+        roots = {Path(row["path"]).name: row for row in report["manifest_roots"]}
+        self.assertEqual(roots["production_manifests_v20"]["ready_event_count"], 1)
+        self.assertEqual(roots["production_manifests_v20"]["failed_event_count"], 1)
+
+    def test_accepts_v20_manifest_without_declared_clip_hash(self) -> None:
+        event_path = self.fixture.manifest_root / "events" / "ac0911_010.json"
+        event = json.loads(event_path.read_text(encoding="utf-8"))
+        event["clips"][0].pop("source_sha256")
+        event["quality_gates"].pop("all_clip_source_hashes_bound")
+        write_json(event_path, event)
+
+        release = self.fixture.release_roots["ac0911"]
+        marker = json.loads(
+            (release / "BATCH_REVIEW_READY.json").read_text(encoding="utf-8")
+        )
+        manifest_path = release / marker["artifacts"]["manifest"]["path"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for snapshot in manifest["source_snapshots"]:
+            if snapshot["label"] == "ac0911_010 v20 production manifest":
+                snapshot["label"] = "ac0911_010 v24 production manifest"
+                snapshot["sha256"] = file_sha256(event_path)
+        write_json(manifest_path, manifest)
+        self.fixture.refresh_release_bindings("ac0911")
+
+        report = self.fixture.audit()
+
+        source_audit = next(
+            row["source_snapshot_audit"]
+            for row in report["families"]
+            if row["family"] == "ac0911"
+        )
+        self.assertEqual(source_audit["clip_source_count"], 1)
+
+    def test_rejects_referenced_failed_event_in_mixed_root(self) -> None:
+        path = self.fixture.manifest_root / "events" / "ac0911_010.json"
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        manifest["quality_gates"]["ready"] = False
+        write_json(path, manifest)
+        write_json(
+            self.fixture.manifest_root / "event_production_summary.json",
+            {
+                "events": 3,
+                "ready_events": 2,
+                "failed_events": 1,
+            },
+        )
+        self.fixture.refresh_family_source_event("ac0911", "ac0911_010")
+
+        with self.assertRaisesRegex(AuditError, "referenced quality gate ready"):
+            self.fixture.audit()
+
+    def test_rejects_missing_ordered_event_clip_snapshot(self) -> None:
+        release = self.fixture.release_roots["ac0911"]
+        marker = json.loads(
+            (release / "BATCH_REVIEW_READY.json").read_text(encoding="utf-8")
+        )
+        manifest_path = release / marker["artifacts"]["manifest"]["path"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["source_snapshots"] = [
+            row
+            for row in manifest["source_snapshots"]
+            if row["label"] != "ac0911_010 clip 0"
+        ]
+        write_json(manifest_path, manifest)
+        self.fixture.refresh_release_bindings("ac0911")
+
+        with self.assertRaisesRegex(AuditError, "source snapshot coverage differs"):
+            self.fixture.audit()
+
+    def test_rejects_audio_snapshot_bound_to_wrong_source_path(self) -> None:
+        release = self.fixture.release_roots["ac0911"]
+        marker = json.loads(
+            (release / "BATCH_REVIEW_READY.json").read_text(encoding="utf-8")
+        )
+        manifest_path = release / marker["artifacts"]["manifest"]["path"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        wrong_audio = self.fixture.root / "source_audio" / "5172.ogg"
+        for snapshot in manifest["source_snapshots"]:
+            if snapshot["label"] == "ac0911_010 audio 8041":
+                snapshot["path"] = str(wrong_audio.resolve())
+                snapshot["sha256"] = file_sha256(wrong_audio)
+        write_json(manifest_path, manifest)
+        self.fixture.refresh_release_bindings("ac0911")
+
+        with self.assertRaisesRegex(AuditError, "source snapshot coverage differs"):
+            self.fixture.audit()
+
+    def test_rejects_changed_source_file(self) -> None:
+        clip = self.fixture.root / "source_clips" / "ac0911_010.mp4"
+        clip.write_bytes(b"changed before audit")
+
+        with self.assertRaisesRegex(AuditError, "source snapshot SHA-256 differs"):
+            self.fixture.audit()
+
+    def test_rejects_source_file_changed_during_audit(self) -> None:
+        clip = self.fixture.root / "source_clips" / "ac0911_010.mp4"
+        mutated = False
+
+        def mutating_probe(path: Path, ffprobe: str) -> dict:
+            nonlocal mutated
+            if not mutated:
+                clip.write_bytes(b"changed during audit")
+                mutated = True
+            return fake_probe(path, ffprobe)
+
+        with self.assertRaisesRegex(
+            AuditError, "source snapshot changed during audit"
+        ):
+            self.fixture.audit(probe=mutating_probe)
 
     def test_real_ffmpeg_and_ffprobe_validate_actual_media(self) -> None:
         report = self.fixture.audit(probe=None)
@@ -630,6 +848,7 @@ class NoBgmMassProductionAuditTests(unittest.TestCase):
             "accepted_current_voice_override_candidates"
         ] = []
         write_json(path, manifest)
+        self.fixture.refresh_family_source_event("ac0911", "ac0911_010")
         with self.assertRaisesRegex(AuditError, "voice-bound subtitle"):
             self.fixture.audit()
 

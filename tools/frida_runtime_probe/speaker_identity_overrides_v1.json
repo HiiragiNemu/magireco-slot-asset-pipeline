@@ -1,0 +1,71 @@
+{
+  "schema": "magireco-hash-bound-speaker-identity-overrides-v1",
+  "status": "project_owner_authorized",
+  "policy": {
+    "ambiguous_raw_speaker_codes_have_no_global_display_identity": true,
+    "identity_requires_exact_event_request_code_name_and_audio_sha256": true,
+    "unlisted_ambiguous_cues_remain_unprefixed": true
+  },
+  "overrides": [
+    {
+      "event": "ac4902_003",
+      "request_id": "8340",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_black_feather",
+      "code_name": "26704_kuro_くそっ！",
+      "audio_sha256": "A0C8B0D4B5CD3116446358AAFEA35C85B11EC745339BCCF7A20EAA5530D2766A",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    },
+    {
+      "event": "ac4902_059",
+      "request_id": "8340",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_black_feather",
+      "code_name": "26704_kuro_くそっ！",
+      "audio_sha256": "A0C8B0D4B5CD3116446358AAFEA35C85B11EC745339BCCF7A20EAA5530D2766A",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    },
+    {
+      "event": "ac7117_001",
+      "request_id": "9634",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_character",
+      "code_name": "31283_233_kuro_ッハァハァ…うわ",
+      "audio_sha256": "4C4A8CB49CFE04062D816B5FBBFC522BF35D79B5F86C67724D8509660D61B863",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    },
+    {
+      "event": "ac7117_001",
+      "request_id": "9635",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_character",
+      "code_name": "31284_234_kuro_あ、ああっ…",
+      "audio_sha256": "2BEE536035CF2335417BA574D2E560327D207B14F834BCDF5ACD751883196698",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    },
+    {
+      "event": "ac7117_006",
+      "request_id": "9638",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_character",
+      "code_name": "31287_244_kuro_はあああっ…",
+      "audio_sha256": "21F07D8F01BDEC3B28A4098EDA122BA81462EADBF2CD8A078EB2702F2B6D0C06",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    },
+    {
+      "event": "ac7117_013",
+      "request_id": "9663",
+      "raw_speaker_code": "kuro",
+      "canonical_speaker_code": "kuro_character",
+      "code_name": "31312_268_kuro_あ…",
+      "audio_sha256": "DCF7E2E6A68441BE6FFA460DE5AA25F6545E66E7155F185ECCDE896B7BE02A42",
+      "evidence": "project_owner_playback_identification_plus_exact_official_voice_asset",
+      "owner_attestation_id": "kuro_black_feather_kuro_kuroe_correction_20260725"
+    }
+  ]
+}

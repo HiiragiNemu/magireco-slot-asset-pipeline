@@ -3,6 +3,17 @@
 Original date: 2026-06-28
 Current checkpoint: 2026-07-24
 
+The newest transfer delta is:
+
+```text
+docs/HANDOFF_CODEX_2026-07-25.md
+```
+
+It records the project owner's latest playback corrections, especially the
+three distinct identities Black Feather / Kuro / Kuroe, the P16 audio-lead
+review boundary, the missing P18 second half, and the audience-route duplicate
+gate. Read that file before using any older `kuro` mapping or expanding v25.
+
 This is the core handoff document for continuing the project.  Treat it as the
 first file to read before touching any renders, manifests, probes, or GitHub
 state.

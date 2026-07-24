@@ -13,10 +13,12 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     AUDIO_OVERRIDE_SCHEMAS,
     DEFAULT_EDITIONS,
     EXPLICITLY_EXCLUDABLE_SLOT_EFFECT_REQUESTS,
+    SPEAKER_IDENTITY_OVERRIDE_SCHEMA,
     SPEAKER_SCHEMA,
     SUPPORTED_EDITIONS,
     apply_audio_role_overrides,
     apply_missing_voice_subtitle_overrides,
+    apply_speaker_identity_overrides,
     attach_speaker_evidence,
     build_family_editions,
     display_text,
@@ -24,9 +26,11 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     load_audio_role_overrides,
     load_dialogue_relationship_rules,
     load_speaker_registry,
+    load_speaker_identity_overrides,
     normalize_editions,
     snapshot,
     validate_series_proposal_bindings,
+    validate_no_exact_audience_event_duplicates,
     validate_translation_relationship_rules,
 )
 from tools.frida_runtime_probe.build_sp_story_chapter_reviews import (
@@ -43,6 +47,99 @@ def write_json(path: Path, value: object) -> None:
 
 
 class NoBgmStoryFamilyEditionTests(unittest.TestCase):
+    def test_exact_audience_event_duplicates_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            visual = root / "visual.mp4"
+            audio = root / "voice.ogg"
+            visual.write_bytes(b"same visual")
+            audio.write_bytes(b"same voice")
+            source = {
+                "path": str(audio.resolve()),
+                "sha256": hashlib.sha256(audio.read_bytes()).hexdigest().upper(),
+            }
+
+            def event(name: str) -> dict:
+                return {
+                    "event": name,
+                    "width": 416,
+                    "height": 232,
+                    "frame_count": 120,
+                    "presentation_samples": 192000,
+                    "clean_visual": visual,
+                    "audio_layers": [
+                        {
+                            "role": "voice",
+                            "request_id": "8340",
+                            "source": source,
+                            "start_ms": 200,
+                            "duration_ms": 500,
+                        }
+                    ],
+                    "dialogue_cues": [
+                        {
+                            "request_id": "8340",
+                            "start_ms": 200,
+                            "end_ms": 700,
+                            "ja_text": "くそっ！",
+                            "zh_text": "可恶！",
+                            "speaker_code": "kuro",
+                        }
+                    ],
+                }
+
+            with self.assertRaisesRegex(RuntimeError, "exact repeated AV"):
+                validate_no_exact_audience_event_duplicates(
+                    "ac4902",
+                    [event("ac4902_003"), event("ac4902_059")],
+                )
+
+    def test_audience_event_variants_are_not_collapsed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            visual = root / "visual.mp4"
+            audio = root / "voice.ogg"
+            visual.write_bytes(b"shared visual")
+            audio.write_bytes(b"shared voice")
+            source = {
+                "path": str(audio.resolve()),
+                "sha256": hashlib.sha256(audio.read_bytes()).hexdigest().upper(),
+            }
+            base = {
+                "width": 512,
+                "height": 288,
+                "frame_count": 178,
+                "presentation_samples": 284800,
+                "clean_visual": visual,
+                "audio_layers": [
+                    {
+                        "role": "scene_se",
+                        "request_id": "10025",
+                        "source": source,
+                        "start_ms": 0,
+                        "duration_ms": 5933,
+                    }
+                ],
+                "dialogue_cues": [],
+            }
+            shifted_audio = copy.deepcopy(base)
+            shifted_audio["event"] = "ac5203_017"
+            shifted_audio["audio_layers"][0]["start_ms"] = 34
+            first = copy.deepcopy(base)
+            first["event"] = "ac5203_005"
+
+            rows = validate_no_exact_audience_event_duplicates(
+                "ac5203",
+                [first, shifted_audio],
+            )
+            self.assertEqual(
+                [row["event"] for row in rows],
+                ["ac5203_005", "ac5203_017"],
+            )
+            self.assertNotEqual(
+                rows[0]["content_sha256"], rows[1]["content_sha256"]
+            )
+
     def test_translation_relationship_rules_fail_closed(self) -> None:
         rules_path = (
             Path(__file__).resolve().parent
@@ -60,6 +157,13 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
         )
         self.assertEqual(len(audit), 2)
         self.assertEqual(len(source["sha256"]), 64)
+        tamaki_san_rule = next(
+            row
+            for row in rules
+            if row["id"] == "yachiyo_or_kuroe_to_tamaki_san_as_classmate_v1"
+        )
+        self.assertIn("kuroe", tamaki_san_rule["speaker_codes"])
+        self.assertNotIn("kuro", tamaki_san_rule["speaker_codes"])
         with self.assertRaisesRegex(ValueError, "relationship rule"):
             validate_translation_relationship_rules(
                 {"環さんはどう思う？": "环小姐，你怎么看？"},
@@ -386,6 +490,9 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
                     source_snapshots=[],
                     audio_role_overrides=[],
                     series_binding={"status": "test_fixture"},
+                    audience_event_content_signatures=[
+                        {"event": "ac_test_001", "content_sha256": "A" * 64}
+                    ],
                     relationship_rule_audit=[],
                     ffmpeg="ffmpeg",
                     ffprobe="ffprobe",
@@ -434,6 +541,154 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
             self.assertEqual(display_text(multiple, "zh", registry), "要上了！")
             unmapped = dict(cue, speaker_code="other")
             self.assertEqual(display_text(unmapped, "zh", registry), "要上了！")
+
+    def test_black_feather_kuro_and_kuroe_display_names_remain_distinct(
+        self,
+    ) -> None:
+        production_path = (
+            Path(__file__).resolve().parent
+            / "tools"
+            / "frida_runtime_probe"
+            / "speaker_display_registry_v1.json"
+        )
+        production_registry, _source = load_speaker_registry(production_path)
+        self.assertEqual(
+            production_registry["kuro_black_feather"],
+            {"ja": "黒羽", "zh": "黑羽"},
+        )
+        self.assertEqual(
+            production_registry["kuro_character"],
+            {"ja": "黒", "zh": "黑"},
+        )
+        self.assertEqual(
+            production_registry["kuroe"],
+            {"ja": "黒江", "zh": "黑江"},
+        )
+        self.assertNotIn("kuro", production_registry)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "speakers.json"
+            value = {
+                "schema": SPEAKER_SCHEMA,
+                "policy": {
+                    "prefix_only_when_speaker_identity_is_evidence_bound": True
+                },
+                "speakers": {
+                    "kuro_black_feather": {"ja": "黒羽", "zh": "黑羽"},
+                    "kuro_character": {"ja": "黒", "zh": "黑"},
+                    "kuroe": {"ja": "黒江", "zh": "黑江"},
+                },
+            }
+            write_json(path, value)
+            registry, _source = load_speaker_registry(path)
+            cue = {
+                "ja_text": "くそっ！",
+                "zh_text": "可恶！",
+                "speaker_code": "kuro",
+                "subtitle_source": "official_voice_label",
+                "evidence": "official_sound_request_code_name",
+            }
+            self.assertEqual(display_text(cue, "ja", registry), "くそっ！")
+            self.assertEqual(display_text(cue, "zh", registry), "可恶！")
+            black_feather_cue = dict(
+                cue, speaker_code="kuro_black_feather"
+            )
+            self.assertEqual(
+                display_text(black_feather_cue, "ja", registry),
+                "黒羽：くそっ！",
+            )
+            self.assertEqual(
+                display_text(black_feather_cue, "zh", registry),
+                "黑羽：可恶！",
+            )
+            kuro_cue = dict(cue, speaker_code="kuro_character")
+            self.assertEqual(display_text(kuro_cue, "ja", registry), "黒：くそっ！")
+            self.assertEqual(display_text(kuro_cue, "zh", registry), "黑：可恶！")
+            kuroe_cue = dict(cue, speaker_code="kuroe")
+            self.assertEqual(display_text(kuroe_cue, "ja", registry), "黒江：くそっ！")
+            self.assertEqual(display_text(kuroe_cue, "zh", registry), "黑江：可恶！")
+
+            value["speakers"]["kuro"] = {"ja": "黒羽", "zh": "黑羽"}
+            write_json(path, value)
+            with self.assertRaisesRegex(ValueError, "ambiguous raw speaker code"):
+                load_speaker_registry(path)
+
+    def test_ambiguous_kuro_identity_requires_exact_hash_bound_context(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            audio = root / "voice.ogg"
+            audio.write_bytes(b"exact official voice")
+            digest = hashlib.sha256(audio.read_bytes()).hexdigest().upper()
+            path = root / "speaker_overrides.json"
+            write_json(
+                path,
+                {
+                    "schema": SPEAKER_IDENTITY_OVERRIDE_SCHEMA,
+                    "status": "project_owner_authorized",
+                    "overrides": [
+                        {
+                            "event": "ac4902_003",
+                            "request_id": "8340",
+                            "raw_speaker_code": "kuro",
+                            "canonical_speaker_code": "kuro_black_feather",
+                            "code_name": "26704_kuro_くそっ！",
+                            "audio_sha256": digest,
+                            "evidence": "owner_playback_plus_official_voice",
+                            "owner_attestation_id": "owner_correction_1",
+                        }
+                    ],
+                },
+            )
+            overrides, source = load_speaker_identity_overrides(path)
+            self.assertIsNotNone(source)
+            resolved = {
+                "event": "ac4902_003",
+                "dialogue_cues": [
+                    {
+                        "request_id": "8340",
+                        "ja_text": "くそっ！",
+                        "zh_text": "可恶！",
+                        "speaker_code": "kuro",
+                    }
+                ],
+            }
+            manifest = {
+                "event": "ac4902_003",
+                "audio": [
+                    {
+                        "request_id": "8340",
+                        "code_name": "26704_kuro_くそっ！",
+                        "path": str(audio),
+                    }
+                ],
+                "subtitles": [
+                    {
+                        "voice_request_id": "8340",
+                        "speaker_code": "kuro",
+                        "subtitle_source": "official_voice_label",
+                        "evidence": "official_sound_request_code_name",
+                    }
+                ],
+            }
+            attach_speaker_evidence(resolved, manifest)
+            applied = apply_speaker_identity_overrides(
+                resolved, manifest, overrides
+            )
+            self.assertEqual(len(applied), 1)
+            self.assertEqual(
+                resolved["dialogue_cues"][0]["raw_speaker_code"], "kuro"
+            )
+            self.assertEqual(
+                resolved["dialogue_cues"][0]["speaker_code"],
+                "kuro_black_feather",
+            )
+
+            audio.write_bytes(b"changed voice")
+            resolved["dialogue_cues"][0]["speaker_code"] = "kuro"
+            with self.assertRaisesRegex(ValueError, "evidence mismatch"):
+                apply_speaker_identity_overrides(resolved, manifest, overrides)
 
     def test_bilingual_cue_is_japanese_above_chinese(self) -> None:
         registry = {"iro": {"ja": "環いろは", "zh": "环彩羽"}}
@@ -815,6 +1070,9 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
                 ],
                 audio_role_overrides=[],
                 series_binding={"status": "test_fixture"},
+                audience_event_content_signatures=[
+                    {"event": "ac0001_001", "content_sha256": "A" * 64}
+                ],
                 relationship_rule_audit=[],
                 ffmpeg="ffmpeg",
                 ffprobe="ffprobe",

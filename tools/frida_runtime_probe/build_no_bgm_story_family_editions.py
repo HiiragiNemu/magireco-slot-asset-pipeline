@@ -119,6 +119,9 @@ MANIFEST_SCHEMA = "magireco-no-bgm-story-family-editions-v1"
 QA_SCHEMA = "magireco-no-bgm-story-family-editions-qa-v1"
 READY_SCHEMA = "magireco-no-bgm-story-family-editions-ready-v1"
 SPEAKER_SCHEMA = "magireco-audited-speaker-display-registry-v1"
+SPEAKER_IDENTITY_OVERRIDE_SCHEMA = (
+    "magireco-hash-bound-speaker-identity-overrides-v1"
+)
 RELATIONSHIP_RULE_SCHEMA = "magireco-dialogue-relationship-rules-v1"
 AUDIO_OVERRIDE_SCHEMAS = {
     "magireco-hash-bound-audio-role-overrides-v1",
@@ -174,7 +177,77 @@ def load_speaker_registry(path: Path | None) -> tuple[dict[str, dict[str, str]],
         if not all(names.values()):
             raise ValueError(f"speaker registry row lacks ja/zh names: {code}")
         result[code] = names
+    if "kuro" in result:
+        raise ValueError(
+            "ambiguous raw speaker code kuro must not have a global display identity"
+        )
+    distinct_codes = ("kuro_black_feather", "kuro_character", "kuroe")
+    distinct_names = [
+        tuple(result[code][language] for language in ("ja", "zh"))
+        for code in distinct_codes
+        if code in result
+    ]
+    if len(distinct_names) != len(set(distinct_names)):
+        raise ValueError("speaker registry collapses Black Feather, Kuro, and Kuroe")
     return result, snapshot(path.resolve(), label="audited speaker display registry")
+
+
+def load_speaker_identity_overrides(
+    path: Path | None,
+) -> tuple[
+    dict[tuple[str, str, str], dict[str, str]],
+    dict[str, str] | None,
+]:
+    """Load owner-authorized contextual identities for ambiguous raw labels."""
+
+    if path is None:
+        return {}, None
+    path = path.resolve()
+    value = read_json(path)
+    if (
+        value.get("schema") != SPEAKER_IDENTITY_OVERRIDE_SCHEMA
+        or value.get("status") != "project_owner_authorized"
+    ):
+        raise ValueError("speaker identity overrides are not owner-authorized")
+    rows = value.get("overrides")
+    if not isinstance(rows, list):
+        raise ValueError("speaker identity overrides lack rows")
+    required_fields = {
+        "event",
+        "request_id",
+        "raw_speaker_code",
+        "canonical_speaker_code",
+        "code_name",
+        "audio_sha256",
+        "evidence",
+        "owner_attestation_id",
+    }
+    result: dict[tuple[str, str, str], dict[str, str]] = {}
+    for index, row in enumerate(rows):
+        if not isinstance(row, Mapping) or set(row) != required_fields:
+            raise ValueError(f"speaker identity override {index} fields differ")
+        normalized = {key: str(row[key]).strip() for key in required_fields}
+        normalized["audio_sha256"] = normalized["audio_sha256"].upper()
+        key = (
+            normalized["event"],
+            normalized["request_id"],
+            normalized["raw_speaker_code"],
+        )
+        if (
+            not all(normalized.values())
+            or key in result
+            or len(normalized["audio_sha256"]) != 64
+            or any(
+                character not in "0123456789ABCDEF"
+                for character in normalized["audio_sha256"]
+            )
+            or normalized["raw_speaker_code"] != "kuro"
+            or normalized["canonical_speaker_code"]
+            not in {"kuro_black_feather", "kuro_character"}
+        ):
+            raise ValueError(f"speaker identity override {index} is invalid")
+        result[key] = normalized
+    return result, snapshot(path, label="hash-bound contextual speaker identities")
 
 
 def load_dialogue_relationship_rules(
@@ -503,6 +576,69 @@ def attach_speaker_evidence(
         cue.update(evidence)
 
 
+def apply_speaker_identity_overrides(
+    resolved: dict[str, Any],
+    manifest: Mapping[str, Any],
+    overrides: Mapping[tuple[str, str, str], Mapping[str, str]],
+) -> list[dict[str, str]]:
+    """Resolve an ambiguous raw code only for one exact event/request/audio."""
+
+    event = str(resolved["event"])
+    audio_by_request: dict[str, Mapping[str, Any]] = {}
+    for row in manifest.get("audio", []):
+        if not isinstance(row, Mapping):
+            raise ValueError(f"{event} has an invalid audio row")
+        request_id = str(row.get("request_id", "")).strip()
+        if not request_id:
+            continue
+        if request_id in audio_by_request:
+            raise ValueError(f"{event} has duplicate audio request: {request_id}")
+        audio_by_request[request_id] = row
+
+    applied: list[dict[str, str]] = []
+    for cue in resolved["dialogue_cues"]:
+        request_id = str(cue["request_id"]).strip()
+        raw_code = str(cue.get("speaker_code", "")).strip()
+        override = overrides.get((event, request_id, raw_code))
+        if override is None:
+            continue
+        audio = audio_by_request.get(request_id)
+        if audio is None:
+            raise ValueError(
+                f"{event} speaker identity override lacks audio request: {request_id}"
+            )
+        audio_path = Path(str(audio.get("path", ""))).resolve()
+        expected_hash = str(override["audio_sha256"]).upper()
+        if (
+            str(audio.get("code_name", "")).strip()
+            != str(override["code_name"]).strip()
+            or not audio_path.is_file()
+            or file_sha256(audio_path) != expected_hash
+        ):
+            raise ValueError(
+                f"{event} speaker identity override evidence mismatch: {request_id}"
+            )
+        canonical_code = str(override["canonical_speaker_code"]).strip()
+        cue["raw_speaker_code"] = raw_code
+        cue["speaker_code"] = canonical_code
+        cue["speaker_identity_evidence"] = str(override["evidence"]).strip()
+        applied.append(
+            {
+                "event": event,
+                "request_id": request_id,
+                "raw_speaker_code": raw_code,
+                "canonical_speaker_code": canonical_code,
+                "code_name": str(override["code_name"]).strip(),
+                "audio_sha256": expected_hash,
+                "evidence": str(override["evidence"]).strip(),
+                "owner_attestation_id": str(
+                    override["owner_attestation_id"]
+                ).strip(),
+            }
+        )
+    return applied
+
+
 def display_text(
     cue: Mapping[str, Any], language: str, speakers: Mapping[str, Mapping[str, str]]
 ) -> str:
@@ -569,6 +705,102 @@ def assert_srt_round_trip(path: Path, cues: Sequence[Mapping[str, Any]]) -> None
     ]
     if parsed != expected:
         raise RuntimeError(f"SRT round-trip mismatch: {path}")
+
+
+def validate_no_exact_audience_event_duplicates(
+    family: str,
+    events: Sequence[Mapping[str, Any]],
+) -> list[dict[str, str]]:
+    """Reject exact repeated AV+dialogue units in one audience-facing series.
+
+    Single-event archival outputs remain untouched.  A family proposal must
+    remove the repeated occurrence (while preserving its provenance outside the
+    audience cut) before it can be promoted as one long-form viewing product.
+    """
+
+    signatures: list[dict[str, str]] = []
+    events_by_signature: dict[str, list[str]] = {}
+    for event in events:
+        event_name = str(event.get("event", "")).strip()
+        clean_visual = Path(str(event.get("clean_visual", ""))).resolve()
+        if not event_name or not clean_visual.is_file():
+            raise RuntimeError(
+                f"{family} cannot audit audience event content: {event_name!r}"
+            )
+        audio_rows = []
+        for layer in event.get("audio_layers", []):
+            if not isinstance(layer, Mapping):
+                raise RuntimeError(f"{event_name} has an invalid audio layer")
+            source = layer.get("source")
+            if not isinstance(source, Mapping):
+                raise RuntimeError(
+                    f"{event_name} audio layer lacks a source snapshot"
+                )
+            audio_rows.append(
+                {
+                    "role": str(layer.get("role", "")),
+                    "request_id": str(layer.get("request_id", "")),
+                    "source_sha256": str(source.get("sha256", "")).upper(),
+                    "start_ms": int(layer.get("start_ms", -1)),
+                    "duration_ms": int(layer.get("duration_ms", -1)),
+                }
+            )
+        cue_rows = []
+        for cue in event.get("dialogue_cues", []):
+            if not isinstance(cue, Mapping):
+                raise RuntimeError(f"{event_name} has an invalid dialogue cue")
+            cue_rows.append(
+                {
+                    "request_id": str(cue.get("request_id", "")),
+                    "start_ms": int(cue.get("start_ms", -1)),
+                    "end_ms": int(cue.get("end_ms", -1)),
+                    "ja_text": str(cue.get("ja_text", "")),
+                    "zh_text": str(cue.get("zh_text", "")),
+                    "speaker_code": str(cue.get("speaker_code", "")),
+                }
+            )
+        signature = canonical_sha256(
+            {
+                "clean_visual_sha256": file_sha256(clean_visual),
+                "width": int(event.get("width", 0)),
+                "height": int(event.get("height", 0)),
+                "frame_count": int(event.get("frame_count", 0)),
+                "presentation_samples": int(event.get("presentation_samples", 0)),
+                "audio_layers": sorted(
+                    audio_rows,
+                    key=lambda row: (
+                        row["start_ms"],
+                        row["request_id"],
+                        row["role"],
+                        row["source_sha256"],
+                        row["duration_ms"],
+                    ),
+                ),
+                "dialogue_cues": sorted(
+                    cue_rows,
+                    key=lambda row: (
+                        row["start_ms"],
+                        row["end_ms"],
+                        row["request_id"],
+                        row["ja_text"],
+                        row["zh_text"],
+                        row["speaker_code"],
+                    ),
+                ),
+            }
+        )
+        signatures.append({"event": event_name, "content_sha256": signature})
+        events_by_signature.setdefault(signature, []).append(event_name)
+
+    duplicate_groups = [
+        names for names in events_by_signature.values() if len(names) > 1
+    ]
+    if duplicate_groups:
+        raise RuntimeError(
+            f"{family} audience series contains exact repeated AV+subtitle "
+            f"events; use a deduplicated route-aware proposal: {duplicate_groups}"
+        )
+    return signatures
 
 
 def _media_audit(
@@ -640,13 +872,19 @@ def build_family_editions(
     source_snapshots: Sequence[Mapping[str, str]],
     audio_role_overrides: Sequence[Mapping[str, str]],
     voice_subtitle_overrides: Sequence[Mapping[str, str]] = (),
+    speaker_identity_overrides: Sequence[Mapping[str, str]] = (),
     series_binding: Mapping[str, Any],
+    audience_event_content_signatures: Sequence[Mapping[str, str]],
     relationship_rule_audit: Sequence[Mapping[str, Any]],
     ffmpeg: str,
     ffprobe: str,
     overwrite: bool,
 ) -> Path:
     selected = normalize_editions(editions)
+    if [str(row.get("event", "")) for row in audience_event_content_signatures] != [
+        str(event.get("event", "")) for event in events
+    ]:
+        raise RuntimeError(f"{family} audience event signature order differs")
     retained_role_counts = {"voice": 0, "scene_se": 0}
     for event in events:
         event_name = str(event.get("event", ""))
@@ -974,6 +1212,7 @@ def build_family_editions(
                 "unresolved_audio_layer_count_zero": True,
                 "audio_role_overrides_exact_hash_bound": True,
                 "voice_subtitle_overrides_exact_hash_bound": True,
+                "ambiguous_speaker_identities_exact_hash_bound": True,
                 "zero_inserted_black_frames": True,
                 "native_dimensions_30fps_no_upscale": True,
                 "exact_frame_and_sample_grid": True,
@@ -981,6 +1220,7 @@ def build_family_editions(
                 "selected_srt_files_round_trip": True,
                 "speaker_prefix_requires_cue_evidence": True,
                 "series_proposal_current_identity_bound": True,
+                "no_exact_duplicate_audience_events": True,
                 "dialogue_relationship_rules_enforced": True,
                 "human_and_publication_status_false": True,
             },
@@ -997,7 +1237,13 @@ def build_family_editions(
             },
             "applied_audio_role_overrides": list(audio_role_overrides),
             "applied_voice_subtitle_overrides": list(voice_subtitle_overrides),
+            "applied_speaker_identity_overrides": list(
+                speaker_identity_overrides
+            ),
             "series_proposal_binding": dict(series_binding),
+            "audience_event_content_signatures": list(
+                audience_event_content_signatures
+            ),
             "dialogue_relationship_rule_audit": list(relationship_rule_audit),
             "source_scene_pcm_f32le_sha256": scene_pcm_hash,
             "audio_master_packet_sha256": master_packet_hash,
@@ -1088,7 +1334,13 @@ def build_family_editions(
             "source_snapshots": list(source_snapshots),
             "applied_audio_role_overrides": list(audio_role_overrides),
             "applied_voice_subtitle_overrides": list(voice_subtitle_overrides),
+            "applied_speaker_identity_overrides": list(
+                speaker_identity_overrides
+            ),
             "series_proposal_binding": dict(series_binding),
+            "audience_event_content_signatures": list(
+                audience_event_content_signatures
+            ),
             "dialogue_relationship_rule_audit": list(relationship_rule_audit),
             "artifacts": artifacts,
         }
@@ -1143,6 +1395,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--layout-profile", action="append", required=True)
     parser.add_argument("--bilingual-layout-profile", action="append")
     parser.add_argument("--speaker-registry")
+    parser.add_argument(
+        "--speaker-identity-overrides",
+        default=str(Path(__file__).with_name("speaker_identity_overrides_v1.json")),
+    )
     parser.add_argument("--audio-role-overrides")
     parser.add_argument("--voice-subtitle-overrides")
     parser.add_argument(
@@ -1312,6 +1568,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     speakers, speaker_source = load_speaker_registry(
         Path(args.speaker_registry).resolve() if args.speaker_registry else None
     )
+    speaker_identity_overrides, speaker_identity_source = (
+        load_speaker_identity_overrides(
+            Path(args.speaker_identity_overrides).resolve()
+            if args.speaker_identity_overrides
+            else None
+        )
+    )
     overrides, override_source = load_audio_role_overrides(
         Path(args.audio_role_overrides).resolve() if args.audio_role_overrides else None
     )
@@ -1334,6 +1597,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     ]
     if speaker_source:
         shared_sources.append(speaker_source)
+    if speaker_identity_source:
+        shared_sources.append(speaker_identity_source)
     if override_source:
         shared_sources.append(override_source)
     if voice_override_source:
@@ -1571,8 +1836,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
 
     resolved_by_family: dict[str, list[dict[str, Any]]] = {}
+    content_signatures_by_family: dict[str, list[dict[str, str]]] = {}
+    applied_speaker_identities_by_family: dict[str, list[dict[str, str]]] = {}
     for family, rows in batch_rows.items():
         resolved_rows: list[dict[str, Any]] = []
+        applied_speaker_identities: list[dict[str, str]] = []
         for row in rows:
             resolved, sources = resolve_event(
                 row["projected"],
@@ -1583,9 +1851,42 @@ def main(argv: Sequence[str] | None = None) -> int:
                 reject_unsubtitled_audio=True,
             )
             attach_speaker_evidence(resolved, row["projected"])
+            applied_speaker_identities.extend(
+                apply_speaker_identity_overrides(
+                    resolved,
+                    row["projected"],
+                    speaker_identity_overrides,
+                )
+            )
             resolved_rows.append(resolved)
             family_sources[family].extend(sources)
+        selected_events = {str(row["event"]) for row in rows}
+        expected_identity_keys = {
+            key
+            for key in speaker_identity_overrides
+            if key[0] in selected_events
+        }
+        applied_identity_keys = {
+            (
+                row["event"],
+                row["request_id"],
+                row["raw_speaker_code"],
+            )
+            for row in applied_speaker_identities
+        }
+        if applied_identity_keys != expected_identity_keys:
+            raise ValueError(
+                f"{family} speaker identity override application differs: "
+                f"expected={sorted(expected_identity_keys)}, "
+                f"applied={sorted(applied_identity_keys)}"
+            )
         resolved_by_family[family] = resolved_rows
+        applied_speaker_identities_by_family[family] = (
+            applied_speaker_identities
+        )
+        content_signatures_by_family[family] = (
+            validate_no_exact_audience_event_duplicates(family, resolved_rows)
+        )
         rehash(family_sources[family])
 
     destinations: list[str] = []
@@ -1613,7 +1914,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             source_snapshots=family_sources[family],
             audio_role_overrides=applied_by_family[family],
             voice_subtitle_overrides=applied_voice_by_family[family],
+            speaker_identity_overrides=(
+                applied_speaker_identities_by_family[family]
+            ),
             series_binding=series_bindings[family],
+            audience_event_content_signatures=content_signatures_by_family[family],
             relationship_rule_audit=relationship_rule_audit,
             ffmpeg=args.ffmpeg,
             ffprobe=args.ffprobe,

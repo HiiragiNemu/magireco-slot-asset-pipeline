@@ -679,7 +679,19 @@ class SubtitleVoiceCatalogTests(unittest.TestCase):
         )
         self.assertEqual(
             request_speaker("30757_343_kuroe_このままじゃ"),
+            "kuroe",
+        )
+        self.assertEqual(
+            request_speaker("8340_kuro_くそっ！"),
             "kuro",
+        )
+        self.assertEqual(
+            speaker_hint("ac7117_001_kuro_走る"),
+            "kuro",
+        )
+        self.assertEqual(
+            speaker_hint("ac7117_003_kuroe_振り返る"),
+            "kuroe",
         )
 
 
