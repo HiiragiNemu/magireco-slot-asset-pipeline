@@ -1,0 +1,192 @@
+{
+  "schema": "magireco-mature-416-route-batch-plan-v1",
+  "status": "mature_route_batch_approved_for_render",
+  "family": "ac7206",
+  "title": "P24 ac7206 六条老虎机选项路线",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "composition_claim": "edited_route_chapter_showcase_not_single_native_session",
+  "uploaded_media_policy": "source_and_uploaded_media_read_only_never_overwrite",
+  "dirinfo_kind": 200,
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7206_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "C16B4E6CE4D1F4ED7A97BF2ACD18F2B9E67AC1EA40763214AEE7FCA30EEB7BB5"
+  },
+  "clean_visual_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7206_full_no_bgm_editions_v1\\masters\\ac7206_full_no_bgm_editions_v1__clean_visual_master.mp4",
+    "sha256": "6B45216B0F3BC7A7392A3C9DD8CD39792EC7C14F6E08DADA53DE46DF2E3C6F27"
+  },
+  "no_bgm_audio_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7206_full_no_bgm_editions_v1\\masters\\ac7206_full_no_bgm_editions_v1__no_bgm_audio_master.m4a",
+    "sha256": "FCF2E4A7927211B5AAA6AA93A420265677250F8AD5C7D6C64E21276037030AAB"
+  },
+  "subtitles_ja": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7206_full_no_bgm_editions_v1\\subtitles\\ac7206_full_no_bgm_editions_v1__ja.srt",
+    "sha256": "886D299C98D31AB3ED6DA012A3C3EFC69215F527338DFBA95BB7A0AA6F2743D4"
+  },
+  "subtitles_zh": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7206_full_no_bgm_editions_v1\\subtitles\\ac7206_full_no_bgm_editions_v1__zh.srt",
+    "sha256": "566B6223C8B8FA29A2BE64299B0010680517B163C621954481358FECFD27E79A"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "routes": [
+    {
+      "route_id": "dirinfo_row20_to_009",
+      "title": "ac7206 路线 1（002→009）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_009"
+      ],
+      "source_rows": [
+        {
+          "row_index": 20,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_009"
+          ]
+        },
+        {
+          "row_index": 30,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_009"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row21_to_010",
+      "title": "ac7206 路线 2（002→010）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_010"
+      ],
+      "source_rows": [
+        {
+          "row_index": 21,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_010"
+          ]
+        },
+        {
+          "row_index": 31,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_010"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row22_to_011",
+      "title": "ac7206 路线 3（002→011）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_011"
+      ],
+      "source_rows": [
+        {
+          "row_index": 22,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_011"
+          ]
+        },
+        {
+          "row_index": 32,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_011"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row23_to_012",
+      "title": "ac7206 路线 4（002→012）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_012"
+      ],
+      "source_rows": [
+        {
+          "row_index": 23,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_012"
+          ]
+        },
+        {
+          "row_index": 33,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_012"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row28_to_013",
+      "title": "ac7206 路线 5（002→013）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_013"
+      ],
+      "source_rows": [
+        {
+          "row_index": 28,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_013"
+          ]
+        },
+        {
+          "row_index": 38,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_013"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row29_to_014",
+      "title": "ac7206 路线 6（002→014）",
+      "render_event_sequence": [
+        "ac7206_002",
+        "ac7206_014"
+      ],
+      "source_rows": [
+        {
+          "row_index": 29,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_014"
+          ]
+        },
+        {
+          "row_index": 39,
+          "raw_event_sequence": [
+            "ac7206_002",
+            "ac7206_014"
+          ]
+        }
+      ]
+    }
+  ]
+}

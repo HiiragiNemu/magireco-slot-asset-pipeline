@@ -1,0 +1,155 @@
+{
+  "schema": "magireco-mature-416-route-batch-plan-v1",
+  "status": "mature_route_batch_approved_for_render",
+  "family": "ac4902",
+  "title": "P12 ac4902 五条去重老虎机选项路线",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "composition_claim": "edited_route_chapter_showcase_not_single_native_session",
+  "uploaded_media_policy": "source_and_uploaded_media_read_only_never_overwrite",
+  "dirinfo_kind": 113,
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "deduplication_proposal": {
+    "path": "ac4902_audience_deduplicated_route_showcase_v1.json",
+    "sha256": "5C23F8EC2B5A1EADBF02583D4A3B2B85529F8984ADF275FF7F5C22E268ADDCEE"
+  },
+  "family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "178011603C41792EF6DFFDE45EE5C0BCF10FC94CDC495ED7E27B45DE2BDF2A76"
+  },
+  "clean_visual_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\masters\\ac4902_full_no_bgm_editions_v1__clean_visual_master.mp4",
+    "sha256": "13C6D9DA13B9CCE8CD8FEE7869833CA625A9297FB10647B398AA4B3A5B5A024A"
+  },
+  "no_bgm_audio_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\masters\\ac4902_full_no_bgm_editions_v1__no_bgm_audio_master.m4a",
+    "sha256": "5E603722009ABAEEFF50BCA1A49D0A1F628A311057653A920483859CF6C982E5"
+  },
+  "subtitles_ja": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\subtitles\\ac4902_full_no_bgm_editions_v1__ja.srt",
+    "sha256": "42CB5ED26544E8F8CADF1E489190BF065D78FF1E51179FCCB3D167BF1CE0DD99"
+  },
+  "subtitles_zh": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\subtitles\\ac4902_full_no_bgm_editions_v1__zh.srt",
+    "sha256": "D4DB0621C0F33338D85AA4038616A275EF9995E91EEF41FF38D928D76463E99E"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "routes": [
+    {
+      "route_id": "dirinfo_row00_to_003",
+      "title": "ac4902 路线 1（001→002→003）",
+      "render_event_sequence": [
+        "ac4902_001",
+        "ac4902_002",
+        "ac4902_003"
+      ],
+      "source_rows": [
+        {
+          "row_index": 0,
+          "raw_event_sequence": [
+            "ac4902_001",
+            "ac4902_002",
+            "ac4902_003"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row01_to_020",
+      "title": "ac4902 路线 2（001→002→020）",
+      "render_event_sequence": [
+        "ac4902_001",
+        "ac4902_002",
+        "ac4902_020"
+      ],
+      "source_rows": [
+        {
+          "row_index": 1,
+          "raw_event_sequence": [
+            "ac4902_001",
+            "ac4902_002",
+            "ac4902_020"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_rows02_11_to_004",
+      "title": "ac4902 路线 3（001→002→004，含精确重复路线）",
+      "render_event_sequence": [
+        "ac4902_001",
+        "ac4902_002",
+        "ac4902_004"
+      ],
+      "source_rows": [
+        {
+          "row_index": 2,
+          "raw_event_sequence": [
+            "ac4902_001",
+            "ac4902_002",
+            "ac4902_004"
+          ]
+        },
+        {
+          "row_index": 11,
+          "raw_event_sequence": [
+            "ac4902_054",
+            "ac4902_055",
+            "ac4902_061"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row09_to_059",
+      "title": "ac4902 路线 4（054→055→059，入口精确去重）",
+      "render_event_sequence": [
+        "ac4902_001",
+        "ac4902_002",
+        "ac4902_059"
+      ],
+      "source_rows": [
+        {
+          "row_index": 9,
+          "raw_event_sequence": [
+            "ac4902_054",
+            "ac4902_055",
+            "ac4902_059"
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo_row10_to_060",
+      "title": "ac4902 路线 5（054→055→060，入口精确去重）",
+      "render_event_sequence": [
+        "ac4902_001",
+        "ac4902_002",
+        "ac4902_060"
+      ],
+      "source_rows": [
+        {
+          "row_index": 10,
+          "raw_event_sequence": [
+            "ac4902_054",
+            "ac4902_055",
+            "ac4902_060"
+          ]
+        }
+      ]
+    }
+  ]
+}
