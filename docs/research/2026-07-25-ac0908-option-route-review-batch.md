@@ -1,5 +1,9 @@
 # 2026-07-25 ac0908 原生 416x232 选项路线审查批次
 
+> 晚间人工更新：项目所有者已播放确认 rows 52–57 的六个**具体 ZH MP4**
+> 语音与字幕时序正常。批准不扩展到 none/JA 或其他 child-local 事件。
+> 参考视频缺失的弱火入口已另做一个 v28 ZH 编辑合集候选，仍需单独复看。
+
 ## 结果
 
 按项目所有者最新优先级，停止新增 512 尺寸生产，先完成一个原生 416x232、
@@ -20,7 +24,8 @@ D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
 `AUTOMATED_SPEC_QA_PASSED_TIMING_RISK_HUMAN_REVIEW_REQUIRED`。根目录
 `TIMING_RISK_STATUS.json` SHA-256：
 `91D44761921497807FE253D577D3C578D63A37B203AE49865AC10E36609C1950`。
-这 18 个文件不是 READY、不是量产成功，也不得进入投稿准备根。
+其中六个 ZH 文件已有精确哈希绑定的人工时序批准；none/JA 不是 READY，也不得
+自动进入投稿准备根。
 内容计数应为 6 条路线、每条 3 个 edition，而不是 18 部不同内容。
 
 ## 路线
@@ -93,10 +98,9 @@ parent-offset 证据。
 
 ## 人工审查边界
 
-当前 `human_playback_approved=false`、`publication_approved=false`，并新增
-`event_global_z2d_timing_ready=false`。ZH 翻译
-文件 `ac0908_option_routes_zh_dialogue_v1.json` 仍标记
-`machine_draft_pending_owner`，不得把自动 QA 当成人工翻译或嘴型批准。
+六个 ZH 的具体文件已 `human_playback_approved=true`，但
+`event_global_z2d_timing_ready=false` 仍保留为逻辑证据边界；none/JA 仍未获
+人工批准。此结论来自项目所有者播放，不是自动 QA 推断。
 
 先看六个 ZH：
 
@@ -109,5 +113,19 @@ P17 `ac6004` 的人工失败说明规格 QA 不足以证明语义音画正确。
 人工检查，不得因视觉上“似乎可接受”而晋升；若人工发现任一路线错位，继续隔离，
 不得统一目测平移。
 
-若六条路线今后全部通过人工时序验收，仍须保留六个独立分段；在此基础上可以再做
-一部“六种菜品路线合集”长版。合集不能替代六个分段，也不能在时序未通过时先做。
+六条 ZH 路线全部通过人工时序观看后继续作为六个独立分段保留。另行生成的
+v28 合集位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\
+  REVIEW_NOW_1_MP4
+```
+
+它补回同一父事件 `ac0908_001` 的饭店外景 `c01_MR` 与侧身炒菜 `c02`，按参考
+编辑顺序排列
+`001→002→001→003→001→004→009→006→009→005→009→007→008`。
+成片 2,745 帧、91.500 秒、416x232、30 fps；SHA-256：
+`53C0A918C043F78D8CB70DC643747C7DEC3FC45D5FA107A91251A347586AFD51`。
+它明确是跨互斥路线的 `reference-derived all-outcomes showcase`，不是一次自然
+session，不能替代六个分段，当前仍需人工复看。

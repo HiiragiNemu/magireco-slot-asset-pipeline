@@ -1,0 +1,80 @@
+{
+  "schema": "magireco-owner-human-playback-approvals-v1",
+  "recorded_date": "2026-07-25",
+  "status": "project_owner_playback_approved",
+  "scope": "Approval is bound only to the exact files and SHA-256 values below. It does not infer approval for sibling editions or composition scopes.",
+  "files": [
+    {
+      "part": "P12",
+      "edition": "ja",
+      "filename": "P12 魔法少女们迎战神滨魔女群 ac4902【去重路线候选】__ja.mp4",
+      "bytes": 28334052,
+      "sha256": "DF3346E45C59DCFBAE566913A9D9D6EE9B0569375B7C2062991F09DD0D9D37E8"
+    },
+    {
+      "part": "P12",
+      "edition": "zh",
+      "filename": "P12 魔法少女们迎战神滨魔女群 ac4902【去重路线候选】__zh.mp4",
+      "bytes": 28295396,
+      "sha256": "6F7D031DE5A4A08E433B9441DB70F82DD400C9E9F565C5BE2372E23BAD836302"
+    },
+    {
+      "part": "P23",
+      "edition": "ja",
+      "filename": "P23 黑江与黑的相遇 ac7117__ja.mp4",
+      "bytes": 18224972,
+      "sha256": "009875BA723DC597D517C8736D4078AB1D570126E1BDE3CFC48D663F4510EF11"
+    },
+    {
+      "part": "P23",
+      "edition": "zh",
+      "filename": "P23 黑江与黑的相遇 ac7117__zh.mp4",
+      "bytes": 18206728,
+      "sha256": "183948615FA074D4E4EE8C525D002226A4A2C27D044FEA1B83D68D4456673720"
+    },
+    {
+      "part": "ac0908 route 52",
+      "edition": "zh",
+      "filename": "ac0908 路线52 桃包选项__zh.mp4",
+      "bytes": 1434061,
+      "sha256": "9348B155E33EA922EBF15C6DB8606357574DCF6B6D9AFCE9B51F4800AF0EDDE0"
+    },
+    {
+      "part": "ac0908 route 53",
+      "edition": "zh",
+      "filename": "ac0908 路线53 中华海蜇选项__zh.mp4",
+      "bytes": 1405041,
+      "sha256": "82BA3E02E59FD810128BD9E1A9273D379D81EA8918393912F685B4293431B298"
+    },
+    {
+      "part": "ac0908 route 54",
+      "edition": "zh",
+      "filename": "ac0908 路线54 天津饭选项__zh.mp4",
+      "bytes": 1621938,
+      "sha256": "FAABAD6B14B5AC3FD5457A7B7181D682ADA098C7C0AB319B2ED902228698E485"
+    },
+    {
+      "part": "ac0908 route 55",
+      "edition": "zh",
+      "filename": "ac0908 路线55 韭菜炒肝选项__zh.mp4",
+      "bytes": 1720355,
+      "sha256": "1A6028D563F77B397A711CFAB8E3DE58F05E8B8B7FD4611FDBD54FBC1581234C"
+    },
+    {
+      "part": "ac0908 route 56",
+      "edition": "zh",
+      "filename": "ac0908 路线56 麻婆豆腐选项__zh.mp4",
+      "bytes": 1698234,
+      "sha256": "4CA0EC34AEE9A09388AA4BB622ED1BEC407761F66E653E3C4DCD0D68356F47F4"
+    },
+    {
+      "part": "ac0908 route 57",
+      "edition": "zh",
+      "filename": "ac0908 路线57 四千年套餐选项__zh.mp4",
+      "bytes": 1922435,
+      "sha256": "64668DCDDFEED74025F877CB7919C1145351632104AEA08E51B3F5055C7DC25F"
+    }
+  ],
+  "ac0908_scope_note": "The six ZH route segments passed owner playback for voice and subtitle timing. This does not prove parent DGM-to-child offsets for unrelated events, does not approve none/JA, and does not make the six mutually exclusive routes one native session.",
+  "p12_scope_note": "P12 remains a route-aware deduplicated showcase, not a complete natural route catalog."
+}

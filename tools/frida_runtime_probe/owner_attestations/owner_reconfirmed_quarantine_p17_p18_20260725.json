@@ -1,0 +1,62 @@
+{
+  "schema": "magireco-owner-human-playback-failures-v1",
+  "recorded_date": "2026-07-25",
+  "status": "quarantine_reconfirmed",
+  "publication_approved": false,
+  "families": [
+    {
+      "part": "P17",
+      "family": "ac6004",
+      "scope": "none/JA/ZH",
+      "root_cause": "Six dialogue requests use child-local Z2D callback timing without a proved parent DGM-to-child event-global instantiation offset; only req3265 has a resolved runtime event manifest.",
+      "missing_dialogue": "ac6004_006 request3260, official voice duration 7.899 seconds, is absent from the old release.",
+      "forbidden_fix": "No global visual shift. Repair each request and child Z2D with a hash-bound parent offset and validate the expected request set.",
+      "review_intervals": [
+        "00:00.000-00:13.000",
+        "00:22.600-00:28.333",
+        "00:38.400-00:46.900"
+      ],
+      "files": [
+        {
+          "edition": "none",
+          "sha256": "0B94F6F4F89AD91301406378FB4A1B2DCD559EE105381681060F72EEA2664AC3"
+        },
+        {
+          "edition": "ja",
+          "sha256": "9BCF0D762DD70DCE86864965838EA82C6EC60D512929D62FE6537D8C58DA9EF8"
+        },
+        {
+          "edition": "zh",
+          "sha256": "5C91E0BF29EE13707C3A8C5350FE6FBFF5DD0F1B53F7EF6CC82760391E1A9A19"
+        }
+      ]
+    },
+    {
+      "part": "P18",
+      "family": "ac6005",
+      "scope": "none/JA/ZH CU-success candidate",
+      "reported_failures": [
+        "mouth motion occurs while voice is absent",
+        "mouth motion occurs while subtitles are absent in JA/ZH",
+        "voice starts before the corresponding mouth motion",
+        "subtitles start before the corresponding mouth motion in JA/ZH",
+        "possible missing dialogue remains unresolved"
+      ],
+      "forbidden_fix": "Do not apply one visual guess or one global shift. Rebuild component composition and presentation timing from logical evidence.",
+      "files": [
+        {
+          "edition": "none",
+          "sha256": "D06DE03FD23B5EF8B267141ECE0E1DB596EAEBD520FABBAD7C274F223FBA7161"
+        },
+        {
+          "edition": "ja",
+          "sha256": "DCD58F978093AA401752E6623911888ECBF370AD964DFE52F02B0979EF5601FA"
+        },
+        {
+          "edition": "zh",
+          "sha256": "DE095E2BC8F1A56D09FF9B642A092B14D00DACEF33B3C706B2DD71A83629B438"
+        }
+      ]
+    }
+  ]
+}

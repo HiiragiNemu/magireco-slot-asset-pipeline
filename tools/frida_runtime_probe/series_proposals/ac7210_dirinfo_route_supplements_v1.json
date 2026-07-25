@@ -1,0 +1,148 @@
+{
+  "schema": "magireco-ac7210-route-supplement-plan-v1",
+  "status": "finite_human_review_candidate",
+  "series": "ac7210",
+  "release_id": "ac7210_dirinfo_route_supplements_zh_v1",
+  "uploaded_media_policy": "preserve_exact_uploaded_p25_read_only_never_overwrite",
+  "presentation_boundary_policy": "hold_last_frame_to_verified_parent_scene_audio_tail_manual_review_only",
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "uploaded_p25_zh": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\zh\\P25 八千代与鹤乃的火箭突击 ac7210__zh.mp4",
+    "sha256": "02EC2353B3130E7A911BBAD2966BA1DB312E47E168894680EEDB8A9856830B15"
+  },
+  "v24_family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7210_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "4BCF07739F0D074EA2030CF2E53DCE00CEFACB2BBBC97A0AD6F6160D096929B2"
+  },
+  "v24_zh_srt": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7210_full_no_bgm_editions_v1\\subtitles\\ac7210_full_no_bgm_editions_v1__zh.srt",
+    "sha256": "B7E4A4E73FD883BDFB375537EFC6A6CACC1B2BE9F2B0AE8789B8523107AE859E"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "existing_events": {
+    "ac7210_001": {
+      "frame_count": 255,
+      "expected_zh_cue_count": 1,
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_batch_inputs\\events\\ac7210_001.json",
+        "sha256": "6E7FC94FA3465D84EB4F070C4F4DCADB4BAFB9C875AA2D7A16A998491C14F8C5"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_event_clean_visuals\\ac7210_001\\clean_visual\\ac7210_001__clean_visual.mp4",
+        "sha256": "42923327A73867FCCF1A242BA3E91A4A4502BA9E656855FA450AB5BB24403EA9"
+      }
+    },
+    "ac7210_004": {
+      "frame_count": 214,
+      "expected_zh_cue_count": 2,
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_batch_inputs\\events\\ac7210_004.json",
+        "sha256": "FECE5533699D1F04777D65053AA0B5B830EFD2828939A9D4E531E225F81A366F"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_event_clean_visuals\\ac7210_004\\clean_visual\\ac7210_004__clean_visual.mp4",
+        "sha256": "63EAC88E3D753D42E8F9E2F139A6C972953F777164FF3A9A93B42F2FC0DCD482"
+      }
+    },
+    "ac7210_005": {
+      "frame_count": 430,
+      "expected_zh_cue_count": 1,
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_batch_inputs\\events\\ac7210_005.json",
+        "sha256": "6C4429870E152B366FA817D7A55B1E44C30CD5749575A7F9F0155F1155965E8D"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\_event_clean_visuals\\ac7210_005\\clean_visual\\ac7210_005__clean_visual.mp4",
+        "sha256": "FBD304A386CF83FD8726D5548A3C33A8FDA468840FE6FBBB28D91AB73BF8D991"
+      }
+    }
+  },
+  "manual_events": {
+    "ac7210_002": {
+      "target_frame_count": 233,
+      "audio_request_id": "2258",
+      "clips": [
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_002_c01_MR.mp4",
+          "sha256": "57F9FA24854201E670C16458D37E616354F2D09A7F66C3EAD34E27AE5D7B7FEF",
+          "frame_count": 30
+        },
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_002_c02_MR.mp4",
+          "sha256": "F818C680052618EB92F3616554E7B265300CD18292D2BDBAD3D010CB5BE7CFD4",
+          "frame_count": 90
+        },
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_002_c03_LP_MR.mp4",
+          "sha256": "108009813BFA3F27D59B7E2A38B3F6CEE4DCDB3531729846461BEEFC12E65A59",
+          "frame_count": 30
+        },
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_002_c03_MR.mp4",
+          "sha256": "108009813BFA3F27D59B7E2A38B3F6CEE4DCDB3531729846461BEEFC12E65A59",
+          "frame_count": 30
+        }
+      ],
+      "scene_audio": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_11201_bank03_ogg_00471.ogg",
+        "sha256": "803334DF6D99FEBE56BA78E364BB84008CEECAB1062B772CD3329CCCA31FAD28"
+      }
+    },
+    "ac7210_003": {
+      "target_frame_count": 222,
+      "audio_request_id": "2259",
+      "clips": [
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_003_MR.mp4",
+          "sha256": "219F4F31FDC0265052DBF035A0A71B068D8F02EB3E2CB6ACBC2895EC0E7504BC",
+          "frame_count": 83
+        },
+        {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7210\\ac7210_003_LP_MR.mp4",
+          "sha256": "D9C5B0E369845FA43962B2FABEF3818C55DD2407EFB947D058B8D8F6F12F80A4",
+          "frame_count": 42
+        }
+      ],
+      "scene_audio": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_11202_bank03_ogg_00472.ogg",
+        "sha256": "331C0C2EBC4128616F1AD944CAF26954A667EFFAA567A233BCF90C66281DBB17"
+      }
+    }
+  },
+  "routes": [
+    {
+      "dirinfo_row": 0,
+      "route_id": "ac7210_dirinfo_row0",
+      "title": "P25补全路线0 火箭突击",
+      "ordered_events": [
+        "ac7210_001",
+        "ac7210_002",
+        "ac7210_003",
+        "ac7210_004"
+      ],
+      "expected_frame_count": 924
+    },
+    {
+      "dirinfo_row": 1,
+      "route_id": "ac7210_dirinfo_row1",
+      "title": "P25补全路线1 火箭突击",
+      "ordered_events": [
+        "ac7210_001",
+        "ac7210_005",
+        "ac7210_003",
+        "ac7210_004"
+      ],
+      "expected_frame_count": 1121
+    }
+  ]
+}

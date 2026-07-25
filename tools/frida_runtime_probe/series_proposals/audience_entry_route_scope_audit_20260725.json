@@ -1,0 +1,122 @@
+{
+  "schema": "magireco-current-audience-entry-route-scope-audit-v1",
+  "recorded_date": "2026-07-25",
+  "status": "risk_register_not_automatic_rebuild_authorization",
+  "scope": "Existing audience long products and current production manifests only; not a scan of all game events.",
+  "classification_policy": {
+    "A": "A public or mandatory entry/connector is absent; the existing long product is composition-incomplete.",
+    "B": "A mutually exclusive entry, option, or ending is absent; produce an independent route or chapter, never insert it into one claimed natural playthrough.",
+    "C": "Gameplay, frame, particle, effect, or component-only material; keep separate from the clean story product."
+  },
+  "evidence": {
+    "dirinfo_routes": {
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    "audience_event_catalog": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+      "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+    }
+  },
+  "class_A_existing_uploaded_zh": [
+    {
+      "part": "P13",
+      "family": "ac4903",
+      "current_order": [
+        "ac4903_002",
+        "ac4903_003",
+        "ac4903_004",
+        "ac4903_005",
+        "ac4903_006",
+        "ac4903_009",
+        "ac4903_010",
+        "ac4903_011",
+        "ac4903_012",
+        "ac4903_013"
+      ],
+      "mandatory_missing": [
+        "ac4903_001"
+      ],
+      "class_B_route_entries_or_endings": [
+        "ac4903_007",
+        "ac4903_016",
+        "ac4903_018",
+        "ac4903_008",
+        "ac4903_015"
+      ],
+      "action": "Produce DirInfo-row chapters; start with native 416 full-frame routes. Keep unresolved ac4903_015 composition fail-closed."
+    },
+    {
+      "part": "P19",
+      "family": "ac6007",
+      "current_order": [
+        "ac6007_002",
+        "ac6007_003",
+        "ac6007_004",
+        "ac6007_005",
+        "ac6007_006"
+      ],
+      "mandatory_missing": [
+        "ac6007_001"
+      ],
+      "route_error": "The current product flattens mutually exclusive row0 and row1, and places ac6007_004 incorrectly for row1.",
+      "action": "Produce row0 001-002-003-004 and row1 001-005-006-004 as separate chapters after resolving the multi-layer ac6007_001 plan."
+    },
+    {
+      "part": "P24",
+      "family": "ac7206",
+      "current_order": "ac7206_002 through ac7206_014 flattened",
+      "mandatory_missing": [
+        "ac7206_001 for the first route group"
+      ],
+      "route_error": "Two entry groups and twelve mutually exclusive outcomes were flattened.",
+      "action": "Separate the ac7206_001 and ac7206_002 route groups and retain route chapters; keep ac7206_015 fail-closed."
+    },
+    {
+      "part": "P25",
+      "family": "ac7210",
+      "current_order": [
+        "ac7210_001",
+        "ac7210_004",
+        "ac7210_005"
+      ],
+      "mandatory_missing": [
+        "ac7210_003"
+      ],
+      "route_error": "DirInfo row0 is 001-002-003-004 and row1 is 001-005-003-004; the current product is neither route.",
+      "action": "Produce two independent native 416 route candidates. Do not overwrite the uploaded exact ZH file."
+    }
+  ],
+  "class_B_followup": [
+    {
+      "part": "P12",
+      "family": "ac4902",
+      "status": "owner-playback-approved deduplicated route showcase, not a natural or complete route catalog",
+      "missing_selector_entries": [
+        "ac4902_005",
+        "ac4902_014",
+        "ac4902_017",
+        "ac4902_056",
+        "ac4902_057",
+        "ac4902_058"
+      ]
+    },
+    {
+      "part": "P10",
+      "family": "ac5203",
+      "status": "missing route entries ac5203_001/ac5203_010/ac5203_011; 512 multi-layer work remains low priority"
+    },
+    {
+      "part": "P16-P18",
+      "status": "remain quarantined; route gaps do not supersede their existing timing and composition blockers"
+    }
+  ],
+  "no_class_A_public_entry_omission_found": [
+    "P11 ac0911",
+    "P14 ac5301",
+    "P15 ac5303",
+    "P20 ac7112",
+    "P21/P22 ac7113"
+  ],
+  "class_C_note": "Unselected ac7112/ac7113/ac7117 material is primarily component pairing or gameplay/effect content and must not be appended by event-number gap."
+}

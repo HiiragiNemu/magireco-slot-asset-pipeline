@@ -2,6 +2,83 @@
 
 更新时间：2026-07-25
 
+## 2026-07-25 晚间人工状态、入口遗漏审计与 416 路线补全
+
+项目所有者已确认此前批准的 P11、P13、P14、P15、P19、P20、P21、P22、
+P24、P25 共 10 个**具体 ZH MP4**已经由本人投稿。精确文件与 SHA-256 记录在
+`owner_attestations/owner_uploaded_10zh_20260725.json`；这不扩展到 none/JA，
+Codex 没有执行上传，也不会覆盖已投稿文件。
+
+最新人工播放状态按具体文件绑定：
+
+- P12 最新去重路线候选 JA/ZH 与 P23 身份纠正候选 JA/ZH 均已确认可用；
+- ac0908 DirInfo rows 52–57 的六个具体 ZH 路线分段，语音与字幕时序已确认正常；
+  none/JA 没有自动获得批准，此批准也不外推到其他 child-local 事件；
+- P17 none/JA/ZH 继续隔离：除 6 条 child-local 起点未闭合外，
+  `ac6004_006` 还漏掉 request 3260 的整条 7.899 秒对白；
+- P18 CU 成功候选 none/JA/ZH 继续隔离：嘴动时无声／无字幕，声音与字幕又在
+  对应嘴动前出现，并且疑似漏对白。
+
+精确哈希与边界分别记录在
+`owner_playback_approved_p12_p23_ac0908_20260725.json` 和
+`owner_reconfirmed_quarantine_p17_p18_20260725.json`。
+
+ac0908 与参考片顺序不同的原因已经闭合：v27 只实现 DirInfo kind 33
+rows 52–57 的强火入口子路线 `009 → 单一菜品 → 008`；参考片是跨互斥路线的
+编辑合集，另含弱火入口 `ac0908_001`，其同一父事件内先播放饭店外景
+`c01_MR`，再播放侧身炒菜 `c02`。现已生成一个仅含 ZH 的原生 416x232 补全
+审查片：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\
+  REVIEW_NOW_1_MP4
+```
+
+成片顺序为
+`001 → 002 → 001 → 003 → 001 → 004 → 009 → 006 → 009 → 005 →
+009 → 007 → 008`，2,745 帧、91.500 秒，H.264/AAC 48 kHz stereo。
+MP4 SHA-256 为
+`53C0A918C043F78D8CB70DC643747C7DEC3FC45D5FA107A91251A347586AFD51`。
+清单与自动 QA 已改用版本根内相对路径；`SHOWCASE_MANIFEST.json`、
+`AUTOMATED_QA.json` 和审查目录 `MANIFEST_SHA256.json` 的 SHA-256 分别为
+`F77FFFF0674D41DAC7CFC9A7357EA8DF6B4C1FB9A2152E2261E7FD631DF05C4B`、
+`04F47F309D0CBB425F1C62DD4A81F46FED2AB96EB1CF44605D31125C9F53DEA6`、
+`3FAC6584AB661542A843C02A9FFB4731F39B3F2C1BB294ABA8816905EBFDCB52`。
+参考片只作为顺序和入口呈现时长证据，未取用其像素或音频。该片明确是
+`reference-derived all-outcomes showcase`，不是一次原生游戏 session，当前仍
+`HUMAN_REVIEW_REQUIRED`；原六个 ZH 路线分段继续保留。
+
+对现有 audience 长产品的有限入口审计还确认 4 个已投稿 ZH 存在 A 类公共入口或
+连接段遗漏／路线扁平化：P13 `ac4903`、P19 `ac6007`、P24 `ac7206`、
+P25 `ac7210`。这不否定已投稿文件的片内播放批准，只说明它们不能代表完整自然
+family。风险表在
+`series_proposals/audience_entry_route_scope_audit_20260725.json`，严格区分：
+A 公共必经遗漏、B 互斥路线另产、C 玩法／外框／组件另集。
+
+其中 P25 已先补两条独立 416 路线：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v29_p25_ac7210_route_supplements_zh_20260725\
+  REVIEW_NOW_2_MP4
+```
+
+- row 0：`001 → 002 → 003 → 004`，924 帧、30.800 秒，
+  SHA-256 `8927CFDF7497B63B4FA47D7D9DB0C340FC837596547F3B9F4E8E15C764079088`；
+- row 1：`001 → 005 → 003 → 004`，1,121 帧、37.366667 秒，
+  SHA-256 `990407DD95ABC18911782AFA9F2EC7AA3E2F17997BA9F716892D1AFFB1A06849`。
+
+`SUPPLEMENT_MANIFEST.json` 与审查目录 `MANIFEST_SHA256.json` 的 SHA-256
+分别为
+`3BE75ADC29B257D1678EE0CE7FECCB7EA1AA89404FFB014AA710A5A9BF5DCE5E`、
+`0097F0456CFAE9F59871A059904AAA8C2B84498318FDDA155F4B72B16F108EF0`。
+
+`_002/_003` 的父 EventInfo 场景声分别长于静态视觉，缺少同-run 下一事件启动
+边界；候选按声音尾部保持最后一帧，故标为
+`PRESENTATION_BOUNDARY_RISK_HUMAN_REVIEW_REQUIRED`，不得直接投稿。
+P13/P24/P19/P12 的后续补全依证据成熟度继续，不能机械串入一部自然播放。
+
 ## 2026-07-25 人工播放纠错与上下文迁移
 
 最新、完整的接手说明位于：
@@ -32,9 +109,9 @@ D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
 - P23：JA/ZH 两版，146.033 秒；只对授权的 9634/9635/9638/9663 标注黑，
   `kuroe` 仍为黑江，标题候选为“黑江与黑的相遇 ac7117”。
 
-P12/P23 自动 QA 通过但仍是 `HUMAN_PLAYBACK_APPROVED=false`、
-`publication_approved=false`。自动规格 QA 未能发现 P18 的语义时序错误，不能覆盖
-人工播放否决。P12/P18/P23 旧版与尚未修复的 P16 旧版共 12 个
+P12/P23 自动 QA 通过，且上述四个**具体最新文件**现已获人工播放可用确认；
+批准不扩展到旧版或其他 edition。自动规格 QA 未能发现 P18 的语义时序错误，
+不能覆盖人工播放否决。P12/P18/P23 旧版与尚未修复的 P16 旧版共 12 个
 none/JA/ZH MP4 已全部移出活跃投稿目录，保存在
 `quarantine_pending_fix_20260725`。项目所有者随后人工否决 P17 `ac6004`：
 角色嘴型与语音／字幕严重错位，共用风险时间线的 none/JA/ZH 三版已移至
@@ -50,8 +127,8 @@ hash-bound parent offset。production manifest builder 现对此 fail-closed：
 缺 resolved runtime event manifest 或父子实例化偏移时，
 `event_global_z2d_timing_ready=false`、`render_ready=false`。
 
-项目所有者已完整确认其中 10 个具体 ZH 文件可投稿：P11、P13、P14、P15、P19、
-P20、P21、P22、P24、P25。精确文件名与 SHA-256 位于
+项目所有者已完整确认并由本人投稿其中 10 个具体 ZH 文件：P11、P13、P14、P15、
+P19、P20、P21、P22、P24、P25。精确文件名与 SHA-256 位于
 `audit\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json`，文件 SHA-256 为
 `62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C`。
 此批准不扩展到未观看的 none/JA。
@@ -85,7 +162,8 @@ ac0908 已按 DirInfo kind 33 rows 52–57 建立六条独立路线，每条保�
 全部通过，但后续只读审计确认 `_002` 至 `_009` 都没有 resolved runtime event
 manifest 或父 DGM→子 Z2D 的事件全局实例化偏移；全部对白仍只是 child-local
 callback 时点。因此 18 个文件现为 timing-risk 有限人工候选，不是 READY 或量产
-成功。人工播放与投稿批准仍为 false，ZH 翻译仍是待所有者确认的机器草案。
+成功。六个具体 ZH 文件的语音／字幕时序现已获项目所有者播放确认；none/JA
+仍未批准，且逻辑上的 parent-offset 风险没有因此外推闭合。
 审查入口：
 
 ```text
@@ -105,8 +183,8 @@ D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
 
 未来 416 产品合同以 ac1102 同类“保留自然分段的 family 长片”为首选。
 ac0908 当前是 6 条路线 × none/JA/ZH 3 edition = 18 个文件，不是 18 部内容；
-仅在六条路线人工时序通过后，才可保留六个分段并额外制作一部“六种菜品路线
-合集”长版。
+六条 ZH 路线分段已通过人工时序观看，并已保留。另行生成的 v28“六种菜品入口
+补全参考合集”仍需单独观看，不能从分段批准自动晋升。
 
 ## 2026-07-24 系统重装恢复与 no-BGM 全面扩产
 

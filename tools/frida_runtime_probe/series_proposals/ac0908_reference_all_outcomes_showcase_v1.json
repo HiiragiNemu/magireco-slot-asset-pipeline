@@ -1,0 +1,307 @@
+{
+  "schema": "magireco-ac0908-reference-showcase-plan-v1",
+  "status": "finite_human_review_candidate",
+  "series": "ac0908",
+  "release_id": "ac0908_reference_all_outcomes_showcase_zh_v1",
+  "title": "ac0908 六种菜品入口补全参考合集",
+  "session_claim": "edited_cross_route_showcase_not_one_native_session",
+  "external_reference_policy": "ordering_and_entry_presentation_only_no_reference_pixels_or_audio",
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "upscale": false
+  },
+  "reference": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\reference_bilibili\\BV1bfVJ6rEuJ__我炒锅都抡冒烟了_reference.mp4",
+    "sha256": "D53A636F4BAE759DFC7534AE2C8F401490A9AD39860A4D5F4392F8F7B0D0166C"
+  },
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "entry_sources": {
+    "exterior_visual": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0908\\ac0908_001_c01_MR.mp4",
+      "sha256": "89B9B01E8F12665EBA87D53D5DC7AFC95347847EC485A59B0407F340C0CE29B1"
+    },
+    "side_cooking_visual": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0908\\ac0908_001_c02.mp4",
+      "sha256": "F5AD3601FF637189B641E57EBD8A4C181A18807AF85B2C95232A29DA5A378487"
+    },
+    "scene_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_02650_bank03_ogg_06698.ogg",
+      "sha256": "A1ACB520182C54F0B2710DDB690B645E9BB1809523A2B9CEC38B8673BC1EBDA7"
+    }
+  },
+  "owner_playback_approved_zh_routes": [
+    {
+      "dirinfo_row": 52,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线52 桃包选项__zh.mp4",
+      "sha256": "9348B155E33EA922EBF15C6DB8606357574DCF6B6D9AFCE9B51F4800AF0EDDE0"
+    },
+    {
+      "dirinfo_row": 53,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线53 中华海蜇选项__zh.mp4",
+      "sha256": "82BA3E02E59FD810128BD9E1A9273D379D81EA8918393912F685B4293431B298"
+    },
+    {
+      "dirinfo_row": 54,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线54 天津饭选项__zh.mp4",
+      "sha256": "FAABAD6B14B5AC3FD5457A7B7181D682ADA098C7C0AB319B2ED902228698E485"
+    },
+    {
+      "dirinfo_row": 55,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线55 韭菜炒肝选项__zh.mp4",
+      "sha256": "1A6028D563F77B397A711CFAB8E3DE58F05E8B8B7FD4611FDBD54FBC1581234C"
+    },
+    {
+      "dirinfo_row": 56,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线56 麻婆豆腐选项__zh.mp4",
+      "sha256": "4CA0EC34AEE9A09388AA4BB622ED1BEC407761F66E653E3C4DCD0D68356F47F4"
+    },
+    {
+      "dirinfo_row": 57,
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\REVIEW_NOW_18_MP4\\ac0908 路线57 四千年套餐选项__zh.mp4",
+      "sha256": "64668DCDDFEED74025F877CB7919C1145351632104AEA08E51B3F5055C7DC25F"
+    }
+  ],
+  "events": {
+    "ac0908_002": {
+      "route_row": 52,
+      "frame_count": 270,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "2E055D8EDD2779E7A6C6764AD3BEDBC8D75FC0A752ADBE588D846B961FB1641E"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_batch_inputs\\events\\ac0908_002.json",
+        "sha256": "A1AA2C6F8A5A75714A56BB3AE757667C2A301FF1CB290A988189FE4536B2C612"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_event_clean_visuals\\ac0908_002\\clean_visual\\ac0908_002__clean_visual.mp4",
+        "sha256": "85CE107A72A0299C4656CC00A443F84A19D54F48F2C2D4549BC2EE3830BD013D"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "DB74B89CD57F2E3E5E1142C98D2F53D91EF66DEEE7708B094CB54F0EDAB16115"
+      }
+    },
+    "ac0908_003": {
+      "route_row": 53,
+      "frame_count": 270,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_53\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "747ED9E2496EA7CCB9FA7582AB2BE722179114687DE7FE24C4DD38FBEC1A89E6"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_53\\_batch_inputs\\events\\ac0908_003.json",
+        "sha256": "8876B75F885845B8363FA4EB448743181E9698F55B19BBF1140F3F1289D79879"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_53\\_event_clean_visuals\\ac0908_003\\clean_visual\\ac0908_003__clean_visual.mp4",
+        "sha256": "8C4C87448E69DD7E72BAAC19EB6556F81CABA9E502111B685B168896FDBCDC49"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_53\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "D2D7A1199A4BB1455E1507E0C5DBB40E2CFAC8AABFD28B88D66DA724057E66BD"
+      }
+    },
+    "ac0908_004": {
+      "route_row": 54,
+      "frame_count": 270,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_54\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "00B5C2F01EE6831F45C51C328DA7E60A7146E5CFB0615B67A56312905FECA0B2"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_54\\_batch_inputs\\events\\ac0908_004.json",
+        "sha256": "851E263C3995A0A049691FB7CBB018D906F9AD26C0084ABC0A35C3A90D772FE0"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_54\\_event_clean_visuals\\ac0908_004\\clean_visual\\ac0908_004__clean_visual.mp4",
+        "sha256": "5B9A50218BEC0F3C816480CE250F37D72674EBC1C8256EAE036EE6A233887EB5"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_54\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "6B8DEDFF76607B07779799674F41D29B5565E84D21D7043D91E94F235140F297"
+      }
+    },
+    "ac0908_005": {
+      "route_row": 55,
+      "frame_count": 270,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_55\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "E2B4826EE46A11732EC6FFF1806D84A311C081723413E2F49434C4DBA7D63986"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_55\\_batch_inputs\\events\\ac0908_005.json",
+        "sha256": "A5C5C5F00898683DCEB7697BB5537C70098E522DCC5C4D77354EE0BF9A44EF12"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_55\\_event_clean_visuals\\ac0908_005\\clean_visual\\ac0908_005__clean_visual.mp4",
+        "sha256": "85085A680D9002CEE4C5FBDF66DD34DA6AA71DFE36D946E7D62BFD32D5E7CBE4"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_55\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "F16C5739A0C55B6FDC4C3CB91C67EF90C8D72FAF570770B8B2F89752E5232B2D"
+      }
+    },
+    "ac0908_006": {
+      "route_row": 56,
+      "frame_count": 270,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_56\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "57247B502CD1DAA4E050A5DDAA6243EAA1BFAEDA435AC2100234D7034D5BB190"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_56\\_batch_inputs\\events\\ac0908_006.json",
+        "sha256": "797E180A341AAB06B3DDE21775E86A1145BC0763629BEE0A9C06BDE4D6B0A792"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_56\\_event_clean_visuals\\ac0908_006\\clean_visual\\ac0908_006__clean_visual.mp4",
+        "sha256": "CDB9EE58199782AF170849F7C53197725CB17C109D3C5392B64335949E53133C"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_56\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "CB6AB5BCDE6B866165B3FFC6285AD03E4311D4CEC3E637C53FECDE6C1E422BA0"
+      }
+    },
+    "ac0908_007": {
+      "route_row": 57,
+      "frame_count": 201,
+      "expected_zh_cue_count": 1,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_57\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "AA7A92C253183465C234CD1AAD50F62F04E9180884354CCAD6B9736A842B823B"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_57\\_batch_inputs\\events\\ac0908_007.json",
+        "sha256": "AE94CE6373C1C5FC4CB8FAC8DE08F3ED9AEF86EEAEE588BE41A072521312C9E7"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_57\\_event_clean_visuals\\ac0908_007\\clean_visual\\ac0908_007__clean_visual.mp4",
+        "sha256": "20DD6C47B4EBD7EDA6485024BD08DA1725D470094BE3FEB586AEA9EC61C598E2"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_57\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "2D1A31F9397F7093974173C855ED277B970C9873D034A20DCCDF8362EAF91127"
+      }
+    },
+    "ac0908_008": {
+      "route_row": 52,
+      "frame_count": 241,
+      "expected_zh_cue_count": 3,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "2E055D8EDD2779E7A6C6764AD3BEDBC8D75FC0A752ADBE588D846B961FB1641E"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_batch_inputs\\events\\ac0908_008.json",
+        "sha256": "8E2A8E8ED6DDABD0372BD1D891A468325F8D1B176440AC9C48864D0F6A511272"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_event_clean_visuals\\ac0908_008\\clean_visual\\ac0908_008__clean_visual.mp4",
+        "sha256": "B5E2F45E8F71FD2666242835D3FD9FA8753BF962F0DF0CBB53BF1A44D2E2AE16"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "DB74B89CD57F2E3E5E1142C98D2F53D91EF66DEEE7708B094CB54F0EDAB16115"
+      }
+    },
+    "ac0908_009": {
+      "route_row": 52,
+      "frame_count": 139,
+      "expected_zh_cue_count": 2,
+      "family_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "2E055D8EDD2779E7A6C6764AD3BEDBC8D75FC0A752ADBE588D846B961FB1641E"
+      },
+      "prepared_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_batch_inputs\\events\\ac0908_009.json",
+        "sha256": "305DA4EBC515F05A063A5C21414D4074B94C060C1DAC767CC21083821DDEA835"
+      },
+      "clean_visual": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\_event_clean_visuals\\ac0908_009\\clean_visual\\ac0908_009__clean_visual.mp4",
+        "sha256": "A25A62513979F3B533DD6FEBCC6688A7B4805BF4BFB20F233D7F802F881B16AE"
+      },
+      "zh_srt": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v27_ac0908_option_routes_20260725\\route_52\\ac0908_full_no_bgm_editions_v1\\subtitles\\ac0908_full_no_bgm_editions_v1__zh.srt",
+        "sha256": "DB74B89CD57F2E3E5E1142C98D2F53D91EF66DEEE7708B094CB54F0EDAB16115"
+      }
+    }
+  },
+  "occurrences": [
+    {
+      "id": "weak_entry_with_exterior_01",
+      "event": "ac0908_001",
+      "include_exterior": true,
+      "frame_count": 187
+    },
+    {
+      "id": "peach_bun_outcome",
+      "event": "ac0908_002"
+    },
+    {
+      "id": "weak_entry_side_only_02",
+      "event": "ac0908_001",
+      "include_exterior": false,
+      "frame_count": 207
+    },
+    {
+      "id": "jellyfish_outcome",
+      "event": "ac0908_003"
+    },
+    {
+      "id": "weak_entry_side_only_03",
+      "event": "ac0908_001",
+      "include_exterior": false,
+      "frame_count": 142
+    },
+    {
+      "id": "tenshinhan_outcome",
+      "event": "ac0908_004"
+    },
+    {
+      "id": "strong_entry_01",
+      "event": "ac0908_009"
+    },
+    {
+      "id": "mapo_tofu_outcome",
+      "event": "ac0908_006"
+    },
+    {
+      "id": "strong_entry_02",
+      "event": "ac0908_009"
+    },
+    {
+      "id": "liver_chive_outcome",
+      "event": "ac0908_005"
+    },
+    {
+      "id": "strong_entry_03",
+      "event": "ac0908_009"
+    },
+    {
+      "id": "four_thousand_year_meal_outcome",
+      "event": "ac0908_007"
+    },
+    {
+      "id": "shared_score_outro",
+      "event": "ac0908_008"
+    }
+  ]
+}

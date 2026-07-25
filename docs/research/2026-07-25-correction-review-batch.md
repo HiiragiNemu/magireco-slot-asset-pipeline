@@ -1,8 +1,8 @@
 # 2026-07-25 P12/P18/P23 纠错人工审查批次
 
-> 2026-07-25 人工播放更新：P18 已被项目所有者判定失败并 fail-closed 隔离。
-> 当前审查入口只剩 P12/P23 共 4 个 MP4；下文 P18 的自动 QA 结果仅保留为
-> 被否决候选的技术记录，不能解释为可投稿。
+> 2026-07-25 人工播放更新：P12/P23 当前 4 个具体 JA/ZH 文件已被项目所有者
+> 确认可用；P18 仍被 fail-closed 隔离。批准只绑定本文哈希，不恢复旧版，
+> 也不把 P12 路线展示候选解释成一条自然路线。
 
 ## 结果
 
@@ -18,6 +18,11 @@ D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
 SHA-256 为
 `847DB95371651651EA8921E66485F016356E83B4ED3101768355542FB1801369`，
 绑定当前 4 个成品。大型媒体不进入 GitHub。
+
+四个具体文件的人工批准记录位于
+`tools/frida_runtime_probe/owner_attestations/
+owner_playback_approved_p12_p23_ac0908_20260725.json`。当前可用不等于由 Codex
+投稿；用户仍自行决定后续投稿。
 
 ## P12
 
@@ -74,8 +79,8 @@ QA   6DB18E8D9BDD5AEF4230642ECCD3A5211EC8F23CFB2FAE2235C90C55FA16ABAE
 ```
 
 这是有限静态证据 composition 候选，不是人工批准的最终版。项目所有者完整播放后
-确认它严重失败：语音与嘴型不符、两人声音时序疑似错误、字幕时序错误，并疑似漏掉
-对白。因此三版均已从审查入口移至：
+确认它严重失败：角色嘴动时没有声音／字幕，声音与字幕又出现在对应嘴动前，并疑似
+漏掉对白。因此三版均已从审查入口移至：
 
 ```text
 D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
@@ -113,8 +118,8 @@ P17 的精确根因不是编码漂移：`005→006→008→011→012` 中仅 req
 manifest 门禁会在缺少父 DGM→子 Z2D 实例化偏移时 fail-closed；修复必须校验
 expected request set 并逐 request 绑定父级偏移，禁止统一目测平移。
 
-项目所有者已完整确认 P11/P13/P14/P15/P19/P20/P21/P22/P24/P25 的 10 个具体
-ZH MP4 可投稿。精确文件名、字节数和 SHA-256 见上传根
+项目所有者已完整确认并由本人投稿 P11/P13/P14/P15/P19/P20/P21/P22/P24/P25
+的 10 个具体 ZH MP4。精确文件名、字节数和 SHA-256 见上传根
 `audit\HUMAN_PLAYBACK_APPROVALS_ZH_20260725.json`；文件自身 SHA-256 为
 `62B9E9EC7B0BC65AE3D4F23298C1A547FE5215FEDB0F473E9597C275531D514C`。
 none/JA 未获自动批准。
