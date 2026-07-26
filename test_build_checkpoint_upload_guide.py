@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,6 +13,38 @@ import build_checkpoint_upload_guide as module  # noqa: E402
 
 
 class BuildCheckpointUploadGuideTest(unittest.TestCase):
+    def test_nested_hash_bound_plan_overlays_merge(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            base = root / "base.json"
+            middle = root / "middle.json"
+            top = root / "top.json"
+            base.write_text(
+                '{"schema":"x","target_bvs":{"a":"A"},'
+                '"directories":{"d":"D"},"sources":{"s":{"path":"x"}}}\n',
+                encoding="utf-8",
+            )
+            middle.write_text(
+                (
+                    '{"base_plan":{"path":"base.json","sha256":"'
+                    + module.file_sha256(base)
+                    + '"},"target_bvs":{"b":"B"}}\n'
+                ),
+                encoding="utf-8",
+            )
+            top.write_text(
+                (
+                    '{"base_plan":{"path":"middle.json","sha256":"'
+                    + module.file_sha256(middle)
+                    + '"},"directories":{"e":"E"}}\n'
+                ),
+                encoding="utf-8",
+            )
+            plan, snapshots = module._load_plan_with_bases(top)
+            self.assertEqual(plan["target_bvs"], {"a": "A", "b": "B"})
+            self.assertEqual(plan["directories"], {"d": "D", "e": "E"})
+            self.assertEqual(len(snapshots), 2)
+
     def test_media_extraction_ignores_excluded_rows(self) -> None:
         value = {
             "routes": [
@@ -66,6 +99,64 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             module._batch_target(plan, "ac0911", "route"),
             "new ac0911 BV",
         )
+
+    def test_owner_approved_mixed_chapters_bind_all_exact_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            releases = []
+            specs = []
+            for release_id in ("ac1102_test", "ac1103_test"):
+                release_root = root / release_id
+                paths = {
+                    "video_sha256": release_root / "video" / f"{release_id}.mp4",
+                    "subtitle_sha256": (
+                        release_root
+                        / "subtitles"
+                        / f"{release_id}__zh_dialogue.srt"
+                    ),
+                    "manifest_sha256": (
+                        release_root / "manifests" / "chapter_review_manifest.json"
+                    ),
+                    "qa_sha256": release_root / "qa" / "automated_qa.json",
+                    "ready_sha256": release_root / "BATCH_REVIEW_READY.json",
+                }
+                release = {"release_id": release_id}
+                for key, path in paths.items():
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(f"{release_id}:{key}\n", encoding="utf-8")
+                    release[key] = module.file_sha256(path)
+                releases.append(release)
+                specs.append(
+                    {
+                        "release_id": release_id,
+                        "target_bv_key": "mixed",
+                        "suggested_part_name": f"part {release_id}",
+                        "action": "append",
+                    }
+                )
+            attestation = {
+                "schema": "magireco-owner-playback-attestation-v1",
+                "attestation_id": (
+                    "mixed_composition_4_chapters_owner_playback_20260718"
+                ),
+                "decisions": {"HUMAN_PLAYBACK_APPROVED": True},
+                "releases": releases,
+            }
+            items = module._owner_approved_mixed_chapter_items(
+                attestation=attestation,
+                root=root,
+                specs=specs,
+                plan={"target_bvs": {"mixed": "mixed BV"}},
+            )
+            self.assertEqual(len(items), 2)
+            self.assertTrue(all(row["state"] == "ready_to_upload" for row in items))
+            self.assertTrue(
+                all(
+                    row["human_approval_status"]
+                    == "exact_file_owner_playback_approved"
+                    for row in items
+                )
+            )
 
 
 if __name__ == "__main__":

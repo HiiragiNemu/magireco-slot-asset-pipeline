@@ -69,6 +69,165 @@ def _bound(
     }
 
 
+def _load_plan_with_bases(
+    plan_path: Path,
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Resolve successive hash-bound ledger overlays without unbounded nesting."""
+
+    seen: set[Path] = set()
+
+    def load(path: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
+        resolved = path.resolve()
+        if resolved in seen:
+            raise ValueError("exhaustive production-ledger base plan cycle")
+        seen.add(resolved)
+        raw = read_json(resolved)
+        if raw.get("base_plan") is None:
+            return dict(raw), []
+        base_path, base_snapshot = _bound(
+            raw["base_plan"],
+            label="base exhaustive production-ledger plan",
+            plan_dir=resolved.parent,
+        )
+        base, snapshots = load(base_path)
+        plan = dict(base)
+        plan.update(
+            {
+                key: value
+                for key, value in raw.items()
+                if key != "base_plan"
+            }
+        )
+        return plan, [base_snapshot, *snapshots]
+
+    return load(plan_path)
+
+
+def _owner_approved_legacy_products(
+    *,
+    raw: Mapping[str, Any],
+    plan_dir: Path,
+) -> tuple[list[dict[str, Any]], set[str], list[dict[str, str]]]:
+    """Index exact owner-played chapters without promoting their source manifests."""
+
+    attestation_path, attestation_snapshot = _bound(
+        raw.get("attestation", {}),
+        label="owner-approved legacy chapter attestation",
+        plan_dir=plan_dir,
+    )
+    attestation = read_json(attestation_path)
+    releases = attestation.get("releases")
+    decisions = attestation.get("decisions")
+    release_ids = raw.get("release_ids")
+    root = Path(str(raw.get("root", ""))).resolve()
+    if (
+        attestation.get("schema") != "magireco-owner-playback-attestation-v1"
+        or attestation.get("attestation_id")
+        != "mixed_composition_4_chapters_owner_playback_20260718"
+        or not isinstance(decisions, Mapping)
+        or decisions.get("HUMAN_PLAYBACK_APPROVED") is not True
+        or not isinstance(releases, list)
+        or not isinstance(release_ids, list)
+        or not root.is_dir()
+    ):
+        raise ValueError("owner-approved legacy chapter declaration differs")
+    by_id = {
+        str(row.get("release_id", "")): row
+        for row in releases
+        if isinstance(row, Mapping)
+    }
+    selected = [str(value) for value in release_ids]
+    if (
+        len(by_id) != len(releases)
+        or len(selected) != len(set(selected))
+        or set(selected) != set(by_id)
+    ):
+        raise ValueError("owner-approved legacy chapter release set differs")
+
+    index: list[dict[str, Any]] = []
+    events: set[str] = set()
+    snapshots = [attestation_snapshot]
+    support_names = {
+        "subtitle_sha256": ("subtitles", "{id}__zh_dialogue.srt"),
+        "manifest_sha256": ("manifests", "chapter_review_manifest.json"),
+        "qa_sha256": ("qa", "automated_qa.json"),
+        "ready_sha256": ("", "BATCH_REVIEW_READY.json"),
+    }
+    for release_id in selected:
+        release = by_id[release_id]
+        release_root = root / release_id
+        video = release_root / "video" / f"{release_id}.mp4"
+        expected_video = str(release.get("video_sha256", "")).upper()
+        if not video.is_file() or file_sha256(video) != expected_video:
+            raise ValueError(f"owner-approved legacy video differs: {video}")
+        snapshots.append(
+            {
+                "label": f"{release_id} owner-approved exact ZH video",
+                "path": str(video.resolve()),
+                "sha256": expected_video,
+            }
+        )
+        manifest_path: Path | None = None
+        for hash_key, (folder, filename_pattern) in support_names.items():
+            support = release_root / folder / filename_pattern.format(id=release_id)
+            expected = str(release.get(hash_key, "")).upper()
+            if not support.is_file() or file_sha256(support) != expected:
+                raise ValueError(
+                    f"owner-approved legacy support artifact differs: {support}"
+                )
+            snapshots.append(
+                {
+                    "label": f"{release_id} {hash_key}",
+                    "path": str(support.resolve()),
+                    "sha256": expected,
+                }
+            )
+            if hash_key == "manifest_sha256":
+                manifest_path = support
+        assert manifest_path is not None
+        manifest = read_json(manifest_path)
+        ordered_events = manifest.get("ordered_events")
+        if (
+            manifest.get("release_id") != release_id
+            or not isinstance(ordered_events, list)
+            or not ordered_events
+            or any(
+                not EVENT_PATTERN.fullmatch(str(event))
+                for event in ordered_events
+            )
+            or len(set(ordered_events)) != len(ordered_events)
+        ):
+            raise ValueError(
+                f"owner-approved legacy chapter event identity differs: {release_id}"
+            )
+        chapter_events = {str(event) for event in ordered_events}
+        overlap = events & chapter_events
+        if overlap:
+            raise ValueError(
+                f"owner-approved legacy chapters overlap: {sorted(overlap)}"
+            )
+        events.update(chapter_events)
+        index.append(
+            {
+                "release_id": release_id,
+                "exact_zh_video": str(video.resolve()),
+                "video_sha256": expected_video,
+                "manifest": str(manifest_path.resolve()),
+                "manifest_sha256": str(
+                    release.get("manifest_sha256", "")
+                ).upper(),
+                "ordered_events": [str(event) for event in ordered_events],
+                "event_count": len(ordered_events),
+                "human_playback_status": "exact_file_owner_playback_approved",
+                "ledger_effect": (
+                    "exact product coverage only; source event timing risk is "
+                    "not generalized or cleared"
+                ),
+            }
+        )
+    return index, events, snapshots
+
+
 def _read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return [dict(row) for row in csv.DictReader(handle)]
@@ -366,27 +525,7 @@ def build(
     plan_path: Path,
     output_root: Path,
 ) -> Path:
-    raw_plan = read_json(plan_path)
-    base_plan_snapshot: dict[str, str] | None = None
-    if raw_plan.get("base_plan") is not None:
-        base_path, base_plan_snapshot = _bound(
-            raw_plan["base_plan"],
-            label="base exhaustive production-ledger plan",
-            plan_dir=plan_path.parent,
-        )
-        base_plan = read_json(base_path)
-        if base_plan.get("base_plan") is not None:
-            raise ValueError("nested exhaustive production-ledger base plan")
-        plan = dict(base_plan)
-        plan.update(
-            {
-                key: value
-                for key, value in raw_plan.items()
-                if key != "base_plan"
-            }
-        )
-    else:
-        plan = raw_plan
+    plan, base_plan_snapshots = _load_plan_with_bases(plan_path)
     if (
         plan.get("schema") != PLAN_SCHEMA
         or plan.get("status") != "active_exhaustive_production_ledger"
@@ -403,8 +542,7 @@ def build(
             "sha256": file_sha256(plan_path),
         }
     ]
-    if base_plan_snapshot is not None:
-        snapshots.append(base_plan_snapshot)
+    snapshots.extend(base_plan_snapshots)
     bound: dict[str, Path] = {}
     for key, label in (
         ("audience_event_catalog", "audience event catalog"),
@@ -644,6 +782,22 @@ def build(
                 }
             )
 
+    approved_legacy_product_index: list[dict[str, Any]] = []
+    approved_legacy_events: set[str] = set()
+    raw_legacy_products = plan.get("owner_approved_legacy_products")
+    if raw_legacy_products is not None:
+        if not isinstance(raw_legacy_products, Mapping):
+            raise ValueError("owner-approved legacy products must be an object")
+        (
+            approved_legacy_product_index,
+            approved_legacy_events,
+            legacy_snapshots,
+        ) = _owner_approved_legacy_products(
+            raw=raw_legacy_products,
+            plan_dir=plan_path.parent,
+        )
+        snapshots.extend(legacy_snapshots)
+
     audience_rows = _read_csv(bound["audience_event_catalog"])
     audience_by_event = {row["event_name"]: row for row in audience_rows}
     if len(audience_by_event) != len(audience_rows):
@@ -861,6 +1015,7 @@ def build(
         "current_material_collections_requiring_exact_file_playback": (
             material_manifest_index
         ),
+        "owner_approved_legacy_exact_products": approved_legacy_product_index,
     }
 
     if any(row["disposition"] not in DISPOSITIONS for row in audience_ledger):
@@ -951,6 +1106,20 @@ def build(
             },
         )
         write_json(
+            staging / "OWNER_APPROVED_LEGACY_PRODUCT_INDEX.json",
+            {
+                "schema": "magireco-owner-approved-legacy-product-index-v1",
+                "products": approved_legacy_product_index,
+                "exact_product_count": len(approved_legacy_product_index),
+                "covered_unique_event_count": len(approved_legacy_events),
+                "claim_boundary": (
+                    "Only the exact ZH files are playback-approved. Their event "
+                    "coverage is recorded without clearing child-local timing "
+                    "risk in current source manifests or approving sibling editions."
+                ),
+            },
+        )
+        write_json(
             staging / "SOURCE_SNAPSHOTS.json",
             {
                 "schema": "magireco-exhaustive-ledger-source-snapshots-v1",
@@ -969,6 +1138,12 @@ def build(
                 "current_production_manifests": len(production_manifest_index),
                 "current_material_collection_manifests": len(
                     material_manifest_index
+                ),
+                "owner_approved_legacy_exact_products": len(
+                    approved_legacy_product_index
+                ),
+                "owner_approved_legacy_unique_events": len(
+                    approved_legacy_events
                 ),
                 "superseded_audit_manifests_excluded": len(
                     superseded_audit_index
@@ -989,6 +1164,12 @@ def build(
             ),
             "produced_event_count": len(produced_events),
             "produced_material_event_count": len(material_events),
+            "owner_approved_legacy_exact_product_count": len(
+                approved_legacy_product_index
+            ),
+            "owner_approved_legacy_unique_event_count": len(
+                approved_legacy_events
+            ),
             "produced_dirinfo_route_count": len(produced_rows),
             "hard_quarantine_families": quarantines,
             "priority_policy": plan.get("priority_policy"),
@@ -1006,7 +1187,9 @@ def build(
             "所有候选均有 disposition、production_state 与 blocker。"
             "gameplay/effect 项只表示已分流到独立合集，不表示合集已经完成；"
             "material_collection 只来自计划列出的当前素材 manifest 根，"
-            "且 review_only 不等于可投稿。\n",
+            "且 review_only 不等于可投稿。旧检查点中由所有者精确播放批准的"
+            "成片只登记 exact file coverage，不会反向清除当前 event manifest "
+            "的 child-local 时序风险，也不会批准 sibling editions。\n",
             encoding="utf-8",
         )
         hashed = [

@@ -1,0 +1,20 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v5.json",
+    "sha256": "B385D76D81B0749BBBE3AE27B3FD268E493D17BA4277D44E835ED69E42951F04"
+  },
+  "checkpoint_id": "20260726-v37-owner-approved-legacy-products",
+  "owner_approved_legacy_products": {
+    "attestation": {
+      "path": "../owner_attestations/mixed_composition_4_chapters_owner_playback_20260718.json",
+      "sha256": "3E20CCBAD510A00E1AD5C8683E7336D2EFBF35720C3A40D5564CD1457E5A6827"
+    },
+    "root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_mixed_composition_reviews_v22_20260718",
+    "release_ids": [
+      "ac1102_full_no_bgm_zh_review_v1",
+      "ac1103_full_no_bgm_zh_review_v1",
+      "ac1104_full_no_bgm_zh_review_v1",
+      "ac5208_full_no_bgm_zh_review_v1"
+    ]
+  }
+}

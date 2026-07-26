@@ -1,0 +1,46 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v36_20260726.json",
+    "sha256": "92BFEE4CDF5A688DCA510CD68C475B87D99A235248F3FBD72FED0A387152DC68"
+  },
+  "checkpoint_id": "20260726-v37-owner-approved-mixed-chapters",
+  "target_bvs": {
+    "mixed_416_chapter_catalog": "新建：MagiaReco Slot 原生416完整章节（含已验证玩法效果）BV",
+    "clean_story_collection": "现有或新建：MagiaReco Slot clean-story 中文章节 BV"
+  },
+  "directories": {
+    "approved_mixed_chapters": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_mixed_composition_reviews_v22_20260718"
+  },
+  "sources": {
+    "owner_approved_mixed_chapters": {
+      "path": "../owner_attestations/mixed_composition_4_chapters_owner_playback_20260718.json",
+      "sha256": "3E20CCBAD510A00E1AD5C8683E7336D2EFBF35720C3A40D5564CD1457E5A6827"
+    }
+  },
+  "approved_mixed_chapter_parts": [
+    {
+      "release_id": "ac1102_full_no_bgm_zh_review_v1",
+      "target_bv_key": "mixed_416_chapter_catalog",
+      "suggested_part_name": "菲莉希亚牧场完整章节（含已验证效果） ac1102",
+      "action": "append_or_create_native416_chapter_part"
+    },
+    {
+      "release_id": "ac1103_full_no_bgm_zh_review_v1",
+      "target_bv_key": "mixed_416_chapter_catalog",
+      "suggested_part_name": "鹤乃外送修行完整章节（含胜利效果） ac1103",
+      "action": "append_or_create_native416_chapter_part"
+    },
+    {
+      "release_id": "ac1104_full_no_bgm_zh_review_v1",
+      "target_bv_key": "mixed_416_chapter_catalog",
+      "suggested_part_name": "海滩香蕉船完整章节（含已验证效果） ac1104",
+      "action": "append_or_create_native416_chapter_part"
+    },
+    {
+      "release_id": "ac5208_full_no_bgm_zh_review_v1",
+      "target_bv_key": "clean_story_collection",
+      "suggested_part_name": "三组魔法少女追击攻击 clean story ac5208",
+      "action": "append_or_create_clean_story_part"
+    }
+  ]
+}

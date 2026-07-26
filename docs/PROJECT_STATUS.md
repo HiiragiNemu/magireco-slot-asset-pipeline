@@ -2,6 +2,67 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 四部已人工批准章节恢复到投稿指南 v37
+
+四个耐久 v22 中文章节的 MP4、SRT、chapter manifest、自动 QA 和 READY hash
+已重新对照项目所有者的精确播放批准记录。它们现在恢复为可投稿 exact files：
+
+- `ac1102_full_no_bgm_zh_review_v1.mp4`，原生 416x232，建议分P
+  “菲莉希亚牧场完整章节（含已验证效果） ac1102”，SHA-256
+  `F2236AC4B3235C645E7408539E37AF2422077D8300C9EED2339CE73E15561BD2`；
+- `ac1103_full_no_bgm_zh_review_v1.mp4`，原生 416x232，建议分P
+  “鹤乃外送修行完整章节（含胜利效果） ac1103”，SHA-256
+  `C1789C88415FEE6F52A4702B62A2F79ABB5877BAC55BE4681F56E27AC2BE5B1C`；
+- `ac1104_full_no_bgm_zh_review_v1.mp4`，原生 416x232，建议分P
+  “海滩香蕉船完整章节（含已验证效果） ac1104”，SHA-256
+  `44CB183FE70CB384995582453D76F06F2CEFD95216D888245566D961AAA51053`；
+- `ac5208_full_no_bgm_zh_review_v1.mp4`，原生 512x288，建议分P
+  “三组魔法少女追击攻击 clean story ac5208”，SHA-256
+  `55875D4C661B2A6A5FEC077A2D3235C04AF98DC264DA104A2258C29E7392626D`。
+
+批准只绑定这四个具体 ZH MP4，不外推到 none/JA、单事件拆片或重渲染。
+前三片建议新建或追加到“原生416完整章节（含已验证玩法效果）”BV；ac5208
+追加到 clean-story 中文章节 BV。Codex 不上传。
+
+`ac1103_013` 单独三版生产在预检阶段 fail-closed：官方 req4058 和 req4059
+是两段相邻语音，但运行时只显示一条合并字幕；当前构建器仍是一条 cue 绑定一个
+request ID。req1086 CLEAR 基础声音也尚缺单独的 hash-bound scene-SE 角色覆盖。
+禁止把 req4059 假标为 SE 绕过门禁，因此本轮没有生成 standalone none/JA/ZH；
+现有整章 ZH 的精确批准不受影响。
+
+穷尽式总账推进到：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  production_ledger_v6_20260726
+```
+
+新增 4 个 exact owner-approved legacy product、覆盖 40 个唯一 event
+occurrence 的独立索引；它只记录具体成片覆盖，不反向清除当前 v20 event manifest
+的 child-local 风险，也不批准 sibling editions。
+`OWNER_APPROVED_LEGACY_PRODUCT_INDEX.json`、`SUMMARY.json`、
+`SHA256SUMS.json` SHA-256 分别为
+`ED6CCAFD1865E920231DBA603C71ED25B0B17DD07FA6FE84D3988D67CD70E45D`、
+`9D2C5F32DFFA3C0E15A8C7763CA45CBFB5D9B92F517486715B8EF7093612C91A`、
+`EBB6CDE07E3DE840C73FF9FA356F69EB03EAECCCD787AF281765C9563863AA6A`。
+
+逐文件上传指南推进到：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  upload_guide_v37_20260726
+```
+
+共 198 个精确文件：10 个已投稿、17 个可投稿、171 个待人工播放、8 类明确
+排除。本检查点新增加的 READY 仅为上述四个 exact ZH。
+`UPLOAD_GUIDE.json`、`.md`、`.csv`、`SHA256SUMS.json` SHA-256 分别为
+`4104818D650A94A982F4FB04EADABF1E755AF624EE1F6D3CE9072BBEAFB4170D`、
+`7A968BF1022496619FF95195707BF970D5A218FE67F401E14E6A5E627371E37B`、
+`73E486329647E8F2FDCAE81772810D6CFD130D86E3533C66767D967D13895FD5`、
+`0C2A72972A1B48E29805DDAAFFB47B7359F77684ABD755C58666974CD5392F6F`。
+P16/P17/P18 继续硬隔离；`ac7210_superseded_verbose_audit` 继续只读审计且
+绝不上传。
+
 ## 2026-07-26 原生 416 视觉素材审查批次 v36
 
 在当前证据成熟的原生 416x232 clean-story 路线扩展完成后，本轮把三个有限

@@ -1,4 +1,6 @@
 import sys
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,6 +14,115 @@ import build_exhaustive_video_production_ledger as module  # noqa: E402
 
 
 class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
+    def test_nested_hash_bound_ledger_overlays_merge(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            base = root / "base.json"
+            middle = root / "middle.json"
+            top = root / "top.json"
+            base.write_text('{"schema":"x","a":1}\n', encoding="utf-8")
+            middle.write_text(
+                json.dumps(
+                    {
+                        "base_plan": {
+                            "path": "base.json",
+                            "sha256": module.file_sha256(base),
+                        },
+                        "b": 2,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            top.write_text(
+                json.dumps(
+                    {
+                        "base_plan": {
+                            "path": "middle.json",
+                            "sha256": module.file_sha256(middle),
+                        },
+                        "c": 3,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            plan, snapshots = module._load_plan_with_bases(top)
+            self.assertEqual((plan["a"], plan["b"], plan["c"]), (1, 2, 3))
+            self.assertEqual(len(snapshots), 2)
+
+    def test_owner_approved_legacy_product_does_not_clear_event_risk(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            release_id = "ac1103_test"
+            release_root = root / "products" / release_id
+            video = release_root / "video" / f"{release_id}.mp4"
+            subtitle = (
+                release_root / "subtitles" / f"{release_id}__zh_dialogue.srt"
+            )
+            manifest = (
+                release_root / "manifests" / "chapter_review_manifest.json"
+            )
+            qa = release_root / "qa" / "automated_qa.json"
+            ready = release_root / "BATCH_REVIEW_READY.json"
+            for path in (video, subtitle, manifest, qa, ready):
+                path.parent.mkdir(parents=True, exist_ok=True)
+            video.write_text("video\n", encoding="utf-8")
+            subtitle.write_text("subtitle\n", encoding="utf-8")
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "release_id": release_id,
+                        "ordered_events": ["ac1103_013"],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            qa.write_text("{}\n", encoding="utf-8")
+            ready.write_text("{}\n", encoding="utf-8")
+            attestation = root / "attestation.json"
+            attestation.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-owner-playback-attestation-v1",
+                        "attestation_id": (
+                            "mixed_composition_4_chapters_owner_playback_20260718"
+                        ),
+                        "decisions": {"HUMAN_PLAYBACK_APPROVED": True},
+                        "releases": [
+                            {
+                                "release_id": release_id,
+                                "video_sha256": module.file_sha256(video),
+                                "subtitle_sha256": module.file_sha256(subtitle),
+                                "manifest_sha256": module.file_sha256(manifest),
+                                "qa_sha256": module.file_sha256(qa),
+                                "ready_sha256": module.file_sha256(ready),
+                            }
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            index, events, snapshots = module._owner_approved_legacy_products(
+                raw={
+                    "attestation": {
+                        "path": str(attestation),
+                        "sha256": module.file_sha256(attestation),
+                    },
+                    "root": str(root / "products"),
+                    "release_ids": [release_id],
+                },
+                plan_dir=root,
+            )
+            self.assertEqual(events, {"ac1103_013"})
+            self.assertEqual(index[0]["human_playback_status"], (
+                "exact_file_owner_playback_approved"
+            ))
+            self.assertIn("not generalized", index[0]["ledger_effect"])
+            self.assertEqual(len(snapshots), 6)
+
     def test_manifest_event_extraction_ignores_source_snapshots(self) -> None:
         value = {
             "ordered_events": ["ac0908_001", "ac0908_002"],

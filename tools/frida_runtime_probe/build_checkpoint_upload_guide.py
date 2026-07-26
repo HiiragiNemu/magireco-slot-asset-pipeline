@@ -53,6 +53,42 @@ def _bound(
     }
 
 
+def _load_plan_with_bases(
+    plan_path: Path,
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Resolve a finite hash-bound overlay chain for successive checkpoints."""
+
+    seen: set[Path] = set()
+
+    def load(path: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
+        resolved = path.resolve()
+        if resolved in seen:
+            raise ValueError("checkpoint upload-guide base plan cycle")
+        seen.add(resolved)
+        raw = read_json(resolved)
+        if raw.get("base_plan") is None:
+            return dict(raw), []
+        base_path, base_snapshot = _bound(
+            raw["base_plan"],
+            label="base checkpoint upload-guide plan",
+            plan_dir=resolved.parent,
+        )
+        base, snapshots = load(base_path)
+        plan = dict(base)
+        for key, value in raw.items():
+            if key == "base_plan":
+                continue
+            if key in {"target_bvs", "directories", "sources"}:
+                if not isinstance(value, Mapping):
+                    raise ValueError(f"upload guide overlay {key} must be an object")
+                plan[key] = {**dict(plan.get(key, {})), **dict(value)}
+            else:
+                plan[key] = value
+        return plan, [base_snapshot, *snapshots]
+
+    return load(plan_path)
+
+
 def _item(
     *,
     path: Path,
@@ -92,6 +128,77 @@ def _target(plan: Mapping[str, Any], name: str) -> str:
     if not isinstance(targets, Mapping) or not isinstance(targets.get(name), str):
         raise ValueError(f"upload guide lacks target BV {name}")
     return str(targets[name])
+
+
+def _owner_approved_mixed_chapter_items(
+    *,
+    attestation: Mapping[str, Any],
+    root: Path,
+    specs: Sequence[Mapping[str, Any]],
+    plan: Mapping[str, Any],
+) -> list[dict[str, str]]:
+    """Bind exact owner-played v22 chapter files without approving siblings."""
+
+    decisions = attestation.get("decisions")
+    releases = attestation.get("releases")
+    if (
+        attestation.get("schema") != "magireco-owner-playback-attestation-v1"
+        or attestation.get("attestation_id")
+        != "mixed_composition_4_chapters_owner_playback_20260718"
+        or not isinstance(decisions, Mapping)
+        or decisions.get("HUMAN_PLAYBACK_APPROVED") is not True
+        or not isinstance(releases, list)
+    ):
+        raise ValueError("mixed-composition owner attestation identity differs")
+    by_id = {
+        str(row.get("release_id", "")): row
+        for row in releases
+        if isinstance(row, Mapping)
+    }
+    if len(by_id) != len(releases):
+        raise ValueError("mixed-composition owner attestation release IDs differ")
+    spec_ids = [str(spec.get("release_id", "")) for spec in specs]
+    if len(spec_ids) != len(set(spec_ids)) or set(spec_ids) != set(by_id):
+        raise ValueError("mixed-composition upload-guide release set differs")
+
+    items: list[dict[str, str]] = []
+    support_names = {
+        "subtitle_sha256": ("subtitles", "{id}__zh_dialogue.srt"),
+        "manifest_sha256": ("manifests", "chapter_review_manifest.json"),
+        "qa_sha256": ("qa", "automated_qa.json"),
+        "ready_sha256": ("", "BATCH_REVIEW_READY.json"),
+    }
+    for spec in specs:
+        release_id = str(spec["release_id"])
+        release = by_id[release_id]
+        release_root = root / release_id
+        video = release_root / "video" / f"{release_id}.mp4"
+        for hash_key, (folder, filename_pattern) in support_names.items():
+            support = release_root / folder / filename_pattern.format(id=release_id)
+            expected = str(release.get(hash_key, "")).upper()
+            if not support.is_file() or file_sha256(support) != expected:
+                raise ValueError(
+                    f"owner-approved mixed chapter support binding differs: {support}"
+                )
+        items.append(
+            _item(
+                path=video,
+                expected_sha256=str(release.get("video_sha256", "")),
+                state="ready_to_upload",
+                target_bv=_target(plan, str(spec["target_bv_key"])),
+                subtitle_track="ZH burned-in",
+                suggested_part_name=str(spec["suggested_part_name"]),
+                action=str(spec["action"]),
+                automated_qa_status="passed_at_v22_checkpoint",
+                human_approval_status="exact_file_owner_playback_approved",
+                publication_instruction="UPLOAD ALLOWED FOR THIS EXACT HASH",
+                scope_note=(
+                    "The project owner played this exact v22 ZH chapter. Approval "
+                    "does not transfer to none/JA, rerenders, or extracted events."
+                ),
+            )
+        )
+    return items
 
 
 def _manifest_media(
@@ -186,29 +293,7 @@ def _track_target(plan: Mapping[str, Any], family: str, edition: str, product: s
 
 
 def build(*, plan_path: Path, output_root: Path) -> Path:
-    raw_plan = read_json(plan_path)
-    base_plan_snapshot: dict[str, str] | None = None
-    if raw_plan.get("base_plan") is not None:
-        base_path, base_plan_snapshot = _bound(
-            raw_plan["base_plan"],
-            label="base checkpoint upload-guide plan",
-            plan_dir=plan_path.parent,
-        )
-        base_plan = read_json(base_path)
-        if base_plan.get("base_plan") is not None:
-            raise ValueError("nested checkpoint upload-guide base plan")
-        plan = dict(base_plan)
-        for key, value in raw_plan.items():
-            if key == "base_plan":
-                continue
-            if key in {"target_bvs", "directories", "sources"}:
-                if not isinstance(value, Mapping):
-                    raise ValueError(f"upload guide overlay {key} must be an object")
-                plan[key] = {**dict(plan.get(key, {})), **dict(value)}
-            else:
-                plan[key] = value
-    else:
-        plan = raw_plan
+    plan, base_plan_snapshots = _load_plan_with_bases(plan_path)
     if (
         plan.get("schema") != PLAN_SCHEMA
         or plan.get("status") != "active_upload_checkpoint"
@@ -222,8 +307,7 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
             "sha256": file_sha256(plan_path),
         }
     ]
-    if base_plan_snapshot is not None:
-        snapshots.append(base_plan_snapshot)
+    snapshots.extend(base_plan_snapshots)
     source_paths: dict[str, Path] = {}
     for name, raw in plan["sources"].items():
         path, snapshot = _bound(
@@ -493,6 +577,23 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     ),
                 )
             )
+
+    if "owner_approved_mixed_chapters" in source_paths:
+        specs = plan.get("approved_mixed_chapter_parts")
+        if not isinstance(specs, list):
+            raise ValueError("upload guide lacks approved mixed-chapter part specs")
+        items.extend(
+            _owner_approved_mixed_chapter_items(
+                attestation=read_json(
+                    source_paths["owner_approved_mixed_chapters"]
+                ),
+                root=Path(
+                    str(plan["directories"]["approved_mixed_chapters"])
+                ).resolve(),
+                specs=specs,
+                plan=plan,
+            )
+        )
 
     keys = [(row["absolute_folder"].casefold(), row["exact_filename"].casefold()) for row in items]
     if len(keys) != len(set(keys)):

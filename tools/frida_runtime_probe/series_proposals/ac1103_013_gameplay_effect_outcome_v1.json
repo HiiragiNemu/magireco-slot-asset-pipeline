@@ -1,0 +1,42 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac1103_gameplay_effect",
+  "proposal_id": "ac1103_013_gameplay_effect_outcome_v1",
+  "status": "blocked_voice_group_contract",
+  "errors": [
+    "req4058 and req4059 are two official adjacent voice assets represented by one runtime-merged subtitle cue; the current family-edition builder models only one request ID per cue",
+    "req1086 is an official CLEAR base sound but lacks a dedicated hash-bound scene-SE role override in the current override registry"
+  ],
+  "ordering": "single runtime-resolved gameplay outcome selected from hash-bound upstream family order",
+  "event_count": 1,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "content_policy": "gameplay_effect_outcome_not_clean_story",
+  "source_series_manifest": {
+    "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac1102_04_20260619\\ac1103\\series_manifest.json",
+    "sha256": "E2EE4F6A236BABAECAADC4B1B1A2C09573FB3325BBE8C7AFA7326E0A34C1746B",
+    "evidence": "The passed upstream family manifest places ac1103_013 in the official event-family order. It is used only as ordering evidence; no old A: media is consumed."
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "ready_event_names": [
+      "ac1103_013"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac1103_013": "5CC2B5FBAD201FCDFD6F17469E3A5A72506BD2BD236AB0A28172A423A336C27F"
+  },
+  "evidence_scope": {
+    "timing": "official_runtime_capture",
+    "composition": "runtime_verified_timed_full_frame_layers",
+    "voice_and_subtitles": "official_runtime_capture",
+    "scene_se": "official_runtime_capture",
+    "excluded_bgm": "no BGM layers are introduced; verified voice and scene SE are retained",
+    "owner_attestation": "mixed_composition_4_chapters_owner_playback_20260718 approved the containing ac1103 ZH chapter, but the new exact standalone files still require exact-file playback"
+  },
+  "production_disposition": "keep_existing_exact_owner_approved_zh_chapter_ready; do_not_render_standalone_none_ja_zh_until_voice-group and scene-SE contracts are hash-bound"
+}
