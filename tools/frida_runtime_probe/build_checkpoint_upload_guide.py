@@ -76,7 +76,27 @@ MATERIAL_PART_NAMES = {
     "ac8000_next_story_visual_catalog_v1": (
         "下一段剧情界面视觉素材 ac8000"
     ),
+    "ac905x_uwanose_components_416_v1": "上乗せ玩法组件素材 ac905x",
+    "ac905x_uwanose_badges_144x160_v1": "上乗せ徽章素材 ac905x",
+    "ac905x_uwanose_numbers_128x64_v1": "上乗せ数字素材 ac905x",
+    "ac5001_flying_combination_components_416_v1": (
+        "角色飞行与合体玩法素材 ac5001"
+    ),
+    "ac5001_attack_title_component_512x416_v1": (
+        "攻击标题效果素材 ac5001"
+    ),
+    "ac0905_su_gameplay_components_416_v1": "SU玩法组件素材 ac0905",
+    "ac0905_su_effect_frames_512x416_v1": "SU效果框素材 ac0905",
 }
+ROUTE_BATCH_SOURCE_NAMES = (
+    "v31_ac4902_manifest",
+    "v31_ac7206_manifest",
+    "v32_ac0908_manifest",
+    "v33_ac4903_manifest",
+    "v34_ac6007_manifest",
+    "v35_ac0911_manifest",
+    "v51_ac4902_selector_routes_manifest",
+)
 
 
 def material_part_name(collection: str) -> str:
@@ -577,14 +597,7 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
             )
         )
 
-    for source_name in (
-        "v31_ac4902_manifest",
-        "v31_ac7206_manifest",
-        "v32_ac0908_manifest",
-        "v33_ac4903_manifest",
-        "v34_ac6007_manifest",
-        "v35_ac0911_manifest",
-    ):
+    for source_name in ROUTE_BATCH_SOURCE_NAMES:
         if source_name not in source_paths:
             continue
         manifest_path = source_paths[source_name]

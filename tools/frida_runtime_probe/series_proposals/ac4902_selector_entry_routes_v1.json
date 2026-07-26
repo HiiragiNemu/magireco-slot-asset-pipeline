@@ -1,0 +1,252 @@
+{
+  "schema": "magireco-ac4902-selector-entry-route-plan-v1",
+  "status": "ac4902_selector_entry_routes_approved_for_render",
+  "family": "ac4902",
+  "title": "ac4902 十七条新增选项入口路线",
+  "composition_claim": "independent_native_dirinfo_routes_no_showcase",
+  "uploaded_media_policy": "source_and_uploaded_media_read_only_never_overwrite",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "dirinfo_kind": 113,
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "178011603C41792EF6DFFDE45EE5C0BCF10FC94CDC495ED7E27B45DE2BDF2A76"
+  },
+  "clean_visual_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\masters\\ac4902_full_no_bgm_editions_v1__clean_visual_master.mp4",
+    "sha256": "13C6D9DA13B9CCE8CD8FEE7869833CA625A9297FB10647B398AA4B3A5B5A024A"
+  },
+  "no_bgm_audio_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\masters\\ac4902_full_no_bgm_editions_v1__no_bgm_audio_master.m4a",
+    "sha256": "5E603722009ABAEEFF50BCA1A49D0A1F628A311057653A920483859CF6C982E5"
+  },
+  "subtitles_ja": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\subtitles\\ac4902_full_no_bgm_editions_v1__ja.srt",
+    "sha256": "42CB5ED26544E8F8CADF1E489190BF065D78FF1E51179FCCB3D167BF1CE0DD99"
+  },
+  "subtitles_zh": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p12_ac4902_deduplicated_route_showcase\\ac4902_full_no_bgm_editions_v1\\subtitles\\ac4902_full_no_bgm_editions_v1__zh.srt",
+    "sha256": "D4DB0621C0F33338D85AA4038616A275EF9995E91EEF41FF38D928D76463E99E"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "deduplication_proposal": {
+    "path": "ac4902_audience_deduplicated_route_showcase_v1.json",
+    "sha256": "5C23F8EC2B5A1EADBF02583D4A3B2B85529F8984ADF275FF7F5C22E268ADDCEE"
+  },
+  "direct_parent_audio_catalog": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+    "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+  },
+  "child_audio_timeline": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+    "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+  },
+  "subtitle_event_timeline": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+    "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+  },
+  "audience_event_catalog": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "entry_events": [
+    {
+      "event": "ac4902_005",
+      "exact_aliases": ["ac4902_056"],
+      "frames": 603,
+      "request_id": 1691,
+      "sound_code": 8155,
+      "action_start_ms": 0,
+      "main_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_005_MR.mp4",
+        "sha256": "0F89093E6AA7B6A0DBA5BC163C1D006875E6EF39D7147819E49D684A668DC67B",
+        "frames": 153
+      },
+      "loop_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_005_LP_MR.mp4",
+        "sha256": "432BBFE3A6560B5CA68354D4C00B77AA0FB41FF32505221A62AB85A35D65A13D",
+        "frames": 450
+      },
+      "ogg": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_08155_bank03_ogg_09554.ogg",
+        "sha256": "F07B3273D79765476DB76BA8B94F1DE8784DFA3829AD59053E5FF59D97BF56F4",
+        "source_samples": 53377
+      }
+    },
+    {
+      "event": "ac4902_014",
+      "exact_aliases": ["ac4902_057"],
+      "frames": 100,
+      "request_id": 1698,
+      "sound_code": 8163,
+      "action_start_ms": 0,
+      "main_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_014.mp4",
+        "sha256": "DD99880AB739152505F0DBD84EC88628DD49F5C4988E5A8E894FD1677DF1D09C",
+        "frames": 70
+      },
+      "loop_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_014_LP.mp4",
+        "sha256": "966F3A663C66B49B2079FC11998AB430884FFF4DD5F56F96FEB81E65CB01A547",
+        "frames": 30
+      },
+      "ogg": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_08163_bank03_ogg_09561.ogg",
+        "sha256": "7C9E7BCC0DD81E47CD5F4FD553B06FC5AEAFCDDEE254299A8332866F07CDC355",
+        "source_samples": 160885
+      }
+    },
+    {
+      "event": "ac4902_017",
+      "exact_aliases": ["ac4902_058"],
+      "frames": 189,
+      "request_id": 1702,
+      "sound_code": 8167,
+      "action_start_ms": 0,
+      "main_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_017.mp4",
+        "sha256": "F2D81383C8D354F5F96E1E22174E7977EB7396A0EB2C80D6F41270E30F917547",
+        "frames": 10
+      },
+      "loop_clip": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac4902\\ac4902_017_LP.mp4",
+        "sha256": "64C9DCC925A907B33C3DC7EB8A2A4245C494C7A35A43DA9637875C4404F5C9DF",
+        "frames": 179
+      },
+      "ogg": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_08167_bank03_ogg_09565.ogg",
+        "sha256": "7B7DE161BB9F0F8DF5F9537C35551A0A809BA6DA8B323C20EC5356A23F00F58B",
+        "source_samples": 183190
+      }
+    }
+  ],
+  "routes": [
+    {
+      "route_id": "row014_005_006",
+      "title": "ac4902 路线 6（001→005→006）",
+      "source_row": {"row_index": 14, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_006"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_006"]
+    },
+    {
+      "route_id": "row015_005_007",
+      "title": "ac4902 路线 7（001→005→007）",
+      "source_row": {"row_index": 15, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_007"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_007"]
+    },
+    {
+      "route_id": "row016_005_008",
+      "title": "ac4902 路线 8（001→005→008）",
+      "source_row": {"row_index": 16, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_008"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_008"]
+    },
+    {
+      "route_id": "row017_005_009",
+      "title": "ac4902 路线 9（001→005→009）",
+      "source_row": {"row_index": 17, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_009"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_009"]
+    },
+    {
+      "route_id": "row024_005_010",
+      "title": "ac4902 路线 10（001→005→010）",
+      "source_row": {"row_index": 24, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_010"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_010"]
+    },
+    {
+      "route_id": "row025_005_011",
+      "title": "ac4902 路线 11（001→005→011）",
+      "source_row": {"row_index": 25, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_011"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_011"]
+    },
+    {
+      "route_id": "row026_005_012",
+      "title": "ac4902 路线 12（001→005→012）",
+      "source_row": {"row_index": 26, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_012"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_012"]
+    },
+    {
+      "route_id": "row027_005_013",
+      "title": "ac4902 路线 13（001→005→013）",
+      "source_row": {"row_index": 27, "raw_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_013"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_013"]
+    },
+    {
+      "route_id": "row034_005_062",
+      "title": "ac4902 路线 14（054→056→062，入口精确别名）",
+      "source_row": {"row_index": 34, "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_062"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_062"]
+    },
+    {
+      "route_id": "row035_005_063",
+      "title": "ac4902 路线 15（054→056→063，入口精确别名）",
+      "source_row": {"row_index": 35, "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_063"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_063"]
+    },
+    {
+      "route_id": "row037_005_065",
+      "title": "ac4902 路线 16（054→056→065，入口精确别名）",
+      "source_row": {"row_index": 37, "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_065"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_005", "ac4902_065"]
+    },
+    {
+      "route_id": "row044_014_015",
+      "title": "ac4902 路线 17（001→014→015）",
+      "source_row": {"row_index": 44, "raw_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_015"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_015"]
+    },
+    {
+      "route_id": "row045_014_029",
+      "title": "ac4902 路线 18（001→014→029）",
+      "source_row": {"row_index": 45, "raw_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_029"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_029"]
+    },
+    {
+      "route_id": "row046_014_016",
+      "title": "ac4902 路线 19（001→014→016）",
+      "source_row": {"row_index": 46, "raw_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_016"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_016"]
+    },
+    {
+      "route_id": "row055_014_072",
+      "title": "ac4902 路线 20（054→057→072，入口精确别名）",
+      "source_row": {"row_index": 55, "raw_event_sequence": ["ac4902_054", "ac4902_057", "ac4902_072"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_014", "ac4902_072"]
+    },
+    {
+      "route_id": "row058_017_018",
+      "title": "ac4902 路线 21（001→017→018）",
+      "source_row": {"row_index": 58, "raw_event_sequence": ["ac4902_001", "ac4902_017", "ac4902_018"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_017", "ac4902_018"]
+    },
+    {
+      "route_id": "row059_017_019",
+      "title": "ac4902 路线 22（001→017→019）",
+      "source_row": {"row_index": 59, "raw_event_sequence": ["ac4902_001", "ac4902_017", "ac4902_019"]},
+      "render_event_sequence": ["ac4902_001", "ac4902_017", "ac4902_019"]
+    }
+  ],
+  "expected_duplicate_rows": [
+    {"row_index": 36, "canonical_route_id": "row016_005_008", "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_064"]},
+    {"row_index": 38, "canonical_route_id": "row024_005_010", "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_066"]},
+    {"row_index": 39, "canonical_route_id": "row025_005_011", "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_067"]},
+    {"row_index": 40, "canonical_route_id": "row026_005_012", "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_068"]},
+    {"row_index": 41, "canonical_route_id": "row027_005_013", "raw_event_sequence": ["ac4902_054", "ac4902_056", "ac4902_069"]},
+    {"row_index": 53, "canonical_route_id": "row044_014_015", "raw_event_sequence": ["ac4902_054", "ac4902_057", "ac4902_070"]},
+    {"row_index": 54, "canonical_route_id": "row045_014_029", "raw_event_sequence": ["ac4902_054", "ac4902_057", "ac4902_071"]},
+    {"row_index": 66, "canonical_route_id": "row058_017_018", "raw_event_sequence": ["ac4902_054", "ac4902_058", "ac4902_073"]},
+    {"row_index": 67, "canonical_route_id": "row059_017_019", "raw_event_sequence": ["ac4902_054", "ac4902_058", "ac4902_074"]}
+  ]
+}

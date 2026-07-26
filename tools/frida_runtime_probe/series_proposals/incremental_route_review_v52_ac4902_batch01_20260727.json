@@ -1,0 +1,80 @@
+{
+  "schema": "magireco-incremental-route-review-plan-v1",
+  "checkpoint_id": "20260727-v52-ac4902-selector-entry-routes-batch01",
+  "checkpoint_label": "v52",
+  "start_upload_id": 108,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v52_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "A6B1F7C198A4CE69BFDB7B51F6EB7FBADDB7940B11CE53C975BB30818DCB6B53"
+  },
+  "source_batch_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v51_ac4902_selector_entry_routes_review_20260727\\ac4902_selector_entry_routes_v1\\BATCH_MANIFEST.json",
+    "sha256": "A979444F85A3C7A358A53902892E28FC88511D77B69D6199E5F726A46279B39F"
+  },
+  "routes": [
+    {
+      "product_id": "ac4902__row014_005_006",
+      "title": "选项路线06",
+      "filename_title": "选项路线06",
+      "route_suffix": "路线06"
+    },
+    {
+      "product_id": "ac4902__row015_005_007",
+      "title": "选项路线07",
+      "filename_title": "选项路线07",
+      "route_suffix": "路线07"
+    },
+    {
+      "product_id": "ac4902__row016_005_008",
+      "title": "选项路线08",
+      "filename_title": "选项路线08",
+      "route_suffix": "路线08"
+    },
+    {
+      "product_id": "ac4902__row017_005_009",
+      "title": "选项路线09",
+      "filename_title": "选项路线09",
+      "route_suffix": "路线09"
+    },
+    {
+      "product_id": "ac4902__row024_005_010",
+      "title": "选项路线10",
+      "filename_title": "选项路线10",
+      "route_suffix": "路线10"
+    },
+    {
+      "product_id": "ac4902__row025_005_011",
+      "title": "选项路线11",
+      "filename_title": "选项路线11",
+      "route_suffix": "路线11"
+    },
+    {
+      "product_id": "ac4902__row026_005_012",
+      "title": "选项路线12",
+      "filename_title": "选项路线12",
+      "route_suffix": "路线12"
+    },
+    {
+      "product_id": "ac4902__row027_005_013",
+      "title": "选项路线13",
+      "filename_title": "选项路线13",
+      "route_suffix": "路线13"
+    },
+    {
+      "product_id": "ac4902__row034_005_062",
+      "title": "选项路线62",
+      "filename_title": "选项路线62",
+      "route_suffix": "路线62"
+    },
+    {
+      "product_id": "ac4902__row035_005_063",
+      "title": "选项路线63",
+      "filename_title": "选项路线63",
+      "route_suffix": "路线63"
+    }
+  ]
+}

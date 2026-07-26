@@ -338,6 +338,13 @@ def _produced_dirinfo_rows(
             local_kind = int(value["dirinfo_kind"])
         if local_kind is not None and value.get("dirinfo_row") is not None:
             output.add((local_kind, int(value["dirinfo_row"])))
+        source_row = value.get("dirinfo_source_row")
+        if (
+            local_kind is not None
+            and isinstance(source_row, Mapping)
+            and source_row.get("row_index") is not None
+        ):
+            output.add((local_kind, int(source_row["row_index"])))
         source_rows = value.get("dirinfo_source_rows")
         if local_kind is not None and isinstance(source_rows, list):
             for row in source_rows:

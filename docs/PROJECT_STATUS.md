@@ -2,6 +2,33 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac4902 新入口路线与 ac0905 分尺寸组件 v52
+
+`no_bgm_editions_v51_ac4902_selector_entry_routes_review_20260727` 已产
+17 条独立原生 416x232 DirInfo 路线、51 个 none/JA/ZH MP4；9 条精确
+audience alias 行没有重复渲染。三种入口事件均用 event-global 0 的
+direct-parent action SE，child audio/subtitle 为零；路线尾部复用已获人工
+批准的 P12 v26 主片。builder 会校验源主片仍含两句获授权的
+`黑羽：可恶！`，但这 17 个路线切片本身不含这两句。没有跨互斥路线
+showcase。
+
+`material_collections_v52_ac0905_split_components_review_20260727` 只覆盖
+8 个 mixed 事件：8 个原生 416x232 SU 玩法组件与 7 个原生 512x416 效果
+框。覆盖审计为 8/8 event、15/15 source、16/16 occurrence；其他 8 个
+full-frame-only 事件和未绑定的 `ac0905_SU3_ef_waku_S_2` 继续阻断。
+
+当前正式总账为 `production_ledger_v20_20260727`：produced audience 188、
+material-covered 499、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。v19 只是一份在发布前发现 singular
+`dirinfo_source_row` 漏计的失败审计根，不是 current。全局指南
+`upload_guide_v52_20260727` 为 10 已投稿、17 可投稿、287 待人工播放、
+8 排除，共 314 个精确文件。
+
+ac4902 人工审查分 U108–U117 与 U118–U124 两批；ac0905 为 U125/U126。
+四个增量审查根的 `UPLOAD_NOW` 与 quarantine media 均为 0。详见
+`docs/research/2026-07-27-ac4902-selector-entry-and-ac0905-components-checkpoint-v52.md`。
+P16/P17/P18 继续 hard quarantine；正式 with-BGM 候选仍为 0。
+
 ## 2026-07-27 ac5001 分尺寸飞行组件 v50
 
 `material_collections_v50_ac5001_split_components_review_20260727` 已把

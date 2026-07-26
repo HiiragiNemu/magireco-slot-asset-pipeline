@@ -9,20 +9,22 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v50
+## 0. 2026-07-27 当前检查点 v52
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v18_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v20_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v50_20260727`。
+`upload_guide_v52_20260727`。
 
-v50 新增 ac5001_001–036 的分尺寸 visual-only 组件覆盖：15 个原生
-416x232 飞行动作／背景／属性源与 1 个原生 512x416 攻击标题源，共
-287 个 occurrence。U106/U107 的 none/JA/ZH 是无音频／字幕产品的合法
-跨目标 hardlink，全部待人工播放。`ac5001_007` 的特殊 7 组件集合保持原样。
+v51/v52 新增 ac4902 的 17 条独立原生 416x232 selector-entry 路线，共
+51 个 none/JA/ZH MP4；9 条精确 alias 行没有重复渲染，也没有生成跨互斥
+路线 showcase。ac0905 的 8 个 mixed 事件另按 416x232 与 512x416 原生尺寸
+收录 15 个 visual-only 组件；另 8 个 full-frame-only 事件继续阻断。
+U108–U124 为两批 ac4902 路线，U125/U126 为 ac0905 素材；全部待人工播放，
+`UPLOAD_NOW` 为 0。
 路径、哈希与上传目标见
-`docs/research/2026-07-27-ac5001-split-native-component-checkpoint-v50.md`。
+`docs/research/2026-07-27-ac4902-selector-entry-and-ac0905-components-checkpoint-v52.md`。
 P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
 Z2D 时序继续 fail closed。
 

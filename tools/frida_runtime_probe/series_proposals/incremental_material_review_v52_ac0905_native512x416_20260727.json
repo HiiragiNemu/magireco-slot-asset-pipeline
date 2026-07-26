@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v52-ac0905-native512x416",
+  "checkpoint_label": "v52",
+  "start_upload_id": 126,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V52.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v52_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "A6B1F7C198A4CE69BFDB7B51F6EB7FBADDB7940B11CE53C975BB30818DCB6B53"
+  },
+  "specific_exclusions": [
+    "本批只含 ac0905 七个原生 512x416 SU 效果框组件；416x232 玩法组件在 U125。",
+    "未绑定任何 audience occurrence 的 ac0905_SU3_ef_waku_S_2 继续作为 blocker，不收入本包。",
+    "本目录只是去重组件清单，不冒充事件、路线或游戏自然 session。",
+    "本批无对白、SE、BGM 或字幕；禁止与 416x232 组件机械拼接、拉伸、补边或 upscale。"
+  ],
+  "products": [
+    {
+      "collection": "ac0905_su_effect_frames_512x416_v1",
+      "title": "SU效果框",
+      "family": "ac0905",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v52_ac0905_split_components_review_20260727\\ac0905_su_effect_frames_512x416_v1\\material_collection_manifest.json",
+        "sha256": "CEEF9D4B0B5059589BA58CF0F13B0527D2591026D3F17C0755A44746D47E107D"
+      },
+      "output_sha256": "2F229946300C6D5178C240ED550660254D78BAE80D1B32A6E7CCAA5ACBF2F2B0"
+    }
+  ]
+}

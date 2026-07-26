@@ -147,6 +147,18 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             module.material_part_name("future_collection_v1"),
             "future_collection_v1",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac0905_su_gameplay_components_416_v1"
+            ),
+            "SU玩法组件素材 ac0905",
+        )
+
+    def test_current_selector_route_source_is_indexed(self) -> None:
+        self.assertIn(
+            "v51_ac4902_selector_routes_manifest",
+            module.ROUTE_BATCH_SOURCE_NAMES,
+        )
 
     def test_owner_approved_mixed_chapters_bind_all_exact_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as value:

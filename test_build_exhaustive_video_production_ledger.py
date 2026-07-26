@@ -214,6 +214,27 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             {(201, 0)},
         )
 
+    def test_produced_dirinfo_rows_accepts_singular_source_row(self) -> None:
+        value = {
+            "family": "ac4902",
+            "routes": [
+                {
+                    "dirinfo_source_row": {
+                        "row_index": 14,
+                        "normalized_event_sequence": [
+                            "ac4902_001",
+                            "ac4902_005",
+                            "ac4902_006",
+                        ],
+                    }
+                }
+            ],
+        }
+        self.assertEqual(
+            module._produced_dirinfo_rows(value, default_kind=113),
+            {(113, 14)},
+        )
+
     def test_child_local_timing_requires_runtime_source(self) -> None:
         manifest = {
             "audio": [

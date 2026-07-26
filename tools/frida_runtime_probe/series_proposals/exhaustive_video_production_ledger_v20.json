@@ -1,0 +1,37 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v18.json",
+    "sha256": "1CD9C1FD2F6310A32DF10852297BA602CD94B523CD3CD2DFEAAA09F2C3900DBC"
+  },
+  "checkpoint_id": "20260727-v51-v52-ac4902-selector-routes-ac0905-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v18 records plus seventeen independent native 416x232 ac4902 selector-entry routes and eight ac0905 mixed full-frame/component events whose fifteen hash-bound visual sources are preserved in separate native 416x232 and 512x416 review catalogs. Nine exact ac4902 alias rows are not rendered twice; the ac0905 native-full-frame-only half, one unbound effect source, and ac0903 overlapping blend layers remain fail-closed.",
+  "append_current_production_roots": [
+    {
+      "label": "v51 ac4902 independent selector-entry routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v51_ac4902_selector_entry_routes_review_20260727",
+      "manifest_glob": "ac4902_selector_entry_routes_v1/BATCH_MANIFEST.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_current_material_roots": [
+    {
+      "label": "v52 ac0905 split-native gameplay and effect component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v52_ac0905_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v52_ac0905_20260727\\ac0905_split_native_components_v1.json",
+      "sha256": "76E272A62930B8FA04E0ACA3CA5ED0F24CF45F789F574518B86ACDDF9CCA39F7"
+    }
+  ]
+}

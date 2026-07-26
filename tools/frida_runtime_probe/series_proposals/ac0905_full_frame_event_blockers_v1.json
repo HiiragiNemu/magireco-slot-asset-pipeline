@@ -1,0 +1,24 @@
+{
+  "schema": "magireco-audience-event-blocker-catalog-v1",
+  "status": "fail_closed",
+  "recorded_date": "2026-07-27",
+  "family": "ac0905",
+  "events": [
+    "ac0905_001",
+    "ac0905_002",
+    "ac0905_006",
+    "ac0905_007",
+    "ac0905_009",
+    "ac0905_010",
+    "ac0905_014",
+    "ac0905_015"
+  ],
+  "current_state": "missing_modern_event_manifest",
+  "current_classification": "native_full_frame_only",
+  "blocker": "These eight native 416x232 events are not current gameplay-component dispositions. Their visual completeness does not prove silence, audio semantics, route order, or clean-story publication readiness.",
+  "required_resolution": "Build a modern hash-bound event/audio/subtitle manifest and close DirInfo route semantics before clean-story production, or provide exact classification evidence before adding them to a gameplay/material collection.",
+  "source": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v18_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "5E08D9251CA10B188D2729ED958463CFEFAC85B7C438DCDC889025CD5E6340A4"
+  }
+}
