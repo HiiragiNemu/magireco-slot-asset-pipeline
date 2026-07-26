@@ -2,6 +2,42 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac5102 分尺寸组件覆盖 v46
+
+`material_collections_v46_ac5102_split_components_review_20260727` 已生成
+ac5102 的原生 416x232 视觉组件目录：116 个混合尺寸事件映射到 49 个
+去重片段，成片 45.429 秒、30fps、H.264、无音轨、无字幕，SHA-256
+`D067F5393576CF4A85EF9105A30571A18DF25DC39913B252E1588078D0707357`。
+同一批事件所需的 8 个原生 512x288 按钮片段不重复生产，精确复用 v44
+机会按钮目录；两种原生尺寸没有互相放大，也没有机械拼为假事件时间线。
+
+新增 fail-closed 跨目录审计
+`material_component_coverage_v46_ac5102_20260727`。它重新哈希 v14 的
+120 条 ac5102 event manifest、两个素材 manifest、两个输出及所有源 MP4，
+逐事件核对 416 component map 和 512 按钮来源。审计结果为 120/120
+事件、57/57 实际使用的唯一片段全部覆盖；v44 中另两个通用按钮片段被明确
+标为允许未使用。覆盖只说明视觉组件库存闭合，不说明对白、SE、字幕、
+child-local 时序或游戏自然 session 已闭合。
+
+增量审查根
+`bilibili_incremental_review_v46_ac5102_split_components_20260727` 使用 U091：
+none/JA/ZH 三个入口为同一无声源的同 inode hardlink，`physical_duplicate`
+均为 false。`00_UPLOAD_NOW` 为 0；唯一内容 45.429 秒，仍须所有者完整播放。
+
+总账推进到 `production_ledger_v15_20260727`：22 个当前素材 manifest 加
+1 个分尺寸覆盖 bundle，material-covered event 288→408。当前 926-event
+production-manifest 库存中已无 `planned_unproduced`：168 个剧情事件已产、
+408 个素材／玩法事件已覆盖、330 个因 child-local 时序阻断、20 个属
+P16/P17/P18 隔离。这个收口不等于更大的 audience/DirInfo 母集已完成：
+后者仍需继续做现代 manifest、分类和路线证据审计。
+
+全局指南 `upload_guide_v46_20260727` 为 10 个已投稿、17 个可投稿、
+202 个待人工播放、8 类明确排除，共 229 个精确文件。P16/P17/P18、
+所有未闭合 child-local 项和 superseded 继续 fail-closed；冻结交接包保持
+不变。当前正式 with-BGM 候选仍为 0，不能仅因 926-event 子库收口便提前
+切换。详细证据见
+`docs/research/2026-07-27-ac5102-split-native-component-coverage-v46.md`。
+
 ## 2026-07-27 其余纯原生 512 玩法素材 v45
 
 `material_collections_v45_native512_remaining_review_20260727` 已把

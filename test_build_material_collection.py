@@ -806,7 +806,9 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
             for path in sorted(root.rglob("*"), key=lambda value: str(value))
         }
 
-    def make_video(self, name: str, color: str) -> Path:
+    def make_video(
+        self, name: str, color: str, size: str = "96x64"
+    ) -> Path:
         path = self.media / name
         subprocess.run(
             [
@@ -818,7 +820,7 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
                 "-f",
                 "lavfi",
                 "-i",
-                f"color=c={color}:s=96x64:r=30:d=0.4",
+                f"color=c={color}:s={size}:r=30:d=0.4",
                 "-an",
                 "-c:v",
                 "libx264",
@@ -1584,6 +1586,77 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
             evidence_paths,
             {ledger.resolve(), *(path.resolve() for path in manifests)},
         )
+
+    def test_named_component_material_filters_derived_clips_by_native_size(
+        self,
+    ) -> None:
+        first = self.make_video("component-red.mp4", "red")
+        second = self.make_video("component-blue.mp4", "blue")
+        excluded = self.make_video(
+            "component-green.mp4", "green", "64x48"
+        )
+        event = "ac5102_004"
+        manifest_path = self.root / f"{event}.json"
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "schema": "magireco-event-production-v3",
+                    "event": event,
+                    "clips": [
+                        {"dgm_name": path.stem, "path": str(path)}
+                        for path in (first, second, excluded)
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        ledger = self.root / "component-ledger.csv"
+        ledger.write_text(
+            "event_name,native_dimensions,disposition,production_state,"
+            "manifest_path,manifest_sha256\n"
+            f"{event},x,gameplay_effect_collection,planned_unproduced,"
+            f"{manifest_path},{file_sha256(manifest_path)}\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_component_evidence",
+            "component_events": [event],
+            "component_native_dimensions": {"width": 96, "height": 64},
+            "derive_clips_from_covered_event_manifests": True,
+            "covered_event_index": {
+                "path": str(ledger),
+                "sha256": file_sha256(ledger),
+                "production_state": "planned_unproduced",
+                "disposition": "gameplay_effect_collection",
+                "native_dimensions": "x",
+            },
+        }
+        plan_path = self.root / "named-component-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {
+                path.stem: {"target_mp4": str(path)}
+                for path in (first, second, excluded)
+            },
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["covered_events"], [])
+        self.assertEqual(manifest["component_events"], [event])
+        self.assertEqual(
+            manifest["component_native_dimensions"],
+            {"width": 96, "height": 64},
+        )
+        self.assertEqual(
+            manifest["component_event_clip_map"][event],
+            [first.stem, second.stem],
+        )
+        self.assertEqual(manifest["clip_count"], 2)
 
     def test_named_material_rejects_evidence_source_hash_mismatch(self) -> None:
         first = self.make_video("mismatch-red.mp4", "red")

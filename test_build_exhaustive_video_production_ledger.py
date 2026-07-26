@@ -235,6 +235,70 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             ),
         )
 
+    def test_split_component_bundle_requires_current_catalog_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            catalog416 = root / "catalog416.json"
+            catalog512 = root / "catalog512.json"
+            catalog416.write_text('{"catalog":"416"}\n', encoding="utf-8")
+            catalog512.write_text('{"catalog":"512"}\n', encoding="utf-8")
+            bundle = root / "bundle.json"
+            bundle.write_text(
+                json.dumps(
+                    {
+                        "schema": (
+                            "magireco-material-component-coverage-audit-v1"
+                        ),
+                        "status": "PASSED",
+                        "coverage_id": "fixture",
+                        "family": "ac5102",
+                        "coverage_claim": "visual components only",
+                        "covered_events": ["ac5102_001"],
+                        "covered_event_count": 1,
+                        "component_catalogs": [
+                            {
+                                "name": "c416",
+                                "manifest_path": str(catalog416),
+                                "manifest_sha256": module.file_sha256(catalog416),
+                            },
+                            {
+                                "name": "c512",
+                                "manifest_path": str(catalog512),
+                                "manifest_sha256": module.file_sha256(catalog512),
+                            },
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            index, events, snapshots = (
+                module._material_component_coverage_bundles(
+                    raw_bundles=[
+                        {
+                            "path": str(bundle),
+                            "sha256": module.file_sha256(bundle),
+                        }
+                    ],
+                    plan_dir=root,
+                    current_material_manifests={
+                        str(catalog416.resolve()).casefold(): (
+                            module.file_sha256(catalog416)
+                        ),
+                        str(catalog512.resolve()).casefold(): (
+                            module.file_sha256(catalog512)
+                        ),
+                    },
+                    quarantines={},
+                )
+            )
+            self.assertEqual(events, {"ac5102_001"})
+            self.assertEqual(
+                index[0]["coverage_status"],
+                "split_native_component_coverage_passed",
+            )
+            self.assertEqual(len(snapshots), 1)
+
     def test_dirinfo_row_collection_supports_source_alias_rows(self) -> None:
         value = {
             "dirinfo_kind": 113,

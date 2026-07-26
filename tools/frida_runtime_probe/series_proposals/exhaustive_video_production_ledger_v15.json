@@ -1,0 +1,71 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v14.json",
+    "sha256": "0920BA2F6ED258E90D29D69FCCED7AD959105B5368FD33E21C61AA4AE0842714"
+  },
+  "checkpoint_id": "20260727-v46-ac5102-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v14 current production and material records plus the native 416x232 ac5102 component catalog and a fail-closed cross-catalog audit binding every one of the remaining 120 ac5102 event manifests to its exact 416x232 scene components and already-current v44 native 512x288 chance-button components. The two resolutions remain separate review products; no mixed-size concat or upscale is treated as a natural event render.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v40 ac7204 native 416 result-card material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v40_native416_ac7204_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v41 ac4904 native 416 SU window material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v41_native416_ac4904_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v42 remaining native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v44 native 512 chance-button visual-only material catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v44_native512_chance_buttons_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v45 remaining pure native 512 visual-only material catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v46 ac5102 native 416 split component visual catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v46_ac5102_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    }
+  ],
+  "material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v46_ac5102_20260727\\ac5102_split_native_components_v1.json",
+      "sha256": "53B179EFD8CB2305B9AD62ADE8AB39A8FD29F8B6999EE3D300B647029174BE6B"
+    }
+  ]
+}

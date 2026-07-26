@@ -520,6 +520,110 @@ def _count(rows: Iterable[Mapping[str, Any]], key: str) -> dict[str, int]:
     return dict(sorted(Counter(str(row[key]) for row in rows).items()))
 
 
+def _material_component_coverage_bundles(
+    *,
+    raw_bundles: Any,
+    plan_dir: Path,
+    current_material_manifests: Mapping[str, str],
+    quarantines: Mapping[str, Any],
+) -> tuple[list[dict[str, Any]], set[str], list[dict[str, str]]]:
+    """Validate visual coverage proven by multiple native-size catalogs."""
+
+    if raw_bundles is None:
+        return [], set(), []
+    if not isinstance(raw_bundles, list):
+        raise ValueError("material component coverage bundles must be a list")
+    index: list[dict[str, Any]] = []
+    covered_events: set[str] = set()
+    snapshots: list[dict[str, str]] = []
+    for position, raw in enumerate(raw_bundles, start=1):
+        if not isinstance(raw, Mapping):
+            raise ValueError("material component coverage bundle is not an object")
+        path, snapshot = _bound(
+            raw,
+            label=f"material component coverage bundle {position}",
+            plan_dir=plan_dir,
+        )
+        value = read_json(path)
+        events_raw = value.get("covered_events")
+        catalogs_raw = value.get("component_catalogs")
+        if (
+            value.get("schema")
+            != "magireco-material-component-coverage-audit-v1"
+            or value.get("status") != "PASSED"
+            or not isinstance(events_raw, list)
+            or not events_raw
+            or len(events_raw) != int(value.get("covered_event_count", -1))
+            or not isinstance(catalogs_raw, list)
+            or len(catalogs_raw) < 2
+        ):
+            raise ValueError(f"material component coverage bundle differs: {path}")
+        events = {str(event) for event in events_raw}
+        if (
+            len(events) != len(events_raw)
+            or any(not EVENT_PATTERN.fullmatch(event) for event in events)
+            or any(_family(event) in quarantines for event in events)
+        ):
+            raise ValueError(
+                f"material component coverage bundle event set differs: {path}"
+            )
+        overlap = covered_events & events
+        if overlap:
+            raise ValueError(
+                "event appears in multiple material component coverage bundles: "
+                f"{sorted(overlap)}"
+            )
+        catalog_bindings: list[dict[str, str]] = []
+        for catalog in catalogs_raw:
+            if not isinstance(catalog, Mapping):
+                raise ValueError(
+                    f"material component coverage catalog differs: {path}"
+                )
+            manifest_path = Path(
+                str(catalog.get("manifest_path", ""))
+            ).resolve()
+            manifest_sha256 = str(
+                catalog.get("manifest_sha256", "")
+            ).upper()
+            current_sha256 = current_material_manifests.get(
+                str(manifest_path).casefold()
+            )
+            if (
+                not re.fullmatch(r"[0-9A-F]{64}", manifest_sha256)
+                or current_sha256 != manifest_sha256
+                or not manifest_path.is_file()
+                or file_sha256(manifest_path) != manifest_sha256
+            ):
+                raise ValueError(
+                    "material component coverage references a non-current "
+                    f"catalog: {manifest_path}"
+                )
+            catalog_bindings.append(
+                {
+                    "name": str(catalog.get("name", "")),
+                    "manifest_path": str(manifest_path),
+                    "manifest_sha256": manifest_sha256,
+                }
+            )
+        covered_events.update(events)
+        snapshots.append(snapshot)
+        index.append(
+            {
+                "coverage_id": str(value.get("coverage_id", "")),
+                "manifest_path": str(path.resolve()),
+                "manifest_sha256": snapshot["sha256"],
+                "family": str(value.get("family", "")),
+                "events": sorted(events),
+                "event_count": len(events),
+                "component_catalogs": catalog_bindings,
+                "coverage_status": "split_native_component_coverage_passed",
+                "claim_boundary": str(value.get("coverage_claim", "")),
+                "upload_status": "review_only_never_auto_upload",
+            }
+        )
+    return index, covered_events, snapshots
+
+
 def build(
     *,
     plan_path: Path,
@@ -586,6 +690,7 @@ def build(
     production_manifest_index: list[dict[str, Any]] = []
     superseded_audit_index: list[dict[str, Any]] = []
     material_manifest_index: list[dict[str, Any]] = []
+    material_component_coverage_index: list[dict[str, Any]] = []
     roots = plan.get("current_production_roots")
     if not isinstance(roots, list) or len(roots) < 5:
         raise ValueError("current production-root set is incomplete")
@@ -717,11 +822,26 @@ def build(
             value = read_json(path)
             if value.get("technical_qa_status") != "passed":
                 raise ValueError(f"current material manifest QA failed: {path}")
-            events_raw = value.get("covered_events")
-            if not isinstance(events_raw, list) or not events_raw:
+            covered_events_raw = value.get("covered_events")
+            component_events_raw = value.get("component_events")
+            has_full_coverage = (
+                isinstance(covered_events_raw, list)
+                and bool(covered_events_raw)
+            )
+            has_component_coverage = (
+                isinstance(component_events_raw, list)
+                and bool(component_events_raw)
+            )
+            if has_full_coverage == has_component_coverage:
                 raise ValueError(
-                    f"current material manifest lacks covered_events: {path}"
+                    "current material manifest must declare exactly one of "
+                    f"covered_events or component_events: {path}"
                 )
+            events_raw = (
+                covered_events_raw
+                if has_full_coverage
+                else component_events_raw
+            )
             events = {str(event) for event in events_raw}
             if any(not EVENT_PATTERN.fullmatch(event) for event in events):
                 raise ValueError(
@@ -741,13 +861,14 @@ def build(
                 raise ValueError(
                     f"hard-quarantine family entered material root: {path}"
                 )
-            overlap = material_events & events
-            if overlap:
-                raise ValueError(
-                    f"covered event appears in multiple material manifests: "
-                    f"{sorted(overlap)}"
-                )
-            material_events.update(events)
+            if has_full_coverage:
+                overlap = material_events & events
+                if overlap:
+                    raise ValueError(
+                        f"covered event appears in multiple material manifests: "
+                        f"{sorted(overlap)}"
+                    )
+                material_events.update(events)
             manifest_sha256 = file_sha256(path)
             snapshots.extend(
                 [
@@ -775,12 +896,42 @@ def build(
                     ),
                     "events": sorted(events),
                     "event_count": len(events),
+                    "coverage_status": (
+                        "full_event_visual_material_coverage"
+                        if has_full_coverage
+                        else "component_only_requires_coverage_bundle"
+                    ),
                     "output_path": str(output_path),
                     "output_sha256": output_sha256,
                     "included_as_current_material": True,
                     "upload_status": "review_only_never_auto_upload",
                 }
             )
+
+    current_material_manifests = {
+        str(Path(row["manifest_path"]).resolve()).casefold(): str(
+            row["manifest_sha256"]
+        ).upper()
+        for row in material_manifest_index
+    }
+    (
+        material_component_coverage_index,
+        component_bundle_events,
+        component_bundle_snapshots,
+    ) = _material_component_coverage_bundles(
+        raw_bundles=plan.get("material_component_coverage_bundles"),
+        plan_dir=plan_dir,
+        current_material_manifests=current_material_manifests,
+        quarantines=quarantines,
+    )
+    overlap = material_events & component_bundle_events
+    if overlap:
+        raise ValueError(
+            "component coverage bundle overlaps full-event material coverage: "
+            f"{sorted(overlap)}"
+        )
+    material_events.update(component_bundle_events)
+    snapshots.extend(component_bundle_snapshots)
 
     approved_legacy_product_index: list[dict[str, Any]] = []
     approved_legacy_events: set[str] = set()
@@ -1015,6 +1166,9 @@ def build(
         "current_material_collections_requiring_exact_file_playback": (
             material_manifest_index
         ),
+        "current_material_component_coverage_bundles": (
+            material_component_coverage_index
+        ),
         "owner_approved_legacy_exact_products": approved_legacy_product_index,
     }
 
@@ -1102,6 +1256,7 @@ def build(
             {
                 "schema": "magireco-current-material-collection-index-v1",
                 "collections": material_manifest_index,
+                "component_coverage_bundles": material_component_coverage_index,
                 "covered_event_count": len(material_events),
             },
         )
@@ -1138,6 +1293,9 @@ def build(
                 "current_production_manifests": len(production_manifest_index),
                 "current_material_collection_manifests": len(
                     material_manifest_index
+                ),
+                "current_material_component_coverage_bundles": len(
+                    material_component_coverage_index
                 ),
                 "owner_approved_legacy_exact_products": len(
                     approved_legacy_product_index

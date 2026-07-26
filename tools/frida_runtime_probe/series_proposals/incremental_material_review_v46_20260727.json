@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v46-ac5102-split-native-components",
+  "checkpoint_label": "v46",
+  "start_upload_id": 91,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V46.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v46_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "57D65BF7E7A0D55F24BD0B841CCDEBF506D4E6CED46D10771F2312D0AC5CEF21"
+  },
+  "specific_exclusions": [
+    "本批仅含 49 个去重后的原生 416x232 ac5102 玩法视觉组件；116 个来源事件的对白、SE、字幕和未闭合 child-local 时序不在本批。",
+    "同一 120-event 覆盖所需的 8 个原生 512x288 ac8002 按钮组件已经由 v44 目录提供；本批不重复复制、不缩放，也不与 416 组件机械拼接。",
+    "跨目录审计只证明视觉组件全部有哈希绑定覆盖，不把分尺寸素材目录声明为游戏自然事件时间线。"
+  ],
+  "products": [
+    {
+      "collection": "ac5102_416_component_visual_catalog_v1",
+      "title": "魔法少女攻击与按钮玩法视觉组件",
+      "family": "ac5102",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v46_ac5102_split_components_review_20260727\\ac5102_416_component_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "9CA70C27309A6B0E23D039344596586444D2FF33B8C04159A95B8A714D53F572"
+      },
+      "output_sha256": "D067F5393576CF4A85EF9105A30571A18DF25DC39913B252E1588078D0707357"
+    }
+  ]
+}

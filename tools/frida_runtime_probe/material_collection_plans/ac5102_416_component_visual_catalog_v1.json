@@ -1,0 +1,46 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac5102_416_component_visual_catalog_v1",
+  "classification": "ac5102_native416_component_visual_material",
+  "evidence": "One hundred sixteen mixed-size ac5102 gameplay/effect events contain native 416x232 scene components plus native 512x288 chance-button components. This catalog derives and retains only the exact 416x232 visual components. It is component-only, excludes all audio/subtitles, and cannot independently claim full event coverage.",
+  "expected_audio_state": "digital_silence",
+  "component_events": [
+    "ac5102_004", "ac5102_006", "ac5102_008", "ac5102_010", "ac5102_012", "ac5102_014", "ac5102_016", "ac5102_018", "ac5102_021", "ac5102_022",
+    "ac5102_023", "ac5102_024", "ac5102_030", "ac5102_032", "ac5102_034", "ac5102_036", "ac5102_038", "ac5102_040", "ac5102_042", "ac5102_044",
+    "ac5102_047", "ac5102_048", "ac5102_049", "ac5102_050", "ac5102_056", "ac5102_058", "ac5102_060", "ac5102_062", "ac5102_064", "ac5102_066",
+    "ac5102_068", "ac5102_070", "ac5102_073", "ac5102_074", "ac5102_075", "ac5102_076", "ac5102_082", "ac5102_084", "ac5102_086", "ac5102_088",
+    "ac5102_090", "ac5102_092", "ac5102_094", "ac5102_096", "ac5102_099", "ac5102_100", "ac5102_101", "ac5102_102", "ac5102_108", "ac5102_110",
+    "ac5102_112", "ac5102_114", "ac5102_116", "ac5102_118", "ac5102_120", "ac5102_122", "ac5102_125", "ac5102_126", "ac5102_127", "ac5102_128",
+    "ac5102_134", "ac5102_136", "ac5102_138", "ac5102_140", "ac5102_142", "ac5102_144", "ac5102_146", "ac5102_148", "ac5102_151", "ac5102_152",
+    "ac5102_153", "ac5102_154", "ac5102_160", "ac5102_162", "ac5102_164", "ac5102_166", "ac5102_168", "ac5102_170", "ac5102_172", "ac5102_174",
+    "ac5102_177", "ac5102_178", "ac5102_179", "ac5102_180", "ac5102_186", "ac5102_188", "ac5102_190", "ac5102_192", "ac5102_194", "ac5102_196",
+    "ac5102_198", "ac5102_200", "ac5102_203", "ac5102_204", "ac5102_205", "ac5102_206", "ac5102_212", "ac5102_214", "ac5102_216", "ac5102_218",
+    "ac5102_220", "ac5102_222", "ac5102_224", "ac5102_226", "ac5102_229", "ac5102_230", "ac5102_231", "ac5102_232", "ac5102_238", "ac5102_240",
+    "ac5102_242", "ac5102_244", "ac5102_255", "ac5102_256", "ac5102_257", "ac5102_258"
+  ],
+  "component_native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "derive_clips_from_covered_event_manifests": true,
+  "covered_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v14_20260727\\PRODUCTION_EVENT_LEDGER.csv",
+    "sha256": "493AFE97AE215831DF51206CE030BEF947F08C388A3C3616FE7062F5E73F7593",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "native_dimensions": "x"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

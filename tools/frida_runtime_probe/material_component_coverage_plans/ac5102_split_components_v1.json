@@ -1,0 +1,45 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac5102_split_native_components_v1",
+  "family": "ac5102",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_event_count": 120,
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v14_20260727\\PRODUCTION_EVENT_LEDGER.csv",
+    "sha256": "493AFE97AE215831DF51206CE030BEF947F08C388A3C3616FE7062F5E73F7593"
+  },
+  "component_catalogs": [
+    {
+      "name": "ac5102_native416_event_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v46_ac5102_split_components_review_20260727\\ac5102_416_component_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "9CA70C27309A6B0E23D039344596586444D2FF33B8C04159A95B8A714D53F572"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac8002_native512_shared_button_components",
+      "role": "shared_components",
+      "native_dimensions": {
+        "width": 512,
+        "height": 288
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v44_native512_chance_buttons_review_20260727\\ac8002_chance_button_prompt_catalog_v1\\material_collection_manifest.json",
+        "sha256": "0555FE45DE88A326752376015B3BF432FA62C37BFE649B2496C2416F6B0C9DA5"
+      },
+      "allowed_unused_sources": [
+        "ac8002_chance_btn",
+        "ac8002_chance_btn_LP"
+      ]
+    }
+  ]
+}

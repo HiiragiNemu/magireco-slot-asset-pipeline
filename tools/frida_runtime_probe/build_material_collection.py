@@ -2628,25 +2628,38 @@ def _build_named_collection_in_place(
             }
         )
     covered_events_raw = plan.get("covered_events", [])
+    component_events_raw = plan.get("component_events", [])
     if not isinstance(covered_events_raw, list):
         raise ValueError(
             f"named material plan covered_events must be a list: {plan_path}"
         )
+    if not isinstance(component_events_raw, list):
+        raise ValueError(
+            f"named material plan component_events must be a list: {plan_path}"
+        )
     covered_events = [str(event).strip() for event in covered_events_raw]
-    if any(not EVENT_NAME_RE.fullmatch(event) for event in covered_events):
+    component_events = [
+        str(event).strip() for event in component_events_raw
+    ]
+    if covered_events and component_events:
+        raise ValueError(
+            "named material plan cannot mix covered_events and component_events"
+        )
+    scoped_events = covered_events or component_events
+    if any(not EVENT_NAME_RE.fullmatch(event) for event in scoped_events):
         raise ValueError("named material plan covered_events contains invalid event")
-    if len(set(covered_events)) != len(covered_events):
+    if len(set(scoped_events)) != len(scoped_events):
         raise ValueError("named material plan covered_events contains duplicates")
     resolved_evidence_sources.extend(
         resolve_covered_event_index(
             plan.get("covered_event_index"),
             plan_path=resolved_plan,
-            covered_events=covered_events,
+            covered_events=scoped_events,
             source_roles=source_roles,
             collection=collection,
         )
     )
-    if covered_events:
+    if scoped_events:
         evidence_events = set()
         evidence_payloads: dict[str, dict] = {}
         for evidence in resolved_evidence_sources:
@@ -2668,17 +2681,17 @@ def _build_named_collection_in_place(
             ):
                 evidence_events.add(event)
                 evidence_payloads[event] = evidence_payload
-        if evidence_events != set(covered_events):
+        if evidence_events != set(scoped_events):
             raise ValueError(
                 "named material covered_events do not match bound event "
-                f"production manifests: declared={sorted(covered_events)}, "
+                f"production manifests: declared={sorted(scoped_events)}, "
                 f"evidence={sorted(evidence_events)}"
             )
     else:
         evidence_payloads = {}
     derived_source_paths: dict[str, set[str]] = {}
     if derive_clips:
-        for event in covered_events:
+        for event in scoped_events:
             payload = evidence_payloads[event]
             clips = payload.get("clips")
             if not isinstance(clips, list) or not clips:
@@ -2767,6 +2780,71 @@ def _build_named_collection_in_place(
                 continue
             return (Path(override["to"]) / relative).resolve()
         return mapped_path.resolve()
+
+    component_dimensions_raw = plan.get("component_native_dimensions")
+    component_dimensions: dict[str, int] | None = None
+    component_event_clip_map: dict[str, list[str]] = {}
+    if component_dimensions_raw is not None:
+        if (
+            not component_events
+            or not derive_clips
+            or not isinstance(component_dimensions_raw, dict)
+            or set(component_dimensions_raw) != {"width", "height"}
+        ):
+            raise ValueError(
+                "component native dimensions require derived component events"
+            )
+        component_dimensions = {
+            "width": int(component_dimensions_raw["width"]),
+            "height": int(component_dimensions_raw["height"]),
+        }
+        if (
+            component_dimensions["width"] < 1
+            or component_dimensions["height"] < 1
+        ):
+            raise ValueError("component native dimensions are invalid")
+        filtered_clips: list[dict] = []
+        selected_keys: set[str] = set()
+        for planned in planned_clips:
+            official_name = str(planned["official_name"])
+            source_path = resolve_named_source(
+                video_map.get(official_name.casefold(), {})
+            )
+            if not source_path.is_file():
+                raise FileNotFoundError(
+                    f"unresolved derived named material {official_name}: "
+                    f"{source_path}"
+                )
+            current_signature = video_signature(probe(source_path, ffprobe))
+            if (
+                int(current_signature["width"])
+                == component_dimensions["width"]
+                and int(current_signature["height"])
+                == component_dimensions["height"]
+            ):
+                filtered_clips.append(planned)
+                selected_keys.add(official_name.casefold())
+        planned_clips = filtered_clips
+        if len(planned_clips) < 2:
+            raise ValueError(
+                "derived component material needs at least two unique clips"
+            )
+        for event in component_events:
+            selected: list[str] = []
+            for clip in evidence_payloads[event]["clips"]:
+                raw_path = str(
+                    clip.get("path") or clip.get("source_path") or ""
+                ).strip()
+                official_name = str(
+                    clip.get("dgm_name") or Path(raw_path).stem
+                ).strip()
+                if official_name.casefold() in selected_keys:
+                    selected.append(official_name)
+            if not selected:
+                raise ValueError(
+                    f"component event has no selected native clips: {event}"
+                )
+            component_event_clip_map[event] = selected
 
     if derive_clips:
         for official_name, raw_paths in derived_source_paths.items():
@@ -3106,6 +3184,9 @@ def _build_named_collection_in_place(
         "evidence": str(plan.get("evidence", "")),
         "evidence_sources": resolved_evidence_sources,
         "covered_events": covered_events,
+        "component_events": component_events,
+        "component_native_dimensions": component_dimensions,
+        "component_event_clip_map": component_event_clip_map,
         "source_root_overrides": resolved_source_root_overrides,
         "direct_stream_copy": True,
         "visual_only_output": True,
