@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v6.json",
+    "sha256": "0A8DCC5CCA58BA7328B692E0A497B1A40AC09F5798C5A5080E7569441F54E3AE"
+  },
+  "checkpoint_id": "20260726-v38-native416-gameplay-ui-materials",
+  "scope": "All v6 current production and exact owner-approved product records plus both hash-bound native 416x232 visual-only material-review roots. Review-only material collections remain non-publishable until exact-file playback.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    }
+  ]
+}

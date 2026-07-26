@@ -1,0 +1,52 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac8000_next_continue_ui_v1",
+  "classification": "black_matte_next_continue_gameplay_ui_material",
+  "evidence": "Two native 416x232 black-matte NEXT/continue UI events each contain an exact intro and loop clip. They are retained as a separate visual-only gameplay material collection, never as clean story.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac8000_002",
+    "ac8000_003"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac8000_002 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac8000_002.json",
+      "sha256": "78443AA9C3A8822E67B020973EE8C1D3C9E240361EF2FA8093A45AA226F45430"
+    },
+    {
+      "label": "ac8000_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac8000_003.json",
+      "sha256": "54DE7ED2964C125314D4F6F4FA4CF4AEDDDE73DB08DE68C441ADA901E2D23AC9"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac8000_cmn_tx_next",
+      "label": "NEXT text intro"
+    },
+    {
+      "official_name": "ac8000_cmn_tx_next_LP",
+      "label": "NEXT text loop"
+    },
+    {
+      "official_name": "ac8000_cmn_tx_tuduku",
+      "label": "continue text intro"
+    },
+    {
+      "official_name": "ac8000_cmn_tx_tuduku_LP",
+      "label": "continue text loop"
+    }
+  ]
+}

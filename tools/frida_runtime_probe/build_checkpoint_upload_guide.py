@@ -547,8 +547,15 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 )
             )
 
-    if "v36_material_index" in source_paths:
-        material_index = read_json(source_paths["v36_material_index"])
+    material_index_source = (
+        "current_material_index"
+        if "current_material_index" in source_paths
+        else "v36_material_index"
+        if "v36_material_index" in source_paths
+        else ""
+    )
+    if material_index_source:
+        material_index = read_json(source_paths[material_index_source])
         if (
             material_index.get("schema")
             != "magireco-current-material-collection-index-v1"

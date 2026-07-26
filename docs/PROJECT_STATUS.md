@@ -2,6 +2,48 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 原生 416 玩法 UI 素材审查 v38
+
+继续按“416 路线／玩法优先于 512 TV 剧情”的顺序，本轮生成两片原生
+416x232、30 fps、视觉-only 玩法 UI 素材：
+
+- `ac8000_next_continue_ui_v1__material_components__416x232_30-1.mp4`：
+  NEXT intro/loop 与继续 intro/loop 共 4 段、10.000 秒，SHA-256
+  `9996E71365100D31E011109EFCAF2885B8A7818B9819D95A07016DD9C0276A89`；
+- `ac8004_shutter_transitions_v1__material_components__416x232_30-1.mp4`：
+  快门关闭 intro/loop 与失败开启共 3 段、2.333 秒，SHA-256
+  `094CF75827BDDC4751086EA22EF82FC129137470C4D71B2A62F7D983689F8666`。
+
+耐久审查根：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  material_collections_v38_native416_ui_review_20260726
+```
+
+两片 H.264 视频流直接复制，最终无音轨、无字幕；自动技术 QA 通过，但均为
+`human_playback_required` / `review_only`，人工确认前禁止投稿。视觉合集不消费
+也不声明 child-local 声音时序；尤其快门的外部老虎机声音没有并入本批。
+
+总账推进到 `production_ledger_v7_20260726`：current material manifest 从 3
+增至 5，覆盖事件从 17 增至 21，planned production-manifest gameplay/material
+项从 391 降至 387；四部 v22 精确人工批准产品仍独立记录，当前 event manifest
+风险标记不变。`SUMMARY.json`、`CURRENT_MATERIAL_COLLECTION_INDEX.json`、
+`SHA256SUMS.json` SHA-256 分别为
+`8C2C3CA25A714FA3392151D482345EC3FF3BC11C3F79C849F9D034098A675099`、
+`727CD928883C2CF462558DCB223D520D6E161CFC77212F349D062279BAA75E1E`、
+`246E80D363C1D9D6B0CC202BC123FC0DBB32FC56A805FC93F72151451EDCA4E7`。
+
+逐文件上传指南推进到 `upload_guide_v38_20260726`，共 200 个精确文件：
+10 个已投稿、17 个可投稿、173 个待人工播放、8 类明确排除。本轮新增两片
+只进入待审，没有新增 READY。`UPLOAD_GUIDE.json`、`.md`、`.csv`、
+`SHA256SUMS.json` SHA-256 分别为
+`034911985AC003F3A9C7FE519A4844877FED7A463B611DA49F4938777E6AD1D5`、
+`F172970838B25279A20CBC7B0DD55C3EA32F04DDCF5CD51BED717AA407750C24`、
+`71A6B42765348A078C93FB0581D59D0747652346F88FCCE38010D752782E911C`、
+`51BD737368C15E1210B57066521B691EE901FCB87112A771A47CA2A82E91AE6F`。
+P16/P17/P18 继续硬隔离；`ac7210_superseded_verbose_audit` 继续只读且绝不上传。
+
 ## 2026-07-26 四部已人工批准章节恢复到投稿指南 v37
 
 四个耐久 v22 中文章节的 MP4、SRT、chapter manifest、自动 QA 和 READY hash

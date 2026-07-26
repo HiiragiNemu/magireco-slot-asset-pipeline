@@ -1,0 +1,48 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac8004_shutter_transitions_v1",
+  "classification": "development_shutter_transition_gameplay_material",
+  "evidence": "The native 416x232 shutter-close intro/loop and shutter-open failure clip are verified transition components. Their external slot sounds are deliberately not claimed by this visual-only collection.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac8004_005",
+    "ac8004_006"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac8004_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac8004_005.json",
+      "sha256": "694C2A380E3B087990A887AADA10B670DFB6D7D6A79E1F6C34E14DF4395B216C"
+    },
+    {
+      "label": "ac8004_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac8004_006.json",
+      "sha256": "8FAF6A03241EFDA507A590651314F71B231CE2E01F81607C1029F6C6B9B80338"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac0928_hat_shutter_lev",
+      "label": "development shutter close intro"
+    },
+    {
+      "official_name": "ac0928_hat_shutter_lev_LP",
+      "label": "development shutter close loop"
+    },
+    {
+      "official_name": "ac0928_hat_shutter_lost",
+      "label": "development shutter open failure"
+    }
+  ]
+}
