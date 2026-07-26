@@ -1,0 +1,17 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v43_20260727.json",
+    "sha256": "A85A95C9AF8613FCEF2090A074FBC82EAC427DFC4AF9C6B5586A60AE7E861444"
+  },
+  "checkpoint_id": "20260727-v44-native512-chance-button-material",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v13_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "66092A156D947D2B39C30F51D5D1300AF9B81ED5A6E4A5B00CA64C97C0DC2BD7"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v13_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "FC612D01941DD16B9FE25DD92AF06BB78270EA2250659F5E9E228237FE283199"
+    }
+  }
+}

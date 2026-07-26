@@ -52,6 +52,10 @@ class BuildIncrementalMaterialReviewPackageTest(unittest.TestCase):
             "黑江瞄准玩法素材 ac2201 中文版",
         )
         self.assertEqual(len({module._target(value) for value in module.EDITIONS}), 3)
+        self.assertIn(
+            "原生512x288",
+            module._target("none", 512, 288),
+        )
 
 
 if __name__ == "__main__":

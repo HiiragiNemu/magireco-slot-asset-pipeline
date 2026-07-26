@@ -57,6 +57,9 @@ MATERIAL_PART_NAMES = {
         "出前胜利复活背景与标志素材 ac1103"
     ),
     "ac2201_kuroe_nerae_gameplay_layers_v1": "黑江瞄准玩法素材 ac2201",
+    "ac8002_chance_button_prompt_catalog_v1": (
+        "五类机会按钮提示素材 ac8002"
+    ),
 }
 
 

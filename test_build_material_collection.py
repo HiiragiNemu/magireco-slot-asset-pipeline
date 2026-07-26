@@ -1508,6 +1508,76 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
             },
         )
 
+    def test_named_material_resolves_event_manifests_from_bound_ledger(
+        self,
+    ) -> None:
+        first = self.make_video("ledger-red.mp4", "red")
+        second = self.make_video("ledger-blue.mp4", "blue")
+        events = ["ac0001_001", "ac6101_2_01"]
+        manifests = []
+        for event in events:
+            path = self.root / f"{event}.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-event-production-v3",
+                        "event": event,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            manifests.append(path)
+        ledger = self.root / "production-event-ledger.csv"
+        ledger.write_text(
+            "event_name,native_dimensions,disposition,production_state,"
+            "manifest_path,manifest_sha256\n"
+            + "\n".join(
+                f"{event},512x288,gameplay_effect_collection,"
+                f"planned_unproduced,{path},{file_sha256(path)}"
+                for event, path in zip(events, manifests)
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_ledger_evidence",
+            "covered_events": events,
+            "covered_event_index": {
+                "path": str(ledger),
+                "sha256": file_sha256(ledger),
+                "production_state": "planned_unproduced",
+                "disposition": "gameplay_effect_collection",
+                "native_dimensions": "512x288",
+            },
+            "clips": [
+                {"official_name": "ledger_red", "label": "red"},
+                {"official_name": "ledger_blue", "label": "blue"},
+            ],
+        }
+        plan_path = self.root / "named-ledger-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {
+                "ledger_red": {"target_mp4": str(first)},
+                "ledger_blue": {"target_mp4": str(second)},
+            },
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["covered_events"], events)
+        evidence_paths = {
+            Path(item["path"]) for item in manifest["evidence_sources"]
+        }
+        self.assertEqual(
+            evidence_paths,
+            {ledger.resolve(), *(path.resolve() for path in manifests)},
+        )
+
     def test_named_material_rejects_evidence_source_hash_mismatch(self) -> None:
         first = self.make_video("mismatch-red.mp4", "red")
         second = self.make_video("mismatch-blue.mp4", "blue")

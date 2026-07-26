@@ -32,6 +32,7 @@ except ImportError:  # direct script execution
 
 SOUND_ID_RE = re.compile(r"^(\d{4,5})(?:_|\s|$)")
 SHA256_RE = re.compile(r"^[0-9A-Fa-f]{64}$")
+EVENT_NAME_RE = re.compile(r"^ac\d+(?:_\d+)+$")
 GAMEPLAY_TERMS = (
     "地図",
     "結果表示",
@@ -142,6 +143,116 @@ def _add_material_source_role(
     if not resolved.is_file():
         raise FileNotFoundError(resolved)
     paths.setdefault(resolved, set()).add(str(role))
+
+
+def resolve_covered_event_index(
+    raw: object,
+    *,
+    plan_path: Path,
+    covered_events: list[str],
+    source_roles: dict[Path, set[str]],
+    collection: str,
+) -> list[dict[str, str]]:
+    """Resolve exact event manifests through one hash-bound ledger snapshot."""
+
+    if raw is None:
+        return []
+    required = {
+        "path",
+        "sha256",
+        "production_state",
+        "disposition",
+        "native_dimensions",
+    }
+    if not isinstance(raw, dict) or set(raw) != required:
+        raise ValueError("named material covered_event_index fields differ")
+    index_path = Path(str(raw["path"]))
+    if not index_path.is_absolute():
+        index_path = plan_path.parent / index_path
+    index_path = index_path.resolve()
+    expected_index_sha = str(raw["sha256"]).strip().upper()
+    if (
+        not index_path.is_file()
+        or not SHA256_RE.fullmatch(expected_index_sha)
+        or file_sha256(index_path) != expected_index_sha
+    ):
+        raise ValueError("named material covered event index SHA-256 differs")
+    _add_material_source_role(
+        source_roles,
+        index_path,
+        f"{collection}:covered_event_index",
+    )
+    selected: dict[str, dict[str, str]] = {}
+    with index_path.open("r", encoding="utf-8-sig", newline="") as source:
+        for row in csv.DictReader(source):
+            event = str(row.get("event_name", "")).strip()
+            if event not in covered_events:
+                continue
+            if event in selected:
+                raise ValueError(
+                    f"covered event index contains duplicate event: {event}"
+                )
+            if (
+                str(row.get("production_state", ""))
+                != str(raw["production_state"])
+                or str(row.get("disposition", ""))
+                != str(raw["disposition"])
+                or str(row.get("native_dimensions", ""))
+                != str(raw["native_dimensions"])
+            ):
+                raise ValueError(
+                    f"covered event index state differs: {event}"
+                )
+            selected[event] = row
+    if set(selected) != set(covered_events):
+        raise ValueError(
+            "covered event index set differs: "
+            f"expected={sorted(covered_events)} actual={sorted(selected)}"
+        )
+    resolved = [
+        {
+            "label": "hash-bound exhaustive production event ledger",
+            "path": str(index_path),
+            "sha256": expected_index_sha,
+        }
+    ]
+    for event in covered_events:
+        row = selected[event]
+        manifest_path = Path(str(row.get("manifest_path", ""))).resolve()
+        expected_manifest_sha = str(
+            row.get("manifest_sha256", "")
+        ).strip().upper()
+        if (
+            not manifest_path.is_file()
+            or not SHA256_RE.fullmatch(expected_manifest_sha)
+            or file_sha256(manifest_path) != expected_manifest_sha
+        ):
+            raise ValueError(
+                f"covered event manifest binding differs: {event}"
+            )
+        payload = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+        if (
+            not str(payload.get("schema", "")).startswith(
+                "magireco-event-production-"
+            )
+            or payload.get("event") != event
+        ):
+            raise ValueError(
+                f"covered event manifest identity differs: {event}"
+            )
+        _add_material_source_role(
+            source_roles,
+            manifest_path,
+            f"{collection}:covered_event_manifest:{event}",
+        )
+        resolved.append(
+            {
+                "label": f"{event} production manifest via event ledger",
+                "path": str(manifest_path),
+                "sha256": expected_manifest_sha,
+            }
+        )
+    return resolved
 
 
 def capture_material_source_snapshot(
@@ -2513,10 +2624,19 @@ def _build_named_collection_in_place(
             f"named material plan covered_events must be a list: {plan_path}"
         )
     covered_events = [str(event).strip() for event in covered_events_raw]
-    if any(not re.fullmatch(r"ac\d+_\d+", event) for event in covered_events):
+    if any(not EVENT_NAME_RE.fullmatch(event) for event in covered_events):
         raise ValueError("named material plan covered_events contains invalid event")
     if len(set(covered_events)) != len(covered_events):
         raise ValueError("named material plan covered_events contains duplicates")
+    resolved_evidence_sources.extend(
+        resolve_covered_event_index(
+            plan.get("covered_event_index"),
+            plan_path=resolved_plan,
+            covered_events=covered_events,
+            source_roles=source_roles,
+            collection=collection,
+        )
+    )
     if covered_events:
         evidence_events = set()
         for evidence in resolved_evidence_sources:
@@ -2534,7 +2654,7 @@ def _build_named_collection_in_place(
                 str(evidence_payload.get("schema", "")).startswith(
                     "magireco-event-production-"
                 )
-                and re.fullmatch(r"ac\d+_\d+", event)
+                and EVENT_NAME_RE.fullmatch(event)
             ):
                 evidence_events.add(event)
         if evidence_events != set(covered_events):

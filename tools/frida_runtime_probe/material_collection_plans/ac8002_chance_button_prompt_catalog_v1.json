@@ -1,0 +1,130 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac8002_chance_button_prompt_catalog_v1",
+  "classification": "five_type_chance_button_gameplay_ui_material",
+  "evidence": "Fifty-nine planned gameplay/effect events across ac0909, ac6101, ac7221, ac8002 and ac9051 resolve exclusively to one of five native 512x288 ac8002 chance-button intro/loop pairs. This visual-only catalog keeps each distinct prompt pair once, drops all event audio and subtitles, does not consume child-local timing, and never claims a clean-story or natural-session sequence.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0909_009",
+    "ac0909_021",
+    "ac0909_033",
+    "ac0909_045",
+    "ac0909_057",
+    "ac0909_069",
+    "ac0909_081",
+    "ac0909_093",
+    "ac0909_105",
+    "ac0909_117",
+    "ac0909_129",
+    "ac0909_141",
+    "ac0909_153",
+    "ac0909_165",
+    "ac0909_177",
+    "ac0909_189",
+    "ac0909_201",
+    "ac0909_213",
+    "ac0909_225",
+    "ac0909_237",
+    "ac0909_249",
+    "ac0909_261",
+    "ac0909_273",
+    "ac0909_285",
+    "ac0909_297",
+    "ac6101_2_01",
+    "ac7221_005",
+    "ac8002_001",
+    "ac8002_002",
+    "ac8002_003",
+    "ac8002_004",
+    "ac8002_005",
+    "ac8002_006",
+    "ac8002_007",
+    "ac8002_009",
+    "ac8002_011",
+    "ac8002_018",
+    "ac8002_021",
+    "ac8002_023",
+    "ac9051_001",
+    "ac9051_002",
+    "ac9051_003",
+    "ac9051_004",
+    "ac9051_005",
+    "ac9051_006",
+    "ac9051_007",
+    "ac9051_008",
+    "ac9051_009",
+    "ac9051_010",
+    "ac9051_011",
+    "ac9051_012",
+    "ac9051_013",
+    "ac9051_014",
+    "ac9051_015",
+    "ac9051_016",
+    "ac9051_017",
+    "ac9051_018",
+    "ac9051_019",
+    "ac9051_020"
+  ],
+  "covered_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v12_20260727\\PRODUCTION_EVENT_LEDGER.csv",
+    "sha256": "2AFBB7FE04EB34DFED9E2B75575C85C5752787D6FF32AC67AA17AE08B0D062AA",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "native_dimensions": "512x288"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac8002_chance_btn",
+      "label": "generic CHANCE button intro"
+    },
+    {
+      "official_name": "ac8002_chance_btn_LP",
+      "label": "generic CHANCE button loop"
+    },
+    {
+      "official_name": "ac8002_chance_btn_osite",
+      "label": "press button intro"
+    },
+    {
+      "official_name": "ac8002_chance_btn_osoteLP",
+      "label": "press button loop"
+    },
+    {
+      "official_name": "ac8002_chance_btn_rengeki",
+      "label": "multi-hit button intro"
+    },
+    {
+      "official_name": "ac8002_chance_btn_rengeki_LP",
+      "label": "multi-hit button loop"
+    },
+    {
+      "official_name": "ac8002_chance_btn_nagaosi",
+      "label": "long-press button intro"
+    },
+    {
+      "official_name": "ac8002_chance_btn_nagaosi_LP",
+      "label": "long-press button loop"
+    },
+    {
+      "official_name": "ac8002_chance_btn_renda",
+      "label": "rapid-tap button intro"
+    },
+    {
+      "official_name": "ac8002_chance_btn_rendaLP",
+      "label": "rapid-tap button loop"
+    }
+  ]
+}

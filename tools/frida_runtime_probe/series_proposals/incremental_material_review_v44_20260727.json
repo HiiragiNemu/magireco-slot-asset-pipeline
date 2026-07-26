@@ -1,0 +1,30 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v44-native512-chance-button-material",
+  "checkpoint_label": "v44",
+  "start_upload_id": 85,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V44.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v44_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "82430859FEA06B30A6DA88F8B3362E964ED0523FAB612CBB0AEF42D6DB6BA773"
+  },
+  "specific_exclusions": [
+    "59 个来源事件的对白、SE 与字幕未进入本视觉-only合集；本片不声明这些 child-local 音频时序已闭合。"
+  ],
+  "products": [
+    {
+      "collection": "ac8002_chance_button_prompt_catalog_v1",
+      "title": "五类机会按钮提示素材",
+      "family": "ac8002",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v44_native512_chance_buttons_review_20260727\\ac8002_chance_button_prompt_catalog_v1\\material_collection_manifest.json",
+        "sha256": "0555FE45DE88A326752376015B3BF432FA62C37BFE649B2496C2416F6B0C9DA5"
+      },
+      "output_sha256": "D2C2E4F08ABE40751976BAEF4E30F2D35FB9EA7BD04E4426923362D2654EBAC2"
+    }
+  ]
+}

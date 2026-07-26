@@ -120,9 +120,9 @@ def _part_name(title: str, family: str, edition: str) -> str:
     return base
 
 
-def _target(edition: str) -> str:
+def _target(edition: str, width: int = 416, height: int = 232) -> str:
     return (
-        "新建建议：MagiaReco Slot 原生416玩法／素材合集 "
+        f"新建建议：MagiaReco Slot 原生{width}x{height}玩法／素材合集 "
         f"({edition}) BV"
     )
 
@@ -188,6 +188,36 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
     start_id = int(plan.get("start_upload_id", 0))
     if start_id < 1:
         raise ValueError("start_upload_id must be positive")
+    expected_dimensions = plan.get(
+        "expected_dimensions",
+        {"width": 416, "height": 232},
+    )
+    if (
+        not isinstance(expected_dimensions, dict)
+        or set(expected_dimensions) != {"width", "height"}
+    ):
+        raise ValueError("incremental material expected_dimensions differs")
+    expected_width = int(expected_dimensions["width"])
+    expected_height = int(expected_dimensions["height"])
+    if expected_width < 1 or expected_height < 1:
+        raise ValueError("incremental material expected dimensions are invalid")
+    checkpoint_label = str(plan.get("checkpoint_label", "v42")).strip()
+    if not re.fullmatch(r"v\d+", checkpoint_label):
+        raise ValueError("incremental material checkpoint label differs")
+    source_guide_copy_name = str(
+        plan.get(
+            "source_guide_copy_name",
+            "SOURCE_GLOBAL_UPLOAD_GUIDE_V42.json",
+        )
+    ).strip()
+    if not re.fullmatch(r"[A-Z0-9_]+\.json", source_guide_copy_name):
+        raise ValueError("incremental material guide copy name differs")
+    specific_exclusions = plan.get("specific_exclusions", [])
+    if not isinstance(specific_exclusions, list) or any(
+        not isinstance(value, str) or not value.strip()
+        for value in specific_exclusions
+    ):
+        raise ValueError("incremental material specific exclusions differ")
 
     prepared: list[dict] = []
     seen_collections: set[str] = set()
@@ -223,8 +253,8 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             raise ValueError(f"{collection} material contract differs")
         probe = probe_video(output, ffprobe)
         if (
-            probe["width"] != 416
-            or probe["height"] != 232
+            probe["width"] != expected_width
+            or probe["height"] != expected_height
             or probe["frame_rate"] != "30/1"
             or probe["video_codec"] != "h264"
             or probe["audio_codec"]
@@ -333,10 +363,15 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                         "visual-only; no audio; no burned-in subtitles; "
                         f"legal {edition} target alias"
                     ),
-                    "automated_qa_status": "passed_visual_only_native416",
+                    "automated_qa_status": (
+                        "passed_visual_only_native"
+                        f"{expected_width}x{expected_height}"
+                    ),
                     "human_approval_status": "human_playback_required",
                     "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
-                    "target_bv": _target(edition),
+                    "target_bv": _target(
+                        edition, expected_width, expected_height
+                    ),
                     "suggested_part_name": _part_name(
                         product["title"], product["family"], edition
                     ),
@@ -354,7 +389,9 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                             "sha256": actual,
                             "canonical_packaged_file": canonical_relative,
                             "physical_duplicate": False,
-                            "target_bv": _target(edition),
+                            "target_bv": _target(
+                                edition, expected_width, expected_height
+                            ),
                             "reason": (
                                 "legal cross-target exact-hash alias; separate "
                                 "hardlink name, same canonical physical data"
@@ -380,7 +417,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             alias_rows,
         )
         shutil.copy2(plan_path, manifests / "SOURCE_INCREMENTAL_PLAN.json")
-        shutil.copy2(guide_path, manifests / "SOURCE_GLOBAL_UPLOAD_GUIDE_V42.json")
+        shutil.copy2(guide_path, manifests / source_guide_copy_name)
 
         table = [
             "| U号 | none 文件 | JA 文件 | ZH 文件 | 建议动作 |",
@@ -400,7 +437,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
         (manifests / "START_HERE_UPLOAD_GUIDE.md").write_text(
             "\n".join(
                 [
-                    "# v42 增量人工审查与上传指南",
+                    f"# {checkpoint_label} 增量人工审查与上传指南",
                     "",
                     "本批没有立即可上传文件；`00_UPLOAD_NOW` 为空是因为这些"
                     "新合集尚未获得 exact-file 人工播放批准，不代表 none 未生产。",
@@ -408,7 +445,9 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                     "先完整播放：",
                     f"`{output_root}\\02_REVIEW_MATERIAL\\batch_001`。",
                     "",
-                    "4 个作品均为原生 416×232、30fps、H.264、无音轨、无"
+                    f"{len(prepared)} 个作品均为原生 "
+                    f"{expected_width}×{expected_height}、30fps、H.264、"
+                    "无音轨、无"
                     "烧录字幕的视觉素材。none/JA/ZH 是分别面向三个目标轨的"
                     "合法同哈希 hardlink；每个作品只占一份物理数据。",
                     "",
@@ -426,24 +465,23 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             encoding="utf-8",
         )
         (manifests / "HUMAN_REVIEW_CHECKLIST.md").write_text(
-            "# v42 素材人工播放检查表\n\n"
+            f"# {checkpoint_label} 素材人工播放检查表\n\n"
             "- [ ] 从头到尾完整播放，无截断、异常黑帧或卡死\n"
             "- [ ] 命名画面顺序合理，重复视觉已去重但别名仍在 manifest\n"
             "- [ ] 全程静音，无意外对白、SE 或 BGM\n"
-            "- [ ] 原生 416×232、30fps，无 upscale\n"
+            f"- [ ] 原生 {expected_width}×{expected_height}、30fps，无 upscale\n"
             "- [ ] 作品是玩法／素材合集，不冒充 clean story\n"
             "- [ ] none/JA/ZH 三入口为同 inode 合法别名\n"
             "- [ ] 按 `UPLOAD_INDEX.csv` 中 exact SHA-256 记录批准或失败\n",
             encoding="utf-8",
         )
         (manifests / "EXCLUSIONS.md").write_text(
-            "# v42 明确排除项\n\n"
+            f"# {checkpoint_label} 明确排除项\n\n"
             "- P16/ac6003、P17/ac6004、P18/ac6005：继续隔离。\n"
             "- 所有 superseded、quarantine、旧错误或已投稿 exact hash。\n"
             "- 未闭合 child-local Z2D 音频／字幕时序项目。\n"
             "- 互斥路线机械串联，以及任何 upscale。\n"
-            "- ac1103 的 256×144 `ac8040_shouri_EF` 系列：留待其他"
-            "原生尺寸效果合集，本批不放大也不混入 416 合集。\n",
+            + "".join(f"- {value.strip()}\n" for value in specific_exclusions),
             encoding="utf-8",
         )
         (

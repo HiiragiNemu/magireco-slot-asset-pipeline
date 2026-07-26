@@ -2,6 +2,38 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 原生 512 机会按钮玩法素材 v44
+
+其他原生尺寸玩法／素材产线首先收口了在多个 family 中重复出现的 ac8002
+机会按钮。`material_collections_v44_native512_chance_buttons_review_20260727`
+包含一个原生 512x288、30fps、H.264、无音轨的视觉-only 合集：普通
+CHANCE、按下、连击、长按、连打五类提示，各保留 intro/loop 一次，共 10
+段、14.000 秒，SHA-256
+`D2C2E4F08ABE40751976BAEF4E30F2D35FB9EA7BD04E4426923362D2654EBAC2`。
+
+本合集覆盖 ac0909、ac6101、ac7221、ac8002、ac9051 共 59 个
+gameplay/effect 事件。这 59 个事件的完整视觉 clip set 都只引用上述五组
+按钮；来源总账、59 个 v20 manifest、官方名称表和 10 个源 MP4 均进入
+source snapshot。原事件的 105 个音频层与 302 条字幕 cue 全部明确排除；
+因此本合集不消费 child-local 时序，也不声称原事件的对白／SE 已修复。
+
+增量审查根
+`bilibili_incremental_review_v44_native512_chance_buttons_20260727` 使用 U085：
+none/JA/ZH 三个入口为同一源 MP4 的同 inode hardlink，分别指向三个目标轨，
+但仍全部 `HOLD_FOR_HUMAN_PLAYBACK`；`00_UPLOAD_NOW` 和隔离媒体均为 0。
+
+总账推进到 `production_ledger_v13_20260727`：current material manifest
+15→16，material-covered event 122→181，production-manifest
+`planned_unproduced` 286→227；blocked timing 与 quarantine 数量完全不变。
+全局指南 `upload_guide_v44_20260727` 为 10 个已投稿、17 个可投稿、196 个
+待人工播放、8 类明确排除，共 223 个精确文件。详细证据见
+`docs/research/2026-07-27-native512-chance-button-material-v44.md`。
+
+剩余 227 个 production-manifest 玩法／效果事件集中在 ac3102（57）、
+ac3103（24）、ac3407（12）、ac3409（12）、ac5102（120）和 ac8000（2）。
+除 ac5102 外的五个纯 512 family/组可继续视觉-only 收口；ac5102 同时包含
+原生 416 与 512 组件，必须分层建目录，不得线性拼接或把任一尺寸放大。
+
 ## 2026-07-27 其他原生尺寸 event-exact 单事件审查 v43
 
 原生 416 剧情／路线的下一批已在 v42 核对为“无新增 event-exact natural
