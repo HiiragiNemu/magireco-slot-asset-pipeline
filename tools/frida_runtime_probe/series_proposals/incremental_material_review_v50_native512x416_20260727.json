@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v50-ac5001-native512x416",
+  "checkpoint_label": "v50",
+  "start_upload_id": 107,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V50.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v50_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "B6ABB2EA5954904E6E58ADF218DA8CDAA771B298FC3794FA26956585CCEAD056"
+  },
+  "specific_exclusions": [
+    "本批只含 ac5001 的一个原生 512x416 攻击标题组件；15 个 416x232 组件在 U106。",
+    "单来源目录只保留一次 exact source，没有伪造重复片段，也不冒充完整事件。",
+    "官方资源名的 attack_tittle 拼写按来源保留；禁止改名后误认成另一素材。",
+    "两种原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac5001_attack_title_component_512x416_v1",
+      "title": "飞行演出攻击标题组件",
+      "family": "ac5001",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v50_ac5001_split_components_review_20260727\\ac5001_attack_title_component_512x416_v1\\material_collection_manifest.json",
+        "sha256": "18E87694038D1BB8F982B9560E1859EDC0795DA70E414F75D8BB546EBCCADAF6"
+      },
+      "output_sha256": "5255F6396023AB80424EFBDC169B437CC7B4A1F755BAF9B0A3E56AF255B06F7B"
+    }
+  ]
+}

@@ -2,6 +2,31 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac5001 分尺寸飞行组件 v50
+
+`material_collections_v50_ac5001_split_components_review_20260727` 已把
+ac5001_001–036 的 287 个 exact visual occurrence 拆成两个原生尺寸产品：
+15 个 416x232 飞行动作／背景／属性组件（55.663 秒）和 1 个 512x416 攻击
+标题组件（2.5 秒）。没有跨尺寸拼接或 upscale；`ac5001_007` 特有的 7 组件
+集合保持原样，没有错误补入其他 35 个事件共有的 `ac5101_1G_lev_lp`。
+
+覆盖审计 `material_component_coverage_v50_ac5001_20260727` 通过：
+36/36 event、287/287 occurrence、16/16 唯一源、0 unused。两个 manifest
+对 v17 当前素材库存的 source SHA 重叠均为 0。它们只声明 visual component
+coverage，不冒充完整事件、对白／SE／BGM／字幕或自然 session。
+
+总账推进到 `production_ledger_v18_20260727`：produced audience 185、
+material-covered 491、produced DirInfo route 62、timing blocker 330、
+quarantine audience 53；P16/P17/P18 继续 hard quarantine。全局指南
+`upload_guide_v50_20260727` 为 10 已投稿、17 可投稿、234 待人工播放、
+8 排除，共 261 个精确文件。U106/U107 分别位于 416x232 与 512x416
+增量审查根；none/JA/ZH 是合法跨目标 hardlink，全部待人工播放，
+`UPLOAD_NOW` 为 0。
+
+当前严格 silent-story 门禁已无新增候选：不能因未找到音频行就继续扩大 v48
+通道。正式 with-BGM 候选仍为 0；继续从 ledger v18 穷尽 no-BGM。详见
+`docs/research/2026-07-27-ac5001-split-native-component-checkpoint-v50.md`。
+
 ## 2026-07-27 ac905x 分尺寸连打组件 v49
 
 `material_collections_v49_ac905x_uwanose_split_components_review_20260727`

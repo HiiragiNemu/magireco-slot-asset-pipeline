@@ -1,0 +1,64 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac5001_split_native_components_v1",
+  "family": "ac5001",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_classification": "mixed_full_frame_and_components",
+  "expected_event_count": 36,
+  "expected_events": [
+    "ac5001_001", "ac5001_002", "ac5001_003", "ac5001_004",
+    "ac5001_005", "ac5001_006", "ac5001_007", "ac5001_008",
+    "ac5001_009", "ac5001_010", "ac5001_011", "ac5001_012",
+    "ac5001_013", "ac5001_014", "ac5001_015", "ac5001_016",
+    "ac5001_017", "ac5001_018", "ac5001_019", "ac5001_020",
+    "ac5001_021", "ac5001_022", "ac5001_023", "ac5001_024",
+    "ac5001_025", "ac5001_026", "ac5001_027", "ac5001_028",
+    "ac5001_029", "ac5001_030", "ac5001_031", "ac5001_032",
+    "ac5001_033", "ac5001_034", "ac5001_035", "ac5001_036"
+  ],
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v17_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "047CC1C020802D8EDE5B5BFEED51A2B2C721D5BF6A06F0361397F5B05522B4F4"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac5001_native416x232_flying_combination_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v50_ac5001_split_components_review_20260727\\ac5001_flying_combination_components_416_v1\\material_collection_manifest.json",
+        "sha256": "970EEE9147F0178F32BFE5992FDE92FB91269FDB33060C491D59452EB5F4B54C"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac5001_native512x416_attack_title_component",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v50_ac5001_split_components_review_20260727\\ac5001_attack_title_component_512x416_v1\\material_collection_manifest.json",
+        "sha256": "18E87694038D1BB8F982B9560E1859EDC0795DA70E414F75D8BB546EBCCADAF6"
+      },
+      "allowed_unused_sources": []
+    }
+  ]
+}

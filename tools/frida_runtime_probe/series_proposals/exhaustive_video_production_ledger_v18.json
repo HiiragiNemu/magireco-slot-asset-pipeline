@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v17.json",
+    "sha256": "44259AF5E136256B9EB7BACBC90D8C95B1FA07E4E23919DAE866DD91C63151C6"
+  },
+  "checkpoint_id": "20260727-v50-ac5001-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v17 records plus thirty-six ac5001 gameplay/effect events whose 287 hash-bound visual component occurrences are preserved in separate native 416x232 and 512x416 review catalogs. The special ac5001_007 seven-source set is retained exactly; no source is resized or concatenated across dimensions.",
+  "append_current_material_roots": [
+    {
+      "label": "v50 ac5001 split-native flying and attack-title component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v50_ac5001_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v50_ac5001_20260727\\ac5001_split_native_components_v1.json",
+      "sha256": "AFE555BE21C5F3BA92C42A74B0D1213F627CD4B291A7343BCE86D2269BE58769"
+    }
+  ]
+}

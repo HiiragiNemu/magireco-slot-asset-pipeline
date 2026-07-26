@@ -9,23 +9,20 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v49
+## 0. 2026-07-27 当前检查点 v50
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v17_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v18_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v49_final_20260727`；中间 v49 指南与无 `final` 后缀的增量
-审查根均已标 superseded。
+`upload_guide_v50_20260727`。
 
-v49 新增 ac9051/ac9053/ac9060 共 21 个玩法／效果事件的分尺寸 visual-only
-组件覆盖：416x232 背景与冲击层、144x160 G/Plus 计数层、128x64 总计数层，
-共 5 个唯一源、105 个 occurrence。U103-U105 的 none/JA/ZH 是无音频／字幕
-产品的合法跨目标 hardlink，全部待人工播放。路径、哈希与上传目标见
-`docs/research/2026-07-27-ac905x-split-native-component-checkpoint-v49.md`。
-ac7113_015、ac7115_007、ac7116_028 的 direct-parent SP-story 音轨语义未
-闭合，因此没有渲染，精确阻断记录在
-`direct_parent_story_soundpack_blockers_v1.json`。
+v50 新增 ac5001_001–036 的分尺寸 visual-only 组件覆盖：15 个原生
+416x232 飞行动作／背景／属性源与 1 个原生 512x416 攻击标题源，共
+287 个 occurrence。U106/U107 的 none/JA/ZH 是无音频／字幕产品的合法
+跨目标 hardlink，全部待人工播放。`ac5001_007` 的特殊 7 组件集合保持原样。
+路径、哈希与上传目标见
+`docs/research/2026-07-27-ac5001-split-native-component-checkpoint-v50.md`。
 P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
 Z2D 时序继续 fail closed。
 

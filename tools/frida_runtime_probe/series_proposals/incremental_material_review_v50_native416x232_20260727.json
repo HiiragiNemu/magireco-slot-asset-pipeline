@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v50-ac5001-native416x232",
+  "checkpoint_label": "v50",
+  "start_upload_id": 106,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V50.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v50_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "B6ABB2EA5954904E6E58ADF218DA8CDAA771B298FC3794FA26956585CCEAD056"
+  },
+  "specific_exclusions": [
+    "本批只含 ac5001 的 15 个原生 416x232 飞行动作、背景与属性组合组件；512x416 攻击标题在 U107。",
+    "36 个事件的 exact component map 已闭合，但本目录只是去重组件清单，不冒充事件或游戏自然 session。",
+    "ac5001_007 的 7 组件集合已原样保留，禁止补入其他 35 个事件共有的 ac5101_1G_lev_lp。",
+    "两种原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac5001_flying_combination_components_416_v1",
+      "title": "飞行组合背景与属性组件",
+      "family": "ac5001",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v50_ac5001_split_components_review_20260727\\ac5001_flying_combination_components_416_v1\\material_collection_manifest.json",
+        "sha256": "970EEE9147F0178F32BFE5992FDE92FB91269FDB33060C491D59452EB5F4B54C"
+      },
+      "output_sha256": "5B5A6BEE49C7E5CF4237A297AB2F474C7415FB7ABE040F949D6208CD0F1FB201"
+    }
+  ]
+}
