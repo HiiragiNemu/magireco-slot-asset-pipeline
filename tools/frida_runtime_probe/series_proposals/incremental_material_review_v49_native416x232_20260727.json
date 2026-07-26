@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v49-ac905x-uwanose-native416x232",
+  "checkpoint_label": "v49",
+  "start_upload_id": 103,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V49.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v49_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "CB14E9BF41C49C1A1B328AAFEA0FC1A94033A19822BC26F2EF43B41E7E08478C"
+  },
+  "specific_exclusions": [
+    "本批只含 416x232 传闻连打背景与冲击原始组件；144x160 与 128x64 计数层在 U104/U105。",
+    "21 个事件的冲击组件缺 event-global 叠加区间，因此不得把本目录冒充合成事件或原生 session。",
+    "三种原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac905x_uwanose_backdrop_impact_416_v1",
+      "title": "传闻连打背景与冲击组件",
+      "family": "ac9053",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v49_ac905x_uwanose_split_components_review_20260727\\ac905x_uwanose_backdrop_impact_416_v1\\material_collection_manifest.json",
+        "sha256": "937A3042794A4AABC1F528BC6D53E3AEC9A22A349B97813CCA98F59271D1B348"
+      },
+      "output_sha256": "0BA294418C440277B076035BBD38E2A2526F00A1D99132C7F1656B2586CAFF2E"
+    }
+  ]
+}

@@ -806,12 +806,20 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 f"{dimension_match.group('width')}x"
                 f"{dimension_match.group('height')}"
             )
+            material_target_bv = (
+                _target(plan, "material_collection_catalog")
+                if native_dimensions == "416x232"
+                else (
+                    "新建：MagiaReco Slot 原生"
+                    f"{native_dimensions}玩法／素材合集 BV"
+                )
+            )
             items.append(
                 _item(
                     path=path,
                     expected_sha256=str(collection.get("output_sha256", "")),
                     state="human_playback_required",
-                    target_bv=_target(plan, "material_collection_catalog"),
+                    target_bv=material_target_bv,
                     subtitle_track="visual-only; no audio; no burned-in subtitles",
                     suggested_part_name=material_part_name(collection_name),
                     action="hold_for_owner_material_playback",

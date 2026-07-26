@@ -1722,6 +1722,62 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
         }
         self.assertEqual(evidence_paths, {ledger.resolve(), clips.resolve()})
 
+    def test_named_component_material_allows_one_exact_source_when_declared(
+        self,
+    ) -> None:
+        source = self.make_video("single-counter.mp4", "white", "128x64")
+        event = "ac9060_001"
+        ledger = self.root / "single-audience-ledger.csv"
+        ledger.write_text(
+            "event_name,code_hex,clip_count,resolved_clip_count,"
+            "classification,production_state,disposition\n"
+            f"{event},0x01,1,1,mixed_full_frame_and_components,"
+            "planned_unproduced,gameplay_effect_collection\n",
+            encoding="utf-8",
+        )
+        clips = self.root / "single-audience-clips.csv"
+        clips.write_text(
+            "event_name,z2d_order,dgm_order,official_name,target_mp4,"
+            "interval_confidence\n"
+            f"{event},1,0,{source.stem},{source},exact_duration_unique\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_single_component_evidence",
+            "component_events": [event],
+            "component_native_dimensions": {"width": 128, "height": 64},
+            "allow_single_source_component_catalog": True,
+            "derive_clips_from_audience_event_catalog": True,
+            "audience_event_index": {
+                "path": str(ledger),
+                "sha256": file_sha256(ledger),
+                "production_state": "planned_unproduced",
+                "disposition": "gameplay_effect_collection",
+                "classification": "mixed_full_frame_and_components",
+            },
+            "audience_clip_index": {
+                "path": str(clips),
+                "sha256": file_sha256(clips),
+            },
+        }
+        plan_path = self.root / "named-single-component-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {source.stem: {"target_mp4": str(source)}},
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["clip_count"], 1)
+        self.assertTrue(manifest["allow_single_source_component_catalog"])
+        self.assertEqual(
+            manifest["component_event_clip_map"][event],
+            [source.stem],
+        )
+
     def test_named_material_rejects_evidence_source_hash_mismatch(self) -> None:
         first = self.make_video("mismatch-red.mp4", "red")
         second = self.make_video("mismatch-blue.mp4", "blue")
@@ -1754,6 +1810,159 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
             build_named_collection(
                 plan_path,
                 video_map,
+                self.out,
+                "ffmpeg",
+                "ffprobe",
+                False,
+            )
+
+    def test_named_material_binds_current_inventory_and_proves_no_overlap(
+        self,
+    ) -> None:
+        first = self.make_video("new-red.mp4", "red")
+        second = self.make_video("new-blue.mp4", "blue")
+        existing = self.root / "existing-source.bin"
+        existing.write_bytes(b"existing material source")
+        current_manifest = self.root / "current-material.json"
+        current_manifest.write_text(
+            json.dumps(
+                {
+                    "sources": [
+                        {
+                            "source_sha256": file_sha256(existing),
+                        }
+                    ]
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        current_index = self.root / "current-material-index.json"
+        current_index.write_text(
+            json.dumps(
+                {
+                    "schema": (
+                        "magireco-current-material-collection-index-v1"
+                    ),
+                    "collections": [
+                        {
+                            "included_as_current_material": True,
+                            "manifest_path": str(current_manifest),
+                            "manifest_sha256": file_sha256(current_manifest),
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_no_overlap",
+            "clips": [
+                {"official_name": "new_red", "label": "red"},
+                {"official_name": "new_blue", "label": "blue"},
+            ],
+            "current_material_index_no_overlap": {
+                "path": str(current_index),
+                "sha256": file_sha256(current_index),
+            },
+        }
+        plan_path = self.root / "named-no-overlap-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {
+                "new_red": {"target_mp4": str(first)},
+                "new_blue": {"target_mp4": str(second)},
+            },
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        gate = manifest["current_material_source_overlap_gate"]
+        self.assertEqual(
+            gate["status"],
+            "passed_no_source_sha256_overlap",
+        )
+        self.assertEqual(gate["candidate_unique_source_sha256_count"], 2)
+        snapshot_paths = {
+            Path(value["path"]).resolve()
+            for value in manifest["source_snapshot_start"]["sources"]
+        }
+        self.assertIn(current_index.resolve(), snapshot_paths)
+        self.assertIn(current_manifest.resolve(), snapshot_paths)
+
+    def test_named_material_rejects_current_source_sha_overlap(self) -> None:
+        first = self.make_video("overlap-red.mp4", "red")
+        second = self.make_video("overlap-blue.mp4", "blue")
+        current_manifest = self.root / "overlap-current-material.json"
+        current_manifest.write_text(
+            json.dumps(
+                {
+                    "sources": [
+                        {
+                            "source_sha256": file_sha256(first),
+                        }
+                    ]
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        current_index = self.root / "overlap-current-index.json"
+        current_index.write_text(
+            json.dumps(
+                {
+                    "schema": (
+                        "magireco-current-material-collection-index-v1"
+                    ),
+                    "collections": [
+                        {
+                            "included_as_current_material": True,
+                            "manifest_path": str(current_manifest),
+                            "manifest_sha256": file_sha256(current_manifest),
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        plan_path = self.root / "named-overlap-plan.json"
+        plan_path.write_text(
+            json.dumps(
+                {
+                    "collection": "named_overlap",
+                    "clips": [
+                        {
+                            "official_name": "overlap_red",
+                            "label": "red",
+                        },
+                        {
+                            "official_name": "overlap_blue",
+                            "label": "blue",
+                        },
+                    ],
+                    "current_material_index_no_overlap": {
+                        "path": str(current_index),
+                        "sha256": file_sha256(current_index),
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "overlaps current material inventory",
+        ):
+            build_named_collection(
+                plan_path,
+                {
+                    "overlap_red": {"target_mp4": str(first)},
+                    "overlap_blue": {"target_mp4": str(second)},
+                },
                 self.out,
                 "ffmpeg",
                 "ffprobe",

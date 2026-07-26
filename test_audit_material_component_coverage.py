@@ -144,6 +144,70 @@ class AuditMaterialComponentCoverageTest(unittest.TestCase):
             self.assertEqual(result["status"], "PASSED")
             self.assertEqual(result["covered_events"], ["ac5102_001"])
             self.assertEqual(len(result["component_catalogs"]), 2)
+            self.assertEqual(result["families"], ["ac5102"])
+
+    def test_split_catalogs_can_cover_an_explicit_multi_family_event_set(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            plan, first_manifest = self._fixture(root)
+            second_manifest = root / "event-ac9053.json"
+            second_event = json.loads(first_manifest.read_text(encoding="utf-8"))
+            second_event["event"] = "ac9053_001"
+            self._write_json(second_manifest, second_event)
+
+            plan_value = json.loads(plan.read_text(encoding="utf-8"))
+            ledger = Path(plan_value["event_ledger"]["path"])
+            with ledger.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            rows.append(
+                {
+                    **rows[0],
+                    "event_name": "ac9053_001",
+                    "family": "ac9053",
+                    "manifest_path": str(second_manifest),
+                    "manifest_sha256": module.file_sha256(second_manifest),
+                }
+            )
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(rows)
+
+            component_manifest = Path(
+                plan_value["component_catalogs"][0]["manifest"]["path"]
+            )
+            component = json.loads(
+                component_manifest.read_text(encoding="utf-8")
+            )
+            component["component_events"].append("ac9053_001")
+            component["component_event_clip_map"]["ac9053_001"] = [
+                "clip416"
+            ]
+            self._write_json(component_manifest, component)
+
+            plan_value.pop("family")
+            plan_value["families"] = ["ac5102", "ac9053"]
+            plan_value["expected_event_count"] = 2
+            plan_value["expected_events"] = [
+                "ac5102_001",
+                "ac9053_001",
+            ]
+            plan_value["event_ledger"]["sha256"] = module.file_sha256(ledger)
+            plan_value["component_catalogs"][0]["manifest"]["sha256"] = (
+                module.file_sha256(component_manifest)
+            )
+            self._write_json(plan, plan_value)
+
+            output = root / "multi-family-audit.json"
+            module.audit(plan_path=plan, output_path=output)
+            result = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result["families"], ["ac5102", "ac9053"])
+            self.assertEqual(
+                result["covered_events"],
+                ["ac5102_001", "ac9053_001"],
+            )
 
     def test_missing_component_source_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as value:

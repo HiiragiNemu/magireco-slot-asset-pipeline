@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v49-ac905x-uwanose-native144x160",
+  "checkpoint_label": "v49",
+  "start_upload_id": 104,
+  "expected_dimensions": {
+    "width": 144,
+    "height": 160
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V49.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v49_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "CB14E9BF41C49C1A1B328AAFEA0FC1A94033A19822BC26F2EF43B41E7E08478C"
+  },
+  "specific_exclusions": [
+    "本批只含 144x160 的 G 与 Plus 计数层；416x232 背景/冲击和 128x64 总计数层在 U103/U105。",
+    "本批只证明原始组件覆盖，不证明三层的 event-global 合成时点或原生 session。",
+    "三种原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac905x_uwanose_g_plus_counter_144_v1",
+      "title": "传闻连打G与Plus计数组件",
+      "family": "ac9053",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v49_ac905x_uwanose_split_components_review_20260727\\ac905x_uwanose_g_plus_counter_144_v1\\material_collection_manifest.json",
+        "sha256": "ECAD1CC5A24587F965690A3E31038F6EE9D8C915E7877DF7800439B54BFC3A57"
+      },
+      "output_sha256": "CCFE3764E19532EDB0B2658C4B0EBB52B8BAFC2D5954B3A8C2ACAB886EA90C97"
+    }
+  ]
+}

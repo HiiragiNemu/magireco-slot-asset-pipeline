@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v16.json",
+    "sha256": "D542F240AF1E8DEDF3BDE42C624A48CE12663079E535A9ED27637F3EEBD352EF"
+  },
+  "checkpoint_id": "20260727-v49-ac905x-uwanose-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v16 records plus twenty-one ac9051/ac9053/ac9060 gameplay events whose same five hash-bound visual components are preserved in three separate native 416x232, 144x160 and 128x64 review catalogs. Component coverage is complete, but the missing event-global impact interval prevents event composition; no source is resized or concatenated across dimensions.",
+  "append_current_material_roots": [
+    {
+      "label": "v49 ac9051/ac9053/ac9060 multi-size Uwanose component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v49_ac905x_uwanose_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v49_ac905x_20260727\\ac9051_ac9053_ac9060_uwanose_split_native_components_v1.json",
+      "sha256": "2F16E8433B41C4C9EAFC71750B622CF24C80FC0695953479C361F519F1D0046C"
+    }
+  ]
+}

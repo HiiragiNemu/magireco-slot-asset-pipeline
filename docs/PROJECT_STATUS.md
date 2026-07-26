@@ -2,6 +2,36 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac905x 分尺寸连打组件 v49
+
+`material_collections_v49_ac905x_uwanose_split_components_review_20260727`
+把 ac9051_031–040、ac9053_011–020、ac9060_001 共 21 个玩法／效果事件共享
+的 5 个精确组件，按原生尺寸拆成 3 个 visual-only 审查产品：416x232 背景与
+冲击层（10 秒）、144x160 G/Plus 计数层（8 秒）、128x64 总计数层（8 秒）。
+没有缩放、没有跨尺寸拼接；由于冲击层的 event-global 区间尚未闭合，这些
+只是原始组件目录，不冒充事件或自然 session 时间线。
+
+跨 family 覆盖审计
+`material_component_coverage_v49_ac905x_20260727` 通过：21/21 event、
+105/105 occurrence、5/5 唯一来源全部覆盖。新增当前素材来源重叠门禁会重哈希
+当前 index 与所有 current manifest；本批 0 重叠，128x64 单来源也只保留一次，
+未伪造重复。
+
+总账推进到 `production_ledger_v17_20260727`：produced audience 185、
+material-covered 455、produced DirInfo route 62、timing blocker 330、
+quarantine audience 53；P16/P17/P18 继续 hard quarantine。全局指南为
+`upload_guide_v49_final_20260727`：10 个已投稿、17 个可投稿、232 个待人工
+播放、8 个排除，共 259 个精确文件。U103/U104/U105 分别位于三个最终增量
+审查根，每个产品的 none/JA/ZH 是一个物理文件的合法跨目标 hardlink，全部
+待人工播放，`UPLOAD_NOW` 为 0。
+
+ac7113_015、ac7115_007、ac7116_028 虽有原生 512 全帧画面与 0ms
+direct-parent SP-story OGG，但该父音轨是否含对白／BGM 尚无逻辑证据；三轨
+全部 fail closed，没有渲染。精确阻断写入
+`direct_parent_story_soundpack_blockers_v1.json`。正式 with-BGM 候选仍为
+0；继续从 ledger v17 穷尽 no-BGM。详见
+`docs/research/2026-07-27-ac905x-split-native-component-checkpoint-v49.md`。
+
 ## 2026-07-27 精确无对白原生 416 与分尺寸素材 v48
 
 生产冻结已解除；已完成的

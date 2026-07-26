@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v49-ac905x-uwanose-native128x64",
+  "checkpoint_label": "v49",
+  "start_upload_id": 105,
+  "expected_dimensions": {
+    "width": 128,
+    "height": 64
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V49.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v49_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "CB14E9BF41C49C1A1B328AAFEA0FC1A94033A19822BC26F2EF43B41E7E08478C"
+  },
+  "specific_exclusions": [
+    "本批只有一个精确 128x64 总计数源；没有复制源来伪造两段内容。",
+    "416x232 背景/冲击和 144x160 G/Plus 计数层在 U103/U104；本批不证明合成时点。",
+    "三种原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac905x_uwanose_total_counter_128_v1",
+      "title": "传闻连打总计数组件",
+      "family": "ac9053",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v49_ac905x_uwanose_split_components_review_20260727\\ac905x_uwanose_total_counter_128_v1\\material_collection_manifest.json",
+        "sha256": "A8E0B852FF724268F95FAE6368F80F0C8EDC8BDD71903F5F90E2AC161C0FBA66"
+      },
+      "output_sha256": "1734E58877E3038C6E0AC156A4E0D342FE8983E5FFA670B0097A013483FF7C19"
+    }
+  ]
+}

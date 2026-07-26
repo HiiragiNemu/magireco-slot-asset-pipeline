@@ -436,6 +436,112 @@ def capture_material_source_snapshot(
     }
 
 
+def validate_current_material_source_no_overlap(
+    raw: object,
+    *,
+    plan_path: Path,
+    candidate_paths: list[Path],
+    source_roles: dict[Path, set[str]],
+    collection: str,
+) -> dict[str, object] | None:
+    """Fail closed when a new catalog reuses a current material source hash."""
+
+    if raw is None:
+        return None
+    if not isinstance(raw, dict) or set(raw) != {"path", "sha256"}:
+        raise ValueError("current material no-overlap index fields differ")
+    index_path = Path(str(raw["path"]))
+    if not index_path.is_absolute():
+        index_path = plan_path.parent / index_path
+    index_path = index_path.resolve()
+    expected_index_sha256 = str(raw["sha256"]).strip().upper()
+    if (
+        not index_path.is_file()
+        or not SHA256_RE.fullmatch(expected_index_sha256)
+        or file_sha256(index_path) != expected_index_sha256
+    ):
+        raise ValueError("current material no-overlap index SHA-256 differs")
+    index = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    collections = index.get("collections")
+    if (
+        index.get("schema")
+        != "magireco-current-material-collection-index-v1"
+        or not isinstance(collections, list)
+    ):
+        raise ValueError("current material no-overlap index schema differs")
+    _add_material_source_role(
+        source_roles,
+        index_path,
+        f"{collection}:current_material_no_overlap_index",
+    )
+    current_hashes: set[str] = set()
+    manifest_count = 0
+    for row in collections:
+        if (
+            not isinstance(row, dict)
+            or row.get("included_as_current_material") is not True
+        ):
+            continue
+        manifest_path = Path(str(row.get("manifest_path", ""))).resolve()
+        manifest_sha256 = str(row.get("manifest_sha256", "")).strip().upper()
+        if (
+            not manifest_path.is_file()
+            or not SHA256_RE.fullmatch(manifest_sha256)
+            or file_sha256(manifest_path) != manifest_sha256
+        ):
+            raise ValueError(
+                "current material no-overlap manifest SHA-256 differs: "
+                f"{manifest_path}"
+            )
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8-sig")
+        )
+        sources = manifest.get("sources")
+        if not isinstance(sources, list) or not sources:
+            raise ValueError(
+                f"current material no-overlap manifest lacks sources: "
+                f"{manifest_path}"
+            )
+        for source in sources:
+            source_sha256 = str(
+                source.get("source_sha256", "")
+                if isinstance(source, dict)
+                else ""
+            ).strip().upper()
+            if not SHA256_RE.fullmatch(source_sha256):
+                raise ValueError(
+                    "current material no-overlap source SHA-256 differs: "
+                    f"{manifest_path}"
+                )
+            current_hashes.add(source_sha256)
+        _add_material_source_role(
+            source_roles,
+            manifest_path,
+            f"{collection}:current_material_no_overlap_manifest",
+        )
+        manifest_count += 1
+    if not manifest_count:
+        raise ValueError("current material no-overlap index has no current manifests")
+    candidate_hashes = {
+        file_sha256(path.resolve()) for path in candidate_paths
+    }
+    overlap = sorted(candidate_hashes & current_hashes)
+    if overlap:
+        raise ValueError(
+            "named material source overlaps current material inventory: "
+            + ", ".join(overlap)
+        )
+    return {
+        "status": "passed_no_source_sha256_overlap",
+        "index_path": str(index_path),
+        "index_sha256": expected_index_sha256,
+        "current_manifest_count": manifest_count,
+        "current_unique_source_sha256_count": len(current_hashes),
+        "candidate_unique_source_sha256_count": len(candidate_hashes),
+        "overlap_source_sha256s": [],
+    }
+
+
 def _material_source_roles_from_snapshot(
     snapshot: object,
 ) -> dict[Path, set[str]]:
@@ -2718,6 +2824,12 @@ def _build_named_collection_in_place(
             "named material plan cannot mix manifest and audience derivation"
         )
     derive_clips = derive_manifest_clips or derive_audience_clips
+    allow_single_source_component_catalog = (
+        plan.get("allow_single_source_component_catalog") is True
+    )
+    minimum_unique_clips = (
+        1 if allow_single_source_component_catalog else 2
+    )
     planned_clips = plan.get("clips", [])
     if derive_clips:
         if planned_clips not in (None, []):
@@ -2725,8 +2837,14 @@ def _build_named_collection_in_place(
                 "derived named material plan must not declare clips"
             )
         planned_clips = []
-    elif not isinstance(planned_clips, list) or len(planned_clips) < 2:
-        raise ValueError(f"named material plan needs at least two clips: {plan_path}")
+    elif (
+        not isinstance(planned_clips, list)
+        or len(planned_clips) < minimum_unique_clips
+    ):
+        raise ValueError(
+            "named material plan lacks the required unique clip count: "
+            f"{plan_path}"
+        )
     source_roles: dict[Path, set[str]] = {}
     _add_material_source_role(
         source_roles, resolved_plan, f"{collection}:named_source_plan"
@@ -2887,9 +3005,9 @@ def _build_named_collection_in_place(
                             "label": official_name,
                         }
                     )
-        if len(planned_clips) < 2:
+        if len(planned_clips) < minimum_unique_clips:
             raise ValueError(
-                "derived named material plan needs at least two unique clips"
+                "derived named material plan lacks the required unique clips"
             )
     source_root_overrides = plan.get("source_root_overrides", [])
     if not isinstance(source_root_overrides, list):
@@ -2945,6 +3063,13 @@ def _build_named_collection_in_place(
         return mapped_path.resolve()
 
     component_dimensions_raw = plan.get("component_native_dimensions")
+    if (
+        allow_single_source_component_catalog
+        and component_dimensions_raw is None
+    ):
+        raise ValueError(
+            "single-source material catalog requires component dimensions"
+        )
     component_dimensions: dict[str, int] | None = None
     component_event_clip_map: dict[str, list[str]] = {}
     if component_dimensions_raw is not None:
@@ -2956,6 +3081,10 @@ def _build_named_collection_in_place(
         ):
             raise ValueError(
                 "component native dimensions require derived component events"
+            )
+        if allow_single_source_component_catalog and not component_events:
+            raise ValueError(
+                "single-source material catalog requires component events"
             )
         component_dimensions = {
             "width": int(component_dimensions_raw["width"]),
@@ -2988,9 +3117,9 @@ def _build_named_collection_in_place(
                 filtered_clips.append(planned)
                 selected_keys.add(official_name.casefold())
         planned_clips = filtered_clips
-        if len(planned_clips) < 2:
+        if len(planned_clips) < minimum_unique_clips:
             raise ValueError(
-                "derived component material needs at least two unique clips"
+                "derived component material lacks the required unique clips"
             )
         for event in component_events:
             selected: list[str] = []
@@ -3029,6 +3158,7 @@ def _build_named_collection_in_place(
                         f"event manifest: {official_name}"
                     )
 
+    planned_source_paths: list[Path] = []
     for clip_index, planned in enumerate(planned_clips, start=1):
         if not isinstance(planned, dict):
             raise ValueError(
@@ -3041,6 +3171,7 @@ def _build_named_collection_in_place(
             raise FileNotFoundError(
                 f"unresolved named material {official_name}: {source_path}"
             )
+        planned_source_paths.append(source_path)
         _add_material_source_role(
             source_roles,
             source_path,
@@ -3056,6 +3187,15 @@ def _build_named_collection_in_place(
                     Path(audio_path),
                     f"{collection}:audio_input:{clip_index}:{audio_index}",
                 )
+    current_material_source_overlap_gate = (
+        validate_current_material_source_no_overlap(
+            plan.get("current_material_index_no_overlap"),
+            plan_path=resolved_plan,
+            candidate_paths=planned_source_paths,
+            source_roles=source_roles,
+            collection=collection,
+        )
+    )
     source_snapshot_start = capture_material_source_snapshot(source_roles)
     plan_snapshot_row = next(
         row
@@ -3164,9 +3304,10 @@ def _build_named_collection_in_place(
         offset_ms = source["end_ms"]
     if signature is None:
         raise ValueError(f"named material plan resolved no sources: {plan_path}")
-    if len(sources) < 2:
+    if len(sources) < minimum_unique_clips:
         raise ValueError(
-            f"named material plan needs at least two unique AV clips: {plan_path}"
+            "named material plan lacks the required unique AV clips: "
+            f"{plan_path}"
         )
 
     width = signature["width"]
@@ -3349,8 +3490,14 @@ def _build_named_collection_in_place(
         "covered_events": covered_events,
         "component_events": component_events,
         "component_native_dimensions": component_dimensions,
+        "allow_single_source_component_catalog": (
+            allow_single_source_component_catalog
+        ),
         "component_event_clip_map": component_event_clip_map,
         "source_root_overrides": resolved_source_root_overrides,
+        "current_material_source_overlap_gate": (
+            current_material_source_overlap_gate
+        ),
         "direct_stream_copy": True,
         "visual_only_output": True,
         "embedded_audio_dropped": bool(embedded_audio_signatures),

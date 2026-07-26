@@ -121,7 +121,23 @@ def audit(
             label="component coverage audience clip index",
             plan_dir=plan_dir,
         )
-    family = str(plan.get("family", ""))
+    family = str(plan.get("family", "")).strip()
+    families_raw = plan.get("families")
+    if families_raw is None:
+        families = {family} if family else set()
+    elif (
+        family
+        or not isinstance(families_raw, list)
+        or not families_raw
+        or len({str(value).strip() for value in families_raw})
+        != len(families_raw)
+    ):
+        raise ValueError("component coverage family scope differs")
+    else:
+        families = {str(value).strip() for value in families_raw}
+    if any(not re.fullmatch(r"ac[0-9]{4}", value) for value in families):
+        raise ValueError("component coverage family identity differs")
+    family_label = family or "+".join(sorted(families))
     expected_state = str(plan.get("expected_production_state", ""))
     expected_disposition = str(plan.get("expected_disposition", ""))
     expected_classification = str(plan.get("expected_classification", ""))
@@ -140,7 +156,7 @@ def audit(
     rows = [
         row
         for row in _read_csv(ledger_path)
-        if row.get("family") == family
+        if row.get("family") in families
         and row.get("production_state") == expected_state
         and row.get("disposition") == expected_disposition
         and (
@@ -153,7 +169,7 @@ def audit(
         )
     ]
     if (
-        not family
+        not families
         or len(rows) != expected_count
         or len({row.get("event_name") for row in rows}) != len(rows)
         or any(
@@ -480,7 +496,8 @@ def audit(
         "schema": RESULT_SCHEMA,
         "status": "PASSED",
         "coverage_id": str(plan.get("coverage_id", "")),
-        "family": family,
+        "family": family_label,
+        "families": sorted(families),
         "composition_policy": plan["composition_policy"],
         "coverage_claim": (
             "Every hash-bound event clip is present in the declared native-size "

@@ -9,21 +9,23 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v48
+## 0. 2026-07-27 当前检查点 v49
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v16_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v17_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v48_final_20260727`，中间 v48 指南与无 `final` 后缀的增量审查根
-均已标 superseded。
+`upload_guide_v49_final_20260727`；中间 v49 指南与无 `final` 后缀的增量
+审查根均已标 superseded。
 
-v48 已产 8 个精确无对白的原生 416x232 单事件产品（ac4002_001、
-ac4003_001、ac4004_001、ac7002_001 至 `_005`），none/JA/ZH 共 24 个上传
-入口；三轨在每个产品内是合法同哈希 hardlink 别名，全部待人工播放。另有
-ac0504 与 ac4921 的 3 个分尺寸 visual-only 素材审查产品。当前审查 ID 为
-U092-U102，路径与哈希见
-`docs/research/2026-07-27-silent-native416-and-split-material-checkpoint-v48.md`。
+v49 新增 ac9051/ac9053/ac9060 共 21 个玩法／效果事件的分尺寸 visual-only
+组件覆盖：416x232 背景与冲击层、144x160 G/Plus 计数层、128x64 总计数层，
+共 5 个唯一源、105 个 occurrence。U103-U105 的 none/JA/ZH 是无音频／字幕
+产品的合法跨目标 hardlink，全部待人工播放。路径、哈希与上传目标见
+`docs/research/2026-07-27-ac905x-split-native-component-checkpoint-v49.md`。
+ac7113_015、ac7115_007、ac7116_028 的 direct-parent SP-story 音轨语义未
+闭合，因此没有渲染，精确阻断记录在
+`direct_parent_story_soundpack_blockers_v1.json`。
 P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
 Z2D 时序继续 fail closed。
 

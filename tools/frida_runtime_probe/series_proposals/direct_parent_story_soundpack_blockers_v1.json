@@ -1,0 +1,123 @@
+{
+  "schema": "magireco-direct-parent-story-soundpack-blocker-catalog-v1",
+  "status": "fail_closed",
+  "recorded_date": "2026-07-27",
+  "claim_boundary": "Each event has an exact native full-frame visual and one event-parent SP-story OGG at 0 ms, but no child voice rows, subtitle rows, or resolved runtime event manifest. Neighboring SP-story events show that a parent SP-story track can coexist with separate child dialogue. Static evidence therefore does not prove these parent tracks dialogue-free or BGM-free. None/JA/ZH no-BGM editions are blocked, not production candidates.",
+  "source_snapshots": [
+    {
+      "label": "audience event clips",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "label": "DirInfo event routes",
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    {
+      "label": "direct-parent audio catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+      "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+    },
+    {
+      "label": "child-Z2D audio catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    {
+      "label": "subtitle timeline catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    }
+  ],
+  "events": [
+    {
+      "event": "ac7113_015",
+      "dirinfo": {
+        "kind": 189,
+        "row_index": 14,
+        "selector_raw": 0,
+        "event_info_index": 8098,
+        "code_hex": "0x783355634d484366"
+      },
+      "video": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7113\\ac7113_AT_SP_story2_06.mp4",
+        "sha256": "CF4DF52EB4E8367B0090D39EED4440C71D98924FC349BF925E38B42AC9284640",
+        "width": 512,
+        "height": 288,
+        "frame_rate": "30/1",
+        "duration_ms": 13367
+      },
+      "direct_parent_audio": {
+        "request_id": 10323,
+        "code_name": "42026_SPストーリー2_06_2G",
+        "start_ms": 0,
+        "duration_ms": 13440,
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_42026_bank03_ogg_08879.ogg",
+        "sha256": "44992E220F6C8732FF9A64D1B06B70689016C69B4CBB6C80A0C4F6B7E1BE79B4"
+      },
+      "child_audio_matches": 0,
+      "subtitle_matches": 0,
+      "blocker": "parent_sp_story_track_dialogue_and_bgm_semantics_unresolved"
+    },
+    {
+      "event": "ac7115_007",
+      "dirinfo": {
+        "kind": 191,
+        "row_index": 6,
+        "selector_raw": 0,
+        "event_info_index": 8173,
+        "code_hex": "0x23796c2a74447854"
+      },
+      "video": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7115\\ac7115_AT_SP_story4_03.mp4",
+        "sha256": "A90406155EF30F9F047FC6451F2113E7E7CEB0A24493247D4AE97A39130784AC",
+        "width": 512,
+        "height": 288,
+        "frame_rate": "30/1",
+        "duration_ms": 14467
+      },
+      "direct_parent_audio": {
+        "request_id": 10343,
+        "code_name": "42062_SPストーリー4_かえでドッペル_03",
+        "start_ms": 0,
+        "duration_ms": 14466,
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_42062_bank03_ogg_08903.ogg",
+        "sha256": "2179B035A053CEC9440E54D1EBEDF76935045AC1C741287D3FB421CDAB39CCB2"
+      },
+      "child_audio_matches": 0,
+      "subtitle_matches": 0,
+      "blocker": "parent_sp_story_track_dialogue_and_bgm_semantics_unresolved"
+    },
+    {
+      "event": "ac7116_028",
+      "dirinfo": {
+        "kind": 192,
+        "row_index": 27,
+        "selector_raw": 0,
+        "event_info_index": 8234,
+        "code_hex": "0x61563d2f66614152"
+      },
+      "video": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac7116\\ac7116_AT_SP_story5_14.mp4",
+        "sha256": "FE3831CEAEA09A002035E4538C83DB8DBC9D969B0B15E1277B6A1767AF1E0364",
+        "width": 512,
+        "height": 288,
+        "frame_rate": "30/1",
+        "duration_ms": 19667
+      },
+      "direct_parent_audio": {
+        "request_id": 10364,
+        "code_name": "42093_SPストーリー5_みふゆとももこ_14",
+        "start_ms": 0,
+        "duration_ms": 19666,
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_42093_bank03_ogg_08925.ogg",
+        "sha256": "8BAC961405FE4692193FAF774AE744A2564DC1C052E6940F082E1C092452B6D9"
+      },
+      "child_audio_matches": 0,
+      "subtitle_matches": 0,
+      "blocker": "parent_sp_story_track_dialogue_and_bgm_semantics_unresolved"
+    }
+  ],
+  "required_resolution": "Obtain a resolved runtime event manifest or equivalent hash-bound evidence that classifies the parent SP-story track, proves whether dialogue is present, separates or positively excludes BGM, and supplies any required JA/ZH subtitle timeline. Until then no edition is READY."
+}

@@ -91,11 +91,33 @@ def _load_plan_with_bases(
         )
         base, snapshots = load(base_path)
         plan = dict(base)
+        append_keys = {
+            "append_current_production_roots": "current_production_roots",
+            "append_current_material_roots": "current_material_roots",
+            "append_material_component_coverage_bundles": (
+                "material_component_coverage_bundles"
+            ),
+        }
+        for overlay_key, destination_key in append_keys.items():
+            if overlay_key not in raw:
+                continue
+            additions = raw[overlay_key]
+            current = plan.get(destination_key)
+            if (
+                not isinstance(additions, list)
+                or not additions
+                or not isinstance(current, list)
+                or destination_key in raw
+            ):
+                raise ValueError(
+                    f"exhaustive ledger append overlay differs: {overlay_key}"
+                )
+            plan[destination_key] = [*current, *additions]
         plan.update(
             {
                 key: value
                 for key, value in raw.items()
-                if key != "base_plan"
+                if key != "base_plan" and key not in append_keys
             }
         )
         return plan, [base_snapshot, *snapshots]

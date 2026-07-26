@@ -51,6 +51,55 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             self.assertEqual((plan["a"], plan["b"], plan["c"]), (1, 2, 3))
             self.assertEqual(len(snapshots), 2)
 
+    def test_hash_bound_ledger_overlay_can_append_versioned_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            base = root / "base.json"
+            top = root / "top.json"
+            base.write_text(
+                json.dumps(
+                    {
+                        "schema": "x",
+                        "current_material_roots": [{"label": "old"}],
+                        "material_component_coverage_bundles": [
+                            {"path": "old"}
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            top.write_text(
+                json.dumps(
+                    {
+                        "base_plan": {
+                            "path": "base.json",
+                            "sha256": module.file_sha256(base),
+                        },
+                        "append_current_material_roots": [
+                            {"label": "new"}
+                        ],
+                        "append_material_component_coverage_bundles": [
+                            {"path": "new"}
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            plan, _snapshots = module._load_plan_with_bases(top)
+            self.assertEqual(
+                [row["label"] for row in plan["current_material_roots"]],
+                ["old", "new"],
+            )
+            self.assertEqual(
+                [
+                    row["path"]
+                    for row in plan["material_component_coverage_bundles"]
+                ],
+                ["old", "new"],
+            )
+
     def test_owner_approved_legacy_product_does_not_clear_event_risk(self) -> None:
         with tempfile.TemporaryDirectory() as value:
             root = Path(value)
