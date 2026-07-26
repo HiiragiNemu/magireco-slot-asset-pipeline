@@ -251,6 +251,7 @@ def _classify_production_event(
     row: Mapping[str, str],
     audience_classification: str,
     produced_events: set[str],
+    material_events: set[str],
     timing_risk: bool,
     quarantines: Mapping[str, Mapping[str, str]],
 ) -> tuple[str, str, str]:
@@ -261,6 +262,12 @@ def _classify_production_event(
         return (
             "produced_clean_story_route",
             "produced_current_manifest_root",
+            "",
+        )
+    if event in material_events:
+        return (
+            "material_collection",
+            "produced_review_only_material_collection",
             "",
         )
     if audience_classification in COMPONENT_CLASSIFICATIONS or (
@@ -291,6 +298,7 @@ def _classify_audience_event(
     row: Mapping[str, str],
     production: Mapping[str, Mapping[str, Any]],
     produced_events: set[str],
+    material_events: set[str],
     quarantines: Mapping[str, Mapping[str, str]],
 ) -> tuple[str, str, str]:
     event = row["event_name"]
@@ -301,6 +309,12 @@ def _classify_audience_event(
         return (
             "produced_clean_story_route",
             "produced_current_manifest_root",
+            "",
+        )
+    if event in material_events:
+        return (
+            "material_collection",
+            "produced_review_only_material_collection",
             "",
         )
     classification = row.get("classification", "")
@@ -352,7 +366,27 @@ def build(
     plan_path: Path,
     output_root: Path,
 ) -> Path:
-    plan = read_json(plan_path)
+    raw_plan = read_json(plan_path)
+    base_plan_snapshot: dict[str, str] | None = None
+    if raw_plan.get("base_plan") is not None:
+        base_path, base_plan_snapshot = _bound(
+            raw_plan["base_plan"],
+            label="base exhaustive production-ledger plan",
+            plan_dir=plan_path.parent,
+        )
+        base_plan = read_json(base_path)
+        if base_plan.get("base_plan") is not None:
+            raise ValueError("nested exhaustive production-ledger base plan")
+        plan = dict(base_plan)
+        plan.update(
+            {
+                key: value
+                for key, value in raw_plan.items()
+                if key != "base_plan"
+            }
+        )
+    else:
+        plan = raw_plan
     if (
         plan.get("schema") != PLAN_SCHEMA
         or plan.get("status") != "active_exhaustive_production_ledger"
@@ -369,6 +403,8 @@ def build(
             "sha256": file_sha256(plan_path),
         }
     ]
+    if base_plan_snapshot is not None:
+        snapshots.append(base_plan_snapshot)
     bound: dict[str, Path] = {}
     for key, label in (
         ("audience_event_catalog", "audience event catalog"),
@@ -406,10 +442,12 @@ def build(
     }
 
     produced_events: set[str] = set()
+    material_events: set[str] = set()
     produced_rows: set[tuple[int, int]] = set()
     explicitly_excluded_rows: dict[tuple[int, int], dict[str, str]] = {}
     production_manifest_index: list[dict[str, Any]] = []
     superseded_audit_index: list[dict[str, Any]] = []
+    material_manifest_index: list[dict[str, Any]] = []
     roots = plan.get("current_production_roots")
     if not isinstance(roots, list) or len(roots) < 5:
         raise ValueError("current production-root set is incomplete")
@@ -507,6 +545,105 @@ def build(
                 }
             )
 
+    material_roots = plan.get("current_material_roots", [])
+    if not isinstance(material_roots, list):
+        raise ValueError("current material-root set must be a list")
+    for raw_root in material_roots:
+        if not isinstance(raw_root, Mapping):
+            raise ValueError("material root declaration must be an object")
+        root = Path(str(raw_root["path"])).resolve()
+        glob = str(raw_root["manifest_glob"])
+        label = str(raw_root["label"])
+        exclusions = raw_root.get("exclude_path_fragments")
+        if not isinstance(exclusions, list) or "superseded" not in {
+            str(value).casefold() for value in exclusions
+        }:
+            raise ValueError(
+                f"current material root lacks explicit superseded exclusion: {root}"
+            )
+        if not root.is_dir() or not glob:
+            raise ValueError(f"current material root is missing: {root}")
+        paths = sorted(
+            path
+            for path in root.glob(glob)
+            if path.is_file()
+            and not _path_matches_exclusion(
+                root=root,
+                path=path,
+                fragments=[str(value) for value in exclusions],
+            )
+        )
+        if not paths:
+            raise ValueError(f"current material root has no manifests: {root}")
+        for path in paths:
+            value = read_json(path)
+            if value.get("technical_qa_status") != "passed":
+                raise ValueError(f"current material manifest QA failed: {path}")
+            events_raw = value.get("covered_events")
+            if not isinstance(events_raw, list) or not events_raw:
+                raise ValueError(
+                    f"current material manifest lacks covered_events: {path}"
+                )
+            events = {str(event) for event in events_raw}
+            if any(not EVENT_PATTERN.fullmatch(event) for event in events):
+                raise ValueError(
+                    f"current material manifest has invalid covered event: {path}"
+                )
+            output_path = Path(str(value.get("output", ""))).resolve()
+            output_sha256 = str(value.get("output_sha256", "")).upper()
+            if (
+                not output_path.is_file()
+                or not re.fullmatch(r"[0-9A-F]{64}", output_sha256)
+                or file_sha256(output_path) != output_sha256
+            ):
+                raise ValueError(
+                    f"current material output hash differs: {output_path}"
+                )
+            if any(_family(event) in quarantines for event in events):
+                raise ValueError(
+                    f"hard-quarantine family entered material root: {path}"
+                )
+            overlap = material_events & events
+            if overlap:
+                raise ValueError(
+                    f"covered event appears in multiple material manifests: "
+                    f"{sorted(overlap)}"
+                )
+            material_events.update(events)
+            manifest_sha256 = file_sha256(path)
+            snapshots.extend(
+                [
+                    {
+                        "label": f"{label} material manifest",
+                        "path": str(path.resolve()),
+                        "sha256": manifest_sha256,
+                    },
+                    {
+                        "label": f"{label} material output",
+                        "path": str(output_path),
+                        "sha256": output_sha256,
+                    },
+                ]
+            )
+            material_manifest_index.append(
+                {
+                    "root_label": label,
+                    "manifest_path": str(path.resolve()),
+                    "manifest_sha256": manifest_sha256,
+                    "collection": str(value.get("collection", "")),
+                    "status": str(value.get("status", "")),
+                    "publication_status": str(
+                        value.get("publication_status", "")
+                    ),
+                    "events": sorted(events),
+                    "event_count": len(events),
+                    "output_path": str(output_path),
+                    "output_sha256": output_sha256,
+                    "included_as_current_material": True,
+                    "upload_status": "review_only_never_auto_upload",
+                }
+            )
+
     audience_rows = _read_csv(bound["audience_event_catalog"])
     audience_by_event = {row["event_name"]: row for row in audience_rows}
     if len(audience_by_event) != len(audience_rows):
@@ -554,6 +691,7 @@ def build(
             row=current["catalog"],
             audience_classification=audience_class,
             produced_events=produced_events,
+            material_events=material_events,
             timing_risk=bool(current["timing_risk"]),
             quarantines=quarantines,
         )
@@ -581,6 +719,7 @@ def build(
             row=raw,
             production=production,
             produced_events=produced_events,
+            material_events=material_events,
             quarantines=quarantines,
         )
         audience_ledger.append(
@@ -602,6 +741,10 @@ def build(
             disposition = "blocked"
             state = "quarantined"
             blocker = quarantines[family]["blocker"]
+        elif event in material_events:
+            disposition = "material_collection"
+            state = "produced_review_only_material_collection"
+            blocker = ""
         elif raw.get("classification") in COMPONENT_CLASSIFICATIONS:
             disposition = "gameplay_effect_collection"
             state = (
@@ -715,6 +858,9 @@ def build(
             and row["root_label"].startswith(("v30", "v31", "v32", "v33", "v34"))
         ],
         "superseded_audit_only_never_upload": superseded_audit_index,
+        "current_material_collections_requiring_exact_file_playback": (
+            material_manifest_index
+        ),
     }
 
     if any(row["disposition"] not in DISPOSITIONS for row in audience_ledger):
@@ -797,6 +943,14 @@ def build(
             },
         )
         write_json(
+            staging / "CURRENT_MATERIAL_COLLECTION_INDEX.json",
+            {
+                "schema": "magireco-current-material-collection-index-v1",
+                "collections": material_manifest_index,
+                "covered_event_count": len(material_events),
+            },
+        )
+        write_json(
             staging / "SOURCE_SNAPSHOTS.json",
             {
                 "schema": "magireco-exhaustive-ledger-source-snapshots-v1",
@@ -813,6 +967,9 @@ def build(
                 "dirinfo_routes": len(dirinfo_ledger),
                 "component_or_mixed_events": len(component_ledger),
                 "current_production_manifests": len(production_manifest_index),
+                "current_material_collection_manifests": len(
+                    material_manifest_index
+                ),
                 "superseded_audit_manifests_excluded": len(
                     superseded_audit_index
                 ),
@@ -831,6 +988,7 @@ def build(
                 component_ledger, "disposition"
             ),
             "produced_event_count": len(produced_events),
+            "produced_material_event_count": len(material_events),
             "produced_dirinfo_route_count": len(produced_rows),
             "hard_quarantine_families": quarantines,
             "priority_policy": plan.get("priority_policy"),
@@ -847,7 +1005,8 @@ def build(
             "P18/ac6005 始终为硬隔离；它们不会因其他批次 QA 通过而重新进入投稿。\n\n"
             "所有候选均有 disposition、production_state 与 blocker。"
             "gameplay/effect 项只表示已分流到独立合集，不表示合集已经完成；"
-            "produced 只来自计划列出的当前 manifest 根。\n",
+            "material_collection 只来自计划列出的当前素材 manifest 根，"
+            "且 review_only 不等于可投稿。\n",
             encoding="utf-8",
         )
         hashed = [

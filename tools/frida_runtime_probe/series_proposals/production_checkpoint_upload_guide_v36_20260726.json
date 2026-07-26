@@ -1,0 +1,16 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v35_20260726.json",
+    "sha256": "58AD99DF8A3BBAEB66199B62A02CD1BE09FC03B76D08C3E65ACB81C07DABA6D0"
+  },
+  "checkpoint_id": "20260726-v36-native416-material-review",
+  "target_bvs": {
+    "material_collection_catalog": "新建：MagiaReco Slot 原生416玩法／素材合集 BV"
+  },
+  "sources": {
+    "v36_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v5_20260726\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "A5DF7A545EFED85255D5ADD6930ADF45A7A2FF2554EBD8831D52E49B6468CDE1"
+    }
+  }
+}

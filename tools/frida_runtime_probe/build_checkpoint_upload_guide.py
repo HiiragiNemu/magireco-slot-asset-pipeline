@@ -186,7 +186,29 @@ def _track_target(plan: Mapping[str, Any], family: str, edition: str, product: s
 
 
 def build(*, plan_path: Path, output_root: Path) -> Path:
-    plan = read_json(plan_path)
+    raw_plan = read_json(plan_path)
+    base_plan_snapshot: dict[str, str] | None = None
+    if raw_plan.get("base_plan") is not None:
+        base_path, base_plan_snapshot = _bound(
+            raw_plan["base_plan"],
+            label="base checkpoint upload-guide plan",
+            plan_dir=plan_path.parent,
+        )
+        base_plan = read_json(base_path)
+        if base_plan.get("base_plan") is not None:
+            raise ValueError("nested checkpoint upload-guide base plan")
+        plan = dict(base_plan)
+        for key, value in raw_plan.items():
+            if key == "base_plan":
+                continue
+            if key in {"target_bvs", "directories", "sources"}:
+                if not isinstance(value, Mapping):
+                    raise ValueError(f"upload guide overlay {key} must be an object")
+                plan[key] = {**dict(plan.get(key, {})), **dict(value)}
+            else:
+                plan[key] = value
+    else:
+        plan = raw_plan
     if (
         plan.get("schema") != PLAN_SCHEMA
         or plan.get("status") != "active_upload_checkpoint"
@@ -200,6 +222,8 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
             "sha256": file_sha256(plan_path),
         }
     ]
+    if base_plan_snapshot is not None:
+        snapshots.append(base_plan_snapshot)
     source_paths: dict[str, Path] = {}
     for name, raw in plan["sources"].items():
         path, snapshot = _bound(
@@ -435,6 +459,37 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     scope_note=(
                         "Source/production contract is approved or evidence-ready, "
                         "but approval does not automatically transfer to this exact output."
+                    ),
+                )
+            )
+
+    if "v36_material_index" in source_paths:
+        material_index = read_json(source_paths["v36_material_index"])
+        if (
+            material_index.get("schema")
+            != "magireco-current-material-collection-index-v1"
+        ):
+            raise ValueError("v36 material index identity differs")
+        for collection in material_index.get("collections", []):
+            if not isinstance(collection, Mapping):
+                raise ValueError("v36 material index collection is malformed")
+            path = Path(str(collection.get("output_path", "")))
+            collection_name = str(collection.get("collection", ""))
+            items.append(
+                _item(
+                    path=path,
+                    expected_sha256=str(collection.get("output_sha256", "")),
+                    state="human_playback_required",
+                    target_bv=_target(plan, "material_collection_catalog"),
+                    subtitle_track="visual-only; no audio; no burned-in subtitles",
+                    suggested_part_name=collection_name,
+                    action="hold_for_owner_material_playback",
+                    automated_qa_status="passed_visual_only_review_contract",
+                    human_approval_status="not_yet_playback_approved",
+                    publication_instruction="DO NOT UPLOAD YET",
+                    scope_note=(
+                        "Native 416x232 visual material collection; not clean "
+                        "story, not a native route, and no audio semantics claimed."
                     ),
                 )
             )

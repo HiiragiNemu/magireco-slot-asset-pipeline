@@ -1,0 +1,17 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v4.json",
+    "sha256": "E0DA0F16BEBE09838ABE97F2602A19431C6248C2B80EF84415F0787F43A27AC2"
+  },
+  "scope": "The v4 current clean-story roots plus the first hash-bound native 416x232 visual-only material-review root. Review-only material collections are current catalog dispositions but are never auto-promoted to upload-ready.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    }
+  ]
+}

@@ -2,6 +2,65 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 原生 416 视觉素材审查批次 v36
+
+在当前证据成熟的原生 416x232 clean-story 路线扩展完成后，本轮把三个有限
+视觉组正式分入玩法／素材审查产品，不把它们冒充自然剧情，也不以自动技术
+检查代替人工批准。耐久输出根为：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  material_collections_v36_native416_review_20260726
+```
+
+共 3 个 MP4：
+
+- `ac0906_small_kyubey_actions_v1`：6 段，15.333 秒，SHA-256
+  `248E3C6A1A7ADB5564A02E1D0AB161636FDFBD5C2D5FD98CE6CA030064A0A8E6`；
+- `ac0931_uwasa_battle_intros_v1`：5 段，105.000 秒，SHA-256
+  `BCB19F3C3C5B14070DCE0C5153C125A71EB67E0B9899D662A9360B88F783294D`；
+- `ac5004_chance_color_titles_v1`：7 段，34.000 秒，SHA-256
+  `C8728053A829D1FC89CB20B3EC3B88C6084B4053433CCCF7041C4686381D14AE`。
+
+三片均保持原生 416x232、30 fps，H.264 视频流直接复制，最终有意无音轨、
+无字幕。自动技术 QA 通过，但状态全部为 `human_playback_required` /
+`review_only`，当前禁止投稿。ac0931 的一个源片带 ALAC 音轨；视觉素材合同
+明确丢弃所有源音轨，manifest 同时保留逐源音频签名，最终 QA 验证成片只有
+视频流。
+
+穷尽式总账已推进到：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  production_ledger_v5_20260726
+```
+
+它通过 hash-bound base plan 继承 v4，只新增 v36 material root；记录 24 个
+current production manifest、3 个 current material manifest、173 个已产
+audience event、17 个已产 material event 和 62 条已产 DirInfo route。
+剩余 planned gameplay/material 项从 408 降至 391，不改变剧情 READY 状态。
+`ac7210_superseded_verbose_audit` 已显式排除，正式唯一来源仍为 v30
+`ac7210`。`SUMMARY.json`、`SHA256SUMS.json` SHA-256 分别为
+`7BC3C52490C849512A11D93B876F18268A5768984B113ED2BA9804D60D95C72C`、
+`9BF7647370C4BD50D6B1068568B3F04818FD0D7DAA5799D8EF297D495C8435D8`。
+
+本检查点逐文件上传指南：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  upload_guide_v36_20260726
+```
+
+共 194 个精确文件：10 个已投稿、13 个可投稿、171 个待人工播放，以及 8 类
+明确排除。v36 三片的目标是未来新建“MagiaReco Slot 原生 416 玩法／素材
+合集”BV；当前既不追加也不替换，且没有字幕轨。`UPLOAD_GUIDE.json`、`.md`、
+`.csv`、`SHA256SUMS.json` SHA-256 分别为
+`AA072277B54C0D26907990175410941BE83ABE9B6F91804DC0DE07D91A42A0F2`、
+`08EEC6972F3FDD24610E71B66EE4F6FEF4A7132217B56BD58652F59FCDAC9278`、
+`7C28A2BFF2C966E2E603D9837E6E7EB522D166991F133C674462C43A984EB7A6`、
+`02E4C9591E5D57212BA002973B7DE8644153F1D771A94BAB6CD0F3EF6D9FBA45`。
+P16/P17/P18 继续硬隔离；Codex 不上传。
+
 ## 2026-07-26 P11/ac0911 九条路线与章节长版 v35
 
 DirInfo kind 36 共 14 条路线。本轮从当前 v24 ac0911 family master 中生成

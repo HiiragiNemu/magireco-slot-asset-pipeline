@@ -1,0 +1,88 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac5004_chance_color_titles_v1",
+  "classification": "chance_color_title_gameplay_material",
+  "evidence": "One native 416x232 standby loop and six color title overlays are retained as a separate visual-only gameplay material review collection. The current v20 event manifests exclude these alpha/title components from clean-story products.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac5004_001",
+    "ac5004_002",
+    "ac5004_003",
+    "ac5004_004",
+    "ac5004_005",
+    "ac5004_006"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac5004_001 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_001.json",
+      "sha256": "8EB6639CAEB28FC98E1DAE70921A3591F5142FB4BAE542FC897780118001836B"
+    },
+    {
+      "label": "ac5004_002 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_002.json",
+      "sha256": "1126E376D1D5BFC087B7153793DFA20397DF4CCE2D66831208DD5297DFA858B4"
+    },
+    {
+      "label": "ac5004_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_003.json",
+      "sha256": "2ECB9831453714C94D2F1FAA706DF6C160C335B4B537225E5A9C62FC988E10D8"
+    },
+    {
+      "label": "ac5004_004 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_004.json",
+      "sha256": "F403DD4F5E88C5134A6656E473D49A9407AE36525C059E1961C66912EA54F1E5"
+    },
+    {
+      "label": "ac5004_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_005.json",
+      "sha256": "4ADE692FBBF0E53BD4EE6A187BEA41CA5F6E91EE0E7BDF44944C535D0C66931A"
+    },
+    {
+      "label": "ac5004_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac5004_006.json",
+      "sha256": "1B95F09487823BEE0941467AD3669352E6C4CAF21BAD78A5670D1D1F83840191"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac5004_at_CC_taiki_LP",
+      "label": "ac5004 chance standby loop"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_wht_alpha",
+      "label": "ac5004 white title overlay"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_blu_alpha",
+      "label": "ac5004 blue title overlay"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_yel_alpha",
+      "label": "ac5004 yellow title overlay"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_gre_alpha",
+      "label": "ac5004 green title overlay"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_red_alpha",
+      "label": "ac5004 red title overlay"
+    },
+    {
+      "official_name": "ac5004_at_CC_title_rbw_alpha",
+      "label": "ac5004 rainbow title overlay"
+    }
+  ]
+}

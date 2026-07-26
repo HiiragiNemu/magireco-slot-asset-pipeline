@@ -74,6 +74,7 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             row={"ready": "yes", "errors": ""},
             audience_classification="native_full_frame_only",
             produced_events={"ac6004_006"},
+            material_events=set(),
             timing_risk=False,
             quarantines={
                 "ac6004": {
@@ -95,11 +96,32 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             },
             production={},
             produced_events=set(),
+            material_events=set(),
             quarantines={},
         )
         self.assertEqual(
             disposition,
             ("gameplay_effect_collection", "planned_unproduced", ""),
+        )
+
+    def test_material_event_is_not_left_as_planned_unproduced(self) -> None:
+        disposition = module._classify_audience_event(
+            row={
+                "event_name": "ac0906_001",
+                "classification": "component_only",
+            },
+            production={},
+            produced_events=set(),
+            material_events={"ac0906_001"},
+            quarantines={},
+        )
+        self.assertEqual(
+            disposition,
+            (
+                "material_collection",
+                "produced_review_only_material_collection",
+                "",
+            ),
         )
 
     def test_dirinfo_row_collection_supports_source_alias_rows(self) -> None:

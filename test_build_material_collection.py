@@ -1373,6 +1373,259 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
             {plan_path.resolve(), first.resolve(), second.resolve()},
         )
 
+    def test_named_visual_collection_allows_mixed_dropped_source_audio(
+        self,
+    ) -> None:
+        silent = self.make_video("named-mixed-silent.mp4", "red")
+        audible = self.make_av_video("named-mixed-audible.mp4", "blue")
+        plan = {
+            "collection": "named_mixed_source_audio",
+            "clips": [
+                {"official_name": "mixed_silent", "label": "silent"},
+                {"official_name": "mixed_audible", "label": "audible"},
+            ],
+        }
+        plan_path = self.root / "named-mixed-source-audio-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        video_map = {
+            "mixed_silent": {"target_mp4": str(silent)},
+            "mixed_audible": {"target_mp4": str(audible)},
+        }
+
+        row = build_named_collection(
+            plan_path,
+            video_map,
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertTrue(manifest["embedded_audio_dropped"])
+        self.assertEqual(len(manifest["embedded_audio_signatures"]), 1)
+        self.assertEqual(
+            [bool(item["source_audio_signature"].get("codec_name"))
+             for item in manifest["sources"]],
+            [False, True],
+        )
+        probe_payload = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "json",
+                row["output"],
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertFalse(
+            any(
+                stream["codec_type"] == "audio"
+                for stream in json.loads(probe_payload.stdout)["streams"]
+            )
+        )
+
+    def test_named_material_hash_binds_declared_evidence_sources(self) -> None:
+        first = self.make_video("evidence-red.mp4", "red")
+        second = self.make_video("evidence-blue.mp4", "blue")
+        evidence = self.root / "event-production.json"
+        evidence.write_text(
+            '{"schema":"magireco-event-production-v3",'
+            '"event":"ac0001_001"}\n',
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_evidence",
+            "covered_events": ["ac0001_001"],
+            "clips": [
+                {"official_name": "evidence_red", "label": "red"},
+                {"official_name": "evidence_blue", "label": "blue"},
+            ],
+            "evidence_sources": [
+                {
+                    "label": "event production manifest",
+                    "path": str(evidence),
+                    "sha256": file_sha256(evidence),
+                }
+            ],
+        }
+        plan_path = self.root / "named-evidence-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        video_map = {
+            "evidence_red": {"target_mp4": str(first)},
+            "evidence_blue": {"target_mp4": str(second)},
+        }
+
+        row = build_named_collection(
+            plan_path,
+            video_map,
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(
+            manifest["evidence_sources"],
+            [
+                {
+                    "label": "event production manifest",
+                    "path": str(evidence.resolve()),
+                    "sha256": file_sha256(evidence),
+                }
+            ],
+        )
+        self.assertEqual(manifest["covered_events"], ["ac0001_001"])
+        source_paths = {
+            Path(item["path"])
+            for item in manifest["source_snapshot_end"]["sources"]
+        }
+        self.assertEqual(
+            source_paths,
+            {
+                plan_path.resolve(),
+                evidence.resolve(),
+                first.resolve(),
+                second.resolve(),
+            },
+        )
+
+    def test_named_material_rejects_evidence_source_hash_mismatch(self) -> None:
+        first = self.make_video("mismatch-red.mp4", "red")
+        second = self.make_video("mismatch-blue.mp4", "blue")
+        evidence = self.root / "mismatch-production.json"
+        evidence.write_text('{"event":"ac0001_001"}\n', encoding="utf-8")
+        plan = {
+            "collection": "named_evidence_mismatch",
+            "clips": [
+                {"official_name": "mismatch_red", "label": "red"},
+                {"official_name": "mismatch_blue", "label": "blue"},
+            ],
+            "evidence_sources": [
+                {
+                    "label": "event production manifest",
+                    "path": str(evidence),
+                    "sha256": "A" * 64,
+                }
+            ],
+        }
+        plan_path = self.root / "named-evidence-mismatch-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        video_map = {
+            "mismatch_red": {"target_mp4": str(first)},
+            "mismatch_blue": {"target_mp4": str(second)},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError, "named material evidence SHA-256 mismatch"
+        ):
+            build_named_collection(
+                plan_path,
+                video_map,
+                self.out,
+                "ffmpeg",
+                "ffprobe",
+                False,
+            )
+
+    def test_named_material_rejects_unbound_covered_event(self) -> None:
+        first = self.make_video("covered-red.mp4", "red")
+        second = self.make_video("covered-blue.mp4", "blue")
+        evidence = self.root / "covered-production.json"
+        evidence.write_text(
+            '{"schema":"magireco-event-production-v3",'
+            '"event":"ac0001_001"}\n',
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_covered_event_mismatch",
+            "covered_events": ["ac0001_002"],
+            "clips": [
+                {"official_name": "covered_red", "label": "red"},
+                {"official_name": "covered_blue", "label": "blue"},
+            ],
+            "evidence_sources": [
+                {
+                    "label": "event production manifest",
+                    "path": str(evidence),
+                    "sha256": file_sha256(evidence),
+                }
+            ],
+        }
+        plan_path = self.root / "named-covered-mismatch-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        video_map = {
+            "covered_red": {"target_mp4": str(first)},
+            "covered_blue": {"target_mp4": str(second)},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError, "covered_events do not match bound event production"
+        ):
+            build_named_collection(
+                plan_path,
+                video_map,
+                self.out,
+                "ffmpeg",
+                "ffprobe",
+                False,
+            )
+
+    def test_named_material_applies_explicit_durable_source_root_override(
+        self,
+    ) -> None:
+        old_root = self.root / "old-root"
+        durable_root = self.root / "durable-root"
+        old_media = old_root / "official"
+        durable_media = durable_root / "official"
+        old_media.mkdir(parents=True)
+        durable_media.mkdir(parents=True)
+        first = self.make_video("override-red-source.mp4", "red")
+        second = self.make_video("override-blue-source.mp4", "blue")
+        durable_first = durable_media / "red.mp4"
+        durable_second = durable_media / "blue.mp4"
+        shutil.copy2(first, durable_first)
+        shutil.copy2(second, durable_second)
+        plan = {
+            "collection": "named_durable_override",
+            "source_root_overrides": [
+                {"from": str(old_root), "to": str(durable_root)}
+            ],
+            "clips": [
+                {"official_name": "override_red", "label": "red"},
+                {"official_name": "override_blue", "label": "blue"},
+            ],
+        }
+        plan_path = self.root / "named-durable-override-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        video_map = {
+            "override_red": {"target_mp4": str(old_media / "red.mp4")},
+            "override_blue": {"target_mp4": str(old_media / "blue.mp4")},
+        }
+
+        row = build_named_collection(
+            plan_path,
+            video_map,
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(
+            [Path(item["path"]) for item in manifest["sources"]],
+            [durable_first.resolve(), durable_second.resolve()],
+        )
+        self.assertEqual(
+            manifest["source_root_overrides"],
+            [{"from": str(old_root), "to": str(durable_root.resolve())}],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

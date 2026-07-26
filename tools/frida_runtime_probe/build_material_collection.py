@@ -2461,6 +2461,130 @@ def _build_named_collection_in_place(
     _add_material_source_role(
         source_roles, resolved_plan, f"{collection}:named_source_plan"
     )
+    evidence_sources = plan.get("evidence_sources", [])
+    if not isinstance(evidence_sources, list):
+        raise ValueError(
+            f"named material plan evidence_sources must be a list: {plan_path}"
+        )
+    resolved_evidence_sources: list[dict[str, str]] = []
+    for evidence_index, raw_evidence in enumerate(evidence_sources, start=1):
+        if not isinstance(raw_evidence, dict):
+            raise ValueError(
+                "named material plan evidence source "
+                f"{evidence_index} is not an object"
+            )
+        raw_path = str(raw_evidence.get("path", "")).strip()
+        expected_sha256 = str(raw_evidence.get("sha256", "")).strip().upper()
+        label = str(raw_evidence.get("label", "")).strip()
+        if not raw_path or not label or not SHA256_RE.fullmatch(expected_sha256):
+            raise ValueError(
+                "named material plan evidence source "
+                f"{evidence_index} requires path, label and SHA-256"
+            )
+        evidence_path = Path(raw_path)
+        if not evidence_path.is_absolute():
+            evidence_path = resolved_plan.parent / evidence_path
+        evidence_path = evidence_path.resolve()
+        if not evidence_path.is_file():
+            raise FileNotFoundError(evidence_path)
+        actual_sha256 = file_sha256(evidence_path)
+        if actual_sha256 != expected_sha256:
+            raise ValueError(
+                "named material evidence SHA-256 mismatch for "
+                f"{evidence_path}: expected={expected_sha256}, "
+                f"actual={actual_sha256}"
+            )
+        _add_material_source_role(
+            source_roles,
+            evidence_path,
+            f"{collection}:evidence_source:{evidence_index}:{label}",
+        )
+        resolved_evidence_sources.append(
+            {
+                "label": label,
+                "path": str(evidence_path),
+                "sha256": expected_sha256,
+            }
+        )
+    covered_events_raw = plan.get("covered_events", [])
+    if not isinstance(covered_events_raw, list):
+        raise ValueError(
+            f"named material plan covered_events must be a list: {plan_path}"
+        )
+    covered_events = [str(event).strip() for event in covered_events_raw]
+    if any(not re.fullmatch(r"ac\d+_\d+", event) for event in covered_events):
+        raise ValueError("named material plan covered_events contains invalid event")
+    if len(set(covered_events)) != len(covered_events):
+        raise ValueError("named material plan covered_events contains duplicates")
+    if covered_events:
+        evidence_events = set()
+        for evidence in resolved_evidence_sources:
+            evidence_path = Path(evidence["path"])
+            if evidence_path.suffix.casefold() != ".json":
+                continue
+            try:
+                evidence_payload = json.loads(
+                    evidence_path.read_text(encoding="utf-8-sig")
+                )
+            except (UnicodeError, json.JSONDecodeError):
+                continue
+            event = str(evidence_payload.get("event", "")).strip()
+            if (
+                str(evidence_payload.get("schema", "")).startswith(
+                    "magireco-event-production-"
+                )
+                and re.fullmatch(r"ac\d+_\d+", event)
+            ):
+                evidence_events.add(event)
+        if evidence_events != set(covered_events):
+            raise ValueError(
+                "named material covered_events do not match bound event "
+                f"production manifests: declared={sorted(covered_events)}, "
+                f"evidence={sorted(evidence_events)}"
+            )
+    source_root_overrides = plan.get("source_root_overrides", [])
+    if not isinstance(source_root_overrides, list):
+        raise ValueError(
+            f"named material plan source_root_overrides must be a list: {plan_path}"
+        )
+    resolved_source_root_overrides: list[dict[str, str]] = []
+    for override_index, raw_override in enumerate(
+        source_root_overrides, start=1
+    ):
+        if not isinstance(raw_override, dict):
+            raise ValueError(
+                "named material source root override "
+                f"{override_index} is not an object"
+            )
+        source_root = Path(str(raw_override.get("from", "")).strip())
+        durable_root = Path(str(raw_override.get("to", "")).strip())
+        if not source_root.is_absolute() or not durable_root.is_absolute():
+            raise ValueError(
+                "named material source root override "
+                f"{override_index} requires absolute from/to paths"
+            )
+        durable_root = durable_root.resolve()
+        if not durable_root.is_dir():
+            raise FileNotFoundError(durable_root)
+        resolved_source_root_overrides.append(
+            {"from": str(source_root), "to": str(durable_root)}
+        )
+
+    def resolve_named_source(map_row: dict[str, str]) -> Path:
+        raw_path = str(
+            map_row.get("target_mp4") or map_row.get("source_mp4") or ""
+        ).strip()
+        if not raw_path:
+            return Path()
+        mapped_path = Path(raw_path)
+        for override in resolved_source_root_overrides:
+            try:
+                relative = mapped_path.relative_to(Path(override["from"]))
+            except ValueError:
+                continue
+            return (Path(override["to"]) / relative).resolve()
+        return mapped_path.resolve()
+
     for clip_index, planned in enumerate(planned_clips, start=1):
         if not isinstance(planned, dict):
             raise ValueError(
@@ -2468,9 +2592,7 @@ def _build_named_collection_in_place(
             )
         official_name = str(planned.get("official_name", "")).strip()
         map_row = video_map.get(official_name.casefold(), {})
-        source_path = Path(
-            str(map_row.get("target_mp4") or map_row.get("source_mp4") or "")
-        ).resolve()
+        source_path = resolve_named_source(map_row)
         if not source_path.is_file():
             raise FileNotFoundError(
                 f"unresolved named material {official_name}: {source_path}"
@@ -2504,13 +2626,11 @@ def _build_named_collection_in_place(
     source_occurrences = []
     audio_hash_cache: dict[str, str] = {}
     signature: dict | None = None
-    embedded_audio_signature: dict | None = None
+    embedded_audio_signatures: list[dict[str, object]] = []
     for clip_index, planned in enumerate(planned_clips, start=1):
         official_name = str(planned.get("official_name", "")).strip()
         map_row = video_map.get(official_name.casefold(), {})
-        source_path = Path(
-            str(map_row.get("target_mp4") or map_row.get("source_mp4") or "")
-        ).resolve()
+        source_path = resolve_named_source(map_row)
         if not source_path.is_file():
             raise FileNotFoundError(
                 f"unresolved named material {official_name}: {source_path}"
@@ -2520,17 +2640,15 @@ def _build_named_collection_in_place(
         source_audio_signature = audio_signature(source_probe)
         if signature is None:
             signature = source_signature
-            embedded_audio_signature = source_audio_signature
         elif source_signature != signature:
             raise ValueError(
                 f"named material video mismatch for {official_name}: "
                 f"{source_signature} != {signature}"
             )
-        elif source_audio_signature != embedded_audio_signature:
-            raise ValueError(
-                f"named material audio mismatch for {official_name}: "
-                f"{source_audio_signature} != {embedded_audio_signature}"
-            )
+        if source_audio_signature.get("codec_name") and (
+            source_audio_signature not in embedded_audio_signatures
+        ):
+            embedded_audio_signatures.append(source_audio_signature)
         duration_ms = round(float(source_probe["format"]["duration"]) * 1000)
         peak_db = (
             audio_peak_db(source_path, ffmpeg)
@@ -2582,6 +2700,7 @@ def _build_named_collection_in_place(
                     if source_audio_signature.get("codec_name")
                     else ""
                 ),
+                "source_audio_signature": source_audio_signature,
                 "source_audio_peak_db": peak_db,
                 "source_video_signature": source_signature,
                 "official_audio_evidence": planned_audio,
@@ -2599,7 +2718,7 @@ def _build_named_collection_in_place(
         source["start_ms"] = offset_ms
         source["end_ms"] = offset_ms + int(source["duration_ms"])
         offset_ms = source["end_ms"]
-    if signature is None or embedded_audio_signature is None:
+    if signature is None:
         raise ValueError(f"named material plan resolved no sources: {plan_path}")
     if len(sources) < 2:
         raise ValueError(
@@ -2782,11 +2901,12 @@ def _build_named_collection_in_place(
         "visual_only_gate": release_gate["visual_only_gate"],
         "audible_review_gate": release_gate["audible_review_gate"],
         "evidence": str(plan.get("evidence", "")),
+        "evidence_sources": resolved_evidence_sources,
+        "covered_events": covered_events,
+        "source_root_overrides": resolved_source_root_overrides,
         "direct_stream_copy": True,
         "visual_only_output": True,
-        "embedded_audio_dropped": bool(
-            embedded_audio_signature.get("codec_name")
-        ),
+        "embedded_audio_dropped": bool(embedded_audio_signatures),
         "audible_status": (
             "blocked_contract"
             if all_audio_rows
@@ -2798,7 +2918,19 @@ def _build_named_collection_in_place(
         "clip_count": len(sources),
         "duration_ms": output_duration_ms,
         "video_signature": signature,
-        "embedded_audio_signature": embedded_audio_signature,
+        "embedded_audio_signature": (
+            embedded_audio_signatures[0]
+            if len(embedded_audio_signatures) == 1
+            else (
+                {
+                    "mode": "mixed_source_audio_signatures_dropped",
+                    "signatures": embedded_audio_signatures,
+                }
+                if embedded_audio_signatures
+                else audio_signature({})
+            )
+        ),
+        "embedded_audio_signatures": embedded_audio_signatures,
         "output": str(output_path.resolve()),
         "labels": str(label_path.resolve()),
         "labels_sha256": file_sha256(label_path),

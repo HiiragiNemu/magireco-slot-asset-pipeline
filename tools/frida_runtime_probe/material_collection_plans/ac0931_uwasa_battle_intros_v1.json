@@ -1,0 +1,74 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0931_uwasa_battle_intros_v1",
+  "classification": "uwasa_battle_intro_gameplay_material",
+  "evidence": "Five native 416x232 Uwasa battle-introduction clips are retained as a separate visual-only gameplay material review collection. The current v20 event manifests classify the events as audience-component-only rather than clean story.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0931_001",
+    "ac0931_002",
+    "ac0931_003",
+    "ac0931_005",
+    "ac0931_006"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac0931_001 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0931_001.json",
+      "sha256": "E55C29D3B5F8666F6C055A1385FC109600B5FA39270C0A934878DF4439D9CF10"
+    },
+    {
+      "label": "ac0931_002 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0931_002.json",
+      "sha256": "D40FC535B6F605D92F724FF2639126AFF7D087E0B1F5D5768E745F98896106CF"
+    },
+    {
+      "label": "ac0931_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0931_003.json",
+      "sha256": "F7238682E9E5BFE307BBA474B2BDEB3837A4A1F0D686C416983EF9D1EE1DDD41"
+    },
+    {
+      "label": "ac0931_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0931_005.json",
+      "sha256": "81666A621A13D387D17AFC90FB520F397E1E63D6426CC8719DA762E16837D71D"
+    },
+    {
+      "label": "ac0931_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0931_006.json",
+      "sha256": "282DE61FC2603B829F6FC44A87D8B6A0B79B85C7C096A6B16DEC20CF635CFC3F"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac0931_kyo_uwasa_bt_dounyu_zekkou_MR",
+      "label": "ac0931_001 Uwasa battle intro Zekkou"
+    },
+    {
+      "official_name": "ac0931_kyo_uwasa_bt_dounyu_kutiyose_MR",
+      "label": "ac0931_002 Uwasa battle intro Kutiyose"
+    },
+    {
+      "official_name": "ac0931_kyo_uwasa_bt_dounyu_fukurou_MR",
+      "label": "ac0931_003 Uwasa battle intro Fukurou"
+    },
+    {
+      "official_name": "ac0931_kyo_uwasa_bt_dounyu_kioku_MR",
+      "label": "ac0931_005 Uwasa battle intro Kioku"
+    },
+    {
+      "official_name": "ac0931_kyo_uwasa_bt_dounyu_mannen_MR",
+      "label": "ac0931_006 Uwasa battle intro Mannen"
+    }
+  ]
+}

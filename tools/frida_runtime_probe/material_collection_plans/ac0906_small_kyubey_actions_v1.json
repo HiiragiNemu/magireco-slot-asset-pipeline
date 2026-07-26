@@ -1,0 +1,84 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0906_small_kyubey_actions_v1",
+  "classification": "small_kyubey_character_overlay_material",
+  "evidence": "Six native 416x232 black-matte small-Kyubey overlay actions are retained as a separate visual-only material review collection. The current v20 event manifests explicitly exclude them from clean-story products because the official runtime background composition is unresolved.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0906_001",
+    "ac0906_002",
+    "ac0906_003",
+    "ac0906_004",
+    "ac0906_005",
+    "ac0906_006"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac0906_001 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_001.json",
+      "sha256": "64CE03968E8770BD6A822A8793D45D056382C88FE3A41ECE3F4735BEAA298598"
+    },
+    {
+      "label": "ac0906_002 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_002.json",
+      "sha256": "DA4E31A5FAB059150D8E19E412E91FEB2228868D0E5C455EA50148E0E5D9CEE8"
+    },
+    {
+      "label": "ac0906_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_003.json",
+      "sha256": "2A84B5CCD3887D8FA7F143DA2816C7257D2C546674FF6590DEDC357552CCDAC2"
+    },
+    {
+      "label": "ac0906_004 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_004.json",
+      "sha256": "9AA908D4B0371F2C186EE671C6B2339F469E8890FCCE5E3B282EC971AFD4E94F"
+    },
+    {
+      "label": "ac0906_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_005.json",
+      "sha256": "1B90B947A887BB687C6285FD41C2C11CE38514D1C29316DD89E56C81679072A4"
+    },
+    {
+      "label": "ac0906_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0906_006.json",
+      "sha256": "67A142A74E2C0AE98B1B834BD95167D7766138FF122A7063595AC8788FDABDCF"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac0906_cmn_sQB_act_LtoR_run",
+      "label": "ac0906_001 small Kyubey runs left to right"
+    },
+    {
+      "official_name": "ac0906_cmn_sQB_act_LtoF_run",
+      "label": "ac0906_002 small Kyubey runs left to front"
+    },
+    {
+      "official_name": "ac0906_cmn_sQB_act_RtoL_run",
+      "label": "ac0906_003 small Kyubey runs right to left"
+    },
+    {
+      "official_name": "ac0906_cmn_sQB_act_RtoF_run",
+      "label": "ac0906_004 small Kyubey runs right to front"
+    },
+    {
+      "official_name": "ac0906_cmn_sQB_act_TtoF_run",
+      "label": "ac0906_005 small Kyubey runs top to front"
+    },
+    {
+      "official_name": "ac0906_cmn_sQB_act_fromB_dis",
+      "label": "ac0906_006 small Kyubey appears from below"
+    }
+  ]
+}
