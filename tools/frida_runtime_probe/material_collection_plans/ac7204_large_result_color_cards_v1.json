@@ -1,0 +1,178 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac7204_large_result_color_cards_v1",
+  "classification": "large_result_color_card_gameplay_material",
+  "evidence": "Fifteen reviewed native 416x232 ac7204 gameplay/result events reuse eight L-size color/effect card intro/loop pairs. This visual-only collection retains white, blue, yellow, green, red, purple, fireworks and rainbow official clips once each, without consuming the events' child-local audio timing.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac7204_009",
+    "ac7204_010",
+    "ac7204_011",
+    "ac7204_012",
+    "ac7204_013",
+    "ac7204_014",
+    "ac7204_015",
+    "ac7204_016",
+    "ac7204_035",
+    "ac7204_036",
+    "ac7204_037",
+    "ac7204_038",
+    "ac7204_039",
+    "ac7204_040",
+    "ac7204_041"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac7204_009 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_009.json",
+      "sha256": "9C2DFEC3A7B8D9208EF807C2CEB7B7B61EB373D6EB4E227526F5EEEECCFC47A1"
+    },
+    {
+      "label": "ac7204_010 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_010.json",
+      "sha256": "84A2CD8DF4B4132FBA3895A18A939D62D0D343E7A8BD238217C35538F4C28224"
+    },
+    {
+      "label": "ac7204_011 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_011.json",
+      "sha256": "3BAC82ABDE4F64926A5FABB03F4C19ADC2B19058A27E1072969076FE7B069E4E"
+    },
+    {
+      "label": "ac7204_012 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_012.json",
+      "sha256": "6EC4940A4677F4A37338B9451C616959C4D2F85A9BB3D8947DC1E39F2FEFE6B3"
+    },
+    {
+      "label": "ac7204_013 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_013.json",
+      "sha256": "3D6A03BB661CA669EC9296C121AA970132C6AADD6C69B06F219BBD36B5F83089"
+    },
+    {
+      "label": "ac7204_014 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_014.json",
+      "sha256": "ADF7BB88E28F8950F12C1E1EB1B951DCBE787A2D61BC45184B1CDB8EBA0A9E97"
+    },
+    {
+      "label": "ac7204_015 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_015.json",
+      "sha256": "572B746701415D3C44FC69F005B8B40566E035E9FF081068BAA29E159510DAB8"
+    },
+    {
+      "label": "ac7204_016 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_016.json",
+      "sha256": "BFB9C9AE8E2BAEC696491710180D98AC6A717E2E7C777E854ED19C96302C450F"
+    },
+    {
+      "label": "ac7204_035 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_035.json",
+      "sha256": "19B3A09FB7622D9B364449FE03EDF0CA18AA51FE225152378033112EA999869F"
+    },
+    {
+      "label": "ac7204_036 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_036.json",
+      "sha256": "BD676971EA4B47143128EB90A99FA96751EAD3C36CFD17678BA421EDFC9B6700"
+    },
+    {
+      "label": "ac7204_037 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_037.json",
+      "sha256": "D423B31D3DC71D9B94813C358A2E30450A67D1818C5336A8E7A43304A1A5F56F"
+    },
+    {
+      "label": "ac7204_038 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_038.json",
+      "sha256": "9B3F8584D8377EEEB7FC6873BE7DCF1D483CA5D027CCCEBC67BCC4818CD58EA9"
+    },
+    {
+      "label": "ac7204_039 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_039.json",
+      "sha256": "13325A00E0852459E5A52A6E04699864160517B01772F784FBBEE65C4762FBDA"
+    },
+    {
+      "label": "ac7204_040 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_040.json",
+      "sha256": "77771C94E7E346EDEF12FA0A7C2959266B9112F1F5331EAC407E098040D18B89"
+    },
+    {
+      "label": "ac7204_041 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_041.json",
+      "sha256": "D3679AA18581B2B5666ECD5FAA1CBDB4DF31DDBE0711EFE62AC95F7B02D75880"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac7204_009_c04_L_wht_MR",
+      "label": "L-size white result intro"
+    },
+    {
+      "official_name": "ac7204_009_c04_L_wht_LP_MR",
+      "label": "L-size white result loop"
+    },
+    {
+      "official_name": "ac7204_010_c04_L_blu_MR",
+      "label": "L-size blue result intro"
+    },
+    {
+      "official_name": "ac7204_010_c04_L_blu_LP_MR",
+      "label": "L-size blue result loop"
+    },
+    {
+      "official_name": "ac7204_011_c04_L_yel_MR",
+      "label": "L-size yellow result intro"
+    },
+    {
+      "official_name": "ac7204_011_c04_L_yel_LP_MR",
+      "label": "L-size yellow result loop"
+    },
+    {
+      "official_name": "ac7204_012_c04_L_grn_MR",
+      "label": "L-size green result intro"
+    },
+    {
+      "official_name": "ac7204_012_c04_L_grn_LP_MR",
+      "label": "L-size green result loop"
+    },
+    {
+      "official_name": "ac7204_013_c04_L_red_MR",
+      "label": "L-size red result intro"
+    },
+    {
+      "official_name": "ac7204_013_c04_L_red_LP_MR",
+      "label": "L-size red result loop"
+    },
+    {
+      "official_name": "ac7204_014_c04_L_prl_MR",
+      "label": "L-size purple result intro"
+    },
+    {
+      "official_name": "ac7204_014_c04_L_prl_LP_MR",
+      "label": "L-size purple result loop"
+    },
+    {
+      "official_name": "ac7204_015_c04_L_hnb_MR",
+      "label": "L-size fireworks result intro"
+    },
+    {
+      "official_name": "ac7204_015_c04_L_hnb_LP_MR",
+      "label": "L-size fireworks result loop"
+    },
+    {
+      "official_name": "ac7204_016_c04_L_rbw_MR",
+      "label": "L-size rainbow result intro"
+    },
+    {
+      "official_name": "ac7204_016_c04_L_rbw_LP_MR",
+      "label": "L-size rainbow result loop"
+    }
+  ]
+}

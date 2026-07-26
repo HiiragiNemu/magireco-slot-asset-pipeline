@@ -1,0 +1,144 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac7204_small_result_color_cards_v1",
+  "classification": "small_result_color_card_gameplay_material",
+  "evidence": "Twelve reviewed native 416x232 ac7204 gameplay/result events reuse six S-size color-card intro/loop pairs. This visual-only collection retains the white, blue, yellow, green, red and purple official clips once each, without consuming the events' child-local audio timing.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac7204_003",
+    "ac7204_004",
+    "ac7204_005",
+    "ac7204_006",
+    "ac7204_007",
+    "ac7204_008",
+    "ac7204_029",
+    "ac7204_030",
+    "ac7204_031",
+    "ac7204_032",
+    "ac7204_033",
+    "ac7204_034"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac7204_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_003.json",
+      "sha256": "C123A8E002893F21DD0AB4A7B720985801443275409BD85E36B26BD779C9EBDA"
+    },
+    {
+      "label": "ac7204_004 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_004.json",
+      "sha256": "7AA58100333BB5D1DE2618A954541BAA107C7BD1630E0233F7CCE652C00ED7EC"
+    },
+    {
+      "label": "ac7204_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_005.json",
+      "sha256": "1890578DDE110933DC024018DFA4E6846FEAD962DDFA3F3811B758DC6048EE80"
+    },
+    {
+      "label": "ac7204_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_006.json",
+      "sha256": "D2F2C97EEE10FFC3F30E4A45639C302F5DE6884A15ECE80D970D2963E486BF68"
+    },
+    {
+      "label": "ac7204_007 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_007.json",
+      "sha256": "4F6ADB584E378659D81B996F8A57084D4F0515BE9A4674D73C37AFFFF88ABBD1"
+    },
+    {
+      "label": "ac7204_008 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_008.json",
+      "sha256": "A554A0A5E26F630DF945DDA4968E27F2043D2915EEFE170C9E3519E0C6F8A114"
+    },
+    {
+      "label": "ac7204_029 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_029.json",
+      "sha256": "69A0B862EE385DA2DBE6FA927FCC18EDA3956C23CED5E553E26E046585E40DBD"
+    },
+    {
+      "label": "ac7204_030 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_030.json",
+      "sha256": "701E4694777BCDD7EB08A5538B50694E30D5E7996E2D2D8B81A6B74FE8E3830A"
+    },
+    {
+      "label": "ac7204_031 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_031.json",
+      "sha256": "026BBDC22CE74E17D49EEFE6CF43C464F6AE611112B6485C54F04C2F56CA209C"
+    },
+    {
+      "label": "ac7204_032 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_032.json",
+      "sha256": "6DBE8A48590C32494B5E847B32CE1286CA31A53C6C599166C242D95FFBCD3580"
+    },
+    {
+      "label": "ac7204_033 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_033.json",
+      "sha256": "9EDA7CC671EC48D18302BB004E2CBCABB242982BC29A61C4FF4CB51D722B6078"
+    },
+    {
+      "label": "ac7204_034 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac7204_034.json",
+      "sha256": "4E11F36A2CB0BA4ECDA208F2DAAE9108FF1985E7F68EFAEC52A4571CB3DE53AC"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac7204_003_c03_S_wht_MR",
+      "label": "S-size white result intro"
+    },
+    {
+      "official_name": "ac7204_003_c03_S_wht_LP_MR",
+      "label": "S-size white result loop"
+    },
+    {
+      "official_name": "ac7204_004_c03_S_blu_MR",
+      "label": "S-size blue result intro"
+    },
+    {
+      "official_name": "ac7204_004_c03_S_blu_LP_MR",
+      "label": "S-size blue result loop"
+    },
+    {
+      "official_name": "ac7204_005_c03_S_yel_MR",
+      "label": "S-size yellow result intro"
+    },
+    {
+      "official_name": "ac7204_005_c03_S_yel_LP_MR",
+      "label": "S-size yellow result loop"
+    },
+    {
+      "official_name": "ac7204_006_c03_S_gre_MR",
+      "label": "S-size green result intro"
+    },
+    {
+      "official_name": "ac7204_006_c03_S_gre_LP_MR",
+      "label": "S-size green result loop"
+    },
+    {
+      "official_name": "ac7204_007_c03_S_red_MR",
+      "label": "S-size red result intro"
+    },
+    {
+      "official_name": "ac7204_007_c03_S_red_LP_MR",
+      "label": "S-size red result loop"
+    },
+    {
+      "official_name": "ac7204_008_c03_S_prl_MR",
+      "label": "S-size purple result intro"
+    },
+    {
+      "official_name": "ac7204_008_c03_S_prl_LP_MR",
+      "label": "S-size purple result loop"
+    }
+  ]
+}

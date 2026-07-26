@@ -2,6 +2,48 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 ac7204 原生 416 结果卡素材审查 v40
+
+本轮按玩法语义把 ac7204 的 27 个原生 416x232 gameplay/result 事件整理为
+两片视觉-only 素材：
+
+- `ac7204_small_result_color_cards_v1__material_components__416x232_30-1.mp4`：
+  小尺寸白／蓝／黄／绿／红／紫 intro+loop 共 12 段、12.000 秒，SHA-256
+  `99631E653AA9A0756E32E9D2B29CE31DF8234FAE292285A901EA790E77EB0F5E`；
+- `ac7204_large_result_color_cards_v1__material_components__416x232_30-1.mp4`：
+  大尺寸六色加烟花、彩虹 intro+loop 共 16 段、16.000 秒，SHA-256
+  `26828847F15CC76A2837ABCAD12D9C63EB88D59C0AE4647B572D76728D250D9F`。
+
+耐久根为
+`material_collections_v40_native416_ac7204_review_20260726`。两片 H.264
+视频流直接复制，最终无音轨、无字幕；自动技术 QA 通过，但均为
+`human_playback_required` / `review_only`。本批不消费 child-local 声音时序，
+也不声明 clean story 或原生 session。
+
+`ac7204_017/_021/_022/_023/_042/_043/_044` 的 parent DGM→child Z2D
+event-global 时序仍未闭合，继续 blocked，没有被本批错误计入已完成。
+
+总账推进到 `production_ledger_v9_20260726`：current material manifest 从 6
+增至 8，覆盖事件从 63 增至 90，planned production-manifest
+gameplay/material 项从 345 降至 318。`SUMMARY.json`、
+`CURRENT_MATERIAL_COLLECTION_INDEX.json`、`SHA256SUMS.json` SHA-256
+分别为
+`9AE86965DDE7AB466BB442C0BE4B2FF2AAF972853EEABA6F289C11E76231581A`、
+`B1A30C1C7829FC9169365C6DE7CE944DC52A38A351226F0AAC00A1AC59ACB854`、
+`9F701DFD7616062ECA08679C0899F1745A7AACDF774221B6AA9F0B6D9392B185`。
+
+逐文件上传指南推进到 `upload_guide_v40_20260726`，共 203 个精确文件：
+10 个已投稿、17 个可投稿、176 个待人工播放、8 类明确排除。两片新文件的
+目标均为未来新建“MagiaReco Slot 原生416玩法／素材合集”BV；建议分P名分别为
+“小尺寸六色结果卡素材 ac7204”和“大尺寸六色与烟花彩虹结果卡素材 ac7204”；
+当前不追加、不替换。`UPLOAD_GUIDE.json`、`.md`、`.csv`、
+`SHA256SUMS.json` SHA-256 分别为
+`34022B6A4D556A31C135F8AE230DD59F9FBE4B15B980961AE3EB713A370E7896`、
+`7891A78A7FF7F3D93861A8E591D125A44FFE3621B3B18785D98FC97317F27537`、
+`6002980A4B091A19DD6A6A15E31D19631E89EC7382FD28A57FC0DDC273E43B28`、
+`D264B36CF8AC9E956AD957FB8D74CB369CEE7CF45A956C04F6CEE64E18932BDB`。
+P16/P17/P18 继续硬隔离；`ac7210_superseded_verbose_audit` 继续绝不上传。
+
 ## 2026-07-26 ac0912 原生 416 小丘比引导素材审查 v39
 
 本轮把 ac0912 的 42 个原生 416x232 小丘比三停引导／结果展示事件分流到一个

@@ -1,0 +1,42 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v8.json",
+    "sha256": "6EC4F9EB672AD5213F9B58259412BF55040DED1B9B084CDEAC080E415D8E9C74"
+  },
+  "checkpoint_id": "20260726-v40-native416-ac7204-materials",
+  "scope": "All v8 current production and exact owner-approved product records plus two hash-bound native 416x232 visual-only ac7204 result-card material review collections. The collections cover only the 27 events already classified as gameplay/result material; seven ac7204 child-local timing blockers remain blocked.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v40 ac7204 native 416 result-card material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v40_native416_ac7204_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    }
+  ]
+}
