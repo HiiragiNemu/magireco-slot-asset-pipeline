@@ -1,0 +1,40 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v42_20260727.json",
+    "sha256": "C02F563963B258BDBA398A19B64C4F8DE3A1875C57B15D39DE2627D8BBD7A2AF"
+  },
+  "checkpoint_id": "20260727-v43-event-exact-512-review",
+  "target_bvs": {
+    "story_collection": "ZH BV13bKN6nEsd",
+    "none_collection": "none BV1rUKN6iEcj",
+    "future_ja_catalog": "JA BV1zQKN6eEC6"
+  },
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v12_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "66092A156D947D2B39C30F51D5D1300AF9B81ED5A6E4A5B00CA64C97C0DC2BD7"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v12_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "1B1CA86BFDCA584FF62C3AE0C597E997755CB96B15D7465D2C5E09C869010BF6"
+    }
+  },
+  "incremental_story_products": {
+    "ac7114_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "SP剧情3 鹤乃"
+    },
+    "ac7115_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "枫的魔女化身"
+    },
+    "ac7115_013": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "黑江与环彩羽迎战魔女化身"
+    },
+    "ac7116_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "美冬与桃子"
+    }
+  }
+}

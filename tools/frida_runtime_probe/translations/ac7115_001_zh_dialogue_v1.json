@@ -1,0 +1,14 @@
+{
+  "schema": "magireco-sp-story-zh-dialogue-map-v1",
+  "scope": "ac7115_001_voice_bound_dialogue",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {"ja": "！", "zh": "！", "status": "machine_draft_pending_owner"},
+    {"ja": "！…かえで！", "zh": "！……枫！", "status": "machine_draft_pending_owner"},
+    {"ja": "かえでちゃん！", "zh": "枫酱！", "status": "machine_draft_pending_owner"},
+    {"ja": "あれは…", "zh": "那是……", "status": "machine_draft_pending_owner"},
+    {"ja": "かえで！ しっかりして！ かえで！", "zh": "枫！振作一点！枫！", "status": "machine_draft_pending_owner"},
+    {"ja": "レナちゃん…", "zh": "玲奈酱……", "status": "machine_draft_pending_owner"},
+    {"ja": "かえで…", "zh": "枫……", "status": "machine_draft_pending_owner"}
+  ]
+}

@@ -235,6 +235,36 @@ def _manifest_media(
 ) -> list[dict[str, str]]:
     output: list[dict[str, str]] = []
     if isinstance(value, Mapping):
+        artifacts = value.get("artifacts")
+        if isinstance(artifacts, Mapping):
+            product = str(
+                value.get("title")
+                or value.get("product_id")
+                or value.get("route_id")
+                or value.get("release_id")
+                or product_prefix
+                or family
+            )
+            for edition in ("none", "ja", "zh"):
+                raw = artifacts.get(f"video_{edition}")
+                if (
+                    not isinstance(raw, Mapping)
+                    or not raw.get("path")
+                    or not raw.get("sha256")
+                ):
+                    continue
+                path = Path(str(raw["path"]))
+                if not path.is_absolute():
+                    path = family_root / path
+                output.append(
+                    {
+                        "family": family,
+                        "product": product,
+                        "edition": edition,
+                        "path": str(path.resolve()),
+                        "sha256": str(raw["sha256"]).upper(),
+                    }
+                )
         media_groups = [
             raw
             for raw in (value.get("media"), value.get("editions"))
@@ -571,6 +601,133 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     ),
                 )
             )
+
+    incremental_story_specs = plan.get("incremental_story_products")
+    if incremental_story_specs is not None:
+        if (
+            "current_production_index" not in source_paths
+            or not isinstance(incremental_story_specs, Mapping)
+            or not incremental_story_specs
+        ):
+            raise ValueError(
+                "incremental story products require current production index"
+            )
+        current_index = read_json(source_paths["current_production_index"])
+        if (
+            current_index.get("schema")
+            != "magireco-current-production-manifest-index-v1"
+            or not isinstance(current_index.get("manifests"), list)
+        ):
+            raise ValueError("current production index identity differs")
+        selected_incremental: dict[str, Mapping[str, Any]] = {}
+        for raw in current_index["manifests"]:
+            if not isinstance(raw, Mapping):
+                raise ValueError("current production index row is malformed")
+            family = str(raw.get("family", ""))
+            spec = incremental_story_specs.get(family)
+            if spec is None:
+                continue
+            if not isinstance(spec, Mapping):
+                raise ValueError(f"incremental story spec differs: {family}")
+            if str(raw.get("root_label", "")) != str(
+                spec.get("root_label", "")
+            ):
+                continue
+            if family in selected_incremental:
+                raise ValueError(
+                    f"duplicate incremental story current manifest: {family}"
+                )
+            selected_incremental[family] = raw
+        if set(selected_incremental) != set(incremental_story_specs):
+            raise ValueError(
+                "incremental story current manifest set differs: "
+                f"expected={sorted(incremental_story_specs)} "
+                f"actual={sorted(selected_incremental)}"
+            )
+        for family, spec in incremental_story_specs.items():
+            raw = selected_incremental[family]
+            manifest_path = Path(str(raw.get("manifest_path", ""))).resolve()
+            expected_manifest_sha = str(
+                raw.get("manifest_sha256", "")
+            ).upper()
+            if (
+                not manifest_path.is_file()
+                or file_sha256(manifest_path) != expected_manifest_sha
+            ):
+                raise ValueError(
+                    f"incremental story manifest binding differs: {family}"
+                )
+            value = read_json(manifest_path)
+            if (
+                value.get("schema")
+                != "magireco-no-bgm-story-family-editions-v1"
+                or value.get("status") != "AUTOMATED_QA_PASSED"
+                or value.get("family") != family
+                or value.get("ordered_events") != [family]
+                or value.get("audio_profile") != "no_bgm"
+                or value.get("bgm_policy") != "intentionally_excluded"
+                or value.get("human_review_status") != "pending"
+                or value.get("publishable") is not False
+            ):
+                raise ValueError(
+                    f"incremental story release contract differs: {family}"
+                )
+            rows = _manifest_media(
+                value,
+                family_root=manifest_path.parent.parent,
+                family=family,
+            )
+            if (
+                len(rows) != 3
+                or {row["edition"] for row in rows}
+                != {"none", "ja", "zh"}
+            ):
+                raise ValueError(
+                    f"incremental story edition set differs: {family}"
+                )
+            title = str(spec.get("title", "")).strip()
+            if not title:
+                raise ValueError(
+                    f"incremental story title is empty: {family}"
+                )
+            for row in rows:
+                edition = row["edition"]
+                path = Path(row["path"])
+                suggested = f"{title} {family}"
+                if edition == "ja":
+                    suggested += "__ja"
+                elif edition == "zh":
+                    suggested += " 中文版"
+                target_key = {
+                    "none": "none_collection",
+                    "ja": "future_ja_catalog",
+                    "zh": "story_collection",
+                }[edition]
+                items.append(
+                    _item(
+                        path=path,
+                        expected_sha256=row["sha256"],
+                        state="human_playback_required",
+                        target_bv=_target(plan, target_key),
+                        subtitle_track=(
+                            "no burned-in subtitles"
+                            if edition == "none"
+                            else f"{edition.upper()} burned-in"
+                        ),
+                        suggested_part_name=suggested,
+                        action="hold_for_owner_playback",
+                        automated_qa_status="passed_event_exact_no_bgm",
+                        human_approval_status=(
+                            "exact_output_not_yet_playback_approved"
+                        ),
+                        publication_instruction="DO NOT UPLOAD YET",
+                        scope_note=(
+                            "Independent event-exact native-size story product "
+                            "bound to one exact DirInfo row. It is not claimed "
+                            "as a complete natural family or combined route."
+                        ),
+                    )
+                )
 
     material_index_source = (
         "current_material_index"

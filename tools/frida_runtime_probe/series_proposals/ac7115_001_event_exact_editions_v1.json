@@ -1,0 +1,30 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac7115_001",
+  "proposal_id": "ac7115_001_event_exact_editions_v1",
+  "status": "passed",
+  "errors": [],
+  "ordering": "single DirInfo kind 191 row 0 event; independent product only",
+  "event_count": 1,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "source_series_manifest": {
+    "path": "ac7115_dirinfo_event_exact_source_v1.json",
+    "sha256": "F6B61816B7C50860D367348C4D18F51BAC78174C47E8C0DB7819C63D0131C317",
+    "evidence": "Hash-bound DirInfo kind 191 source catalog proves row 0 resolves exactly to ac7115_001."
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "ready_event_names": [
+      "ac7115_001"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac7115_001": "F0444CB9E3686C0EB224C3E58F48C57C2A03A9BCCDA526D0EF692899EAE92A5F"
+  },
+  "scope_boundary": "This does not concatenate DirInfo row 12 or any sibling ac7115 event and does not claim a complete family or natural multi-event session."
+}

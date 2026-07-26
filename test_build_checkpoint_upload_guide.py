@@ -74,6 +74,42 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(Path(rows[0]["path"]).name, "ready.mp4")
 
+    def test_media_extraction_reads_standard_family_video_artifacts(self) -> None:
+        value = {
+            "release_id": "ac7115_001_full_no_bgm_editions_v1",
+            "artifacts": {
+                "video_none": {
+                    "path": "video/release__none.mp4",
+                    "sha256": "A" * 64,
+                },
+                "video_ja": {
+                    "path": "video/release__ja.mp4",
+                    "sha256": "B" * 64,
+                },
+                "video_zh": {
+                    "path": "video/release__zh.mp4",
+                    "sha256": "C" * 64,
+                },
+                "subtitles_zh": {
+                    "path": "subtitles/release__zh.srt",
+                    "sha256": "D" * 64,
+                },
+            },
+        }
+        rows = module._manifest_media(
+            value,
+            family_root=Path("D:/durable/current"),
+            family="ac7115_001",
+        )
+        self.assertEqual(
+            {row["edition"] for row in rows},
+            {"none", "ja", "zh"},
+        )
+        self.assertEqual(
+            {Path(row["path"]).suffix for row in rows},
+            {".mp4"},
+        )
+
     def test_family_targets_are_explicit(self) -> None:
         plan = {
             "target_bvs": {

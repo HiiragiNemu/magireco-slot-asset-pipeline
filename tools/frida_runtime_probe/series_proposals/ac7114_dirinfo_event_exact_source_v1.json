@@ -1,0 +1,34 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "series": "ac7114",
+  "proposal_id": "ac7114_dirinfo_event_exact_source_v1",
+  "status": "passed",
+  "errors": [],
+  "ordering": "DirInfo kind 190 row order; this is an event catalog, not a claim that siblings form one natural session",
+  "event_count": 1,
+  "native_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "native_frame_rate": "30/1",
+  "dimension_policy": "exact_native_only_no_resize_no_pad_no_crop_no_upscale",
+  "dirinfo_evidence": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01",
+    "kind": 190,
+    "rows": [
+      {
+        "row_index": 0,
+        "event": "ac7114_001",
+        "event_info_index": 8125,
+        "code_hex": "0x4f71466b3d723041"
+      }
+    ]
+  },
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715",
+    "ready_event_names": [
+      "ac7114_001"
+    ]
+  }
+}

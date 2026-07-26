@@ -2,6 +2,45 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 其他原生尺寸 event-exact 单事件审查 v43
+
+原生 416 剧情／路线的下一批已在 v42 核对为“无新增 event-exact natural
+family”；因此产线按既定优先级进入其他原生尺寸，而不是重新生产低证据的
+512 family 拼接。v43 在
+`no_bgm_editions_v43_event_exact_512_review_20260727` 生成四个彼此独立、
+DirInfo 行与 v20 manifest 双重哈希绑定的原生 512x288 单事件产品：
+`ac7114_001`、`ac7115_001`、`ac7115_013`、`ac7116_001`。每个均有
+none/JA/ZH，合计 12 个 H.264/AAC 48kHz stereo MP4、57.466 秒唯一内容；
+自动 QA 通过，但仍为 `human_playback_required` / `publishable=false`。
+这些单事件不被表述为完整 natural family，也没有互相串联。
+
+`ac7115_001` 的旧 manifest 对 request 9097、9090、9095 有可验证语音，却
+没有独立字幕 cue。本轮使用官方 request code、OGG 名称、SHA-256、已解析
+event-global 起点建立逐 request override，补入“！”、“！”和
+“！…枫！”；没有统一目测平移。该事件现在有 8 条 voice-bound cue，需人工
+重点检查三条补齐语音是否与张嘴／字幕同步。
+
+增量审查根为
+`bilibili_incremental_review_v43_event_exact_512_20260727`：U081-U084，
+`01_REVIEW_STORY\batch_001`，4 个作品／12 个 exact MP4，全部为源文件的
+同盘 hardlink；`00_UPLOAD_NOW` 与隔离媒体均为 0。none 目标
+`BV1rUKN6iEcj`、JA 目标 `BV1zQKN6eEC6`、ZH 目标 `BV13bKN6nEsd` 已逐项
+写入 `UPLOAD_INDEX.csv`，但人工批准前全部 HOLD。
+
+总账推进到 `production_ledger_v12_20260727`：current production manifest
+24→28，produced event 173→177，原先四条
+`evidence_ready_event_waiting_route_product` 已全部转为
+`produced_current_manifest_root`。全局指南推进到
+`upload_guide_v43_20260727`：10 个已投稿、17 个可投稿、195 个待人工播放、
+8 类明确排除，共 222 个精确文件。第一次未消费 v43 index 的指南草案已移动
+到 `upload_guide_v43_20260727_superseded_missing_incremental_audit`，正式唯一
+指南是无后缀的 v43 根；superseded 审计绝不上传。详细证据见
+`docs/research/2026-07-27-event-exact-native512-checkpoint-v43.md`。
+
+冻结交接根继续保持不变；P16/P17/P18、未闭合 child-local、互斥路线机械
+串联和任何 upscale 继续 fail-closed。普通“待人工播放”不会停止无关产线。
+当前 with-BGM 正式候选仍为 0；完成／精确阻断已发现 no-BGM 库存后再切换。
+
 ## 2026-07-27 生产冻结解除与原生 416 剩余素材审查 v42
 
 项目所有者已明确解除同日生产冻结；已完成的

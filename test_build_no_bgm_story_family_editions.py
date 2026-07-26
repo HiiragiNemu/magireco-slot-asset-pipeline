@@ -29,6 +29,7 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     load_speaker_identity_overrides,
     normalize_editions,
     snapshot,
+    validate_dirinfo_source_evidence,
     validate_series_proposal_bindings,
     validate_no_exact_audience_event_duplicates,
     validate_translation_relationship_rules,
@@ -254,6 +255,58 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
                     series_path=proposal_path,
                     manifest_root=manifest_root,
                     ordered_events=["ac0001_001"],
+                )
+
+    def test_dirinfo_source_evidence_binds_exact_rows_and_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            catalog = root / "dirinfo.csv"
+            catalog.write_text(
+                "kind,row_index,event_info_index,code_hex,scene_name,"
+                "resolved_events\n"
+                "191,0,8167,0x5773382374447854,ac7115_001,ac7115_001\n"
+                "191,12,8179,0x4c792a5a74447854,ac7115_013,ac7115_013\n",
+                encoding="utf-8",
+            )
+            source_path = root / "source.json"
+            source_series = {
+                "family_state": {
+                    "ready_event_names": ["ac7115_001", "ac7115_013"]
+                },
+                "dirinfo_evidence": {
+                    "path": str(catalog),
+                    "sha256": hashlib.sha256(catalog.read_bytes())
+                    .hexdigest()
+                    .upper(),
+                    "kind": 191,
+                    "rows": [
+                        {
+                            "row_index": 0,
+                            "event": "ac7115_001",
+                            "event_info_index": 8167,
+                            "code_hex": "0x5773382374447854",
+                        },
+                        {
+                            "row_index": 12,
+                            "event": "ac7115_013",
+                            "event_info_index": 8179,
+                            "code_hex": "0x4c792a5a74447854",
+                        },
+                    ],
+                },
+            }
+            snapshot_row = validate_dirinfo_source_evidence(
+                source_series=source_series,
+                source_path=source_path,
+            )
+            self.assertEqual(snapshot_row["sha256"], source_series[
+                "dirinfo_evidence"
+            ]["sha256"])
+            source_series["family_state"]["ready_event_names"].reverse()
+            with self.assertRaisesRegex(ValueError, "order differs"):
+                validate_dirinfo_source_evidence(
+                    source_series=source_series,
+                    source_path=source_path,
                 )
 
     def test_native_512x416_opening_layout_is_supported_without_resizing(

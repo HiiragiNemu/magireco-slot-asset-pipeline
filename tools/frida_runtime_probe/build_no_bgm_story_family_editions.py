@@ -23,8 +23,10 @@ from __future__ import annotations
 
 import argparse
 import copy
+import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -1522,6 +1524,10 @@ def validate_series_proposal_bindings(
     source_snapshot = snapshot(
         source_path, label=f"{family} hash-bound source series manifest"
     )
+    dirinfo_snapshot = validate_dirinfo_source_evidence(
+        source_series=source_series,
+        source_path=source_path,
+    )
     return (
         {
             "status": "current_identity_bound",
@@ -1532,8 +1538,89 @@ def validate_series_proposal_bindings(
                 "sha256": expected_source_hash,
             },
         },
-        [source_snapshot],
+        [
+            source_snapshot,
+            *([dirinfo_snapshot] if dirinfo_snapshot else []),
+        ],
     )
+
+
+def validate_dirinfo_source_evidence(
+    *,
+    source_series: Mapping[str, Any],
+    source_path: Path,
+) -> dict[str, str] | None:
+    """Validate an optional exact DirInfo row catalog behind a source series."""
+
+    raw = source_series.get("dirinfo_evidence")
+    if raw is None:
+        return None
+    if not isinstance(raw, Mapping) or set(raw) != {
+        "path",
+        "sha256",
+        "kind",
+        "rows",
+    }:
+        raise ValueError("source series DirInfo evidence fields differ")
+    path = Path(str(raw["path"]))
+    if not path.is_absolute():
+        path = source_path.parent / path
+    path = path.resolve()
+    expected_sha256 = str(raw["sha256"]).strip().upper()
+    if (
+        len(expected_sha256) != 64
+        or any(value not in "0123456789ABCDEF" for value in expected_sha256)
+        or not path.is_file()
+        or file_sha256(path) != expected_sha256
+    ):
+        raise ValueError("source series DirInfo evidence SHA-256 differs")
+    kind = int(raw["kind"])
+    declarations = raw["rows"]
+    if not isinstance(declarations, list) or not declarations:
+        raise ValueError("source series DirInfo evidence has no rows")
+    required = {"row_index", "event", "event_info_index", "code_hex"}
+    expected_rows: dict[int, dict[str, str]] = {}
+    for index, row in enumerate(declarations):
+        if not isinstance(row, Mapping) or set(row) != required:
+            raise ValueError(f"source series DirInfo row {index} fields differ")
+        row_index = int(row["row_index"])
+        event = str(row["event"])
+        if (
+            row_index in expected_rows
+            or not re.fullmatch(r"ac\d+_\d+", event)
+        ):
+            raise ValueError(f"source series DirInfo row {index} is invalid")
+        expected_rows[row_index] = {
+            "event": event,
+            "event_info_index": str(int(row["event_info_index"])),
+            "code_hex": str(row["code_hex"]).casefold(),
+        }
+    actual_rows: dict[int, dict[str, str]] = {}
+    with path.open("r", encoding="utf-8-sig", newline="") as source:
+        for row in csv.DictReader(source):
+            if int(row["kind"]) != kind:
+                continue
+            row_index = int(row["row_index"])
+            if row_index not in expected_rows:
+                continue
+            actual_rows[row_index] = {
+                "event": str(row["resolved_events"] or row["scene_name"]),
+                "event_info_index": str(int(row["event_info_index"])),
+                "code_hex": str(row["code_hex"]).casefold(),
+            }
+    if actual_rows != expected_rows:
+        raise ValueError(
+            "source series DirInfo rows differ: "
+            f"expected={expected_rows} actual={actual_rows}"
+        )
+    source_events = source_series.get("family_state", {}).get(
+        "ready_event_names"
+    )
+    if source_events != [
+        expected_rows[index]["event"] for index in sorted(expected_rows)
+    ]:
+        raise ValueError("source series event order differs from DirInfo rows")
+    return snapshot(path, label="hash-bound DirInfo event route catalog")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

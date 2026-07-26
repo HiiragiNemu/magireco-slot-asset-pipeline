@@ -1,0 +1,47 @@
+{
+  "schema": "magireco-incremental-story-review-plan-v1",
+  "checkpoint_id": "20260727-v43-event-exact-512-review",
+  "start_upload_id": 81,
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v43_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "9A4AB213F0EEE89D59F0906C42677943E4B660157EEEAD2C4F37D7A5766AE7D7"
+  },
+  "products": [
+    {
+      "family": "ac7114_001",
+      "title": "SP剧情3 鹤乃",
+      "filename_title": "SP剧情3鹤乃",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\ac7114_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "E7CBC8F237CEAFBB48790EBC264F94B6D0F25806EACA47D5DA923D456D023EF1"
+      }
+    },
+    {
+      "family": "ac7115_001",
+      "title": "枫的魔女化身",
+      "filename_title": "枫的魔女化身",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\ac7115_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "A4C648D33E97AEEF59DC6582FECE740647C83F95141D6558FEC0621FBC24EF86"
+      }
+    },
+    {
+      "family": "ac7115_013",
+      "title": "黑江与环彩羽迎战魔女化身",
+      "filename_title": "黑江与环彩羽迎战魔女化身",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\ac7115_013_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "0EFF25E051EC97207D60B55E70418288FAE5B7C43EF2100FDB3572BEDAC1B9D3"
+      }
+    },
+    {
+      "family": "ac7116_001",
+      "title": "美冬与桃子",
+      "filename_title": "美冬与桃子",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\ac7116_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "5F7BA9A776A2D3512183721CBA5E7604D04466EC960C36A5EF4DE61A60FD43CA"
+      }
+    }
+  ]
+}

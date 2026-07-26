@@ -1,0 +1,65 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v11.json",
+    "sha256": "6F5721529CC39A990B419AB4785D0BEE6225422A6F429B0DFACF0065A0AAB2E9"
+  },
+  "checkpoint_id": "20260727-v43-event-exact-512-review",
+  "recorded_date": "2026-07-27",
+  "scope": "All v11 current production and exact owner-approved records plus four independent event-exact native 512x288 no-BGM story products. Each product is bound to one exact DirInfo event row and one current v20 manifest; none is represented as a complete natural family or concatenated with another route.",
+  "current_production_roots": [
+    {
+      "label": "v24 mass no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v25 next-story no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v25_next_story_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v30 current approved-contract ac0908/ac7210 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726",
+      "manifest_glob": "**/*MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v31 mature ac4902/ac7206 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v32 ac0908 complete-entry routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v32_ac0908_complete_entry_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v33 ac4903 mature clean routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v33_ac4903_mature_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v34 ac6007 finite clean route candidates",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v34_p19_ac6007_complete_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v35 ac0911 mature clean routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v35_ac0911_mature_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v43 independent event-exact native 512 story review products",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727",
+      "manifest_glob": "ac*_full_no_bgm_editions_v1/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    }
+  ]
+}

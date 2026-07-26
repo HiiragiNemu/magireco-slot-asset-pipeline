@@ -1,0 +1,45 @@
+{
+  "schema": "magireco-voice-subtitle-overrides-v1",
+  "purpose": "Hash-bound completion of three audible ac7115_001 official role-voice requests that lack standalone runtime text cues in v20",
+  "accepted": {
+    "9097": {
+      "text": "！",
+      "speaker_code": "rena",
+      "source": "curated_official_sound_request_code_name",
+      "official_prefix": "！",
+      "ogg_name": "snd_30746_bank08_ogg_07567.ogg",
+      "audio_sha256": "3EE766E9A99E325837A0DF2C1567106E0ADF425BA017A02E3DB2D840ADE2A48D",
+      "evidence": [
+        "official request code 30746_317_rena_！ contains the complete vocalization",
+        "request 9097 is retained at event-global 194 ms by the runtime-verified ac7115_001 manifest",
+        "the rena speaker code identifies Minami Rena"
+      ]
+    },
+    "9090": {
+      "text": "！",
+      "speaker_code": "kuroe",
+      "source": "curated_official_sound_request_code_name",
+      "official_prefix": "！",
+      "ogg_name": "snd_30739_bank08_ogg_07560.ogg",
+      "audio_sha256": "E1F0580748B6CCCCF9F395E6DB64424098F691FB11CD037A30096A38D1E9643B",
+      "evidence": [
+        "official request code 30739_303_kuroe_！ contains the complete vocalization",
+        "request 9090 is retained at event-global 2339 ms by the runtime-verified ac7115_001 manifest",
+        "kuroe is the distinct Kuroe identity and is not the ambiguous raw kuro label"
+      ]
+    },
+    "9095": {
+      "text": "！…かえで！",
+      "speaker_code": "rena",
+      "source": "curated_official_sound_request_code_name",
+      "official_prefix": "！…かえで！",
+      "ogg_name": "snd_30744_bank09_ogg_07565.ogg",
+      "audio_sha256": "55AA252016D96D89DD28D7B9050596860F6B27E83959395C14E732D68A3FAB9C",
+      "evidence": [
+        "official request code 30744_310_rena_！…かえで！ contains the complete line",
+        "request 9095 is retained at event-global 8966 ms by the runtime-verified ac7115_001 manifest",
+        "the existing graphical display text at 9667-11533 ms is deliberately unbound and cannot replace this audible Rena voice cue"
+      ]
+    }
+  }
+}
