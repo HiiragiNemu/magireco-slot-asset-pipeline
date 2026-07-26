@@ -1,0 +1,86 @@
+{
+  "schema": "magireco-checkpoint-upload-guide-plan-v1",
+  "status": "active_upload_checkpoint",
+  "checkpoint_id": "20260726-v33-ac0908-ac7210-ac4902-ac7206-ac4903",
+  "target_bvs": {
+    "story_collection": "项目所有者当前已投稿的 ZH 剧情合集 BV（本地未记录 BV 号）",
+    "future_ja_catalog": "新建：MagiaReco Slot 日文字幕路线合集 BV",
+    "ac0908_route_catalog": "新建：ac0908 六种菜品独立路线 BV",
+    "ac0908_reference_showcase": "新建：ac0908 全选项参考剪辑 BV（明确非单次原生流程）",
+    "ac7210_route_supplement": "新建或追加：ac7210/P25 路线补全 BV",
+    "ac4902_route_catalog": "新建：ac4902/P12 互斥路线合集 BV",
+    "ac4903_route_catalog": "新建：ac4903/P13 互斥路线合集 BV",
+    "ac7206_route_catalog": "新建：ac7206/P24 互斥路线合集 BV",
+    "future_catalog": "未来分类完成后的对应 family BV"
+  },
+  "directories": {
+    "uploaded_zh": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\zh",
+    "corrections_review_now": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\REVIEW_NOW_4_MP4"
+  },
+  "sources": {
+    "owner_uploaded_exact_zh": {
+      "path": "../owner_attestations/owner_uploaded_10zh_20260725.json",
+      "sha256": "3BCB8A229B81DD66A4620CC415F95C7B858A97B76A6457BF9B21D4F1CD790453"
+    },
+    "owner_approved_corrections": {
+      "path": "../owner_attestations/owner_playback_approved_p12_p23_ac0908_20260725.json",
+      "sha256": "D8F5F3271F64405A0A0871BDDD8FFD554903B7DD0116ECCD1C70D56437AF7E87"
+    },
+    "v30_ac0908_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726\\ac0908\\manifest\\AC0908_APPROVED_PRODUCTION_MANIFEST.json",
+      "sha256": "33BF6818617FD086A6DE3C1EDDE386A8EF07269E576887FD521A232847831857"
+    },
+    "v30_ac7210_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726\\ac7210\\manifest\\PRODUCTION_MANIFEST.json",
+      "sha256": "7FA543DD559118E650859850C9A2DA66909660F5A88EE878159D302DA26BF70E"
+    },
+    "v31_ac4902_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726\\ac4902\\BATCH_MANIFEST.json",
+      "sha256": "583DA2E62D768399FA5BD2911ACE53C7F1444C43A73800748C739C5F5C14C778"
+    },
+    "v31_ac7206_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726\\ac7206\\BATCH_MANIFEST.json",
+      "sha256": "9D313015D2B04E8C0EDA5A3FB53F31B8B006106310600386553CFB8BE315FE47"
+    },
+    "v32_ac0908_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v32_ac0908_complete_entry_routes_20260726\\ac0908\\BATCH_MANIFEST.json",
+      "sha256": "FDD86EE89E0FC6F2DB6A9AD88D6404BF4011B62FFCBC589BE5EACDA89429A1CC"
+    },
+    "v33_ac4903_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v33_ac4903_mature_routes_20260726\\ac4903\\BATCH_MANIFEST.json",
+      "sha256": "64BE46ADB85DC7D8B776FF5B6069492411E43AB909F2947F3EBEF628A0720877"
+    }
+  },
+  "explicit_exclusions": [
+    {
+      "scope": "P16 / ac6003 全 family",
+      "disposition": "quarantine_never_upload",
+      "reason": "ac6003_009 父 DGM→子 Z2D event-global 实例化偏移尚未闭合。"
+    },
+    {
+      "scope": "P17 / ac6004 全 family",
+      "disposition": "quarantine_never_upload",
+      "reason": "人工验收时序失败，六条 child-local 起点未闭合，且漏 req3260 整条 7.899 秒对白。"
+    },
+    {
+      "scope": "P18 / ac6005 全 family",
+      "disposition": "quarantine_never_upload",
+      "reason": "人工验收确认张嘴、声音、字幕严重错位并疑似缺对白。"
+    },
+    {
+      "scope": "ac7210 DirInfo rows 2、3、4",
+      "disposition": "blocked_never_upload",
+      "reason": "分层合成与父子时序未闭合；v30 只批准 rows 0、1。"
+    },
+    {
+      "scope": "ac4903 DirInfo rows 14、18、21",
+      "disposition": "gameplay_effect_collection_not_clean_story",
+      "reason": "终点 ac4903_015 混合 416×232 剧情与 256×144 胜利/玩法效果，需后续分层合成。"
+    },
+    {
+      "scope": "v30/ac7210_superseded_verbose_audit 全目录",
+      "disposition": "superseded_audit_only_never_upload",
+      "reason": "仅保留历史审计；正式唯一 ac7210 来源为 v30/ac7210。"
+    }
+  ]
+}

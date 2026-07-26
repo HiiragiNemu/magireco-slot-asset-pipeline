@@ -1,0 +1,104 @@
+{
+  "schema": "magireco-ac7210-approved-route-editions-plan-v1",
+  "status": "owner_playback_approved_and_full_production_authorized",
+  "series": "ac7210",
+  "release_id": "ac7210_approved_dirinfo_rows_0_1_editions_v1",
+  "audio_profile": "no_bgm",
+  "editions": [
+    "none",
+    "ja",
+    "zh"
+  ],
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "approved_zh_policy": "hardlink_exact_owner_approved_files_no_reencode",
+  "sibling_subtitle_policy": "extract_v24_ja_zh_by_event_presentation_timeline",
+  "route_policy": "rows_0_1_independent_never_concat_as_one_native_session",
+  "review_plan": {
+    "path": "ac7210_dirinfo_route_supplements_v1.json",
+    "sha256": "02CD1F2B623B3C50B62D9B8268C95CCFF5847B384FFA05BD52B9BC67F64F59AD"
+  },
+  "owner_attestation": {
+    "path": "..\\owner_attestations\\owner_approved_ac0908_ac7210_full_production_20260726.json",
+    "sha256": "2E6D4EB800F6A95B0FFCD81364B2F41C457EADD68F6244F03E4938947397AFD0"
+  },
+  "v24_family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7210_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "4BCF07739F0D074EA2030CF2E53DCE00CEFACB2BBBC97A0AD6F6160D096929B2"
+  },
+  "subtitle_sources": {
+    "ja": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7210_full_no_bgm_editions_v1\\subtitles\\ac7210_full_no_bgm_editions_v1__ja.srt",
+      "sha256": "A75C4830C1242BC1812D97A9E13D6ACDB799F045DEFCE7DA0CD685FA26105368"
+    },
+    "zh": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac7210_full_no_bgm_editions_v1\\subtitles\\ac7210_full_no_bgm_editions_v1__zh.srt",
+      "sha256": "B7E4A4E73FD883BDFB375537EFC6A6CACC1B2BE9F2B0AE8789B8523107AE859E"
+    }
+  },
+  "approved_zh": [
+    {
+      "dirinfo_row": 0,
+      "byte_count": 4617334,
+      "source": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v29_p25_ac7210_route_supplements_zh_20260725\\REVIEW_NOW_2_MP4\\P25补全路线0 火箭突击__zh.mp4",
+        "sha256": "8927CFDF7497B63B4FA47D7D9DB0C340FC837596547F3B9F4E8E15C764079088"
+      }
+    },
+    {
+      "dirinfo_row": 1,
+      "byte_count": 6852753,
+      "source": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v29_p25_ac7210_route_supplements_zh_20260725\\REVIEW_NOW_2_MP4\\P25补全路线1 火箭突击__zh.mp4",
+        "sha256": "990407DD95ABC18911782AFA9F2EC7AA3E2F17997BA9F716892D1AFFB1A06849"
+      }
+    }
+  ],
+  "excluded_dirinfo_rows": [
+    {
+      "dirinfo_row": 2,
+      "ordered_events": [
+        "ac7210_001",
+        "ac7210_002",
+        "ac7210_003",
+        "ac7210_006"
+      ],
+      "excluded_component_events": [
+        "ac7210_006"
+      ],
+      "production_disposition": "excluded_until_layered_composition_and_parent_child_timing_are_closed"
+    },
+    {
+      "dirinfo_row": 3,
+      "ordered_events": [
+        "ac7210_001",
+        "ac7210_005",
+        "ac7210_003",
+        "ac7210_006"
+      ],
+      "excluded_component_events": [
+        "ac7210_006"
+      ],
+      "production_disposition": "excluded_until_layered_composition_and_parent_child_timing_are_closed"
+    },
+    {
+      "dirinfo_row": 4,
+      "ordered_events": [
+        "ac7210_007",
+        "ac7210_008"
+      ],
+      "excluded_component_events": [
+        "ac7210_007",
+        "ac7210_008"
+      ],
+      "production_disposition": "excluded_until_layered_composition_and_parent_child_timing_are_closed"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "schema": "magireco-ac0908-complete-entry-routes-plan-v1",
+  "status": "owner_approved_full_production",
+  "series": "ac0908",
+  "release_id": "ac0908_complete_entry_routes_v1",
+  "audio_profile": "no_bgm",
+  "editions": [
+    "none",
+    "ja",
+    "zh"
+  ],
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "upscale": false
+  },
+  "route_policy": "dirinfo_rows_6_11_are_six_independent_native_route_segments",
+  "entry_audio_policy": "approved_v28_ac0908_001_scene_audio_overlay_continues_across_outcome_boundary",
+  "owner_attestation": {
+    "path": "../owner_attestations/owner_approved_ac0908_complete_entry_routes_20260726.json",
+    "sha256": "C615E88E6F7B06EA1322F597933D23E86ACFBBDC8843DBF713012E9B9045A67F"
+  },
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "approved_strong_route_plan": {
+    "path": "ac0908_approved_full_production_v1.json",
+    "sha256": "C3DBC603636DBFCCD63C36C0845D53349F0222C5C042944AA1447704091B63A5"
+  },
+  "reference_showcase_plan": {
+    "path": "ac0908_reference_all_outcomes_showcase_v1.json",
+    "sha256": "F4677DAE15086FFE3AFFCCD7054E662D1BBF57DEBE939BDDD0349F79E845CBDA"
+  },
+  "approved_reference_showcase_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\manifest\\SHOWCASE_MANIFEST.json",
+    "sha256": "F77FFFF0674D41DAC7CFC9A7357EA8DF6B4C1FB9A2152E2261E7FD631DF05C4B"
+  },
+  "approved_reference_showcase_qa": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\qa\\AUTOMATED_QA.json",
+    "sha256": "04F47F309D0CBB425F1C62DD4A81F46FED2AB96EB1CF44605D31125C9F53DEA6"
+  },
+  "entry_visual": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\weak_entry_with_exterior_01__visual.mp4",
+    "sha256": "A29F5A78107605131097F8B34035A1F2CE1D42F8F184CDCE50BEA3980C779C9B",
+    "bytes": 297518,
+    "frame_count": 187
+  },
+  "event_pcm": {
+    "ac0908_002": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_002.f32le",
+      "sha256": "B6C068BFC489F12BBA738121EDD94741CB20D3462CBD54BA75CB878F64DA5F1E",
+      "samples": 432000
+    },
+    "ac0908_003": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_003.f32le",
+      "sha256": "3D663CD1DADF8CACF0DC1B57C3351AD327553A29CE2C5D18AD96CF2665FEAB9A",
+      "samples": 432000
+    },
+    "ac0908_004": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_004.f32le",
+      "sha256": "8830BDAB58D4297C28A50B065FCC416299E6C11A89809E4FD9D103102624B405",
+      "samples": 432000
+    },
+    "ac0908_005": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_005.f32le",
+      "sha256": "A64469CD2F3530586F04481FF25B34719BBE280BCC7E3CF9B49291EF65DE4541",
+      "samples": 432000
+    },
+    "ac0908_006": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_006.f32le",
+      "sha256": "38C41583D2811DCD9DAC713CC16A829DA583EF4EFD27DC5EDF90B774D29C80D9",
+      "samples": 432000
+    },
+    "ac0908_007": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_007.f32le",
+      "sha256": "526840AC0A0392AC491633A9199A9DAD832867E79E755639E62148CC04F5E6B3",
+      "samples": 321600
+    },
+    "ac0908_008": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v28_ac0908_complete_showcase_zh_20260725\\work\\ac0908_008.f32le",
+      "sha256": "24230F284E5D6AA33A7CF80E54DA6B7876BA4D233EDA53C34B1907DC2FDE2AD2",
+      "samples": 385600
+    }
+  },
+  "subtitle_layout": {
+    "path": "../subtitle_layout_profiles/project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "routes": [
+    {
+      "dirinfo_row": 6,
+      "source_strong_row": 52,
+      "outcome_event": "ac0908_002",
+      "title": "ac0908 完整入口路线6 桃包"
+    },
+    {
+      "dirinfo_row": 7,
+      "source_strong_row": 53,
+      "outcome_event": "ac0908_003",
+      "title": "ac0908 完整入口路线7 中华海蜇"
+    },
+    {
+      "dirinfo_row": 8,
+      "source_strong_row": 54,
+      "outcome_event": "ac0908_004",
+      "title": "ac0908 完整入口路线8 天津饭"
+    },
+    {
+      "dirinfo_row": 9,
+      "source_strong_row": 55,
+      "outcome_event": "ac0908_005",
+      "title": "ac0908 完整入口路线9 韭菜炒肝"
+    },
+    {
+      "dirinfo_row": 10,
+      "source_strong_row": 56,
+      "outcome_event": "ac0908_006",
+      "title": "ac0908 完整入口路线10 麻婆豆腐"
+    },
+    {
+      "dirinfo_row": 11,
+      "source_strong_row": 57,
+      "outcome_event": "ac0908_007",
+      "title": "ac0908 完整入口路线11 四千年套餐"
+    }
+  ]
+}

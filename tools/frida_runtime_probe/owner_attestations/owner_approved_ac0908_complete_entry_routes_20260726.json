@@ -1,0 +1,86 @@
+{
+  "schema": "magireco-owner-approved-route-expansion-v1",
+  "recorded_date": "2026-07-26",
+  "status": "owner_approved_full_production",
+  "family": "ac0908",
+  "approved_presentation_contract": {
+    "entry_event": "ac0908_001",
+    "entry_frames": 187,
+    "entry_visual_scope": "restaurant_exterior_then_side_cooking",
+    "approved_reference_zh_filename": "ac0908 六种菜品入口补全参考合集__zh.mp4",
+    "approved_reference_zh_sha256": "53C0A918C043F78D8CB70DC643747C7DEC3FC45D5FA107A91251A347586AFD51"
+  },
+  "authorized_dirinfo_routes": [
+    {
+      "kind": 33,
+      "row": 6,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_002",
+        "ac0908_008"
+      ]
+    },
+    {
+      "kind": 33,
+      "row": 7,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_003",
+        "ac0908_008"
+      ]
+    },
+    {
+      "kind": 33,
+      "row": 8,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_004",
+        "ac0908_008"
+      ]
+    },
+    {
+      "kind": 33,
+      "row": 9,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_005",
+        "ac0908_008"
+      ]
+    },
+    {
+      "kind": 33,
+      "row": 10,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_006",
+        "ac0908_008"
+      ]
+    },
+    {
+      "kind": 33,
+      "row": 11,
+      "ordered_events": [
+        "ac0908_001",
+        "ac0908_007",
+        "ac0908_008"
+      ]
+    }
+  ],
+  "production_authorization": {
+    "audio_profile": "no_bgm",
+    "editions": [
+      "none",
+      "ja",
+      "zh"
+    ],
+    "native_media": "416x232 at 30 fps, no upscale",
+    "route_policy": "Each mutually exclusive DirInfo row remains an independent route segment."
+  },
+  "non_expansion_boundaries": [
+    "The 187-frame entry contract applies only to ac0908 DirInfo kind 33 rows 6 through 11.",
+    "The entry scene audio keeps the approved v28 overlay behavior across the following outcome boundary.",
+    "Rows 52 through 57 remain separate strong-entry routes and are not replaced.",
+    "Selector outcomes outside these twelve routes still require independent classification.",
+    "No BGM, source deletion, or Bilibili upload is authorized."
+  ]
+}

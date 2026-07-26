@@ -1,6 +1,81 @@
 # Project Status
 
-更新时间：2026-07-25
+更新时间：2026-07-26
+
+## 2026-07-26 原生 416 路线量产、穷尽式总账 v2 与上传指南
+
+本检查点继续以原生 416x232 路线为最高优先级，没有新增 512 系生产，也没有
+upscale。v30–v33 当前共包含 47 个内容产品、141 个最终
+none/JA/ZH MP4：
+
+- v30：ac0908 六条强入口独立路线加一个明确标注的跨路线参考合集，以及
+  ac7210 DirInfo rows 0/1，共 27 个 MP4；
+- v31：ac4902 五条去重路线加编辑章节合集、ac7206 六条路线加编辑章节合集，
+  共 39 个 MP4；
+- v32：ac0908 DirInfo rows 6–11 的六条完整 `001 → 菜品 → 008`
+  独立路线，共 18 个 MP4。每条入口固定使用已批准的 187 帧饭店外景／侧身炒菜
+  presentation，并保留其已批准的跨 outcome 边界场景声；
+- v33：ac4903 DirInfo kind 114 的 19 条独立 clean-story 路线，共 57 个
+  MP4。预检纠正了“简单入口段无音频”的旧摘要：`001/007/008/016/018`
+  各有一条 event-global 0 的 direct-parent 场景 SE，成片保留这些 SE 及其
+  跨下一事件边界的尾音。rows 14/18/21 因 `ac4903_015` 混合 416x232
+  剧情与 256x144 胜利／玩法效果，继续排除到分层效果合成。
+
+v32 manifest、QA 的 SHA-256 分别为
+`FDD86EE89E0FC6F2DB6A9AD88D6404BF4011B62FFCBC589BE5EACDA89429A1CC`、
+`1F257C92043EEF9307E7567191E3F64F995EBEAADB16C4538A015C0993397533`；
+v33 manifest、QA 分别为
+`64BE46ADB85DC7D8B776FF5B6069492411E43AB909F2947F3EBEF628A0720877`、
+`BFB4B0A927754BF69F5303D4BAF802DAA1233653617032BD0DF05450F000210C`。
+v32/v33 的新输出均仅有自动 QA，通过不等于人工播放或投稿批准。
+
+穷尽式总账现位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  production_ledger_v2_20260726
+```
+
+母集为 7,753 个 audience event、926 个当前 production-manifest event、
+13,558 条 DirInfo route 与 5,508 条 component/mixed review row。当前计入
+172 个已产 audience event 和 51 条已产 DirInfo route；其余逐项归入 blocked、
+玩法／效果合集或素材合集。`ac7210_superseded_verbose_audit` 已从 current
+扫描显式排除，只在 `SUPERSEDED_AUDIT_INDEX.json` 中作为历史审计保留，永不
+上传；正式 ac7210 只把 rows 0/1 计为已产，rows 2/3/4 明确阻断。
+`SUMMARY.json`、`SHA256SUMS.json` 的 SHA-256 分别为
+`602C8099A81562577BB27CF5B6503E037F21F9BACC2372A15B0280F67F1AC0C7`、
+`8C0CDB85C5E7829229BB328C00E7F03D2618022B2BB661EE3A7274C1CE5E0C74`。
+
+每个后续生产检查点必须同时生成逐文件上传指南。本轮指南位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  upload_guide_v33_20260726
+```
+
+它逐项记录目标 BV／字幕轨、绝对文件夹、精确文件名、SHA-256、建议分P名、
+追加或替换动作、自动 QA、人工批准和排除项。当前共 155 个精确文件条目：
+10 个已投稿且禁止重复、13 个 exact-file 可投稿、132 个必须先人工播放，
+另有 6 类明确排除。13 个可投稿文件中，当前 ZH 轨为 P12、P23、ac0908
+六条强入口路线、ac0908 单独的 reference-derived 参考合集、ac7210 rows 0/1，
+另有 P12/P23 两个已人工确认的 JA 文件；Codex 不执行上传。P16/ac6003、
+P17/ac6004、P18/ac6005 继续全 family 硬隔离，不得因其他 family 量产成功而
+重新进入投稿清单。`UPLOAD_GUIDE.json`、`UPLOAD_GUIDE.md`、
+`UPLOAD_GUIDE.csv` 的 SHA-256 分别为
+`1C9951072EEE457E5F43432CDB804C7C1F15D9D3B0B1A1F9988071A853B1352B`、
+`FFD5CB23D1BEB4C35A3B489BCD391045519D71B966A706FA717768AE5B45FD34`、
+`D491ECF3960A49F42B424018196B984489ED1FC82ECCEFADF35C6AD702DD023D`。
+
+Frida 运行时环境前提仍以
+`D:\magia\MyProducts\casino\runtime_recovery_20260725\
+RUNTIME_RECOVERY_FRIDA_17_16_4.md` 为准：17.5.2 zygote agent 污染已通过
+完整 reboot 清除，host/server/ARM64 Gadget 统一到 17.16.4；禁止枚举、
+spawn、zygote attach、双 27043 session 与宽泛 observer。P16 仍只允许在真实
+slot 画面后用 ADB numeric PID 做单 session 轻量定向 probe，且该阻断不影响
+纯本地量产。
+
+更完整的生产边界和目录清单见
+`docs/research/2026-07-26-exhaustive-416-production-checkpoint-v33.md`。
 
 ## 2026-07-25 晚间人工状态、入口遗漏审计与 416 路线补全
 

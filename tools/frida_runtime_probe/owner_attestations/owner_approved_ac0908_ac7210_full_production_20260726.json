@@ -1,0 +1,46 @@
+{
+  "schema": "magireco-owner-playback-production-authorization-v1",
+  "recorded_date": "2026-07-26",
+  "status": "owner_playback_approved_and_full_production_authorized",
+  "scope": "The project owner approved the exact reviewed ZH media below and explicitly authorized comprehensive route production. Sibling editions must reuse the same approved presentation timelines and hash-bound source inputs.",
+  "approved_review_media": [
+    {
+      "family": "ac0908",
+      "product": "reference-derived all-outcomes showcase",
+      "filename": "ac0908 六种菜品入口补全参考合集__zh.mp4",
+      "bytes": 5769539,
+      "sha256": "53C0A918C043F78D8CB70DC643747C7DEC3FC45D5FA107A91251A347586AFD51"
+    },
+    {
+      "family": "ac7210",
+      "product": "DirInfo kind 201 row 0",
+      "filename": "P25补全路线0 火箭突击__zh.mp4",
+      "bytes": 4617334,
+      "sha256": "8927CFDF7497B63B4FA47D7D9DB0C340FC837596547F3B9F4E8E15C764079088"
+    },
+    {
+      "family": "ac7210",
+      "product": "DirInfo kind 201 row 1",
+      "filename": "P25补全路线1 火箭突击__zh.mp4",
+      "bytes": 6852753,
+      "sha256": "990407DD95ABC18911782AFA9F2EC7AA3E2F17997BA9F716892D1AFFB1A06849"
+    }
+  ],
+  "production_authorization": {
+    "audio_profile": "no_bgm",
+    "editions": [
+      "none",
+      "ja",
+      "zh"
+    ],
+    "ac0908": "Promote the approved showcase presentation contract and the previously approved six ZH option-route timing contracts to comprehensive sibling-edition production. Preserve every mutually exclusive route as an independent segment; keep the showcase explicitly edited and non-native-session.",
+    "ac7210": "Promote the approved DirInfo row 0 and row 1 presentation contracts to comprehensive sibling-edition production. Preserve the two routes as independent products.",
+    "continuation": "Continue closing and producing the remaining evidence-backed native 416x232 route catalog without waiting for unrelated 512-family or runtime work."
+  },
+  "non_expansion_boundaries": [
+    "Approval of an observed presentation contract is not represented as new runtime proof of a parent DGM-to-child Z2D offset.",
+    "Unknown selector outcomes and component-only events still require classification before they enter a clean-story product.",
+    "Mutually exclusive routes must not be concatenated and labeled as one native gameplay session.",
+    "No BGM, upscale, source deletion, or Bilibili upload is authorized."
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "schema": "magireco-exhaustive-video-production-ledger-plan-v1",
+  "status": "active_exhaustive_production_ledger",
+  "recorded_date": "2026-07-26",
+  "scope": "All candidates currently present in the hash-bound audience event catalog, production event catalog, DirInfo route table, current no-BGM audience roots, and component/mixed catalog.",
+  "disposition_categories": [
+    "produced_clean_story_route",
+    "gameplay_effect_collection",
+    "material_collection",
+    "blocked"
+  ],
+  "priority_policy": "native_416x232_first_then_other_native_sizes_never_upscale",
+  "audience_event_catalog": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+    "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+  },
+  "audience_event_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_summary.json",
+    "sha256": "313353BF7290F8E29E3740E5CAA37D4B859C939BFAF4CC3885DCCF95CB4AC357"
+  },
+  "component_mixed_catalog": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\component_or_mixed_review.csv",
+    "sha256": "5EF3F01F9E766A6AFCE061D6965BD6826B58B314E5EA81A88291737EFFA10FCF"
+  },
+  "production_event_catalog_base": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\event_production_catalog.csv",
+    "sha256": "6E6D7C01CD98B11704543266D7E523254CBDCE37BA9A2C21CA8FCE90AC06A927"
+  },
+  "production_event_summary_base": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\event_production_summary.json",
+    "sha256": "9025608499EE13760A817CF8DF630AC08EE92F539EF6C13E1E2042835C2A58B2"
+  },
+  "production_event_catalog_overlay": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v24_timing_and_reviewed_subtitles_20260724\\event_production_catalog.csv",
+    "sha256": "63E3F6976D00D6F478852B5E22FE9C5377A968B7605F41FACF465B5C2D5BA8FC"
+  },
+  "production_event_summary_overlay": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v24_timing_and_reviewed_subtitles_20260724\\event_production_summary.json",
+    "sha256": "D27B2A68676FE10FDDDD6CB3A53ADDCB4ED24D4FAE4A2BA1EF89402A2954BA09"
+  },
+  "dirinfo_routes": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "human_playback_status": {
+    "path": "../audience_human_playback_status_20260725.json",
+    "sha256": "8062052BC0169C15BE092670D7A21B2C5E77B692365BD186ACF238B2008F244A"
+  },
+  "active_upload_exclusions": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_upload_ready_v25_no_bgm_20260724_16families\\audit\\ACTIVE_UPLOAD_EXCLUSIONS_20260725.json",
+    "sha256": "2FFBB9A4F9FC418ABFED3F6FE1ED7828007638BBC7F6D94717014042C75AD802"
+  },
+  "owner_uploaded_exact_zh": {
+    "path": "../owner_attestations/owner_uploaded_10zh_20260725.json",
+    "sha256": "3BCB8A229B81DD66A4620CC415F95C7B858A97B76A6457BF9B21D4F1CD790453"
+  },
+  "owner_approved_corrections": {
+    "path": "../owner_attestations/owner_playback_approved_p12_p23_ac0908_20260725.json",
+    "sha256": "D8F5F3271F64405A0A0871BDDD8FFD554903B7DD0116ECCD1C70D56437AF7E87"
+  },
+  "owner_reconfirmed_quarantine": {
+    "path": "../owner_attestations/owner_reconfirmed_quarantine_p17_p18_20260725.json",
+    "sha256": "0D1732651A05CF3FABEF081EAC32DBE5BC74D7FA41E9613AB2243F92AF9957F5"
+  },
+  "current_production_roots": [
+    {
+      "label": "v24 mass no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json"
+    },
+    {
+      "label": "v25 next-story no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v25_next_story_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json"
+    },
+    {
+      "label": "v30 approved ac0908/ac7210 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726",
+      "manifest_glob": "**/*MANIFEST.json"
+    },
+    {
+      "label": "v31 mature ac4902/ac7206 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json"
+    },
+    {
+      "label": "v32 ac0908 complete-entry routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v32_ac0908_complete_entry_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json"
+    }
+  ],
+  "hard_quarantine_families": {
+    "ac6003": {
+      "part": "P16",
+      "blocker": "unresolved_parent_dgm_to_child_z2d_instantiation_offset_ac6003_009"
+    },
+    "ac6004": {
+      "part": "P17",
+      "blocker": "human_playback_failed_child_local_timing_and_missing_request3260"
+    },
+    "ac6005": {
+      "part": "P18",
+      "blocker": "human_playback_failed_component_composition_voice_subtitle_timing_and_dialogue_completeness"
+    }
+  },
+  "historical_scope_gap": {
+    "products": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+      "P8",
+      "P9"
+    ],
+    "disposition": "blocked",
+    "blocker": "historical_v21_v22_products_not_reaudited_as_current_manifest_inputs_under_20260725_directory_policy"
+  }
+}

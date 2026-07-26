@@ -773,7 +773,11 @@ def _build_one_product(
         _encode_edition(
             clean_visual=final_clean,
             audio_master=audio_master,
-            subtitle_path=subtitle_paths.get(edition),
+            subtitle_path=(
+                subtitle_paths.get(edition)
+                if edition == "none" or cues.get(edition)
+                else None
+            ),
             layout=layout,
             fonts_dir=fonts_dir,
             output=output,
