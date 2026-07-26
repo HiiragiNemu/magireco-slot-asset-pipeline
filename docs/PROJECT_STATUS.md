@@ -2,6 +2,50 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 ac0912 原生 416 小丘比引导素材审查 v39
+
+本轮把 ac0912 的 42 个原生 416x232 小丘比三停引导／结果展示事件分流到一个
+有限的视觉-only 玩法素材合集：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  material_collections_v39_native416_ac0912_review_20260726\
+  ac0912_small_kyubey_3on_guides_v1\
+  ac0912_small_kyubey_3on_guides_v1__material_components__416x232_30-1.mp4
+```
+
+成片 88.266 秒、416x232、30 fps，SHA-256
+`B8C43A88E712BD11990C7D91C89E84C4D71E182E89C9AC3588CCD905E53862D6`。
+计划绑定全部 42 个 v20 event manifest 与耐久 D: official-name video map；
+公共小丘比、S 型五类结果、L 型五类结果按语义顺序排列。S/L flash 的两个官方
+名字实际对应字节完全相同的 MP4，聚合 exact-AV 去重门禁保留两个 alias 而只
+输出一次，因此 24 个计划名得到 23 个唯一片段。
+
+H.264 视频流直接复制，最终无音轨、无字幕；本产品不消费也不声明 event manifest
+中的 child-local 声音时序。自动技术 QA 通过，但 exact MP4 当前仍为
+`human_playback_required` / `review_only`，人工确认前禁止投稿。它是玩法／素材
+合集，不是 clean story，也不是一条原生 session。
+
+总账推进到 `production_ledger_v8_20260726`：current material manifest 从 5
+增至 6，覆盖事件从 21 增至 63，planned production-manifest
+gameplay/material 项从 387 降至 345。`SUMMARY.json`、
+`CURRENT_MATERIAL_COLLECTION_INDEX.json`、`SHA256SUMS.json` SHA-256
+分别为
+`828D8EFCC038972F5945A97AF150E6757930FCE4B50DBAC91E044F9F27DED0BC`、
+`618E06CE83644CFF9B964CE04A7D8E1E41926986C20027FF9B40BE63EF4C7760`、
+`AACE910EEAF1DD2AE7166209967865B3C66D7BCFFBBEAF4C2E4AF10592333F26`。
+
+逐文件上传指南推进到 `upload_guide_v39_20260726`，共 201 个精确文件：
+10 个已投稿、17 个可投稿、174 个待人工播放、8 类明确排除。本轮新增文件
+只进入待审，目标是未来新建“MagiaReco Slot 原生416玩法／素材合集”BV，
+建议分P名“小丘比三停引导与结果文字素材 ac0912”；当前不追加、不替换。
+`UPLOAD_GUIDE.json`、`.md`、`.csv`、`SHA256SUMS.json` SHA-256 分别为
+`700D9EB48B572D0B37A3CF538EE3553D64F9A70184D1C40C516EA1D35CB72945`、
+`404F3E1DD77C4F6BD9C3E3EBEE94A39502C268B1F3C0A624E0278394D55289EE`、
+`396BE82EBF6D0C67BB2353E221F1E0C3426F158638C3C4C5C2BB3EEE692691EC`、
+`14FBC7DF3DBDEAD7F0E5FC672B89C8B5F239AE11AF821C4FB3B8A3E1C5E8126A`。
+P16/P17/P18 继续硬隔离；`ac7210_superseded_verbose_audit` 继续绝不上传。
+
 ## 2026-07-26 原生 416 玩法 UI 素材审查 v38
 
 继续按“416 路线／玩法优先于 512 TV 剧情”的顺序，本轮生成两片原生

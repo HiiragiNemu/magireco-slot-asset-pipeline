@@ -1,0 +1,34 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v7.json",
+    "sha256": "A2F99375219FF5541B609299E02A7FA373FB097A494050EF49AA87D75DEA0098"
+  },
+  "checkpoint_id": "20260726-v39-native416-ac0912-materials",
+  "scope": "All v7 current production and exact owner-approved product records plus the hash-bound ac0912 native 416x232 visual-only small-Kyubey guide material review root. The new collection covers all 42 ac0912 gameplay/material events without consuming child-local audio timing and remains review-only until exact-file playback.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    }
+  ]
+}
