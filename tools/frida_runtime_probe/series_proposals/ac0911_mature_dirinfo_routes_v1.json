@@ -1,0 +1,186 @@
+{
+  "schema": "magireco-mature-416-route-batch-plan-v1",
+  "status": "mature_route_batch_approved_for_render",
+  "family": "ac0911",
+  "title": "P11 黑江邀请彩羽前往神滨与挑战演出 ac0911 九条成熟路线",
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "composition_claim": "edited_route_chapter_showcase_not_single_native_session",
+  "uploaded_media_policy": "source_and_uploaded_media_read_only_never_overwrite",
+  "dirinfo_kind": 36,
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+  },
+  "family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac0911_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "B16568E3067E8458C6C946904F29FAD6BFEEDDCB39B1F656C9B705CC595BCBDC"
+  },
+  "clean_visual_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac0911_full_no_bgm_editions_v1\\masters\\ac0911_full_no_bgm_editions_v1__clean_visual_master.mp4",
+    "sha256": "0892101AE4D23783EDCBCB1DFB657181E95EBF30139FDEAC41C364FA54E06750"
+  },
+  "no_bgm_audio_master": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac0911_full_no_bgm_editions_v1\\masters\\ac0911_full_no_bgm_editions_v1__no_bgm_audio_master.m4a",
+    "sha256": "E07CC508EC3354FF9B295900D41B24199711B6F071697ADB87A1542C89AC1A86"
+  },
+  "subtitles_ja": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac0911_full_no_bgm_editions_v1\\subtitles\\ac0911_full_no_bgm_editions_v1__ja.srt",
+    "sha256": "C6282DCD8AC19AAA1BDC04174CAAAD5E0FCBAA514D334897A7B87AD6660A303B"
+  },
+  "subtitles_zh": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac0911_full_no_bgm_editions_v1\\subtitles\\ac0911_full_no_bgm_editions_v1__zh.srt",
+    "sha256": "1DE9D96C3807EB3BC41D32B59C66A0DCCAB1F61C33A4B5C7040236CCB50028EE"
+  },
+  "subtitle_layout": {
+    "path": "..\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "owner_source_approval": {
+    "path": "../owner_attestations/owner_uploaded_10zh_20260725.json",
+    "sha256": "3BCB8A229B81DD66A4620CC415F95C7B858A97B76A6457BF9B21D4F1CD790453",
+    "part": "P11",
+    "filename": "P11 黑江邀请彩羽前往神滨与挑战演出 ac0911__zh.mp4",
+    "media_sha256": "64C320112F813644D848F8AFB81D9FF4D56E0A10D7CDC03668B81E4A3B171EFD"
+  },
+  "routes": [
+    {
+      "route_id": "dirinfo-row-000",
+      "title": "ac0911 路线 1（001→002→003）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_003"],
+      "source_rows": [
+        {
+          "row_index": 0,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_003"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-001",
+      "title": "ac0911 路线 2（001→002→004）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_004"],
+      "source_rows": [
+        {
+          "row_index": 1,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_004"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-002",
+      "title": "ac0911 路线 3（001→002→005）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_005"],
+      "source_rows": [
+        {
+          "row_index": 2,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_005"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-003",
+      "title": "ac0911 路线 4（001→002→009）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_009"],
+      "source_rows": [
+        {
+          "row_index": 3,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_009"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-004",
+      "title": "ac0911 路线 5（001→002→017）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_017"],
+      "source_rows": [
+        {
+          "row_index": 4,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_017"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-005",
+      "title": "ac0911 路线 6（001→002→010）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_010"],
+      "source_rows": [
+        {
+          "row_index": 5,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_010"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-006",
+      "title": "ac0911 路线 7（001→002→011）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_011"],
+      "source_rows": [
+        {
+          "row_index": 6,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_011"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-007",
+      "title": "ac0911 路线 8（001→002→012）",
+      "render_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_012"],
+      "source_rows": [
+        {
+          "row_index": 7,
+          "raw_event_sequence": ["ac0911_001", "ac0911_002", "ac0911_012"]
+        }
+      ]
+    },
+    {
+      "route_id": "dirinfo-row-009",
+      "title": "ac0911 路线 9（001→006→008）",
+      "render_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_008"],
+      "source_rows": [
+        {
+          "row_index": 9,
+          "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_008"]
+        }
+      ]
+    }
+  ],
+  "excluded_dirinfo_rows": [
+    {
+      "row_index": 8,
+      "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_007"],
+      "disposition": "blocked",
+      "blocker": "ac0911_007 lacks a current modern event manifest and is absent from the source family master"
+    },
+    {
+      "row_index": 10,
+      "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_013"],
+      "disposition": "blocked",
+      "blocker": "ac0911_013 is absent from the current audience catalog and source family master"
+    },
+    {
+      "row_index": 11,
+      "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_016"],
+      "disposition": "blocked",
+      "blocker": "ac0911_016 is absent from the current audience catalog and source family master"
+    },
+    {
+      "row_index": 12,
+      "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_014"],
+      "disposition": "blocked",
+      "blocker": "ac0911_014 is absent from the current audience catalog and source family master"
+    },
+    {
+      "row_index": 13,
+      "raw_event_sequence": ["ac0911_001", "ac0911_006", "ac0911_015"],
+      "disposition": "blocked",
+      "blocker": "ac0911_015 is absent from the current audience catalog and source family master"
+    }
+  ]
+}

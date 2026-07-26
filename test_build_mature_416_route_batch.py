@@ -69,6 +69,11 @@ class BuildMature416RouteBatchTest(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        ac0911 = json.loads(
+            (plan_root / "ac0911_mature_dirinfo_routes_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
         self.assertEqual(len(ac7206["routes"]), 6)
         self.assertEqual(len(ac4902["routes"]), 5)
         self.assertEqual(
@@ -79,7 +84,12 @@ class BuildMature416RouteBatchTest(unittest.TestCase):
             [row["row_index"] for row in ac4902["routes"][2]["source_rows"]],
             [2, 11],
         )
-        for plan in (ac7206, ac4902):
+        self.assertEqual(len(ac0911["routes"]), 9)
+        self.assertEqual(
+            {row["row_index"] for row in ac0911["excluded_dirinfo_rows"]},
+            {8, 10, 11, 12, 13},
+        )
+        for plan in (ac7206, ac4902, ac0911):
             signatures = {
                 tuple(route["render_event_sequence"]) for route in plan["routes"]
             }

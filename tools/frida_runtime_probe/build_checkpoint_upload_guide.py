@@ -168,6 +168,7 @@ def _batch_target(plan: Mapping[str, Any], family: str, product: str) -> str:
     if family == "ac0908" and "参考合集" in product:
         return _target(plan, "ac0908_reference_showcase")
     names = {
+        "ac0911": "ac0911_route_catalog",
         "ac0908": "ac0908_route_catalog",
         "ac4902": "ac4902_route_catalog",
         "ac4903": "ac4903_route_catalog",
@@ -400,6 +401,7 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
         "v32_ac0908_manifest",
         "v33_ac4903_manifest",
         "v34_ac6007_manifest",
+        "v35_ac0911_manifest",
     ):
         if source_name not in source_paths:
             continue

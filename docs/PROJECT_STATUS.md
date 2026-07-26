@@ -2,6 +2,61 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 P11/ac0911 九条路线与章节长版 v35
+
+DirInfo kind 36 共 14 条路线。本轮从当前 v24 ac0911 family master 中生成
+rows 0–7、9 的九条独立原生 416x232 路线，并保留一个明确标注为
+`edited_route_chapter_showcase_not_single_native_session` 的九章节长版。
+每个产品均有 none/JA/ZH，总计 10 个内容产品、30 个 MP4：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  no_bgm_editions_v35_ac0911_mature_routes_20260726\ac0911
+```
+
+rows 8、10、11、12、13 已 fail-closed 排除：row 8 的 `ac0911_007`
+缺当前现代 event manifest 且不在 source family；其余四条终点
+`ac0911_013/_016/_014/_015` 不在当前 audience catalog 或 source family，
+禁止猜测补入。旧 P11 具体 ZH 文件已由项目所有者投稿且保持只读；其人工批准
+不外推到本轮 30 个 exact outputs。
+
+自动 QA 为 9/9 路线完成、0 failure，确认 DirInfo 完整分区、来源 master/hash、
+原生 416x232、30 fps、H.264/AAC 48 kHz stereo、无 upscale、字幕回读和同产品
+none/JA/ZH 音频包及解码 PCM 一致。`BATCH_MANIFEST.json`、
+`AUTOMATED_QA.json` SHA-256 分别为
+`86136C5611B3169D830C22A103057DEA46E7A03AB54D49D719C925F5D2DFC31F`、
+`7B635566FB268C6D68C1D3676F09EA1B10DFA240C0EFEC0EE031CAD6C653FFDD`。
+30 个文件全部必须先人工播放，当前禁止投稿。
+
+穷尽式总账已推进至：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  production_ledger_v4_20260726
+```
+
+它记录 24 个 current manifest、173 个已产 audience event、62 条已产
+DirInfo route，并把 ac0911 的五条阻断路线显式列入 excluded。`SUMMARY.json`
+和 `SHA256SUMS.json` SHA-256 分别为
+`8CE13680052442C90E7F4BE4CD0BA2F4198A8402D69457865677114986E18A3E`、
+`106935BC88CEA249EBBC76D10B884D7B41B16C6D1C0AEDD5D09B26E1EF516AFB`。
+
+本检查点逐文件上传指南：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  upload_guide_v35_20260726
+```
+
+共 191 个精确文件：10 个已投稿且禁止重复、13 个可投稿、168 个待人工播放，
+以及 8 类明确排除。新增 30 个 ac0911 文件全部为
+`human_playback_required`。`UPLOAD_GUIDE.json`、`.md`、`.csv` SHA-256
+分别为
+`669FA2A1D44EC4D06248D0253962592A9090DC9DC2AA69A54F98556FE602E36F`、
+`9D7EECAFA235ABBE33885F3F7B4F1EDC117A464796CB2819B2028DC6C2CF0D4F`、
+`5CA04032FA474229DE44D9D34B6D99D9C3504455643B8CD5ADD229E42BC05AFB`。
+P16/P17/P18 继续硬隔离；Codex 不上传。
+
 ## 2026-07-26 P19/ac6007 完整入口有限候选、总账 v3 与上传指南 v34
 
 P19/ac6007 的 DirInfo kind 174 已按当前静态证据完整分流。rows 0/1 是两条

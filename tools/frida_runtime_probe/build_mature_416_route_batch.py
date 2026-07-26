@@ -344,6 +344,7 @@ def _validate_plan(
     routes: list[dict[str, Any]] = []
     route_ids: set[str] = set()
     normalized_sequences: set[tuple[str, ...]] = set()
+    used_source_rows: set[int] = set()
     for raw in routes_raw:
         if not isinstance(raw, Mapping):
             raise ValueError("route plan row must be an object")
@@ -390,6 +391,7 @@ def _validate_plan(
                     "normalized_event_sequence": normalized,
                 }
             )
+            used_source_rows.add(row_index)
         signature = tuple(render_sequence)
         if signature in normalized_sequences:
             raise ValueError(f"{route_id} duplicates another rendered route")
@@ -409,6 +411,81 @@ def _validate_plan(
             }
         )
 
+    excluded_rows: list[dict[str, Any]] = []
+    if "excluded_dirinfo_rows" in plan:
+        raw_exclusions = plan.get("excluded_dirinfo_rows")
+        if not isinstance(raw_exclusions, list):
+            raise ValueError("excluded DirInfo row declaration is not a list")
+        excluded_indices: set[int] = set()
+        for raw in raw_exclusions:
+            if not isinstance(raw, Mapping):
+                raise ValueError("excluded DirInfo row declaration is invalid")
+            row_index = int(raw["row_index"])
+            raw_sequence = [str(value) for value in raw["raw_event_sequence"]]
+            disposition = str(raw["disposition"])
+            blocker = str(raw["blocker"]).strip()
+            if (
+                row_index in used_source_rows
+                or row_index in excluded_indices
+                or source_routes.get(row_index) != raw_sequence
+                or disposition not in {"blocked", "gameplay_effect_collection"}
+                or not blocker
+            ):
+                raise ValueError(f"excluded DirInfo row {row_index} differs")
+            excluded_indices.add(row_index)
+            excluded_rows.append(
+                {
+                    "dirinfo_row": row_index,
+                    "raw_event_sequence": raw_sequence,
+                    "disposition": disposition,
+                    "blocker": blocker,
+                }
+            )
+        if set(source_routes) != used_source_rows | excluded_indices:
+            raise ValueError("DirInfo route partition is not exhaustive")
+
+    owner_source_approval: dict[str, Any] | None = None
+    if "owner_source_approval" in plan:
+        raw = plan["owner_source_approval"]
+        if not isinstance(raw, Mapping):
+            raise ValueError("owner source approval declaration is invalid")
+        path, snapshot = validate_bound_file(
+            {"path": raw["path"], "sha256": raw["sha256"]},
+            label=f"{family} owner-approved exact source ZH",
+            plan_dir=plan_dir,
+        )
+        bound["owner_source_approval"] = path
+        snapshots.append(snapshot)
+        approval = read_json(path)
+        part = str(raw["part"])
+        filename = str(raw["filename"])
+        media_sha256 = str(raw["media_sha256"]).upper()
+        matches = [
+            row
+            for row in approval.get("files", [])
+            if isinstance(row, Mapping)
+            and str(row.get("part", "")) == part
+            and str(row.get("filename", "")) == filename
+            and str(row.get("sha256", "")).upper() == media_sha256
+        ]
+        source_zh = artifacts.get("video_zh")
+        if (
+            approval.get("status") != "uploaded_by_project_owner"
+            or len(matches) != 1
+            or not isinstance(source_zh, Mapping)
+            or str(source_zh.get("sha256", "")).upper() != media_sha256
+        ):
+            raise ValueError("owner source approval exact-file binding differs")
+        owner_source_approval = {
+            "part": part,
+            "filename": filename,
+            "sha256": media_sha256,
+            "scope": (
+                "owner-approved source ZH only; exact new route and showcase "
+                "outputs do not inherit playback or publication approval"
+            ),
+        }
+
     return {
         "family": family,
         "title": str(plan["title"]),
@@ -424,6 +501,8 @@ def _validate_plan(
         },
         "dedup_aliases": aliases,
         "dirinfo_kind": dirinfo_kind,
+        "excluded_dirinfo_rows": excluded_rows,
+        "owner_source_approval": owner_source_approval,
     }
 
 
@@ -1092,6 +1171,7 @@ def build_family(
             "publication_approved": False,
             "checks": {
                 "dirinfo_rows_hash_bound_and_exact": True,
+                "dirinfo_route_partition_fail_closed": True,
                 "exact_duplicate_aliases_fail_closed": True,
                 "source_family_masters_hash_bound": True,
                 "native_416x232": True,
@@ -1127,7 +1207,9 @@ def build_family(
             "source_snapshots": resolved["snapshots"],
             "family_manifest_sha256": resolved["family_manifest_sha256"],
             "dirinfo_kind": resolved["dirinfo_kind"],
+            "excluded_dirinfo_rows": resolved["excluded_dirinfo_rows"],
             "exact_duplicate_alias_map": resolved["dedup_aliases"],
+            "owner_source_approval": resolved["owner_source_approval"],
             "human_playback_approved": False,
             "publication_approved": False,
         }

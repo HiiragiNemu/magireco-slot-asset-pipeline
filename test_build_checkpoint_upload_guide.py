@@ -44,6 +44,7 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
     def test_family_targets_are_explicit(self) -> None:
         plan = {
             "target_bvs": {
+                "ac0911_route_catalog": "new ac0911 BV",
                 "ac4903_route_catalog": "new ac4903 BV",
                 "ac6007_route_catalog": "new ac6007 BV",
                 "future_catalog": "future BV",
@@ -60,6 +61,10 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
         self.assertEqual(
             module._batch_target(plan, "ac6007", "route"),
             "new ac6007 BV",
+        )
+        self.assertEqual(
+            module._batch_target(plan, "ac0911", "route"),
+            "new ac0911 BV",
         )
 
 
