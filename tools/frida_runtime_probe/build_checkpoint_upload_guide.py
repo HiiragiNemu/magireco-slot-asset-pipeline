@@ -37,6 +37,31 @@ FIELDS = (
     "publication_instruction",
     "scope_note",
 )
+MATERIAL_PART_NAMES = {
+    "ac0906_small_kyubey_actions_v1": "小丘比动作素材 ac0906",
+    "ac0931_uwasa_battle_intros_v1": "传闻战斗开场素材 ac0931",
+    "ac5004_chance_color_titles_v1": "机会颜色标题素材 ac5004",
+    "ac8000_next_continue_ui_v1": "下一段与继续界面素材 ac8000",
+    "ac8004_shutter_transitions_v1": "快门转场素材 ac8004",
+    "ac0912_small_kyubey_3on_guides_v1": "小丘比三停引导素材 ac0912",
+    "ac7204_small_result_color_cards_v1": "小尺寸六色结果卡素材 ac7204",
+    "ac7204_large_result_color_cards_v1": (
+        "大尺寸六色与烟花彩虹结果卡素材 ac7204"
+    ),
+    "ac4904_su_window_group_01_v1": "环彩羽等五人窗框素材 ac4904",
+    "ac4904_su_window_group_02_v1": "鹿目圆等五人窗框素材 ac4904",
+    "ac4904_su_window_group_03_v1": "音梦等五人窗框素材 ac4904",
+    "ac0914_uwasa_narration_transition_layers_v1": "谣叙事转场素材 ac0914",
+    "ac0914_uwasa_outcome_layers_v1": "谣五类十种结果素材 ac0914",
+    "ac1103_demae_victory_revival_layers_v1": (
+        "出前胜利复活背景与标志素材 ac1103"
+    ),
+    "ac2201_kuroe_nerae_gameplay_layers_v1": "黑江瞄准玩法素材 ac2201",
+}
+
+
+def material_part_name(collection: str) -> str:
+    return MATERIAL_PART_NAMES.get(collection, collection)
 
 
 def _bound(
@@ -573,7 +598,7 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     state="human_playback_required",
                     target_bv=_target(plan, "material_collection_catalog"),
                     subtitle_track="visual-only; no audio; no burned-in subtitles",
-                    suggested_part_name=collection_name,
+                    suggested_part_name=material_part_name(collection_name),
                     action="hold_for_owner_material_playback",
                     automated_qa_status="passed_visual_only_review_contract",
                     human_approval_status="not_yet_playback_approved",

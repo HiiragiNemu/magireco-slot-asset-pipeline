@@ -2,9 +2,45 @@
 
 更新时间：2026-07-27
 
-## 2026-07-27 生产冻结与人工审查／上传交接
+## 2026-07-27 生产冻结解除与原生 416 剩余素材审查 v42
 
-项目所有者已冻结新增生产。本轮只把 `upload_guide_v41_20260726` 的精确文件
+项目所有者已明确解除同日生产冻结；已完成的
+`bilibili_human_review_upload_freeze_20260727` 继续保持原样，不覆盖、不删改。
+生产从 v10/v41 总账继续。只读穷尽核对确认当前没有新的、未生产且
+event-exact 的原生 416 剧情 family／DirInfo 路线；因此本轮转入仍未覆盖的
+17 个 evidence-ready 原生 416 玩法／素材事件。
+
+本轮在
+`material_collections_v42_native416_remaining_review_20260727` 形成四个
+视觉-only 审查产品：ac0914 谣叙事转场、ac0914 五类十种结果、ac1103
+出前胜利／复活背景与标志、ac2201 黑江瞄准玩法素材。共 38 个唯一片段、
+147.563 秒，全部为原生 416x232、30fps、H.264、无音轨、无字幕；自动技术
+QA 通过但仍是 `human_playback_required` / `review_only`。ac0914 结果的
+20 个官方名称按 exact media 去重为 13 个画面并保留 7 个别名；ac1103
+背景与标志合并为一个产品，避免两个成片重复认领相同事件。
+
+增量审查根为
+`bilibili_incremental_review_v42_native416_materials_20260727`。其中
+U077-U080 各保留 none/JA/ZH 三个正确命名入口，共 12 个 MP4 入口、4 个
+唯一 SHA-256；无音频／字幕差异的 sibling edition 均为同 inode hardlink，
+`physical_duplicate=false`。`00_UPLOAD_NOW` 为 0，新文件只在
+`02_REVIEW_MATERIAL\batch_001` 等待人工完整播放；none 未被省略。
+
+总账推进到 `production_ledger_v11_20260727`：current material manifest
+从 11 增至 15，覆盖事件从 105 增至 122，production-manifest
+gameplay/effect `planned_unproduced` 从 303 降至 286。全局指南推进到
+`upload_guide_v42_20260727`：10 个已投稿、17 个可投稿、183 个待人工播放、
+8 类明确排除，共 210 个精确文件。详细记录见
+`docs/research/2026-07-27-native416-remaining-material-checkpoint-v42.md`。
+
+P16/P17/P18、未闭合 child-local、互斥分支机械串联和 superseded 继续
+fail-closed。当前没有任何正式证据闭合的 with-BGM 渲染候选；BGM 来源身份
+虽已部分闭合，但路线绑定、入口相位、循环与 fade/duck/stop 时间线仍阻断。
+完成／精确阻断全部已发现 no-BGM 库存后，才正式切换 with-BGM。
+
+## 2026-07-27 历史检查点：生产冻结与人工审查／上传交接
+
+项目所有者当时冻结新增生产。本轮只把 `upload_guide_v41_20260726` 的精确文件
 整理到耐久交接根
 `bilibili_human_review_upload_freeze_20260727`，没有生成或重编码媒体，也没有
 操作 Bilibili。交接包含 196 个命名 MP4 入口、194 个唯一 SHA-256：
@@ -25,7 +61,8 @@ BV。逐文件目标、分P名、追加/新建建议、自动 QA 与人工状态
 隔离项零泄漏。P16/P17/P18、superseded、旧错误/重复、10 个已投稿 exact hash
 和未纳入 v41 的未闭合 child-local 项目均排除。详细记录见
 `docs/research/2026-07-27-human-review-upload-freeze-handoff.md`。本检查点后停止
-新增 family、渲染、逆向、BGM 和素材扩产，等待项目所有者人工审查与上传。
+新增 family、渲染、逆向、BGM 和素材扩产；该冻结随后由项目所有者明确解除，
+但本交接根继续作为不可改写的历史检查点保留。
 
 ## 2026-07-26 ac4904 原生 416 角色窗框 UI 素材审查 v41
 

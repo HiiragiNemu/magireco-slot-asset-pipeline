@@ -1189,12 +1189,13 @@ def _canonical_evidence_rows(rows: object) -> list[dict]:
     for row in rows:
         if not isinstance(row, dict):
             continue
-        # Event identity and local paths are aliases/provenance, not media
-        # identity.  Source hashes, cue times, text and mix fields remain.
+        # Event, local path, and source code-name identities are
+        # aliases/provenance, not media identity.  Source hashes, cue times,
+        # text and mix fields remain.
         normalized = {
             key: value
             for key, value in row.items()
-            if key not in {"event", "path"}
+            if key not in {"event", "path", "code_name"}
         }
         canonical.append(_canonical_json_value(normalized))
     return sorted(

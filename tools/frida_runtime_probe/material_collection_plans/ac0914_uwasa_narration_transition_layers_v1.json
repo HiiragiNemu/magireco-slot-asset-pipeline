@@ -1,0 +1,58 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0914_uwasa_narration_transition_layers_v1",
+  "classification": "uwasa_character_narration_transition_material",
+  "evidence": "Three reviewed native 416x232 ac0914 events expose four black-matte Uwasa character narration and entry/exit transition layers. They are retained as a visual-only component collection, not a clean story or native session. Child-local audio timing is deliberately not consumed and every embedded source track is dropped.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0914_002",
+    "ac0914_003",
+    "ac0914_019"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac0914_002 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_002.json",
+      "sha256": "778F8A96B28EB91CB0173BB84FD6D49463470B52C273DCD9037F4C0D8AE60CE3"
+    },
+    {
+      "label": "ac0914_003 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_003.json",
+      "sha256": "23D9093FB09C054C3E7FE21F525A28AF5AECB216CED49F0EE7F0C138E9B881B4"
+    },
+    {
+      "label": "ac0914_019 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_019.json",
+      "sha256": "25B59E6B702E12728E045D92371E82FFC6907DD172497F2B72617B66767BFABB"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac0914_1on_uwasa1_out_c002",
+      "label": "Uwasa narration layer 1 exit"
+    },
+    {
+      "official_name": "ac0914_1on_uwasa2_3_c003",
+      "label": "Uwasa narration layer 2-3 intro"
+    },
+    {
+      "official_name": "ac0914_1on_uwasa2_3_c003_lp",
+      "label": "Uwasa narration layer 2-3 loop"
+    },
+    {
+      "official_name": "ac0914_1on_uwasa3_out_c004",
+      "label": "Uwasa narration layer 3 exit"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v42-native416-remaining-materials",
+  "start_upload_id": 77,
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v42_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "9CEDBCB81A30029290297ADA943F6ED3EC05BF37BAA67EB502CA87B7CF77BD08"
+  },
+  "products": [
+    {
+      "collection": "ac0914_uwasa_narration_transition_layers_v1",
+      "title": "谣叙事转场素材",
+      "family": "ac0914",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727\\ac0914_uwasa_narration_transition_layers_v1\\material_collection_manifest.json",
+        "sha256": "663284F3BAA3B04DC4A870B14485543831699E18C9DD33DDC11863EB03050A81"
+      },
+      "output_sha256": "A70F07643BF5E9C0EC94A8338272CAF5437CE32E63B8648D5FEA2E989468C2D9"
+    },
+    {
+      "collection": "ac0914_uwasa_outcome_layers_v1",
+      "title": "谣五类十种结果素材",
+      "family": "ac0914",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727\\ac0914_uwasa_outcome_layers_v1\\material_collection_manifest.json",
+        "sha256": "CD0B728EBE9E0174AAEC8E2D15C5FD09AE3AEA5E0108BBA3FC93968AD054B862"
+      },
+      "output_sha256": "C413407DA0ADD4E44CABABA7289CA5802DD2F27162AAE2DB16811505D58D1B80"
+    },
+    {
+      "collection": "ac1103_demae_victory_revival_layers_v1",
+      "title": "出前胜利复活背景与标志素材",
+      "family": "ac1103",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727\\ac1103_demae_victory_revival_layers_v1\\material_collection_manifest.json",
+        "sha256": "E7D558669A7EFD85CB1B2ED9AB67A9B2F95A861006CE65B4ABA3580EF8EF721F"
+      },
+      "output_sha256": "F7570B8D186670C85900C1ECBE0BBCBC867868C0BF7029739E6DE5EE098E1393"
+    },
+    {
+      "collection": "ac2201_kuroe_nerae_gameplay_layers_v1",
+      "title": "黑江瞄准玩法素材",
+      "family": "ac2201",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727\\ac2201_kuroe_nerae_gameplay_layers_v1\\material_collection_manifest.json",
+        "sha256": "38F729ED0240B9B00FDF6802228769AB26F88F87044CFD6092C571664EBA754C"
+      },
+      "output_sha256": "D6F5711C1C606EBFC58D626491BEB18F6DB0A5C3927D6297437045A3418BD506"
+    }
+  ]
+}

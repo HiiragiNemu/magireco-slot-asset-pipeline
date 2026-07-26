@@ -506,6 +506,19 @@ class MaterialCollectionAvDedupTests(unittest.TestCase):
             ["ac5102_133", "ac5102_156"],
         )
 
+    def test_exact_media_duplicate_ignores_code_name_alias(self) -> None:
+        first = self.source("ac0914_004", "", "D" * 64)
+        second = self.source("ac0914_005", "", "D" * 64)
+        first["official_audio_evidence"][0]["code_name"] = "outcome_a_loop"
+        second["official_audio_evidence"][0]["code_name"] = "outcome_b_loop"
+
+        deduplicated = deduplicate_material_sources_by_av_signature(
+            [first, second]
+        )
+
+        self.assertEqual(len(deduplicated), 1)
+        self.assertEqual(deduplicated[0]["source_occurrence_count"], 2)
+
 
 class MaterialCollectionPromotionTests(unittest.TestCase):
     def setUp(self) -> None:

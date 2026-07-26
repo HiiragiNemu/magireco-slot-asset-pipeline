@@ -1,0 +1,104 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0914_uwasa_outcome_layers_v1",
+  "classification": "uwasa_five_class_ten_outcome_gameplay_material",
+  "evidence": "Ten reviewed native 416x232 ac0914 result events expose five Uwasa classes with two outcome variants each. The twenty official names are kept in semantic order while exact AV duplicates are collapsed with source aliases retained. This visual-only gameplay/result collection does not consume child-local audio timing and drops every embedded source track.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0914_004",
+    "ac0914_005",
+    "ac0914_006",
+    "ac0914_007",
+    "ac0914_008",
+    "ac0914_009",
+    "ac0914_010",
+    "ac0914_011",
+    "ac0914_012",
+    "ac0914_013"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac0914_004 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_004.json",
+      "sha256": "AFB37981F4339D875B7C31D1D56D13E10A58DFB9313B84B797A5A73BFEC86711"
+    },
+    {
+      "label": "ac0914_005 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_005.json",
+      "sha256": "45EDE37D2FF4A33DD97FECE501D46354D6C0A5F43459525DBFB4264D2BB8F61C"
+    },
+    {
+      "label": "ac0914_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_006.json",
+      "sha256": "F0537737110504DDABBEB92B5CE9DACAB71B7B2B1694A43C31A0EF1C66D36406"
+    },
+    {
+      "label": "ac0914_007 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_007.json",
+      "sha256": "7870BC84E99B66BAC3FD2938EE73E7247F4BDB1BC2E0E52F786F825AC9FEBB35"
+    },
+    {
+      "label": "ac0914_008 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_008.json",
+      "sha256": "9A68ECF47EFDC6EB47FBFFA01FAB2043DA43EB69DA8376463F46B1AD8ED2DE7E"
+    },
+    {
+      "label": "ac0914_009 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_009.json",
+      "sha256": "BDF837B7669121342C048D743B80EADE0DED2A64AE0CA417BE42A07538848334"
+    },
+    {
+      "label": "ac0914_010 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_010.json",
+      "sha256": "6D6326384E3599EF4CD750A23069C5A07B332B05D972654EAFDD4619F2334596"
+    },
+    {
+      "label": "ac0914_011 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_011.json",
+      "sha256": "7A22F7AA00FD14EE2A72C8D8D6FFAFE09375CAE7B992D1C729E8A7D1A5DFE992"
+    },
+    {
+      "label": "ac0914_012 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_012.json",
+      "sha256": "7A7BE005F2B45238CF88062FF220CF0AE867F0D29F9E3F054ABE0D3D1FED3C9B"
+    },
+    {
+      "label": "ac0914_013 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac0914_013.json",
+      "sha256": "0F7C97E469F0422016AB51B13D0A5AC7C9C003B002DB136030243B17643A6B2E"
+    }
+  ],
+  "clips": [
+    {"official_name": "ac0914_3on_uwasa4_zeko1_c005", "label": "zeko outcome 1 intro"},
+    {"official_name": "ac0914_3on_uwasa4_zeko1_c005_lp", "label": "zeko outcome 1 loop"},
+    {"official_name": "ac0914_3on_uwasa4_zeko2_c005", "label": "zeko outcome 2 intro"},
+    {"official_name": "ac0914_3on_uwasa4_zeko2_c005_lp", "label": "zeko outcome 2 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kuti1_c005", "label": "kuti outcome 1 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kuti1_c005_lp", "label": "kuti outcome 1 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kuti2_c005", "label": "kuti outcome 2 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kuti2_c005_lp", "label": "kuti outcome 2 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kouun1_c005", "label": "kouun outcome 1 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kouun1_c005_lp", "label": "kouun outcome 1 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kouun2_c005", "label": "kouun outcome 2 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kouun2_c005_lp", "label": "kouun outcome 2 loop"},
+    {"official_name": "ac0914_3on_uwasa4_boti1_c005", "label": "boti outcome 1 intro"},
+    {"official_name": "ac0914_3on_uwasa4_boti1_c005_lp", "label": "boti outcome 1 loop"},
+    {"official_name": "ac0914_3on_uwasa4_boti2_c005", "label": "boti outcome 2 intro"},
+    {"official_name": "ac0914_3on_uwasa4_boti2_c005_lp", "label": "boti outcome 2 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kiok1_c005", "label": "kiok outcome 1 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kiok1_c005_lp", "label": "kiok outcome 1 loop"},
+    {"official_name": "ac0914_3on_uwasa4_kiok2_c005", "label": "kiok outcome 2 intro"},
+    {"official_name": "ac0914_3on_uwasa4_kiok2_c005_lp", "label": "kiok outcome 2 loop"}
+  ]
+}

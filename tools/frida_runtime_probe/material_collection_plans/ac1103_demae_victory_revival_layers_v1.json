@@ -1,0 +1,55 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac1103_demae_victory_revival_layers_v1",
+  "classification": "demae_victory_revival_background_and_logo_material",
+  "evidence": "Three native 416x232 ac1103 events have closed visual composition evidence. Eleven full-size victory and revival backgrounds followed by the two native WIN logo overlay clips are retained as one visual-only material review collection so the same events are not ambiguously claimed by two audience products. The 256x144 ac8040 victory effects remain excluded for a later native-size collection, no component is upscaled, and no event audio is inherited.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac1103_006",
+    "ac1103_012",
+    "ac1103_013"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac1103_006 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac1103_006.json",
+      "sha256": "1E864965173CDEB841133380637A113A791DD527F18CE2C4B2193D12C6945A05"
+    },
+    {
+      "label": "ac1103_012 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac1103_012.json",
+      "sha256": "E9283E8297AEB70B09AD4DA9F67D46FFE3E9648431CFB848C9EEFFEEB6F9E9E1"
+    },
+    {
+      "label": "ac1103_013 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac1103_013.json",
+      "sha256": "5CC2B5FBAD201FCDFD6F17469E3A5A72506BD2BD236AB0A28172A423A336C27F"
+    }
+  ],
+  "clips": [
+    {"official_name": "ac1103_3off_c010_win", "label": "three-stop victory background 10"},
+    {"official_name": "ac1103_3off_c011_win", "label": "three-stop victory background 11"},
+    {"official_name": "ac1103_3off_c012_win", "label": "three-stop victory background 12 intro"},
+    {"official_name": "ac1103_3off_c012_win_LP", "label": "three-stop victory background 12 loop"},
+    {"official_name": "ac1103_lev_c015_fukkatu_win", "label": "level revival victory background 15"},
+    {"official_name": "ac1103_lev_c016_fukkatu_win", "label": "level revival victory background 16 intro"},
+    {"official_name": "ac1103_lev_c016_fukkatu_win_LP", "label": "level revival victory background 16 loop"},
+    {"official_name": "ac1103_1on_c017_fukkatu_win", "label": "one-stop revival victory background 17"},
+    {"official_name": "ac1103_1on_c018_fukkatu_win", "label": "one-stop revival victory background 18"},
+    {"official_name": "ac1103_1on_c019_fukkatu_win", "label": "one-stop revival victory background 19"},
+    {"official_name": "ac1103_1on_c020_fukkatu_win", "label": "one-stop revival victory background 20"},
+    {"official_name": "ac1103_3off_c012_win_rogo", "label": "demae WIN logo intro"},
+    {"official_name": "ac1103_3off_c012_win_rogo_LP", "label": "demae WIN logo loop"}
+  ]
+}

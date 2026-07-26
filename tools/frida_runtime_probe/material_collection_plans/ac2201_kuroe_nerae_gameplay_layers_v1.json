@@ -1,0 +1,38 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac2201_kuroe_nerae_gameplay_layers_v1",
+  "classification": "kuroe_nerae_gameplay_component_material",
+  "evidence": "The unresolved ac2201_001 event contains six native 416x232 Kuroe nerae gameplay layers plus two reused ac2101 target-text layers. Because the parent composition is not closed, these are preserved only as individually ordered visual components. They are not mechanically composited, are not a native session, and do not consume the truncated child-local audio evidence.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac2201_001"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac2201_001 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac2201_001.json",
+      "sha256": "100A4B4FC712DA83E8C5F95A8BD72451343258DD19C77B5D24FD8182FA2F397D"
+    }
+  ],
+  "clips": [
+    {"official_name": "ac2201_kuroe_nerae_in_ADD_001", "label": "Kuroe nerae additive entry 1"},
+    {"official_name": "ac2201_kuroe_nerae_in_MUL_001", "label": "Kuroe nerae multiply entry"},
+    {"official_name": "ac2201_kuroe_nerae_in_NML_001", "label": "Kuroe nerae normal entry"},
+    {"official_name": "ac2201_kuroe_nerae_in_ADD_002", "label": "Kuroe nerae additive entry 2"},
+    {"official_name": "ac2201_kuroe_nerae_NML_001_IN", "label": "Kuroe nerae normal intro"},
+    {"official_name": "ac2201_kuroe_nerae_NML_001_LP", "label": "Kuroe nerae normal loop"},
+    {"official_name": "ac2101_cz1_iroha_nerae_S_moji", "label": "reused nerae target text intro"},
+    {"official_name": "ac2101_cz1_iroha_nerae_S_moji_LP", "label": "reused nerae target text loop"}
+  ]
+}

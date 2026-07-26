@@ -100,6 +100,18 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             "new ac0911 BV",
         )
 
+    def test_material_part_names_are_human_facing_with_safe_fallback(self) -> None:
+        self.assertEqual(
+            module.material_part_name(
+                "ac2201_kuroe_nerae_gameplay_layers_v1"
+            ),
+            "黑江瞄准玩法素材 ac2201",
+        )
+        self.assertEqual(
+            module.material_part_name("future_collection_v1"),
+            "future_collection_v1",
+        )
+
     def test_owner_approved_mixed_chapters_bind_all_exact_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as value:
             root = Path(value)
