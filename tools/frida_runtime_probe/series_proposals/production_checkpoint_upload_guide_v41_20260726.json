@@ -1,0 +1,13 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v40_20260726.json",
+    "sha256": "1C1754FCF3D7B5D7642D4093D0FF1840889AD76CF0AB1662CBEEAD198995716F"
+  },
+  "checkpoint_id": "20260726-v41-native416-ac4904-materials",
+  "sources": {
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v10_20260726\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "3C48B7C22AC4CF413864370BCF0C1624CB1F9DFA3B0FD4B7EB1E0F57D968C2C5"
+    }
+  }
+}

@@ -2,6 +2,46 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 ac4904 原生 416 角色窗框 UI 素材审查 v41
+
+本轮将 ac4904 的 15 个 SU/window 玩法事件按角色组整理为三片原生
+416x232 视觉-only 素材：
+
+- group 01：公共天线效果及环彩羽、八千代、二叶莎奈、鹤乃、菲莉希亚，
+  16 段、55.666 秒，SHA-256
+  `AB6500D70BD71BF2DE366DB11E6FADE39805D356AF89D3C92F2DF9D672138E0E`；
+- group 02：鹿目圆、沙耶香、麻美、杏子、焰，15 段、48.000 秒，SHA-256
+  `8A5868D05AB7B3E2C12CA5599AC68DE6996C67F805061C2EAE2B07D51C5CF628`；
+- group 03：音梦、灯花、阿莉娜、环彩羽变体、忧，15 段、60.999 秒，
+  SHA-256
+  `76B1E742728B1948A0DB1FEDE89376630B70FF4EF35DC4E3D93DACCC00247593`。
+
+耐久根为 `material_collections_v41_native416_ac4904_review_20260726`。
+公共天线效果仅在第一片保留一次，后两片不重复；每名角色各含 intro、
+additional、loop。三片 H.264 视频流直接复制，最终无音轨、无字幕，自动技术
+QA 通过，但均为 `human_playback_required` / `review_only`。不消费 child-local
+声音时序，也不声明 clean story 或原生 session。
+
+总账推进到 `production_ledger_v10_20260726`：current material manifest
+从 8 增至 11，覆盖事件从 90 增至 105，planned production-manifest
+gameplay/material 项从 318 降至 303。`SUMMARY.json`、
+`CURRENT_MATERIAL_COLLECTION_INDEX.json`、`SHA256SUMS.json` SHA-256
+分别为
+`0F29B74C717507F181CF67AE346350A8FBE1D9EEB86B223EC1B1DB3FF9B2B875`、
+`3C48B7C22AC4CF413864370BCF0C1624CB1F9DFA3B0FD4B7EB1E0F57D968C2C5`、
+`9A501C6DED8E78D2FF44E7D57CA8DF471F9E82DF527ED6D0783B1FBB3CDA4F78`。
+
+逐文件上传指南推进到 `upload_guide_v41_20260726`，共 206 个精确文件：
+10 个已投稿、17 个可投稿、179 个待人工播放、8 类明确排除。三片新文件均
+以未来新建“MagiaReco Slot 原生416玩法／素材合集”BV 为目标；无字幕轨；
+当前不追加、不替换。`UPLOAD_GUIDE.json`、`.md`、`.csv`、
+`SHA256SUMS.json` SHA-256 分别为
+`3E223C4A6718D4B7FA91C8BB7AED8AE52568F309A41DCA59BA8E987834761B70`、
+`AD05FA5E82F3C28F965015D1A7CE7CA24F6C578055061A4A082830A9A8326116`、
+`CD57600762E0FD4EDEE03DE19161A88B6CA4195C8F7C8E2FCFFD2E4A7DAB8922`、
+`835B527362E8BC140A4082B7207C475163E331DDED014B7BCDF607EA00E08B42`。
+P16/P17/P18 继续硬隔离；`ac7210_superseded_verbose_audit` 继续绝不上传。
+
 ## 2026-07-26 ac7204 原生 416 结果卡素材审查 v40
 
 本轮按玩法语义把 ac7204 的 27 个原生 416x232 gameplay/result 事件整理为

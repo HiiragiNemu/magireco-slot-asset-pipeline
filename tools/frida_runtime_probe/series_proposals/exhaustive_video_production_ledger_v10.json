@@ -1,0 +1,50 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v9.json",
+    "sha256": "22B3D4B33778DDEB69427B45B1F40859FF7B1CC952E78A80E0F162691415C6BD"
+  },
+  "checkpoint_id": "20260726-v41-native416-ac4904-materials",
+  "scope": "All v9 current production and exact owner-approved product records plus three hash-bound native 416x232 visual-only ac4904 SU character-window material review collections covering all 15 events already classified as gameplay/material.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v40 ac7204 native 416 result-card material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v40_native416_ac7204_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    },
+    {
+      "label": "v41 ac4904 native 416 SU window material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v41_native416_ac4904_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac4904_su_window_group_02_v1",
+  "classification": "su_character_window_gameplay_material",
+  "evidence": "Five reviewed native 416x232 ac4904 SU/window events present Madoka, Sayaka, Mami, Kyoko and Homura inside slot character-window UI. This visual-only collection retains each character's intro, additional layer and loop. The common antenna effect is preserved once in group 01, so it is not duplicated here.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac4904_016",
+    "ac4904_017",
+    "ac4904_018",
+    "ac4904_019",
+    "ac4904_020"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac4904_016 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_016.json",
+      "sha256": "8BF37D08B04F32B567B2F09FD509449B77C1D2E3FD90B177C0A582C8D83E8361"
+    },
+    {
+      "label": "ac4904_017 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_017.json",
+      "sha256": "EACF11D17FDA5B0AD18EDF59C634E021605CE0F80E32831C870AC0D932D32042"
+    },
+    {
+      "label": "ac4904_018 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_018.json",
+      "sha256": "60FDCBB7A97DC0BFA178B03CFB22DBC6DFB4CBAE6101FA7A3B7A618D724E60EF"
+    },
+    {
+      "label": "ac4904_019 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_019.json",
+      "sha256": "8B9BF21B157C06531F28F28B1750F2A7B91F790335324A2670E711A6A4B0EE39"
+    },
+    {
+      "label": "ac4904_020 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_020.json",
+      "sha256": "D9E95E6041C7F18D69ACA7C6E329B112C6274E5DDEEC8AE29551929CF22B0A78"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac4904_cmn_SU_window_SU21_mad",
+      "label": "Madoka SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU21_mad_AD",
+      "label": "Madoka SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU21_mad_LP",
+      "label": "Madoka SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU22_say",
+      "label": "Sayaka SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU22_say_AD",
+      "label": "Sayaka SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU22_say_LP",
+      "label": "Sayaka SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU23_mam",
+      "label": "Mami SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU23_mam_AD",
+      "label": "Mami SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU23_mam_LP",
+      "label": "Mami SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU24_kyo",
+      "label": "Kyoko SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU24_kyo_AD",
+      "label": "Kyoko SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU24_kyo_LP",
+      "label": "Kyoko SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU25_hom",
+      "label": "Homura SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU25_hom_AD",
+      "label": "Homura SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU25_hom_LP",
+      "label": "Homura SU window loop"
+    }
+  ]
+}

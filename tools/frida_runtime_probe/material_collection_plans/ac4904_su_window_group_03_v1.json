@@ -1,0 +1,114 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac4904_su_window_group_03_v1",
+  "classification": "su_character_window_gameplay_material",
+  "evidence": "Five reviewed native 416x232 ac4904 SU/window events present Nemu, Touka, Alina, Iroha and Ui inside slot character-window UI. This visual-only collection retains each character's intro, additional layer and loop. The common antenna effect is preserved once in group 01, so it is not duplicated here.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac4904_023",
+    "ac4904_024",
+    "ac4904_025",
+    "ac4904_026",
+    "ac4904_027"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac4904_023 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_023.json",
+      "sha256": "0FD282AA36C2B8198391BE443E25F739C1CB26DA29400FF5803A4DC2580303D7"
+    },
+    {
+      "label": "ac4904_024 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_024.json",
+      "sha256": "9DA663637A7DEED775F7CEE565CD4884F54DEC995D3AB99E31B00B2A457D1215"
+    },
+    {
+      "label": "ac4904_025 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_025.json",
+      "sha256": "C96CC7E8505DCEC2B5FDE9A817FE6BDBFB077392A5F9F08C95FE3490FE5DF621"
+    },
+    {
+      "label": "ac4904_026 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_026.json",
+      "sha256": "D245B2E0D5F807E009C4D1D03065787C0C9AE7F242089E179EA7BA335AEC6639"
+    },
+    {
+      "label": "ac4904_027 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_027.json",
+      "sha256": "02AF0A2D8B1D67B5F7000CB5C04E9912B38DB91420E759D388B58036F658060A"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac4904_cmn_SU_window_SU31_nem",
+      "label": "Nemu SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU31_nem_AD",
+      "label": "Nemu SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU31_nem_LP",
+      "label": "Nemu SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU32_tou",
+      "label": "Touka SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU32_tou_AD",
+      "label": "Touka SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU32_tou_LP",
+      "label": "Touka SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU33_ali",
+      "label": "Alina SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU33_ali_AD",
+      "label": "Alina SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU33_ali_LP",
+      "label": "Alina SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU34_iro",
+      "label": "Iroha SU window intro variant"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU34_iro_AD",
+      "label": "Iroha SU window additional-layer variant"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU34_iro_LP",
+      "label": "Iroha SU window loop variant"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU35_ui",
+      "label": "Ui SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU35_ui_AD",
+      "label": "Ui SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU35_ui_LP",
+      "label": "Ui SU window loop"
+    }
+  ]
+}

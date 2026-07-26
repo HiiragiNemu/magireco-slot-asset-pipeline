@@ -1,0 +1,118 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac4904_su_window_group_01_v1",
+  "classification": "su_character_window_gameplay_material",
+  "evidence": "Five reviewed native 416x232 ac4904 SU/window events present Iroha, Yachiyo, Sana, Tsuruno and Felicia inside slot character-window UI. This visual-only collection retains the common antenna effect once, followed by each character's intro, additional layer and loop. It is gameplay/material, not clean story, and does not consume child-local audio timing.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac4904_011",
+    "ac4904_012",
+    "ac4904_013",
+    "ac4904_014",
+    "ac4904_015"
+  ],
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    },
+    {
+      "label": "ac4904_011 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_011.json",
+      "sha256": "E133707B0C91D07F1FBF3121ACFA303807721539F871361E13CDC55D452DEFE5"
+    },
+    {
+      "label": "ac4904_012 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_012.json",
+      "sha256": "9C1F55AFEF7153996DA3D5C329DC6079184BBB2EDAA685F57D85395950DA3225"
+    },
+    {
+      "label": "ac4904_013 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_013.json",
+      "sha256": "F0FDD8D511A4B8B01755279E09BBB1E39660CA9920B21C8460C70ECB40D962D3"
+    },
+    {
+      "label": "ac4904_014 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_014.json",
+      "sha256": "86C068D35483B96E6B85B802268060176F989DDD2E2E5DF84D1DD27D48011DAC"
+    },
+    {
+      "label": "ac4904_015 v20 event production manifest",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v20_frame_grid_20260715\\events\\ac4904_015.json",
+      "sha256": "A8DB32A78C16C4E4577BAE09D437640D11BBE5E247C62080201A07FE169B98F9"
+    }
+  ],
+  "clips": [
+    {
+      "official_name": "ac4904_cmn_SU_window_ef_anten",
+      "label": "common SU window antenna effect"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU01_iro",
+      "label": "Iroha SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU01_iro_AD",
+      "label": "Iroha SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU01_iro_LP",
+      "label": "Iroha SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU02_yac",
+      "label": "Yachiyo SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU02_yac_AD",
+      "label": "Yachiyo SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU02_yac_LP",
+      "label": "Yachiyo SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU03_san",
+      "label": "Sana SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU03_san_AD",
+      "label": "Sana SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU03_san_LP",
+      "label": "Sana SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU04_tur",
+      "label": "Tsuruno SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU04_tur_AD",
+      "label": "Tsuruno SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU04_tur_LP",
+      "label": "Tsuruno SU window loop"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU05_fer",
+      "label": "Felicia SU window intro"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU05_fer_AD",
+      "label": "Felicia SU window additional layer"
+    },
+    {
+      "official_name": "ac4904_cmn_SU_window_SU05_fer_LP",
+      "label": "Felicia SU window loop"
+    }
+  ]
+}
