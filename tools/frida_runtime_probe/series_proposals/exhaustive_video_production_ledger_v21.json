@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v20.json",
+    "sha256": "E3E3492C9091A408460B6A065169B12E0EEDDF36DA3D364D332993ADDC81A6E9"
+  },
+  "checkpoint_id": "20260727-v53-ac0916-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v20 records plus 104 ac0916 mixed gameplay/effect events whose 652 hash-bound visual component occurrences are preserved in separate native 416x232, 416x120 and 160x120 review catalogs. No component is resized or concatenated across dimensions, and the catalogs do not claim to be natural event sessions.",
+  "append_current_material_roots": [
+    {
+      "label": "v53 ac0916 split-native character and text component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v53_ac0916_20260727\\ac0916_split_native_components_v1.json",
+      "sha256": "84991B6F433F6FE6205A16B2D7F8AB3BA007DA78BAB34775D60B743304294C28"
+    }
+  ]
+}

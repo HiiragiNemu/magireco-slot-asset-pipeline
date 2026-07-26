@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v53-ac0916-native160x120",
+  "checkpoint_label": "v53",
+  "start_upload_id": 129,
+  "expected_dimensions": {
+    "width": 160,
+    "height": 120
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V53.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v53_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "08A7852D27F651FA2FC6B84CC428E3860CE56C3620E99230977C7C93A274CAAE"
+  },
+  "specific_exclusions": [
+    "本批只含 ac0916 的 12 个原生 160x120 玩法文字循环效果组件；角色动作与 416x120 文字入场层分别在 U127/U128。",
+    "104 个事件的 exact component map 已闭合，但本目录只是去重组件清单，不冒充完整事件或游戏自然 session。",
+    "三个原生尺寸禁止机械拼接、拉伸、补边或 upscale。",
+    "本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac0916_text_effect_components_160x120_v1",
+      "title": "玩法文字循环效果组件",
+      "family": "ac0916",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_text_effect_components_160x120_v1\\material_collection_manifest.json",
+        "sha256": "120CFEF121B2B44B2A3A5E8C5AD41FF3A201447A1650DB3F33A80BFD44FDECF3"
+      },
+      "output_sha256": "40F02363A369F6BE49FE6864C78F60B0B899C8D79E93389081EC70CDE70D131B"
+    }
+  ]
+}

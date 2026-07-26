@@ -1,0 +1,144 @@
+{
+  "schema": "magireco-ac0903-stop-premonition-event-plan-v1",
+  "plan_id": "ac0903_stop_premonition_event_v1",
+  "status": "blocked_exact_compositor_contract_missing",
+  "event": "ac0903_001",
+  "scope": "DirInfo kind 28 row 0 only. Build one native 416x232 parent-Z2D event with direct-parent scene SE; never concatenate the four DGM components.",
+  "audio_profile": "no_bgm",
+  "editions": [
+    "none",
+    "ja",
+    "zh"
+  ],
+  "publishable": false,
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "frame_count": 60,
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "upscale": false
+  },
+  "inputs": {
+    "audience_event_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "audience_event_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v18_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "5E08D9251CA10B188D2729ED958463CFEFAC85B7C438DCDC889025CD5E6340A4"
+    },
+    "dirinfo_routes": {
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    "dirinfo_route_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v18_20260727\\DIRINFO_ROUTE_LEDGER.csv",
+      "sha256": "B760367EC09AFFBB05DF08A187F785AE03CADAF733F2B2B9A463A0A55B9FF967"
+    },
+    "gdb_event_dgm_timeline": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\z2d_dgm_event_map_v4\\gdb_event_dgm_video_timeline.csv",
+      "sha256": "05A35B519FDFAECB07E9C3DD6E60D46695C2D30D5348E841397AA87358B36563"
+    },
+    "direct_parent_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+      "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+    },
+    "child_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    "subtitles": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    }
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "source_sha256_by_official_name": {
+    "ac0903_SU1_jaku_add": "366A62E38613BC02115FC4E6BA64335CD1D0C12311AAF5979DF5731C55DF5E84",
+    "ac0903_SU1_jaku_mlt": "114B0D955033CF7CDA3AC825CB35DBE00913A739AE12CE0F68A495125DC200EE",
+    "ac0903_SU1_jaku_nom": "28D68222A71D74A228EC0888D06D0AA89E82D7C7D3AD4661140DC4FDCBA23D3C",
+    "ac0903_SU1_jaku_nom_LP": "50B4C5D26EC5D19A747985A2FB3A85C2A12A301A27C3BA69AE90333785E9E1E4"
+  },
+  "audio_source_sha256": "C91FE6F1C0C098AB22F50743666ABB6FEB7AF0F478587035F138CE7D7E1F5AFB",
+  "composition_evidence_boundary": {
+    "parent_z2d": "ac0903_cmn_stop_zen_SU1_S",
+    "parent_frame_range": [
+      0,
+      60
+    ],
+    "base_interval_candidates": [
+      "ac0903_SU1_jaku_nom@0:30",
+      "ac0903_SU1_jaku_nom_LP@30:60"
+    ],
+    "parallel_layer_candidates": [
+      "ac0903_SU1_jaku_mlt@0:10:candidate_from_dgm_suffix_unproven",
+      "ac0903_SU1_jaku_add@0:10:candidate_from_dgm_suffix_unproven"
+    ],
+    "raw_layer_flags": {
+      "ac0903_SU1_jaku_add": "0x037e",
+      "ac0903_SU1_jaku_mlt": "0x037e",
+      "ac0903_SU1_jaku_nom": "0x077e",
+      "ac0903_SU1_jaku_nom_LP": "0x077e"
+    },
+    "forbidden": "linear_concat_or_guessed_blend"
+  },
+  "audio_contract": {
+    "source_kind": "direct_parent_event_audio",
+    "request_id": 680,
+    "sound_code": 2400,
+    "classification": "scene_se",
+    "start_sample": 0,
+    "decoded_sample_count": 91811,
+    "retain_in_no_bgm": true
+  },
+  "render_authorized": false,
+  "media_outputs_written": 0,
+  "compositor_blocker": {
+    "code": "exact_native_compositor_contract_missing",
+    "missing_fields": [
+      "native_add_blend_equation",
+      "native_mlt_blend_equation",
+      "working_color_space_and_transfer",
+      "source_alpha_or_matte_semantics",
+      "straight_or_premultiplied_alpha",
+      "final_draw_order",
+      "render_target_format_bit_depth_and_rounding",
+      "chroma_upsampling_and_canvas_transform",
+      "output_color_metadata",
+      "shader_program_and_blend_state_identity",
+      "reference_game_framebuffer_hash",
+      "frame_enable_pts_quantization",
+      "supported_exact_renderer_implementation"
+    ],
+    "renderer_evidence": [
+      {
+        "path": "..\\render_event_manifest.py",
+        "sha256": "D776092121421DD905DA9093EB3C81D286C45BBA61EF319CB91E91F86C2B8945",
+        "finding": "supports screen, black_key and opaque only"
+      },
+      {
+        "path": "..\\build_event_production_manifests.py",
+        "sha256": "3968CF7FA655BEA553407C85DE4AFD9267713C5E7A540A2F6514B79BCE32B09A",
+        "finding": "valid blend modes exclude multiply and addition"
+      },
+      {
+        "path": "..\\..\\..\\magireco_asset_pipeline.py",
+        "sha256": "41838D65517D447992AEEB0CAFD8CA305481554D00481E85EE2258ACD63401B3",
+        "finding": "preserves raw layer flags without decoding compositor semantics"
+      },
+      {
+        "path": "..\\presentation_effect_variants\\ac4903_sparkle_variant_v1.json",
+        "sha256": "EF737EB48DD17450A19F26159837A4FB931FE19BB8009A0C062AAB7C3544998A",
+        "finding": "project precedent requires native blend, z-order, transform and interval evidence"
+      }
+    ]
+  },
+  "edition_contract": "none, JA and ZH remain hypothetical same-content targets only. No media or hardlink may be created until the exact native compositor contract is hash-bound and implemented."
+}

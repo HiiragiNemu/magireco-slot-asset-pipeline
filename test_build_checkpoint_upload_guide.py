@@ -153,6 +153,12 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             ),
             "SU玩法组件素材 ac0905",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac0916_text_effect_components_160x120_v1"
+            ),
+            "玩法文字循环效果素材 ac0916",
+        )
 
     def test_current_selector_route_source_is_indexed(self) -> None:
         self.assertIn(

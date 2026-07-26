@@ -9,22 +9,21 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v52
+## 0. 2026-07-27 当前检查点 v53
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v20_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v21_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v52_20260727`。
+`upload_guide_v53_20260727`。
 
-v51/v52 新增 ac4902 的 17 条独立原生 416x232 selector-entry 路线，共
-51 个 none/JA/ZH MP4；9 条精确 alias 行没有重复渲染，也没有生成跨互斥
-路线 showcase。ac0905 的 8 个 mixed 事件另按 416x232 与 512x416 原生尺寸
-收录 15 个 visual-only 组件；另 8 个 full-frame-only 事件继续阻断。
-U108–U124 为两批 ac4902 路线，U125/U126 为 ac0905 素材；全部待人工播放，
-`UPLOAD_NOW` 为 0。
+v53 新增 ac0916 的 104 个 mixed 玩法／效果事件覆盖：652 个 occurrence、
+39 个唯一源，拆成原生 416x232、416x120、160x120 三个 visual-only
+组件产品，覆盖审计无缺失或 unused。U127/U128/U129 是三种尺寸的审查入口，
+全部待人工播放，`UPLOAD_NOW` 为 0。`ac0903_001` 虽已闭合事件、层区间和
+direct-parent SE，但 exact native compositor 合同缺失，明确不允许渲染。
 路径、哈希与上传目标见
-`docs/research/2026-07-27-ac4902-selector-entry-and-ac0905-components-checkpoint-v52.md`。
+`docs/research/2026-07-27-ac0916-split-native-component-checkpoint-v53.md`。
 P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
 Z2D 时序继续 fail closed。
 

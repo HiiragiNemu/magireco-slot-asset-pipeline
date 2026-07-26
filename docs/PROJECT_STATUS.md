@@ -2,6 +2,28 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac0916 三尺寸玩法组件 v53
+
+`material_collections_v53_ac0916_split_components_review_20260727` 已把
+ac0916 的 104 个 mixed 玩法／效果事件、652 个 exact occurrence 拆成
+3 个原生 visual-only 产品：23 个 416x232 角色动作源、4 个 416x120
+文字入场源、12 个 160x120 文字循环效果源。39 个唯一源与 v20 current
+material index 零重叠；没有跨尺寸拼接、缩放或自然事件声明。
+
+覆盖审计为 104/104 event、652/652 occurrence、39/39 source、0 unused。
+总账推进到 `production_ledger_v21_20260727`：produced audience 188、
+material-covered 603、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。全局指南 `upload_guide_v53_20260727` 为
+10 已投稿、17 可投稿、290 待人工播放、8 排除，共 317 个精确文件。
+U127/U128/U129 分别是 416x232、416x120、160x120 审查入口，三者
+`UPLOAD_NOW` 均为 0。
+
+`ac0903_001` 的事件、层区间和 req680 时序已闭合，但 native add/mlt 的
+blend、色彩／alpha、最终 z-order、canvas transform 与量化合同未闭合；
+`composition_blockers_v53_ac0903_20260727` 明确记录不允许渲染且媒体数为 0。
+详见
+`docs/research/2026-07-27-ac0916-split-native-component-checkpoint-v53.md`。
+
 ## 2026-07-27 ac4902 新入口路线与 ac0905 分尺寸组件 v52
 
 `no_bgm_editions_v51_ac4902_selector_entry_routes_review_20260727` 已产

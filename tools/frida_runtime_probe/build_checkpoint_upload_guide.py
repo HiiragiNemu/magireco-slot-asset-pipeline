@@ -87,6 +87,15 @@ MATERIAL_PART_NAMES = {
     ),
     "ac0905_su_gameplay_components_416_v1": "SU玩法组件素材 ac0905",
     "ac0905_su_effect_frames_512x416_v1": "SU效果框素材 ac0905",
+    "ac0916_character_action_components_416_v1": (
+        "角色变身与决定动作素材 ac0916"
+    ),
+    "ac0916_text_in_add_components_416x120_v1": (
+        "玩法文字入场叠加素材 ac0916"
+    ),
+    "ac0916_text_effect_components_160x120_v1": (
+        "玩法文字循环效果素材 ac0916"
+    ),
 }
 ROUTE_BATCH_SOURCE_NAMES = (
     "v31_ac4902_manifest",

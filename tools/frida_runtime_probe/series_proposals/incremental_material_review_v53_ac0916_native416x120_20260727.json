@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v53-ac0916-native416x120",
+  "checkpoint_label": "v53",
+  "start_upload_id": 128,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 120
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V53.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v53_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "08A7852D27F651FA2FC6B84CC428E3860CE56C3620E99230977C7C93A274CAAE"
+  },
+  "specific_exclusions": [
+    "本批只含 ac0916 的 4 个原生 416x120 玩法文字入场叠加组件；角色动作与 160x120 文字效果分别在 U127/U129。",
+    "104 个事件的 exact component map 已闭合，但本目录只是去重组件清单，不冒充完整事件或游戏自然 session。",
+    "三个原生尺寸禁止机械拼接、拉伸、补边或 upscale。",
+    "本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac0916_text_in_add_components_416x120_v1",
+      "title": "玩法文字入场叠加组件",
+      "family": "ac0916",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_text_in_add_components_416x120_v1\\material_collection_manifest.json",
+        "sha256": "A57FE5E4859394C22A8F4F907EEC068BD633628A24633620BA21F9BA3C0994CD"
+      },
+      "output_sha256": "1F567908F1F0106E990C59833E99188ABA88345FF705B07B1136657820F65275"
+    }
+  ]
+}

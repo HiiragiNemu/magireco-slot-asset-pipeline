@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v53-ac0916-native416x232",
+  "checkpoint_label": "v53",
+  "start_upload_id": 127,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V53.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v53_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "08A7852D27F651FA2FC6B84CC428E3860CE56C3620E99230977C7C93A274CAAE"
+  },
+  "specific_exclusions": [
+    "本批只含 ac0916 的 23 个原生 416x232 角色动作组件；416x120 与 160x120 文字层分别在 U128/U129。",
+    "104 个事件的 exact component map 已闭合，但本目录只是去重组件清单，不冒充完整事件或游戏自然 session。",
+    "sana_hensin 源内 ALAC 轨为 -91 dB 数字静音；输出按 visual-only 丢弃该轨，不猜成对白、SE 或 BGM。",
+    "三个原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac0916_character_action_components_416_v1",
+      "title": "角色变身与决定动作组件",
+      "family": "ac0916",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_character_action_components_416_v1\\material_collection_manifest.json",
+        "sha256": "C8CFE7653481ECFD486556B9F63F399DC608F6DD9B546217EEAD551351B80581"
+      },
+      "output_sha256": "1297757D7E2F4990FE0E543BC37A86803A54FF7CD2FF6FFA367DD443ED69C6DA"
+    }
+  ]
+}

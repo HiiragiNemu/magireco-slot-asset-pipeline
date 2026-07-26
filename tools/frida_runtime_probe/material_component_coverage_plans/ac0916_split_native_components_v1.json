@@ -1,0 +1,94 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac0916_split_native_components_v1",
+  "family": "ac0916",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_classification": "mixed_full_frame_and_components",
+  "expected_event_count": 104,
+  "expected_events": [
+    "ac0916_001", "ac0916_002", "ac0916_003", "ac0916_004",
+    "ac0916_005", "ac0916_006", "ac0916_008", "ac0916_009",
+    "ac0916_010", "ac0916_011", "ac0916_012", "ac0916_013",
+    "ac0916_014", "ac0916_015", "ac0916_016", "ac0916_017",
+    "ac0916_018", "ac0916_019", "ac0916_020", "ac0916_021",
+    "ac0916_022", "ac0916_023", "ac0916_024", "ac0916_025",
+    "ac0916_026", "ac0916_027", "ac0916_028", "ac0916_029",
+    "ac0916_030", "ac0916_031", "ac0916_032", "ac0916_033",
+    "ac0916_034", "ac0916_035", "ac0916_036", "ac0916_037",
+    "ac0916_038", "ac0916_039", "ac0916_040", "ac0916_041",
+    "ac0916_042", "ac0916_043", "ac0916_044", "ac0916_045",
+    "ac0916_046", "ac0916_047", "ac0916_048", "ac0916_049",
+    "ac0916_051", "ac0916_052", "ac0916_053", "ac0916_054",
+    "ac0916_055", "ac0916_056", "ac0916_057", "ac0916_058",
+    "ac0916_059", "ac0916_060", "ac0916_061", "ac0916_062",
+    "ac0916_063", "ac0916_064", "ac0916_065", "ac0916_066",
+    "ac0916_067", "ac0916_068", "ac0916_069", "ac0916_070",
+    "ac0916_071", "ac0916_072", "ac0916_073", "ac0916_074",
+    "ac0916_076", "ac0916_077", "ac0916_078", "ac0916_079",
+    "ac0916_080", "ac0916_081", "ac0916_082", "ac0916_083",
+    "ac0916_084", "ac0916_085", "ac0916_086", "ac0916_087",
+    "ac0916_088", "ac0916_089", "ac0916_090", "ac0916_091",
+    "ac0916_092", "ac0916_093", "ac0916_094", "ac0916_095",
+    "ac0916_096", "ac0916_097", "ac0916_098", "ac0916_099",
+    "ac0916_100", "ac0916_101", "ac0916_102", "ac0916_103",
+    "ac0916_104", "ac0916_105", "ac0916_106", "ac0916_107"
+  ],
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v20_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "26BD3FBF9387EA87CE181ACFA513C2F8800191E9ABB3DE37AE0433028B5B755C"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac0916_native416x232_character_action_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_character_action_components_416_v1\\material_collection_manifest.json",
+        "sha256": "C8CFE7653481ECFD486556B9F63F399DC608F6DD9B546217EEAD551351B80581"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac0916_native416x120_text_in_add_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 120
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_text_in_add_components_416x120_v1\\material_collection_manifest.json",
+        "sha256": "A57FE5E4859394C22A8F4F907EEC068BD633628A24633620BA21F9BA3C0994CD"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac0916_native160x120_text_effect_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 160,
+        "height": 120
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v53_ac0916_split_components_review_20260727\\ac0916_text_effect_components_160x120_v1\\material_collection_manifest.json",
+        "sha256": "120CFEF121B2B44B2A3A5E8C5AD41FF3A201447A1650DB3F33A80BFD44FDECF3"
+      },
+      "allowed_unused_sources": []
+    }
+  ]
+}
