@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -703,6 +704,21 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 raise ValueError(
                     f"incremental story edition set differs: {family}"
                 )
+            no_dialogue_aliases = spec.get("no_dialogue_aliases") is True
+            if no_dialogue_aliases and (
+                value.get("dialogue_cue_count") != 0
+                or set(value.get("verified_no_event_audio_events", []))
+                != {family}
+                or any(
+                    value.get("subtitle_profiles", {}).get(edition)
+                    != "no_dialogue_cross_target_alias"
+                    for edition in ("ja", "zh")
+                )
+                or len({row["sha256"] for row in rows}) != 1
+            ):
+                raise ValueError(
+                    f"incremental no-dialogue alias contract differs: {family}"
+                )
             title = str(spec.get("title", "")).strip()
             if not title:
                 raise ValueError(
@@ -728,7 +744,9 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                         state="human_playback_required",
                         target_bv=_target(plan, target_key),
                         subtitle_track=(
-                            "no burned-in subtitles"
+                            "no burned-in subtitles; exact no-dialogue alias"
+                            if no_dialogue_aliases
+                            else "no burned-in subtitles"
                             if edition == "none"
                             else f"{edition.upper()} burned-in"
                         ),
@@ -740,9 +758,19 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                         ),
                         publication_instruction="DO NOT UPLOAD YET",
                         scope_note=(
-                            "Independent event-exact native-size story product "
-                            "bound to one exact DirInfo row. It is not claimed "
-                            "as a complete natural family or combined route."
+                            (
+                                "Independent event-exact native-size product "
+                                "bound to one exact DirInfo row. Current direct, "
+                                "child-Z2D and subtitle catalogs prove zero event "
+                                "audio/subtitle rows; none/JA/ZH are legal "
+                                "cross-target hardlink aliases of one exact hash."
+                            )
+                            if no_dialogue_aliases
+                            else (
+                                "Independent event-exact native-size story product "
+                                "bound to one exact DirInfo row. It is not claimed "
+                                "as a complete natural family or combined route."
+                            )
                         ),
                     )
                 )
@@ -766,6 +794,18 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 raise ValueError("v36 material index collection is malformed")
             path = Path(str(collection.get("output_path", "")))
             collection_name = str(collection.get("collection", ""))
+            dimension_match = re.search(
+                r"__(?P<width>[0-9]+)x(?P<height>[0-9]+)_",
+                path.name,
+            )
+            if dimension_match is None:
+                raise ValueError(
+                    f"material output name lacks native dimensions: {path.name}"
+                )
+            native_dimensions = (
+                f"{dimension_match.group('width')}x"
+                f"{dimension_match.group('height')}"
+            )
             items.append(
                 _item(
                     path=path,
@@ -779,8 +819,9 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     human_approval_status="not_yet_playback_approved",
                     publication_instruction="DO NOT UPLOAD YET",
                     scope_note=(
-                        "Native 416x232 visual material collection; not clean "
-                        "story, not a native route, and no audio semantics claimed."
+                        f"Native {native_dimensions} visual material collection; "
+                        "not clean story, not a native route, and no audio "
+                        "semantics claimed."
                     ),
                 )
             )

@@ -1,6 +1,6 @@
 {
   "schema": "magireco-analysis-toolchain-lock-v1",
-  "captured_on": "2026-06-19",
+  "captured_on": "2026-07-25",
   "platform": "Windows 10.0.26200",
   "tools": [
     {
@@ -22,9 +22,9 @@
     },
     {
       "name": "Frida",
-      "version": "17.5.2",
+      "version": "17.16.4",
       "required": true,
-      "install": "python -m pip install frida==17.5.2 frida-tools==14.5.0"
+      "install": "python -m pip install frida==17.16.4 frida-tools==14.10.4"
     },
     {
       "name": "Java",
@@ -51,8 +51,8 @@
     }
   ],
   "python_packages": {
-    "frida": "17.5.2",
-    "frida-tools": "14.5.0",
+    "frida": "17.16.4",
+    "frida-tools": "14.10.4",
     "requests": "2.32.5",
     "tqdm": "4.67.1",
     "mitmproxy": "12.2.1",

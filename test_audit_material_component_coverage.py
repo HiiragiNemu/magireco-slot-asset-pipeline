@@ -168,6 +168,98 @@ class AuditMaterialComponentCoverageTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "absent from split catalogs"):
                 module.audit(plan_path=plan, output_path=root / "audit.json")
 
+    def test_audience_inventory_can_bind_two_native_component_catalogs(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            plan, _event_manifest = self._fixture(root)
+            plan_value = json.loads(plan.read_text(encoding="utf-8"))
+            ledger = Path(plan_value["event_ledger"]["path"])
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=[
+                        "event_name",
+                        "family",
+                        "clip_count",
+                        "resolved_clip_count",
+                        "classification",
+                        "production_state",
+                        "disposition",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "event_name": "ac5102_001",
+                        "family": "ac5102",
+                        "clip_count": 2,
+                        "resolved_clip_count": 2,
+                        "classification": (
+                            "mixed_full_frame_and_components"
+                        ),
+                        "production_state": "planned_unproduced",
+                        "disposition": "gameplay_effect_collection",
+                    }
+                )
+            clip_index = root / "audience-clips.csv"
+            with clip_index.open(
+                "w", encoding="utf-8", newline=""
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=["event_name", "official_name", "target_mp4"],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "event_name": "ac5102_001",
+                        "official_name": "clip416",
+                        "target_mp4": str(root / "clip416.mp4"),
+                    }
+                )
+                writer.writerow(
+                    {
+                        "event_name": "ac5102_001",
+                        "official_name": "clip512",
+                        "target_mp4": str(root / "clip512.mp4"),
+                    }
+                )
+            c512_path = Path(
+                plan_value["component_catalogs"][1]["manifest"]["path"]
+            )
+            c512 = json.loads(c512_path.read_text(encoding="utf-8"))
+            c512["component_events"] = ["ac5102_001"]
+            c512["component_event_clip_map"] = {
+                "ac5102_001": ["clip512"]
+            }
+            self._write_json(c512_path, c512)
+            plan_value["event_ledger"]["sha256"] = module.file_sha256(ledger)
+            plan_value["audience_clip_index"] = {
+                "path": str(clip_index),
+                "sha256": module.file_sha256(clip_index),
+            }
+            plan_value["expected_events"] = ["ac5102_001"]
+            plan_value["expected_classification"] = (
+                "mixed_full_frame_and_components"
+            )
+            plan_value["component_catalogs"][1]["role"] = "event_components"
+            plan_value["component_catalogs"][1]["manifest"]["sha256"] = (
+                module.file_sha256(c512_path)
+            )
+            self._write_json(plan, plan_value)
+            output = root / "audience-audit.json"
+            module.audit(plan_path=plan, output_path=output)
+            result = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "PASSED")
+            self.assertEqual(
+                {
+                    row["role"] for row in result["component_catalogs"]
+                },
+                {"event_components"},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

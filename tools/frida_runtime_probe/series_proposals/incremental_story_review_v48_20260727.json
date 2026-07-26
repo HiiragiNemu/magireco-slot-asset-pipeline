@@ -1,0 +1,90 @@
+{
+  "schema": "magireco-incremental-story-review-plan-v1",
+  "checkpoint_id": "20260727-v48-silent-native416-review",
+  "checkpoint_label": "v48",
+  "start_upload_id": 92,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "no_dialogue_aliases": true,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V48.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v48_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "DBB0F84FE029D73D4DBFFF0A9D26DF5550A162EF837FEA8321419C06CB5B73DF"
+  },
+  "products": [
+    {
+      "family": "ac4002_001",
+      "title": "回廊追逐动画",
+      "filename_title": "回廊追逐动画",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4002_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "59F58585BC9E29F8A0AC9D894B4442A39B2EA7201B81F49F66F1138B63E2BE8C"
+      }
+    },
+    {
+      "family": "ac4003_001",
+      "title": "游乐园追逐动画",
+      "filename_title": "游乐园追逐动画",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4003_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "34105B7632001FCC1C34B33940AF422F1C013EF7D377FAA694B8E7E7C58EE629"
+      }
+    },
+    {
+      "family": "ac4004_001",
+      "title": "火焰中的魔法少女动画",
+      "filename_title": "火焰中的魔法少女动画",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4004_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "74D3CACF08BCB825A73255219D4C82974FD02E83A25CAC696456BB11A7ECB8E4"
+      }
+    },
+    {
+      "family": "ac7002_001",
+      "title": "夜空魔女登场短片",
+      "filename_title": "夜空魔女登场短片",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "1BA5B61F04297470692E23FBC35E1E7F2B96CE3566403219C9B13A557E1DAB73"
+      }
+    },
+    {
+      "family": "ac7002_002",
+      "title": "魔法少女迎战魔女短片",
+      "filename_title": "魔法少女迎战魔女短片",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_002_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "4C57B05EC021058A730415D89A2DCE5D5850EB43013CBA8A27B1AE83E4D6F121"
+      }
+    },
+    {
+      "family": "ac7002_003",
+      "title": "白色斗篷魔法少女飞行战斗",
+      "filename_title": "白色斗篷魔法少女飞行战斗",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_003_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "7A21FB03B81EC3C4EC0148E4E30C7386B8A57E904710FA9B44E97B1B44DB4417"
+      }
+    },
+    {
+      "family": "ac7002_004",
+      "title": "魔女追逐战动画",
+      "filename_title": "魔女追逐战动画",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_004_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "F9B66DD9DF0944DF1A86D676CB8F3A7A03CB98AB19A4F1F48D6729D56F112F69"
+      }
+    },
+    {
+      "family": "ac7002_005",
+      "title": "红夜魔女决战动画",
+      "filename_title": "红夜魔女决战动画",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_005_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "0EBB5635300E38E66317D3F8636B3D8BF61D1DA24AF12BBCE45E25CE99363FCA"
+      }
+    }
+  ]
+}

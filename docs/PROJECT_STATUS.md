@@ -2,6 +2,50 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 精确无对白原生 416 与分尺寸素材 v48
+
+生产冻结已解除；已完成的
+`bilibili_human_review_upload_freeze_20260727` 继续保持只读、不覆盖。v48 新增
+一条严格的无对白 audience lane：只有单事件 DirInfo、原生 416x232、精确
+画面区间，并且 direct-parent audio、child-Z2D audio、subtitle 三个当前哈希绑定
+目录对该事件都为零行时，才允许建立空音频／空字幕 manifest。ac4002_001、
+ac4003_001、ac4004_001、ac7002_001 至 `_005` 共 8 个产品、190.667 秒通过；
+`no_bgm_editions_v47_silent_native416_review_20260727` 已产 none/JA/ZH 24 个
+目标入口。因为确实无对白／字幕，每个产品三轨是同哈希、同 inode 的合法
+跨目标别名；AAC 为 48 kHz stereo，峰值 -91.0 dBFS。自动 QA 通过但全部仍待
+人工播放，未进入 `UPLOAD_NOW`。
+
+素材侧 `material_collections_v48_ac0504_ac4921_split_components_review_20260727`
+新增 3 个 visual-only 审查产品：ac0504 11 个原生 416x232 胜利演出组件；
+ac4921 的 6 个原生 416x232 角色动作与 10 个原生 416x120 结果框分开保存，
+不缩放、不跨尺寸拼接。ac0504 的 event variant 区间仍有歧义，因此只作原始
+组件合集，不冒充事件时间线；ac4921 的 22-event 覆盖审计通过。
+
+总账推进到 `production_ledger_v16_20260727`：当前 produced audience event
+185、material-covered 434、produced DirInfo route 62、timing blocker 330、
+quarantine audience event 53。P16/P17/P18 仍为 hard quarantine。正式全局
+指南为 `upload_guide_v48_final_20260727`，共 10 已投稿、17 可投稿、229 待
+人工播放、8 明确排除、256 个精确文件；中间 v48 指南已标 superseded。
+增量审查入口为：
+
+```text
+bilibili_incremental_review_v48_silent_native416_final_20260727
+  U092-U099，8 个产品 / 24 个目标文件
+bilibili_incremental_review_v48_material_native416x232_final_20260727
+  U100-U101，2 个产品 / 6 个目标文件
+bilibili_incremental_review_v48_material_native416x120_final_20260727
+  U102，1 个产品 / 3 个目标文件
+```
+
+MuMu/Frida 的耐久恢复记录已合入本检查点：旧 17.5.2 会污染 Android 15
+zygote；唯一验证组合为 Frida 17.16.4、frida-tools 14.10.4、device server
+17.16.4、ARM64 Gadget 17.16.4。`reproducibility/toolchain.lock.json` 已同步，
+Git 不包含二进制。当前正式 with-BGM 候选仍为 0；继续从 ledger v16 扩展
+no-BGM，只有全部已发现库存已产或精确阻断后才切换。详细证据见
+`docs/research/2026-07-27-silent-native416-and-split-material-checkpoint-v48.md`。
+最终代码状态全仓回归为 445 passed / 4 skipped；compile、JSON parse、
+diff check 与审查包 hardlink/hash 核对均通过。
+
 ## 2026-07-27 ac5102 分尺寸组件覆盖 v46
 
 `material_collections_v46_ac5102_split_components_review_20260727` 已生成

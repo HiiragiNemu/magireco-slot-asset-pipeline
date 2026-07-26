@@ -255,6 +255,147 @@ def resolve_covered_event_index(
     return resolved
 
 
+def resolve_audience_event_inventory(
+    *,
+    event_index_raw: object,
+    clip_index_raw: object,
+    plan_path: Path,
+    covered_events: list[str],
+    source_roles: dict[Path, set[str]],
+    collection: str,
+) -> tuple[list[dict[str, str]], dict[str, dict]]:
+    """Resolve exact component occurrences from hash-bound audience catalogs."""
+
+    required_event_fields = {
+        "path",
+        "sha256",
+        "production_state",
+        "disposition",
+        "classification",
+    }
+    if (
+        not isinstance(event_index_raw, dict)
+        or set(event_index_raw) != required_event_fields
+        or not isinstance(clip_index_raw, dict)
+        or set(clip_index_raw) != {"path", "sha256"}
+    ):
+        raise ValueError("named material audience event inventory fields differ")
+
+    def bound_csv(raw: dict, label: str) -> tuple[Path, str]:
+        path = Path(str(raw["path"]))
+        if not path.is_absolute():
+            path = plan_path.parent / path
+        path = path.resolve()
+        expected_sha256 = str(raw["sha256"]).strip().upper()
+        if (
+            not path.is_file()
+            or not SHA256_RE.fullmatch(expected_sha256)
+            or file_sha256(path) != expected_sha256
+        ):
+            raise ValueError(f"named material {label} SHA-256 differs")
+        _add_material_source_role(
+            source_roles,
+            path,
+            f"{collection}:{label.replace(' ', '_')}",
+        )
+        return path, expected_sha256
+
+    event_index, event_index_sha256 = bound_csv(
+        event_index_raw, "audience event index"
+    )
+    clip_index, clip_index_sha256 = bound_csv(
+        clip_index_raw, "audience clip index"
+    )
+    selected: dict[str, dict[str, str]] = {}
+    with event_index.open("r", encoding="utf-8-sig", newline="") as source:
+        for row in csv.DictReader(source):
+            event = str(row.get("event_name", "")).strip()
+            if event not in covered_events:
+                continue
+            if event in selected:
+                raise ValueError(
+                    f"audience event index contains duplicate event: {event}"
+                )
+            if (
+                str(row.get("production_state", ""))
+                != str(event_index_raw["production_state"])
+                or str(row.get("disposition", ""))
+                != str(event_index_raw["disposition"])
+                or str(row.get("classification", ""))
+                != str(event_index_raw["classification"])
+                or int(row.get("clip_count", 0))
+                != int(row.get("resolved_clip_count", -1))
+            ):
+                raise ValueError(
+                    f"audience event index state/coverage differs: {event}"
+                )
+            selected[event] = row
+    if set(selected) != set(covered_events):
+        raise ValueError(
+            "audience event index set differs: "
+            f"expected={sorted(covered_events)} actual={sorted(selected)}"
+        )
+
+    clips_by_event: dict[str, list[dict[str, str]]] = {
+        event: [] for event in covered_events
+    }
+    with clip_index.open("r", encoding="utf-8-sig", newline="") as source:
+        for row in csv.DictReader(source):
+            event = str(row.get("event_name", "")).strip()
+            if event not in clips_by_event:
+                continue
+            official_name = str(
+                row.get("official_name") or row.get("dgm_name") or ""
+            ).strip()
+            raw_path = str(
+                row.get("target_mp4") or row.get("source_mp4") or ""
+            ).strip()
+            if not official_name or not raw_path:
+                raise ValueError(
+                    f"audience clip identity differs: {event}"
+                )
+            clips_by_event[event].append(
+                {
+                    "dgm_name": official_name,
+                    "path": raw_path,
+                    "z2d_order": str(row.get("z2d_order", "")),
+                    "dgm_order": str(row.get("dgm_order", "")),
+                    "interval_confidence": str(
+                        row.get("interval_confidence", "")
+                    ),
+                }
+            )
+    for event, clips in clips_by_event.items():
+        if len(clips) != int(selected[event]["clip_count"]):
+            raise ValueError(
+                f"audience clip occurrence count differs: {event}"
+            )
+    payloads = {
+        event: {
+            "schema": "magireco-audience-event-component-inventory-v1",
+            "event": event,
+            "event_code_hex": selected[event].get("code_hex", ""),
+            "clips": clips_by_event[event],
+        }
+        for event in covered_events
+    }
+    return (
+        [
+            {
+                "label": "hash-bound exhaustive audience event ledger",
+                "path": str(event_index),
+                "sha256": event_index_sha256,
+            },
+            {
+                "label": "hash-bound audience event clip occurrence catalog",
+                "path": str(clip_index),
+                "sha256": clip_index_sha256,
+            },
+        ],
+        payloads,
+    )
+
+
 def capture_material_source_snapshot(
     paths: dict[Path, set[str]],
 ) -> dict[str, object]:
@@ -2566,9 +2707,17 @@ def _build_named_collection_in_place(
     if not collection:
         raise ValueError(f"named material plan has no collection: {plan_path}")
     collection = validate_output_identifier(collection, label="plan.collection")
-    derive_clips = (
+    derive_manifest_clips = (
         plan.get("derive_clips_from_covered_event_manifests") is True
     )
+    derive_audience_clips = (
+        plan.get("derive_clips_from_audience_event_catalog") is True
+    )
+    if derive_manifest_clips and derive_audience_clips:
+        raise ValueError(
+            "named material plan cannot mix manifest and audience derivation"
+        )
+    derive_clips = derive_manifest_clips or derive_audience_clips
     planned_clips = plan.get("clips", [])
     if derive_clips:
         if planned_clips not in (None, []):
@@ -2650,18 +2799,32 @@ def _build_named_collection_in_place(
         raise ValueError("named material plan covered_events contains invalid event")
     if len(set(scoped_events)) != len(scoped_events):
         raise ValueError("named material plan covered_events contains duplicates")
-    resolved_evidence_sources.extend(
-        resolve_covered_event_index(
-            plan.get("covered_event_index"),
+    if derive_audience_clips:
+        (
+            audience_evidence_sources,
+            evidence_payloads,
+        ) = resolve_audience_event_inventory(
+            event_index_raw=plan.get("audience_event_index"),
+            clip_index_raw=plan.get("audience_clip_index"),
             plan_path=resolved_plan,
             covered_events=scoped_events,
             source_roles=source_roles,
             collection=collection,
         )
-    )
-    if scoped_events:
+        resolved_evidence_sources.extend(audience_evidence_sources)
+    else:
+        evidence_payloads = {}
+        resolved_evidence_sources.extend(
+            resolve_covered_event_index(
+                plan.get("covered_event_index"),
+                plan_path=resolved_plan,
+                covered_events=scoped_events,
+                source_roles=source_roles,
+                collection=collection,
+            )
+        )
+    if scoped_events and not derive_audience_clips:
         evidence_events = set()
-        evidence_payloads: dict[str, dict] = {}
         for evidence in resolved_evidence_sources:
             evidence_path = Path(evidence["path"])
             if evidence_path.suffix.casefold() != ".json":
@@ -2687,7 +2850,7 @@ def _build_named_collection_in_place(
                 f"production manifests: declared={sorted(scoped_events)}, "
                 f"evidence={sorted(evidence_events)}"
             )
-    else:
+    elif not scoped_events:
         evidence_payloads = {}
     derived_source_paths: dict[str, set[str]] = {}
     if derive_clips:

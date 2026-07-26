@@ -124,6 +124,48 @@ def rehash(rows: Sequence[Mapping[str, str]]) -> None:
             raise RuntimeError(f"source changed during build: {row['label']}: {path}")
 
 
+def validate_audio_absence_evidence(
+    manifest: Mapping[str, Any],
+) -> list[dict[str, str]]:
+    """Revalidate all three current catalogs behind an exact no-audio claim."""
+
+    event = str(manifest.get("event", ""))
+    evidence = manifest.get("audio_absence_evidence")
+    rows = evidence.get("source_snapshots") if isinstance(evidence, Mapping) else None
+    expected_labels = {
+        "direct_parent_audio_catalog",
+        "child_z2d_audio_catalog",
+        "subtitle_timeline_catalog",
+    }
+    if (
+        not isinstance(rows, list)
+        or len(rows) != len(expected_labels)
+        or any(
+            not isinstance(row, Mapping)
+            or set(row) != {"label", "path", "sha256"}
+            for row in rows
+        )
+        or {str(row["label"]) for row in rows} != expected_labels
+    ):
+        raise ValueError(f"{event} audio absence source snapshots differ")
+    resolved: list[dict[str, str]] = []
+    for row in rows:
+        label = str(row["label"])
+        path = Path(str(row["path"]))
+        expected_sha256 = str(row["sha256"]).upper()
+        if (
+            not path.is_absolute()
+            or len(expected_sha256) != 64
+            or any(value not in "0123456789ABCDEF" for value in expected_sha256)
+        ):
+            raise ValueError(f"{event} audio absence source snapshot differs")
+        current = snapshot(path, label=label)
+        if current["sha256"] != expected_sha256:
+            raise ValueError(f"{event} audio absence source SHA-256 differs")
+        resolved.append(current)
+    return resolved
+
+
 def validate_reusable_clean_visual(
     *, event: str, prepared_path: Path, clean_visual: Path, clean_report: Path
 ) -> None:
@@ -296,8 +338,21 @@ def prepare_manifest(
         clip["source_sha256"] = clip_snapshot["sha256"]
 
     audio = prepared.get("audio")
-    if not isinstance(audio, list) or not audio:
-        raise ValueError(f"{event} has no audio rows")
+    if not isinstance(audio, list):
+        raise ValueError(f"{event} has invalid audio rows")
+    verified_no_event_audio = (
+        not audio
+        and gates.get("verified_no_event_audio") is True
+        and isinstance(prepared.get("audio_absence_evidence"), Mapping)
+        and prepared["audio_absence_evidence"].get("status")
+        == "hash_bound_zero_matches"
+    )
+    if not audio and not verified_no_event_audio:
+        raise ValueError(
+            f"{event} has no audio rows without exact absence evidence"
+        )
+    if verified_no_event_audio:
+        sources.extend(validate_audio_absence_evidence(prepared))
     request_ids = {str(row.get("request_id")) for row in audio if isinstance(row, Mapping)}
     permitted_forbidden_audio_request_ids = (
         permitted_forbidden_audio_request_ids or set()

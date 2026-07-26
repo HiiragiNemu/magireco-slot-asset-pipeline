@@ -1,0 +1,42 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v48-ac0504-ac4921-native416x232",
+  "checkpoint_label": "v48",
+  "start_upload_id": 100,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V48.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v48_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "DBB0F84FE029D73D4DBFFF0A9D26DF5550A162EF837FEA8321419C06CB5B73DF"
+  },
+  "specific_exclusions": [
+    "ac0504 四个事件的 variant 区间仍有 duration_interval_ambiguous；本批只保存 11 个精确原始组件，不重建或冒充事件时间线。",
+    "ac4921 的 416x120 结果框组件在独立批次 U102；不得与 416x232 角色动作机械拼接或缩放。",
+    "本批是 visual-only 素材审查，不包含对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac0504_win_raw_components_v1",
+      "title": "胜利演出原始视觉组件",
+      "family": "ac0504",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v48_ac0504_ac4921_split_components_review_20260727\\ac0504_win_raw_components_v1\\material_collection_manifest.json",
+        "sha256": "0A80D6A1DAB8B9710DDECA070233C55EAF29F760007E2F5B0480480CB292BABD"
+      },
+      "output_sha256": "3E528BDA567644148B7D7CBDC97E6F8F62F0C7B1FBAF1547FA0E8337996559C4"
+    },
+    {
+      "collection": "ac4921_character_action_components_v1",
+      "title": "角色动作视觉组件",
+      "family": "ac4921",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v48_ac0504_ac4921_split_components_review_20260727\\ac4921_character_action_components_v1\\material_collection_manifest.json",
+        "sha256": "FE99294863C2455CC58D61DA51742467398D1311206886E5C92BA11B3C248A68"
+      },
+      "output_sha256": "B9B53AE9ACF967B7F02B22EDA2E47FB8E68C4A1AB44E7B29994B70B89C333173"
+    }
+  ]
+}

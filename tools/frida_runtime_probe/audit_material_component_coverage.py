@@ -108,16 +108,49 @@ def audit(
         label="component coverage event ledger",
         plan_dir=plan_dir,
     )
+    audience_clip_raw = plan.get("audience_clip_index")
+    audience_mode = audience_clip_raw is not None
+    audience_clip_path: Path | None = None
+    audience_clips_by_event: dict[str, list[dict[str, str]]] = {}
+    audience_clip_snapshot: dict[str, str] | None = None
+    if audience_mode:
+        if not isinstance(audience_clip_raw, Mapping):
+            raise ValueError("audience component clip index differs")
+        audience_clip_path, audience_clip_snapshot = _bound(
+            audience_clip_raw,
+            label="component coverage audience clip index",
+            plan_dir=plan_dir,
+        )
     family = str(plan.get("family", ""))
     expected_state = str(plan.get("expected_production_state", ""))
     expected_disposition = str(plan.get("expected_disposition", ""))
+    expected_classification = str(plan.get("expected_classification", ""))
     expected_count = int(plan.get("expected_event_count", 0))
+    expected_events_raw = plan.get("expected_events")
+    expected_events = (
+        {str(value) for value in expected_events_raw}
+        if isinstance(expected_events_raw, list)
+        else None
+    )
+    if expected_events is not None and (
+        len(expected_events) != len(expected_events_raw)
+        or any(not EVENT_PATTERN.fullmatch(event) for event in expected_events)
+    ):
+        raise ValueError("component coverage expected event set differs")
     rows = [
         row
         for row in _read_csv(ledger_path)
         if row.get("family") == family
         and row.get("production_state") == expected_state
         and row.get("disposition") == expected_disposition
+        and (
+            not expected_classification
+            or row.get("classification") == expected_classification
+        )
+        and (
+            expected_events is None
+            or row.get("event_name") in expected_events
+        )
     ]
     if (
         not family
@@ -127,8 +160,72 @@ def audit(
             not EVENT_PATTERN.fullmatch(str(row.get("event_name", "")))
             for row in rows
         )
+        or (
+            expected_events is not None
+            and {str(row.get("event_name", "")) for row in rows}
+            != expected_events
+        )
     ):
         raise ValueError("component coverage ledger event set differs")
+    if audience_mode:
+        assert audience_clip_path is not None
+        audience_clips_by_event = {
+            str(row["event_name"]): [] for row in rows
+        }
+        with audience_clip_path.open(
+            "r", encoding="utf-8-sig", newline=""
+        ) as handle:
+            for clip in csv.DictReader(handle):
+                event = str(clip.get("event_name", ""))
+                if event not in audience_clips_by_event:
+                    continue
+                source_name = str(
+                    clip.get("official_name") or clip.get("dgm_name") or ""
+                ).strip()
+                raw_path = str(
+                    clip.get("target_mp4") or clip.get("source_mp4") or ""
+                ).strip()
+                if not source_name or not raw_path:
+                    raise ValueError(
+                        f"audience component clip identity differs: {event}"
+                    )
+                audience_clips_by_event[event].append(
+                    {"dgm_name": source_name, "path": raw_path}
+                )
+        for row in rows:
+            event = str(row["event_name"])
+            if (
+                int(row.get("clip_count", 0))
+                != int(row.get("resolved_clip_count", -1))
+                or len(audience_clips_by_event[event])
+                != int(row.get("clip_count", 0))
+            ):
+                raise ValueError(
+                    f"audience component occurrence set differs: {event}"
+                )
+
+    source_root_overrides_raw = plan.get("source_root_overrides", [])
+    if not isinstance(source_root_overrides_raw, list):
+        raise ValueError("component coverage source-root overrides differ")
+    source_root_overrides: list[tuple[Path, Path]] = []
+    for raw in source_root_overrides_raw:
+        if not isinstance(raw, Mapping):
+            raise ValueError("component coverage source-root override differs")
+        old = Path(str(raw.get("from", "")))
+        new = Path(str(raw.get("to", ""))).resolve()
+        if not old.is_absolute() or not new.is_dir():
+            raise ValueError("component coverage source-root override differs")
+        source_root_overrides.append((old, new))
+
+    def resolve_source_path(raw_path: str) -> Path:
+        path = Path(raw_path)
+        for old, new in source_root_overrides:
+            try:
+                relative = path.relative_to(old)
+            except ValueError:
+                continue
+            return (new / relative).resolve()
+        return path.resolve()
 
     catalog_declarations = plan.get("component_catalogs")
     if not isinstance(catalog_declarations, list) or len(catalog_declarations) < 2:
@@ -143,6 +240,8 @@ def audit(
         },
         ledger_snapshot,
     ]
+    if audience_clip_snapshot is not None:
+        snapshots.append(audience_clip_snapshot)
     for raw in catalog_declarations:
         if not isinstance(raw, Mapping):
             raise ValueError("component catalog declaration is not an object")
@@ -223,31 +322,43 @@ def audit(
         for value in catalog_by_name.values()
         if value["role"] == "event_components"
     ]
-    if len(event_component_catalogs) != 1:
-        raise ValueError("exactly one event-components catalog is required")
-    event_catalog = event_component_catalogs[0]
-    event_map_raw = event_catalog["component_event_clip_map"]
-    if not isinstance(event_map_raw, Mapping):
-        raise ValueError("event-components catalog lacks component event map")
+    if not event_component_catalogs:
+        raise ValueError("at least one event-components catalog is required")
+    for event_catalog in event_component_catalogs:
+        if not isinstance(
+            event_catalog["component_event_clip_map"], Mapping
+        ):
+            raise ValueError(
+                "event-components catalog lacks component event map"
+            )
 
     used_by_catalog: dict[str, set[str]] = {
         name: set() for name in catalog_by_name
     }
     event_rows: list[dict[str, Any]] = []
-    event_names_with_local_components: set[str] = set()
+    events_with_catalog_components: dict[str, set[str]] = {
+        catalog["name"]: set() for catalog in event_component_catalogs
+    }
     for row in sorted(rows, key=lambda value: str(value["event_name"])):
         event = str(row["event_name"])
-        manifest_path = Path(str(row.get("manifest_path", ""))).resolve()
-        manifest_sha256 = str(row.get("manifest_sha256", "")).upper()
-        if (
-            not manifest_path.is_file()
-            or file_sha256(manifest_path) != manifest_sha256
-        ):
-            raise ValueError(f"event manifest snapshot differs: {event}")
-        manifest = read_json(manifest_path)
-        if manifest.get("event") != event:
-            raise ValueError(f"event manifest identity differs: {event}")
-        clips = manifest.get("clips")
+        manifest_path: Path | None = None
+        manifest_sha256 = ""
+        if audience_mode:
+            clips: Any = audience_clips_by_event[event]
+        else:
+            manifest_path = Path(
+                str(row.get("manifest_path", ""))
+            ).resolve()
+            manifest_sha256 = str(row.get("manifest_sha256", "")).upper()
+            if (
+                not manifest_path.is_file()
+                or file_sha256(manifest_path) != manifest_sha256
+            ):
+                raise ValueError(f"event manifest snapshot differs: {event}")
+            manifest = read_json(manifest_path)
+            if manifest.get("event") != event:
+                raise ValueError(f"event manifest identity differs: {event}")
+            clips = manifest.get("clips")
         if not isinstance(clips, list) or not clips:
             raise ValueError(f"event has no component clips: {event}")
         per_catalog: dict[str, list[str]] = {
@@ -263,7 +374,7 @@ def audit(
                     f"event clip is absent from split catalogs: {event} {source_name}"
                 )
             source = catalog_by_name[catalog_name]["sources"][source_name]
-            clip_path = Path(str(clip.get("path", ""))).resolve()
+            clip_path = resolve_source_path(str(clip.get("path", "")))
             if (
                 clip_path != Path(str(source["path"])).resolve()
                 or file_sha256(clip_path)
@@ -274,39 +385,54 @@ def audit(
                 )
             per_catalog[catalog_name].append(source_name)
             used_by_catalog[catalog_name].add(source_name)
-        local_names = per_catalog[event_catalog["name"]]
-        mapped_raw = event_map_raw.get(event, [])
-        if not isinstance(mapped_raw, list):
-            raise ValueError(f"component event map row differs: {event}")
-        mapped_names = [str(value) for value in mapped_raw]
-        if set(mapped_names) != set(local_names) or len(mapped_names) != len(
-            set(mapped_names)
-        ):
-            raise ValueError(f"component event map is incomplete: {event}")
-        if local_names:
-            event_names_with_local_components.add(event)
-        event_rows.append(
-            {
-                "event": event,
-                "event_manifest_path": str(manifest_path),
-                "event_manifest_sha256": manifest_sha256,
-                "catalog_sources": {
-                    name: names
-                    for name, names in per_catalog.items()
-                    if names
-                },
-            }
-        )
-        snapshots.append(
-            {
-                "label": f"{event} production manifest",
-                "path": str(manifest_path),
-                "sha256": manifest_sha256,
-            }
-        )
+        for event_catalog in event_component_catalogs:
+            catalog_name = event_catalog["name"]
+            local_names = per_catalog[catalog_name]
+            event_map_raw = event_catalog["component_event_clip_map"]
+            mapped_raw = event_map_raw.get(event, [])
+            if not isinstance(mapped_raw, list):
+                raise ValueError(f"component event map row differs: {event}")
+            mapped_names = [str(value) for value in mapped_raw]
+            if set(mapped_names) != set(local_names) or len(
+                mapped_names
+            ) != len(set(mapped_names)):
+                raise ValueError(
+                    f"component event map is incomplete: {event} {catalog_name}"
+                )
+            if local_names:
+                events_with_catalog_components[catalog_name].add(event)
+        event_row = {
+            "event": event,
+            "catalog_sources": {
+                name: names
+                for name, names in per_catalog.items()
+                if names
+            },
+        }
+        if manifest_path is not None:
+            event_row.update(
+                {
+                    "event_manifest_path": str(manifest_path),
+                    "event_manifest_sha256": manifest_sha256,
+                }
+            )
+            snapshots.append(
+                {
+                    "label": f"{event} production manifest",
+                    "path": str(manifest_path),
+                    "sha256": manifest_sha256,
+                }
+            )
+        event_rows.append(event_row)
 
-    if event_catalog["component_events"] != event_names_with_local_components:
-        raise ValueError("event-components catalog event set differs")
+    for event_catalog in event_component_catalogs:
+        if event_catalog["component_events"] != events_with_catalog_components[
+            event_catalog["name"]
+        ]:
+            raise ValueError(
+                "event-components catalog event set differs: "
+                f"{event_catalog['name']}"
+            )
     catalog_results = []
     for name, catalog in catalog_by_name.items():
         all_sources = set(catalog["sources"])

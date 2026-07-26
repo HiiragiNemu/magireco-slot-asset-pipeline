@@ -20,6 +20,7 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     apply_missing_voice_subtitle_overrides,
     apply_speaker_identity_overrides,
     attach_speaker_evidence,
+    build_event_pcm_or_verified_silence,
     build_family_editions,
     display_text,
     edition_cues,
@@ -28,6 +29,8 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     load_speaker_registry,
     load_speaker_identity_overrides,
     normalize_editions,
+    is_evidence_bound_silent_manifest,
+    is_aac_silence_floor,
     snapshot,
     validate_dirinfo_source_evidence,
     validate_series_proposal_bindings,
@@ -48,6 +51,54 @@ def write_json(path: Path, value: object) -> None:
 
 
 class NoBgmStoryFamilyEditionTests(unittest.TestCase):
+    def test_verified_silence_requires_three_zero_match_snapshots(self) -> None:
+        manifest = {
+            "audio": [],
+            "quality_gates": {"verified_no_event_audio": True},
+            "audio_absence_evidence": {
+                "status": "hash_bound_zero_matches",
+                "direct_parent_audio_matches": 0,
+                "child_audio_matches": 0,
+                "subtitle_matches": 0,
+                "source_snapshots": [{}, {}, {}],
+            },
+        }
+        self.assertTrue(is_evidence_bound_silent_manifest(manifest))
+        manifest["audio_absence_evidence"]["child_audio_matches"] = 1
+        self.assertFalse(is_evidence_bound_silent_manifest(manifest))
+
+    def test_verified_silent_pcm_is_exact_zero_grid(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "silent.f32le"
+            event = {
+                "event": "ac4002_001",
+                "presentation_samples": 1600,
+                "audio_layers": [],
+                "verified_no_event_audio": True,
+                "audio_absence_evidence": {
+                    "status": "hash_bound_zero_matches"
+                },
+            }
+            audit = build_event_pcm_or_verified_silence(
+                event, output=output, ffmpeg="unused"
+            )
+            self.assertEqual(output.stat().st_size, 1600 * 2 * 4)
+            self.assertEqual(output.read_bytes(), bytes(output.stat().st_size))
+            self.assertTrue(audit["verified_digital_silence"])
+
+            event["verified_no_event_audio"] = False
+            with self.assertRaisesRegex(RuntimeError, "without exact absence"):
+                build_event_pcm_or_verified_silence(
+                    event, output=output, ffmpeg="unused"
+                )
+
+    def test_aac_silence_floor_is_strict(self) -> None:
+        self.assertTrue(is_aac_silence_floor({"max_volume_db": "-inf"}))
+        self.assertTrue(is_aac_silence_floor({"max_volume_db": "-91.0"}))
+        self.assertTrue(is_aac_silence_floor({"max_volume_db": "-90.0"}))
+        self.assertFalse(is_aac_silence_floor({"max_volume_db": "-89.9"}))
+        self.assertFalse(is_aac_silence_floor({"max_volume_db": "unknown"}))
+
     def test_exact_audience_event_duplicates_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

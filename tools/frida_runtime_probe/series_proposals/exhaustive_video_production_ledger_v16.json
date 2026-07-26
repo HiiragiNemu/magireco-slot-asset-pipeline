@@ -1,0 +1,143 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v15.json",
+    "sha256": "F42BBD0D4E1DBE5833EA6A229F7166DBD1113FF99502D7BD6BAC28730F57ADDB"
+  },
+  "checkpoint_id": "20260727-v48-silent-story-and-split-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v15 records plus eight native 416x232 single-DirInfo-row audience products whose three current audio/subtitle catalogs have hash-bound zero matches, four ac0504 raw component events, and twenty-two ac4921 mixed-size events covered by separate native 416x232 and 416x120 component catalogs. Silent events receive 48 kHz stereo AAC silence only after exact absence proof; ac7002 sibling rows and ac4921 mixed dimensions are never concatenated.",
+  "current_production_roots": [
+    {
+      "label": "v24 mass no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v25 next-story no-BGM families",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v25_next_story_20260724",
+      "manifest_glob": "**/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v30 current approved-contract ac0908/ac7210 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726",
+      "manifest_glob": "**/*MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v31 mature ac4902/ac7206 routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v32 ac0908 complete-entry routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v32_ac0908_complete_entry_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v33 ac4903 mature clean routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v33_ac4903_mature_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v34 ac6007 finite clean route candidates",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v34_p19_ac6007_complete_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v35 ac0911 mature clean routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v35_ac0911_mature_routes_20260726",
+      "manifest_glob": "ac*/BATCH_MANIFEST.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v43 independent event-exact native 512 story review products",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727",
+      "manifest_glob": "ac*_full_no_bgm_editions_v1/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v47 exact-silent independent native 416 audience products",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727",
+      "manifest_glob": "ac*_full_no_bgm_editions_v1/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    }
+  ],
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v40 ac7204 native 416 result-card material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v40_native416_ac7204_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v41 ac4904 native 416 SU window material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v41_native416_ac4904_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v42 remaining native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v44 native 512 chance-button visual-only material catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v44_native512_chance_buttons_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v45 remaining pure native 512 visual-only material catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v46 ac5102 native 416 split component visual catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v46_ac5102_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v48 ac0504 and ac4921 native split component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v48_ac0504_ac4921_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    }
+  ],
+  "material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v46_ac5102_20260727\\ac5102_split_native_components_v1.json",
+      "sha256": "53B179EFD8CB2305B9AD62ADE8AB39A8FD29F8B6999EE3D300B647029174BE6B"
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v48_ac4921_20260727\\ac4921_split_native_components_v1.json",
+      "sha256": "904D950B8890869B464E3A0FE4A56436D3A7F291C05E53F0C42C66C916690C2B"
+    }
+  ]
+}

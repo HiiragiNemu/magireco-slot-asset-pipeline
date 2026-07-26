@@ -3,6 +3,19 @@
 Original date: 2026-06-28
 Current checkpoint: 2026-07-24
 
+Current production delta (2026-07-27):
+
+```text
+docs/research/2026-07-27-silent-native416-and-split-material-checkpoint-v48.md
+```
+
+The owner lifted the production freeze.  Continue from
+`production_ledger_v16_20260727`; keep the old freeze package immutable.
+The only current v48 upload guide is `upload_guide_v48_final_20260727`.
+P16/P17/P18 and unresolved child-local timing remain fail-closed.  Formal
+with-BGM production still has zero ready candidates and starts only after the
+discovered no-BGM inventory is produced or precisely blocked.
+
 The newest transfer delta is:
 
 ```text

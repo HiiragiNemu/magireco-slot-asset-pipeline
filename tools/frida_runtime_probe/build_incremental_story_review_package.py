@@ -132,6 +132,29 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
     start_id = int(plan.get("start_upload_id", 0))
     if start_id < 1:
         raise ValueError("start_upload_id must be positive")
+    expected_dimensions = plan.get(
+        "expected_dimensions", {"width": 512, "height": 288}
+    )
+    if (
+        not isinstance(expected_dimensions, dict)
+        or set(expected_dimensions) != {"width", "height"}
+        or int(expected_dimensions["width"]) <= 0
+        or int(expected_dimensions["height"]) <= 0
+    ):
+        raise ValueError("incremental story expected dimensions differ")
+    expected_width = int(expected_dimensions["width"])
+    expected_height = int(expected_dimensions["height"])
+    no_dialogue_aliases = plan.get("no_dialogue_aliases") is True
+    checkpoint_label = str(plan.get("checkpoint_label", "")).strip() or "incremental"
+    source_guide_copy_name = str(
+        plan.get("source_guide_copy_name", "SOURCE_GLOBAL_UPLOAD_GUIDE.json")
+    ).strip()
+    if (
+        not re.fullmatch(r"[A-Za-z0-9_.-]+\.json", source_guide_copy_name)
+        or "/" in source_guide_copy_name
+        or "\\" in source_guide_copy_name
+    ):
+        raise ValueError("incremental story guide copy name differs")
 
     prepared: list[dict] = []
     seen_families: set[str] = set()
@@ -168,6 +191,17 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             or manifest.get("publishable") is not False
         ):
             raise ValueError(f"{family} story release contract differs")
+        if no_dialogue_aliases and (
+            manifest.get("dialogue_cue_count") != 0
+            or set(manifest.get("verified_no_event_audio_events", []))
+            != {family}
+            or any(
+                manifest.get("subtitle_profiles", {}).get(edition)
+                != "no_dialogue_cross_target_alias"
+                for edition in ("ja", "zh")
+            )
+        ):
+            raise ValueError(f"{family} no-dialogue alias contract differs")
         artifacts = manifest.get("artifacts")
         if not isinstance(artifacts, dict):
             raise ValueError(f"{family} story artifacts differ")
@@ -201,8 +235,8 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                 raise ValueError(f"{family} {edition} upload-guide state differs")
             probe = probe_video(source, ffprobe)
             if (
-                probe["width"] != 512
-                or probe["height"] != 288
+                probe["width"] != expected_width
+                or probe["height"] != expected_height
                 or probe["frame_rate"] != "30/1"
                 or probe["video_codec"] != "h264"
                 or probe["audio_codec"] != "aac"
@@ -221,6 +255,10 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
         durations = {round(row["duration_seconds"], 3) for row in editions.values()}
         if len(durations) != 1:
             raise ValueError(f"{family} edition durations differ")
+        if no_dialogue_aliases and len(
+            {row["sha256"] for row in editions.values()}
+        ) != 1:
+            raise ValueError(f"{family} no-dialogue edition hashes differ")
         prepared.append(
             {
                 "family": family,
@@ -371,7 +409,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             alias_rows,
         )
         shutil.copy2(plan_path, manifests / "SOURCE_INCREMENTAL_PLAN.json")
-        shutil.copy2(guide_path, manifests / "SOURCE_GLOBAL_UPLOAD_GUIDE_V43.json")
+        shutil.copy2(guide_path, manifests / source_guide_copy_name)
 
         table = [
             "| U号 | 作品 | none | JA | ZH | 状态 |",
@@ -392,17 +430,29 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
         (manifests / "START_HERE_UPLOAD_GUIDE.md").write_text(
             "\n".join(
                 [
-                    "# v43 增量人工审查与上传指南",
+                    f"# {checkpoint_label} 增量人工审查与上传指南",
                     "",
-                    "本批没有立即可上传文件；`00_UPLOAD_NOW` 为空只表示这 12 "
-                    "个 exact MP4 尚未获得人工播放批准，绝不表示 none 未生产。",
+                    "本批没有立即可上传文件；`00_UPLOAD_NOW` 为空只表示这 "
+                    f"{len(index_rows)} 个 exact MP4 尚未获得人工播放批准，"
+                    "绝不表示 none 未生产。",
                     "",
                     "请先完整播放：",
                     f"`{output_root}\\01_REVIEW_STORY\\batch_001`。",
                     "",
-                    "4 个作品均为独立 event-exact 原生 512×288 单事件产品，"
-                    "每个都有 none/JA/ZH；它们不宣称完整 natural family，也"
-                    "没有把互斥路线机械串联。",
+                    f"{len(prepared)} 个作品均为独立 event-exact 原生 "
+                    f"{expected_width}×{expected_height} 单事件产品，每个都有 "
+                    "none/JA/ZH；它们不宣称完整 natural family，也没有把"
+                    "互斥路线机械串联。",
+                    *(
+                        [
+                            "",
+                            "本批三套证据目录均精确无事件音频或字幕命中；"
+                            "none/JA/ZH 是面向不同目标 BV 的合法同哈希硬链接"
+                            "别名，不生成空 SRT，也不伪造字幕或 SE。",
+                        ]
+                        if no_dialogue_aliases
+                        else []
+                    ),
                     "",
                     *table,
                     "",
@@ -416,24 +466,31 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             ),
             encoding="utf-8",
         )
-        (manifests / "HUMAN_REVIEW_CHECKLIST.md").write_text(
-            "# v43 剧情人工播放检查表\n\n"
-            "- [ ] 每个版本从头到尾完整播放，无截断、异常黑帧或卡死\n"
-            "- [ ] 角色开口、对白、SE 与字幕时序自然\n"
+        timing_check = (
+            "- [ ] 三轨均无烧录字幕；AAC 仅为经证据批准的 48kHz stereo "
+            "silence presentation，未伪造对白或 SE\n"
+            if no_dialogue_aliases
+            else "- [ ] 角色开口、对白、SE 与字幕时序自然\n"
             "- [ ] none 无烧录字幕；JA/ZH 字幕语言与目标轨一致\n"
-            "- [ ] ac7115_001 的 3 条补齐语音均有对应字幕且无抢跑\n"
-            "- [ ] 原生 512×288、30fps、H.264/AAC 48kHz stereo，无 upscale\n"
+        )
+        (manifests / "HUMAN_REVIEW_CHECKLIST.md").write_text(
+            f"# {checkpoint_label} 剧情人工播放检查表\n\n"
+            "- [ ] 每个版本从头到尾完整播放，无截断、异常黑帧或卡死\n"
+            f"{timing_check}"
+            f"- [ ] 原生 {expected_width}×{expected_height}、30fps、"
+            "H.264/AAC 48kHz stereo，无 upscale\n"
             "- [ ] 单事件边界自然，但不把它误认作完整 family\n"
             "- [ ] 按 `UPLOAD_INDEX.csv` 的 exact SHA-256 记录批准或失败\n",
             encoding="utf-8",
         )
         (manifests / "EXCLUSIONS.md").write_text(
-            "# v43 明确排除项\n\n"
+            f"# {checkpoint_label} 明确排除项\n\n"
             "- P16/ac6003、P17/ac6004、P18/ac6005：继续隔离。\n"
             "- 所有 superseded、quarantine、旧错误或已投稿 exact hash。\n"
             "- 未闭合 child-local Z2D 音频／字幕时序项目。\n"
             "- 互斥路线机械串联、完整 family 的无证据外推、任何 upscale。\n"
-            "- 本批仅含 4 个独立 event-exact 单事件；其他 family 继续由总账"
+            f"- 本批仅含 {len(prepared)} 个独立 event-exact 单事件；"
+            "其他 family 继续由总账"
             "分流，不在这里冒充完成。\n",
             encoding="utf-8",
         )

@@ -1,0 +1,43 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0504_win_raw_components_v1",
+  "classification": "ac0504_native416_visual_component_catalog",
+  "evidence": "Four fully resolved ac0504 audience events reuse one common native 416x232 visual component set and four WIN variants. The variant event intervals are duration_interval_ambiguous, so this product preserves each exact raw component once and does not reconstruct an event timeline.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac0504_017",
+    "ac0504_024",
+    "ac0504_025",
+    "ac0504_026"
+  ],
+  "derive_clips_from_audience_event_catalog": true,
+  "audience_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v15_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "046DB568396F13C8A46AE286A073297689227EF41E084279198337DCF93D15AE",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "classification": "mixed_full_frame_and_components"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "component and mixed audience-event catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\component_or_mixed_review.csv",
+      "sha256": "5EF3F01F9E766A6AFCE061D6965BD6826B58B314E5EA81A88291737EFFA10FCF"
+    },
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

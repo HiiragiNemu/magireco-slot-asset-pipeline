@@ -1,0 +1,75 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v46_20260727.json",
+    "sha256": "0FF3E191AE6D68B908D5B27A15DE58A6B1FAAA831A71EC435A56F3712CEE9D34"
+  },
+  "checkpoint_id": "20260727-v48-silent-story-and-split-components",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v16_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "BC308E19C8170350A52A2AA4AB7BB82C4B5CB317625F2349F3604303E107A163"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v16_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "68890B8F9FD40AAA0AD4711E18A82ECDDA11C2DC56FC35E4A921F4788FBE0270"
+    }
+  },
+  "incremental_story_products": {
+    "ac7114_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "SP剧情3 鹤乃"
+    },
+    "ac7115_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "枫的魔女化身"
+    },
+    "ac7115_013": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "黑江与环彩羽迎战魔女化身"
+    },
+    "ac7116_001": {
+      "root_label": "v43 independent event-exact native 512 story review products",
+      "title": "美冬与桃子"
+    },
+    "ac4002_001": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "回廊追逐动画",
+      "no_dialogue_aliases": true
+    },
+    "ac4003_001": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "游乐园追逐动画",
+      "no_dialogue_aliases": true
+    },
+    "ac4004_001": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "火焰中的魔法少女动画",
+      "no_dialogue_aliases": true
+    },
+    "ac7002_001": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "夜空魔女登场短片",
+      "no_dialogue_aliases": true
+    },
+    "ac7002_002": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "魔法少女迎战魔女短片",
+      "no_dialogue_aliases": true
+    },
+    "ac7002_003": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "白色斗篷魔法少女飞行战斗",
+      "no_dialogue_aliases": true
+    },
+    "ac7002_004": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "魔女追逐战动画",
+      "no_dialogue_aliases": true
+    },
+    "ac7002_005": {
+      "root_label": "v47 exact-silent independent native 416 audience products",
+      "title": "红夜魔女决战动画",
+      "no_dialogue_aliases": true
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v48-ac4921-native416x120",
+  "checkpoint_label": "v48",
+  "start_upload_id": 102,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 120
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V48.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v48_final_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "DBB0F84FE029D73D4DBFFF0A9D26DF5550A162EF837FEA8321419C06CB5B73DF"
+  },
+  "specific_exclusions": [
+    "本批只含 416x120 结果框原始组件；对应 416x232 角色动作组件在 U101。",
+    "22 个来源事件的两种原生尺寸由 coverage audit 分开闭合，禁止机械拼接、拉伸、补边或 upscale。",
+    "本批是 visual-only 素材审查，不包含对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac4921_result_frame_components_v1",
+      "title": "结果框视觉组件",
+      "family": "ac4921",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v48_ac0504_ac4921_split_components_review_20260727\\ac4921_result_frame_components_v1\\material_collection_manifest.json",
+        "sha256": "2978969D3C80E2D05BDC9C221ABE385467A9C3767B23F6B3EFAD080E600A2F2C"
+      },
+      "output_sha256": "322968D878FE085DC025192E0B7E250A98701CE06A960D5D5D7D06BC324669C9"
+    }
+  ]
+}

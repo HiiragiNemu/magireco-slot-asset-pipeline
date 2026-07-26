@@ -9,6 +9,36 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
+## 0. 2026-07-27 当前检查点 v48
+
+项目所有者已解除生产冻结。冻结交接根
+`bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
+当前产线。最新穷尽总账为 `production_ledger_v16_20260727`；从这里继续所有
+已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
+`upload_guide_v48_final_20260727`，中间 v48 指南与无 `final` 后缀的增量审查根
+均已标 superseded。
+
+v48 已产 8 个精确无对白的原生 416x232 单事件产品（ac4002_001、
+ac4003_001、ac4004_001、ac7002_001 至 `_005`），none/JA/ZH 共 24 个上传
+入口；三轨在每个产品内是合法同哈希 hardlink 别名，全部待人工播放。另有
+ac0504 与 ac4921 的 3 个分尺寸 visual-only 素材审查产品。当前审查 ID 为
+U092-U102，路径与哈希见
+`docs/research/2026-07-27-silent-native416-and-split-material-checkpoint-v48.md`。
+P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
+Z2D 时序继续 fail closed。
+
+运行时环境前提已经纠正：Frida 17.5.2 在当前 MuMu Android 15 上会污染
+zygote 并导致子进程在 frida-agent 内 fault。唯一验证组合为 host Frida
+17.16.4 / frida-tools 14.10.4、device server 17.16.4、ARM64 Gadget 17.16.4。
+只允许 ADB `pidof` 后的已知数字 PID 单 session 定向 attach；禁止进程枚举、
+spawn、zygote attach、双 27043 session 和宽泛 observer。完整记录在
+`D:\magia\MyProducts\casino\runtime_recovery_20260725\
+RUNTIME_RECOVERY_FRIDA_17_16_4.md`，Git 不上传二进制。
+
+正式 with-BGM 候选仍为 0。只有所有已发现 no-BGM 项目已产或有精确 blocker
+后才切换；BGM 必须绑定曲目身份、入口相位、音量、fade/duck/stop、来源哈希
+和路线时间线。
+
 ## 1. 长期目标
 
 基于游戏运行时和可验证静态证据，在外部复刻《魔法纪录 Slot》的媒体调度，保存

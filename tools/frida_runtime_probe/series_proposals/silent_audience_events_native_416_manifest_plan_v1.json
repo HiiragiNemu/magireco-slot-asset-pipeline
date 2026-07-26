@@ -1,0 +1,157 @@
+{
+  "schema": "magireco-silent-audience-event-manifest-plan-v1",
+  "plan_id": "silent_audience_events_native_416_manifest_plan_v1",
+  "scope": "Eight native 416x232, single-DirInfo-row audience events with exact full-frame intervals and zero exact matches in all three audio/subtitle evidence catalogs.",
+  "inputs": {
+    "audience_event_catalog": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+      "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+    },
+    "audience_event_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "audience_event_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v15_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "046DB568396F13C8A46AE286A073297689227EF41E084279198337DCF93D15AE"
+    },
+    "dirinfo_routes": {
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    "dirinfo_route_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v15_20260727\\DIRINFO_ROUTE_LEDGER.csv",
+      "sha256": "B760367EC09AFFBB05DF08A187F785AE03CADAF733F2B2B9A463A0A55B9FF967"
+    },
+    "direct_parent_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+      "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+    },
+    "child_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    "subtitles": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    }
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "events": [
+    {
+      "event": "ac4002_001",
+      "title_zh": "回廊追逐动画 ac4002",
+      "dirinfo": {
+        "kind": 106,
+        "row_index": 0,
+        "event_info_index": 4799,
+        "code_hex": "0x6264424b63396a41"
+      },
+      "source_sha256_by_official_name": {
+        "ac4002_001": "09C465F9C479DB2A4C8D46816B2C9B725CD9FAC1D118EB9C66AB5E140761E092"
+      }
+    },
+    {
+      "event": "ac4003_001",
+      "title_zh": "游乐园追逐动画 ac4003",
+      "dirinfo": {
+        "kind": 107,
+        "row_index": 0,
+        "event_info_index": 4800,
+        "code_hex": "0x5a44793524363544"
+      },
+      "source_sha256_by_official_name": {
+        "ac4003_001_c01": "75698871D2704F1129087583D6B4DA0126FFD18878A94B884A0FA73D25B99D87",
+        "ac4003_001_c02": "4636E41D0A40588334DDB1FD957B60A77FDE1BCDB58138343477B5F1A960D2DA",
+        "ac4003_001_c03": "8C76DBE62ACB14DAB3D14E1766AA360E7A1021D4E4BA0D380ED0663FB2174CA1",
+        "ac4003_001_c04": "F52DAA87EE98FC150CDE5C6AF64439FB97D07737455EDF03AE48A09215AEB4A3",
+        "ac4003_001_c05": "E9703A2BD45D3939D649756029FF61E12D98555174E172C48AD41F157165A9E9"
+      }
+    },
+    {
+      "event": "ac4004_001",
+      "title_zh": "火焰中的魔法少女动画 ac4004",
+      "dirinfo": {
+        "kind": 108,
+        "row_index": 0,
+        "event_info_index": 4801,
+        "code_hex": "0x767630362566656a"
+      },
+      "source_sha256_by_official_name": {
+        "ac4004_c01": "F7AC84DC83F96AE0AC29720CB222941F805CCA520EC35E06EB04813198A362A4",
+        "ac4004_c01_LP": "79D18E1039F2B7A932771B7593F40BE14053845B2F58D5F8F8CF4270A2A0974C"
+      }
+    },
+    {
+      "event": "ac7002_001",
+      "title_zh": "夜空魔女登场短片 ac7002",
+      "dirinfo": {
+        "kind": 177,
+        "row_index": 0,
+        "event_info_index": 7884,
+        "code_hex": "0x386a5a256c6f4249"
+      },
+      "source_sha256_by_official_name": {
+        "ac7002_001_c01": "FDFFE455AFE563B5C8CEE1F81B360A686A09DA0FB9E043913B5C817751164272"
+      }
+    },
+    {
+      "event": "ac7002_002",
+      "title_zh": "魔法少女迎战魔女短片 ac7002",
+      "dirinfo": {
+        "kind": 177,
+        "row_index": 1,
+        "event_info_index": 7885,
+        "code_hex": "0x50645f406c6f4249"
+      },
+      "source_sha256_by_official_name": {
+        "ac7002_002_tiitle": "813F9363D58F1EC2CDD35EAD4C2B64B7BAB8B94F70C715FC0D1C97FDF26BBBA3"
+      }
+    },
+    {
+      "event": "ac7002_003",
+      "title_zh": "白色斗篷魔法少女飞行战斗 ac7002",
+      "dirinfo": {
+        "kind": 177,
+        "row_index": 2,
+        "event_info_index": 7886,
+        "code_hex": "0x5a4c3f566c6f4249"
+      },
+      "source_sha256_by_official_name": {
+        "ac7002_001_lp_c02_ren_c05": "337CAA1A849C92CE1229FC660A98ED2637FC24E8B9EF20350D5003188C3ABB4C"
+      }
+    },
+    {
+      "event": "ac7002_004",
+      "title_zh": "魔女追逐战动画 ac7002",
+      "dirinfo": {
+        "kind": 177,
+        "row_index": 3,
+        "event_info_index": 7887,
+        "code_hex": "0x422d5f3f6c6f4249"
+      },
+      "source_sha256_by_official_name": {
+        "ac7002_002_c01": "55F1C122A1E88B14A1CB94FCDA99765BFDBB7C01AA9A65D32521E36348073DA8",
+        "ac7002_002_lp_c02_ren_c05": "F06A47D7099C31575AF19F0F8FE79761D2BC5C970A0479FE637F3D773F1FEEAE"
+      }
+    },
+    {
+      "event": "ac7002_005",
+      "title_zh": "红夜魔女决战动画 ac7002",
+      "dirinfo": {
+        "kind": 177,
+        "row_index": 4,
+        "event_info_index": 7888,
+        "code_hex": "0x72573f646c6f4249"
+      },
+      "source_sha256_by_official_name": {
+        "ac7002_003_lp_c01": "5A052D7CC153534238F1D30C5CD7F0C904EAC7EB37B57E6A9D3D737739BC32EA"
+      }
+    }
+  ]
+}

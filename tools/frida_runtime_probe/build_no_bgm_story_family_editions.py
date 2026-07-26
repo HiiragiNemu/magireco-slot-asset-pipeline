@@ -69,6 +69,7 @@ try:
         scene_audio_role,
         snapshot,
         validate_audio_layer_roles,
+        validate_audio_absence_evidence,
         validate_reusable_clean_visual,
     )
     from .output_path_contract import resolve_output_child, validate_output_identifier
@@ -108,6 +109,7 @@ except ImportError:  # direct script execution
         scene_audio_role,
         snapshot,
         validate_audio_layer_roles,
+        validate_audio_absence_evidence,
         validate_reusable_clean_visual,
     )
     from output_path_contract import (  # type: ignore
@@ -709,6 +711,146 @@ def assert_srt_round_trip(path: Path, cues: Sequence[Mapping[str, Any]]) -> None
         raise RuntimeError(f"SRT round-trip mismatch: {path}")
 
 
+def is_evidence_bound_silent_manifest(manifest: Mapping[str, Any]) -> bool:
+    """Return true only for a manifest with exact, hash-bound zero-audio proof."""
+
+    audio = manifest.get("audio")
+    gates = manifest.get("quality_gates")
+    evidence = manifest.get("audio_absence_evidence")
+    return (
+        audio == []
+        and isinstance(gates, Mapping)
+        and gates.get("verified_no_event_audio") is True
+        and isinstance(evidence, Mapping)
+        and evidence.get("status") == "hash_bound_zero_matches"
+        and evidence.get("direct_parent_audio_matches") == 0
+        and evidence.get("child_audio_matches") == 0
+        and evidence.get("subtitle_matches") == 0
+        and isinstance(evidence.get("source_snapshots"), list)
+        and len(evidence["source_snapshots"]) == 3
+    )
+
+
+def resolve_story_event(
+    manifest: Mapping[str, Any],
+    *,
+    clean_visual: Path,
+    clean_report: Path,
+    translations: Mapping[str, str],
+    reject_unsubtitled_audio: bool,
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Resolve a normal voiced event or one exactly proven silent event."""
+
+    if not is_evidence_bound_silent_manifest(manifest):
+        return resolve_event(
+            manifest,
+            clean_visual=clean_visual,
+            clean_report=clean_report,
+            translations=translations,
+            require_scene_se=False,
+            reject_unsubtitled_audio=reject_unsubtitled_audio,
+        )
+    absence_sources = validate_audio_absence_evidence(manifest)
+    event = str(manifest["event"])
+    report = read_json(clean_report)
+    clean_source = snapshot(clean_visual, label=f"{event} clean visual")
+    report_source = snapshot(
+        clean_report, label=f"{event} clean visual render manifest"
+    )
+    if (
+        report.get("event") != event
+        or report.get("status") != "passed"
+        or str(report.get("output_sha256", "")).upper()
+        != clean_source["sha256"]
+    ):
+        raise ValueError(f"{event} clean visual report is not passed")
+    quantization = manifest.get("render_duration_quantization")
+    if not isinstance(quantization, Mapping):
+        raise ValueError(f"{event} lacks CFR quantization evidence")
+    frame_count_value = int(manifest["render_frame_count"])
+    samples = int(quantization["audio_sample_count"])
+    if samples != frame_count_value * 1600:
+        raise ValueError(f"{event} frame/sample grids differ")
+    if manifest.get("subtitles") != []:
+        raise ValueError(f"{event} silent event unexpectedly contains subtitles")
+    return (
+        {
+            "event": event,
+            "width": int(manifest["native_dimensions"]["width"]),
+            "height": int(manifest["native_dimensions"]["height"]),
+            "composition_model": str(manifest["video_composition_model"]),
+            "frame_count": frame_count_value,
+            "presentation_samples": samples,
+            "clean_visual": clean_visual,
+            "clean_report": clean_report,
+            "audio_layers": [],
+            "dialogue_cues": [],
+            "excluded_voice_requests": [],
+            "excluded_source_cues": [],
+            "verified_no_event_audio": True,
+            "audio_absence_evidence": copy.deepcopy(
+                manifest["audio_absence_evidence"]
+            ),
+        },
+        [clean_source, report_source, *absence_sources],
+    )
+
+
+def build_event_pcm_or_verified_silence(
+    event: Mapping[str, Any],
+    *,
+    output: Path,
+    ffmpeg: str,
+) -> dict[str, Any]:
+    """Render event PCM, permitting zeros only after exact absence proof."""
+
+    layers = event.get("audio_layers")
+    if isinstance(layers, list) and layers:
+        return build_event_pcm(event, output=output, ffmpeg=ffmpeg)
+    if (
+        layers != []
+        or event.get("verified_no_event_audio") is not True
+        or not isinstance(event.get("audio_absence_evidence"), Mapping)
+    ):
+        raise RuntimeError(
+            f"{event.get('event')} has no audio layers without exact absence proof"
+        )
+    samples = int(event["presentation_samples"])
+    expected_bytes = samples * 2 * 4
+    with output.open("wb") as target:
+        target.truncate(expected_bytes)
+    return {
+        "event": str(event["event"]),
+        "presentation_samples": samples,
+        "byte_count": expected_bytes,
+        "sha256": file_sha256(output),
+        "verified_digital_silence": True,
+    }
+
+
+def hardlink_or_copy(source: Path, target: Path) -> str:
+    """Create a cross-edition alias without hiding a filesystem fallback."""
+
+    try:
+        os.link(source, target)
+        return "hardlink"
+    except OSError:
+        shutil.copy2(source, target)
+        return "copy"
+
+
+def is_aac_silence_floor(volume: Mapping[str, Any]) -> bool:
+    """Accept only digital silence or the deterministic AAC encoder noise floor."""
+
+    value = str(volume.get("max_volume_db", "")).lower()
+    if value == "-inf":
+        return True
+    try:
+        return float(value) <= -90.0
+    except ValueError:
+        return False
+
+
 def validate_no_exact_audience_event_duplicates(
     family: str,
     events: Sequence[Mapping[str, Any]],
@@ -888,13 +1030,24 @@ def build_family_editions(
     ]:
         raise RuntimeError(f"{family} audience event signature order differs")
     retained_role_counts = {"voice": 0, "scene_se": 0}
+    verified_silent_events: list[str] = []
     for event in events:
         event_name = str(event.get("event", ""))
         layers = event.get("audio_layers")
-        if not isinstance(layers, list) or not layers:
+        if not isinstance(layers, list):
             raise RuntimeError(
-                f"{event_name} has no retained evidence-bound audio layers"
+                f"{event_name} has invalid retained evidence-bound audio layers"
             )
+        if not layers:
+            if (
+                event.get("verified_no_event_audio") is not True
+                or not isinstance(event.get("audio_absence_evidence"), Mapping)
+            ):
+                raise RuntimeError(
+                    f"{event_name} has no retained evidence-bound audio layers"
+                )
+            verified_silent_events.append(event_name)
+            continue
         roles = [str(layer.get("role", "")) for layer in layers]
         invalid_roles = sorted(set(roles) - set(retained_role_counts))
         if invalid_roles:
@@ -946,7 +1099,11 @@ def build_family_editions(
         timeline: list[dict[str, Any]] = []
         for event in events:
             event_pcm = work / f"{event['event']}.f32le"
-            pcm_audits.append(build_event_pcm(event, output=event_pcm, ffmpeg=ffmpeg))
+            pcm_audits.append(
+                build_event_pcm_or_verified_silence(
+                    event, output=event_pcm, ffmpeg=ffmpeg
+                )
+            )
             event_pcm_paths.append(event_pcm)
             start_frame = total_frames
             start_sample = total_samples
@@ -1079,22 +1236,29 @@ def build_family_editions(
         subtitle_dir.mkdir()
         subtitle_paths: dict[str, Path] = {}
         edition_cue_rows: dict[str, list[dict[str, Any]]] = {}
-        for edition in selected:
-            if edition not in SUBTITLE_EDITIONS:
-                continue
-            rows = edition_cues(base_cues, edition, speakers)
-            path = subtitle_dir / f"{release_id}__{edition}.srt"
-            assert_srt_round_trip(path, rows)
-            subtitle_paths[edition] = path
-            edition_cue_rows[edition] = rows
+        no_dialogue_aliases = not base_cues
+        if not no_dialogue_aliases:
+            for edition in selected:
+                if edition not in SUBTITLE_EDITIONS:
+                    continue
+                rows = edition_cues(base_cues, edition, speakers)
+                path = subtitle_dir / f"{release_id}__{edition}.srt"
+                assert_srt_round_trip(path, rows)
+                subtitle_paths[edition] = path
+                edition_cue_rows[edition] = rows
 
         video_dir = staging / "video"
         video_dir.mkdir()
         video_paths: dict[str, Path] = {}
         media_audits: dict[str, dict[str, Any]] = {}
+        edition_alias_modes: dict[str, str] = {}
+        canonical_silent_edition = selected[0] if no_dialogue_aliases else ""
         for edition in selected:
             output = video_dir / f"{release_id}__{edition}.mp4"
-            if edition == "none":
+            if no_dialogue_aliases and edition != canonical_silent_edition:
+                source = video_paths[canonical_silent_edition]
+                edition_alias_modes[edition] = hardlink_or_copy(source, output)
+            elif edition == "none" or no_dialogue_aliases:
                 command = [
                     ffmpeg,
                     "-y",
@@ -1117,6 +1281,9 @@ def build_family_editions(
                     "+faststart",
                     output.relative_to(staging).as_posix(),
                 ]
+                run(command, cwd=staging)
+                if no_dialogue_aliases:
+                    edition_alias_modes[edition] = "canonical"
             else:
                 selected_layout = bilingual_layout if edition == "ja_zh" else layout
                 assert selected_layout is not None
@@ -1157,7 +1324,7 @@ def build_family_editions(
                     "+faststart",
                     output.relative_to(staging).as_posix(),
                 ]
-            run(command, cwd=staging)
+                run(command, cwd=staging)
             video_paths[edition] = output
             media_audits[edition] = _media_audit(
                 output,
@@ -1177,18 +1344,32 @@ def build_family_editions(
         }:
             raise RuntimeError("selected editions do not share one AAC packet identity")
         volume = volume_audit(audio_master, ffmpeg)
-        if str(volume["max_volume_db"]).lower() == "-inf":
+        exact_all_event_silence = len(verified_silent_events) == len(events)
+        if (
+            str(volume["max_volume_db"]).lower() == "-inf"
+            and not exact_all_event_silence
+        ):
             raise RuntimeError("family no-BGM audio master is silent")
+        if exact_all_event_silence and not is_aac_silence_floor(volume):
+            raise RuntimeError(
+                "evidence-bound silent family produced non-silent audio"
+            )
 
         review_dir = staging / "review"
         review_dir.mkdir()
         review_form = review_dir / "HUMAN_PLAYBACK_REVIEW.md"
+        dialogue_review_note = (
+            "- [ ] 本事件经三套哈希绑定目录证明没有事件对白、SE或字幕；"
+            "none/JA/ZH 是面向不同目标轨的同内容别名\n"
+            if no_dialogue_aliases
+            else "- [ ] 日文、中文及已选择的中日对照版内容正确\n"
+        )
         review_form.write_text(
             f"# {family} 无 BGM 多版本人工播放审查\n\n"
             f"版本：{', '.join(selected)}\n\n"
             f"事件数：{len(events)}；对白 cue：{len(base_cues)}；BGM：有意排除。\n\n"
             "- [ ] 无字幕版没有字幕或字幕流\n"
-            "- [ ] 日文、中文及已选择的中日对照版内容正确\n"
+            f"{dialogue_review_note}"
             "- [ ] 有可靠说话人证据时姓名前缀正确；多人或未知说话人不加前缀\n"
             "- [ ] 事件顺序、画面、voice、SE、循环与边界正确\n"
             "- [ ] 所有版本保持原生分辨率和 30 fps，无 upscale\n"
@@ -1220,6 +1401,17 @@ def build_family_editions(
                 "exact_frame_and_sample_grid": True,
                 "aac_encoded_once_and_packet_identical": True,
                 "selected_srt_files_round_trip": True,
+                "verified_silent_audio_only_when_exact_absence_bound": (
+                    (exact_all_event_silence and is_aac_silence_floor(volume))
+                    or (
+                        not exact_all_event_silence
+                        and str(volume["max_volume_db"]).lower() != "-inf"
+                    )
+                ),
+                "no_dialogue_cross_target_aliases_audited": (
+                    not no_dialogue_aliases
+                    or set(edition_alias_modes) == set(selected)
+                ),
                 "speaker_prefix_requires_cue_evidence": True,
                 "series_proposal_current_identity_bound": True,
                 "no_exact_duplicate_audience_events": True,
@@ -1237,6 +1429,8 @@ def build_family_editions(
                 **retained_role_counts,
                 "unsubtitled_audio": 0,
             },
+            "verified_no_event_audio_events": list(verified_silent_events),
+            "edition_alias_modes": dict(edition_alias_modes),
             "applied_audio_role_overrides": list(audio_role_overrides),
             "applied_voice_subtitle_overrides": list(voice_subtitle_overrides),
             "applied_speaker_identity_overrides": list(
@@ -1256,7 +1450,12 @@ def build_family_editions(
             "volume": volume,
             "warnings": [
                 "These are automated expansion candidates, not owner-approved releases.",
-                "BGM is intentionally excluded; all retained audio is verified voice or scene SE.",
+                (
+                    "BGM is intentionally excluded; events with audio retain only "
+                    "verified voice/scene SE, while exact-silent events carry only "
+                    "a 48 kHz stereo silence presentation track (AAC decoder "
+                    "floor no higher than -90 dBFS)."
+                ),
                 "Human playback and Bilibili publication approval remain false.",
             ],
         }
@@ -1302,9 +1501,21 @@ def build_family_editions(
             "selected_editions": list(selected),
             "subtitle_profiles": {
                 "none": "none",
-                "ja": "ja_voice_bound_dialogue",
-                "zh": "zh_voice_bound_dialogue",
-                "ja_zh": "ja_above_zh_voice_bound_dialogue",
+                "ja": (
+                    "no_dialogue_cross_target_alias"
+                    if no_dialogue_aliases
+                    else "ja_voice_bound_dialogue"
+                ),
+                "zh": (
+                    "no_dialogue_cross_target_alias"
+                    if no_dialogue_aliases
+                    else "zh_voice_bound_dialogue"
+                ),
+                "ja_zh": (
+                    "no_dialogue_cross_target_alias"
+                    if no_dialogue_aliases
+                    else "ja_above_zh_voice_bound_dialogue"
+                ),
             },
             "bgm_policy": "intentionally_excluded",
             "voice_se_policy": "preserve_verified_evidence_bound_original",
@@ -1333,6 +1544,8 @@ def build_family_editions(
                 },
             },
             "dialogue_cue_count": len(base_cues),
+            "verified_no_event_audio_events": list(verified_silent_events),
+            "edition_alias_modes": dict(edition_alias_modes),
             "source_snapshots": list(source_snapshots),
             "applied_audio_role_overrides": list(audio_role_overrides),
             "applied_voice_subtitle_overrides": list(voice_subtitle_overrides),
@@ -1793,12 +2006,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"{row['event']} contains unresolved unsubtitled audio "
                     f"layers: {unresolved}"
                 )
-            validate_audio_layer_roles(
-                str(row["event"]),
-                [item["role"] for item in role_rows],
-                require_scene_se=False,
-                reject_unsubtitled_audio=True,
-            )
+            if role_rows:
+                validate_audio_layer_roles(
+                    str(row["event"]),
+                    [item["role"] for item in role_rows],
+                    require_scene_se=False,
+                    reject_unsubtitled_audio=True,
+                )
+            elif not is_evidence_bound_silent_manifest(projected):
+                raise ValueError(
+                    f"{row['event']} has no retained evidence-bound audio layers"
+                )
             audio_request_ids = {
                 str(audio.get("request_id", "")).strip()
                 for audio in projected.get("audio", [])
@@ -1929,12 +2147,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         resolved_rows: list[dict[str, Any]] = []
         applied_speaker_identities: list[dict[str, str]] = []
         for row in rows:
-            resolved, sources = resolve_event(
+            resolved, sources = resolve_story_event(
                 row["projected"],
                 clean_visual=row["clean_visual"],
                 clean_report=row["clean_report"],
                 translations=translations,
-                require_scene_se=False,
                 reject_unsubtitled_audio=True,
             )
             attach_speaker_evidence(resolved, row["projected"])

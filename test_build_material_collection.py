@@ -1658,6 +1658,70 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
         )
         self.assertEqual(manifest["clip_count"], 2)
 
+    def test_named_component_material_derives_from_audience_inventory(
+        self,
+    ) -> None:
+        first = self.make_video("audience-red.mp4", "red")
+        second = self.make_video("audience-blue.mp4", "blue")
+        event = "ac4921_027"
+        ledger = self.root / "audience-ledger.csv"
+        ledger.write_text(
+            "event_name,code_hex,clip_count,resolved_clip_count,"
+            "classification,production_state,disposition\n"
+            f"{event},0x01,2,2,mixed_full_frame_and_components,"
+            "planned_unproduced,gameplay_effect_collection\n",
+            encoding="utf-8",
+        )
+        clips = self.root / "audience-clips.csv"
+        clips.write_text(
+            "event_name,z2d_order,dgm_order,official_name,target_mp4,"
+            "interval_confidence\n"
+            f"{event},1,0,{first.stem},{first},exact_duration_unique\n"
+            f"{event},1,1,{second.stem},{second},exact_duration_unique\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_audience_component_evidence",
+            "component_events": [event],
+            "component_native_dimensions": {"width": 96, "height": 64},
+            "derive_clips_from_audience_event_catalog": True,
+            "audience_event_index": {
+                "path": str(ledger),
+                "sha256": file_sha256(ledger),
+                "production_state": "planned_unproduced",
+                "disposition": "gameplay_effect_collection",
+                "classification": "mixed_full_frame_and_components",
+            },
+            "audience_clip_index": {
+                "path": str(clips),
+                "sha256": file_sha256(clips),
+            },
+        }
+        plan_path = self.root / "named-audience-component-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {
+                first.stem: {"target_mp4": str(first)},
+                second.stem: {"target_mp4": str(second)},
+            },
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["component_events"], [event])
+        self.assertEqual(
+            manifest["component_event_clip_map"][event],
+            [first.stem, second.stem],
+        )
+        evidence_paths = {
+            Path(value["path"]).resolve()
+            for value in manifest["evidence_sources"]
+        }
+        self.assertEqual(evidence_paths, {ledger.resolve(), clips.resolve()})
+
     def test_named_material_rejects_evidence_source_hash_mismatch(self) -> None:
         first = self.make_video("mismatch-red.mp4", "red")
         second = self.make_video("mismatch-blue.mp4", "blue")

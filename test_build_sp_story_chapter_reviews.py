@@ -302,6 +302,54 @@ class SpStoryChapterReviewTests(unittest.TestCase):
             self.assertEqual(len(prepared["clips"][0]["source_sha256"]), 64)
             self.assertEqual(len(sources), 3)
 
+    def test_prepare_manifest_accepts_only_exactly_proven_empty_audio(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest = self.minimal_manifest(root)
+            manifest["audio"] = []
+            manifest["quality_gates"]["verified_no_event_audio"] = True
+            evidence_sources = []
+            for label in (
+                "direct_parent_audio_catalog",
+                "child_z2d_audio_catalog",
+                "subtitle_timeline_catalog",
+            ):
+                path = root / f"{label}.csv"
+                path.write_text("event_name\n", encoding="utf-8")
+                evidence_sources.append(
+                    {
+                        "label": label,
+                        "path": str(path.resolve()),
+                        "sha256": hashlib.sha256(path.read_bytes())
+                        .hexdigest()
+                        .upper(),
+                    }
+                )
+            manifest["audio_absence_evidence"] = {
+                "status": "hash_bound_zero_matches",
+                "source_snapshots": evidence_sources,
+            }
+            source_path = root / "silent.json"
+            write_json(source_path, manifest)
+            prepared, _, sources = prepare_manifest(
+                source_path,
+                plan_dir=root / "plans",
+                manifest_dir=root / "prepared",
+            )
+            self.assertEqual(prepared["audio"], [])
+            self.assertEqual(len(sources), 5)
+
+            manifest["audio_absence_evidence"]["status"] = "unproven"
+            write_json(source_path, manifest)
+            with self.assertRaisesRegex(
+                ValueError, "without exact absence evidence"
+            ):
+                prepare_manifest(
+                    source_path,
+                    plan_dir=root / "plans2",
+                    manifest_dir=root / "prepared2",
+                )
+
     def test_prepare_manifest_replaces_incomplete_authored_plan(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
