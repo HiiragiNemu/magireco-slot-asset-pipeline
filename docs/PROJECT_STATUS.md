@@ -1,6 +1,31 @@
 # Project Status
 
-更新时间：2026-07-26
+更新时间：2026-07-27
+
+## 2026-07-27 生产冻结与人工审查／上传交接
+
+项目所有者已冻结新增生产。本轮只把 `upload_guide_v41_20260726` 的精确文件
+整理到耐久交接根
+`bilibili_human_review_upload_freeze_20260727`，没有生成或重编码媒体，也没有
+操作 Bilibili。交接包含 196 个命名 MP4 入口、194 个唯一 SHA-256：
+
+- `00_UPLOAD_NOW`：17 个 exact-file 人工批准文件（15 ZH、2 JA、0 none）；
+- `01_REVIEW_STORY`：59 个作品、168 个文件、6 批；
+- `02_REVIEW_MATERIAL`：11 个作品、11 个文件、2 批；
+- `03_QUARANTINED_DO_NOT_UPLOAD`：0 个 MP4，只保留排除说明。
+
+全部 194 个唯一媒体通过同盘 NTFS hardlink 收录，无 copy fallback。ac4903
+DirInfo row 8 的 none/JA/ZH 为一个合法跨目标 exact-hash 组：保留三个正确
+命名入口，JA/ZH 作为 canonical none 的同 inode hardlink，并在
+`ALIASES.csv`/`UPLOAD_INDEX.csv` 记录 `physical_duplicate=false` 和各自目标
+BV。逐文件目标、分P名、追加/新建建议、自动 QA 与人工状态见
+`manifests/START_HERE_UPLOAD_GUIDE.md` 和 `UPLOAD_INDEX.csv`。
+
+独立复核确认 196/196 媒体哈希正确、8 个批次均不超过 10 个作品或约 30 分钟、
+隔离项零泄漏。P16/P17/P18、superseded、旧错误/重复、10 个已投稿 exact hash
+和未纳入 v41 的未闭合 child-local 项目均排除。详细记录见
+`docs/research/2026-07-27-human-review-upload-freeze-handoff.md`。本检查点后停止
+新增 family、渲染、逆向、BGM 和素材扩产，等待项目所有者人工审查与上传。
 
 ## 2026-07-26 ac4904 原生 416 角色窗框 UI 素材审查 v41
 
