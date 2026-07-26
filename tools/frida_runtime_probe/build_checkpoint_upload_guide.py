@@ -60,6 +60,21 @@ MATERIAL_PART_NAMES = {
     "ac8002_chance_button_prompt_catalog_v1": (
         "五类机会按钮提示素材 ac8002"
     ),
+    "ac3102_roulette_battle_visual_catalog_v1": (
+        "轮盘战斗玩法视觉素材 ac3102"
+    ),
+    "ac3103_roulette_color_visual_catalog_v1": (
+        "轮盘颜色玩法视觉素材 ac3103"
+    ),
+    "ac3407_character_reveal_visual_catalog_v1": (
+        "角色揭示玩法视觉素材 ac3407"
+    ),
+    "ac3409_character_reveal_visual_catalog_v1": (
+        "角色揭示玩法视觉素材 ac3409"
+    ),
+    "ac8000_next_story_visual_catalog_v1": (
+        "下一段剧情界面视觉素材 ac8000"
+    ),
 }
 
 

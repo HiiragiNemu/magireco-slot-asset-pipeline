@@ -1,0 +1,36 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac3102_roulette_battle_visual_catalog_v1",
+  "classification": "roulette_battle_gameplay_visual_material",
+  "evidence": "Fifty-seven ac3102 gameplay/effect events are represented as a visual-only catalog of every distinct native 512x288 clip referenced by their hash-bound v20 manifests. Clip discovery follows event and clip order from the manifests, deduplicates exact official names, excludes all event audio/subtitles, and does not claim a native session sequence.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac3102_007", "ac3102_008", "ac3102_010", "ac3102_011", "ac3102_013", "ac3102_014", "ac3102_016", "ac3102_017", "ac3102_019", "ac3102_020",
+    "ac3102_023", "ac3102_026", "ac3102_029", "ac3102_032", "ac3102_042", "ac3102_043", "ac3102_044", "ac3102_045", "ac3102_046", "ac3102_047",
+    "ac3102_048", "ac3102_049", "ac3102_050", "ac3102_051", "ac3102_052", "ac3102_053", "ac3102_054", "ac3102_055", "ac3102_069", "ac3102_070",
+    "ac3102_071", "ac3102_072", "ac3102_073", "ac3102_074", "ac3102_075", "ac3102_076", "ac3102_077", "ac3102_078", "ac3102_093", "ac3102_094",
+    "ac3102_095", "ac3102_096", "ac3102_097", "ac3102_098", "ac3102_099", "ac3102_101", "ac3102_102", "ac3102_104", "ac3102_109", "ac3102_110",
+    "ac3102_111", "ac3102_117", "ac3102_118", "ac3102_119", "ac3102_120", "ac3102_121", "ac3102_123"
+  ],
+  "derive_clips_from_covered_event_manifests": true,
+  "covered_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v13_20260727\\PRODUCTION_EVENT_LEDGER.csv",
+    "sha256": "D811FB6D6DD671CA2D9941BB58C9300FA63A0FC8580A2D316C51E8648A95BD60",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "native_dimensions": "512x288"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v13.json",
+    "sha256": "0F61F95C30B5671AF70EB5439DE73B87341A18726A1AC5B8A612DEDDFBA01B7F"
+  },
+  "checkpoint_id": "20260727-v45-native512-remaining-materials",
+  "recorded_date": "2026-07-27",
+  "scope": "All v13 current production and material records plus five hash-bound native 512x288 visual-only catalogs covering 107 gameplay/effect events in ac3102, ac3103, ac3407, ac3409 and ac8000. Clip lists are derived in event/clip order from the exact bound v20 manifests, deduplicated by official identity, and rechecked against the official-name map.",
+  "current_material_roots": [
+    {
+      "label": "v36 native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v36_native416_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v38 native 416 gameplay UI material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v38_native416_ui_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v39 ac0912 native 416 small-Kyubey guide material review collection",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v39_native416_ac0912_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v40 ac7204 native 416 result-card material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v40_native416_ac7204_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v41 ac4904 native 416 SU window material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v41_native416_ac4904_review_20260726",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v42 remaining native 416 visual-only material review collections",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v42_native416_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded"]
+    },
+    {
+      "label": "v44 native 512 chance-button visual-only material catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v44_native512_chance_buttons_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    },
+    {
+      "label": "v45 remaining pure native 512 visual-only material catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": ["superseded", "quarantine"]
+    }
+  ]
+}

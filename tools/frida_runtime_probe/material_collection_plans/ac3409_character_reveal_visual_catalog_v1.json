@@ -1,0 +1,32 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac3409_character_reveal_visual_catalog_v1",
+  "classification": "character_reveal_gameplay_visual_material",
+  "evidence": "Twelve ac3409 gameplay/effect events are represented as a visual-only catalog of every distinct native 512x288 character-reveal clip referenced by their hash-bound v20 manifests. Shared overlays are retained once; audio/subtitles are excluded.",
+  "expected_audio_state": "digital_silence",
+  "covered_events": [
+    "ac3409_251", "ac3409_252", "ac3409_253", "ac3409_254", "ac3409_255", "ac3409_256",
+    "ac3409_257", "ac3409_258", "ac3409_259", "ac3409_260", "ac3409_261", "ac3409_262"
+  ],
+  "derive_clips_from_covered_event_manifests": true,
+  "covered_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v13_20260727\\PRODUCTION_EVENT_LEDGER.csv",
+    "sha256": "D811FB6D6DD671CA2D9941BB58C9300FA63A0FC8580A2D316C51E8648A95BD60",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "native_dimensions": "512x288"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

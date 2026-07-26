@@ -1522,6 +1522,16 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
                     {
                         "schema": "magireco-event-production-v3",
                         "event": event,
+                        "clips": [
+                            {
+                                "dgm_name": "ledger-red",
+                                "path": str(first),
+                            },
+                            {
+                                "dgm_name": "ledger-blue",
+                                "path": str(second),
+                            },
+                        ],
                     }
                 )
                 + "\n",
@@ -1543,6 +1553,7 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
         plan = {
             "collection": "named_ledger_evidence",
             "covered_events": events,
+            "derive_clips_from_covered_event_manifests": True,
             "covered_event_index": {
                 "path": str(ledger),
                 "sha256": file_sha256(ledger),
@@ -1550,18 +1561,14 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
                 "disposition": "gameplay_effect_collection",
                 "native_dimensions": "512x288",
             },
-            "clips": [
-                {"official_name": "ledger_red", "label": "red"},
-                {"official_name": "ledger_blue", "label": "blue"},
-            ],
         }
         plan_path = self.root / "named-ledger-plan.json"
         plan_path.write_text(json.dumps(plan), encoding="utf-8")
         row = build_named_collection(
             plan_path,
             {
-                "ledger_red": {"target_mp4": str(first)},
-                "ledger_blue": {"target_mp4": str(second)},
+                "ledger-red": {"target_mp4": str(first)},
+                "ledger-blue": {"target_mp4": str(second)},
             },
             self.out,
             "ffmpeg",

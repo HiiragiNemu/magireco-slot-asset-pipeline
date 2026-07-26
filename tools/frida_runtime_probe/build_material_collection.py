@@ -2566,8 +2566,17 @@ def _build_named_collection_in_place(
     if not collection:
         raise ValueError(f"named material plan has no collection: {plan_path}")
     collection = validate_output_identifier(collection, label="plan.collection")
+    derive_clips = (
+        plan.get("derive_clips_from_covered_event_manifests") is True
+    )
     planned_clips = plan.get("clips", [])
-    if not isinstance(planned_clips, list) or len(planned_clips) < 2:
+    if derive_clips:
+        if planned_clips not in (None, []):
+            raise ValueError(
+                "derived named material plan must not declare clips"
+            )
+        planned_clips = []
+    elif not isinstance(planned_clips, list) or len(planned_clips) < 2:
         raise ValueError(f"named material plan needs at least two clips: {plan_path}")
     source_roles: dict[Path, set[str]] = {}
     _add_material_source_role(
@@ -2639,6 +2648,7 @@ def _build_named_collection_in_place(
     )
     if covered_events:
         evidence_events = set()
+        evidence_payloads: dict[str, dict] = {}
         for evidence in resolved_evidence_sources:
             evidence_path = Path(evidence["path"])
             if evidence_path.suffix.casefold() != ".json":
@@ -2657,11 +2667,53 @@ def _build_named_collection_in_place(
                 and EVENT_NAME_RE.fullmatch(event)
             ):
                 evidence_events.add(event)
+                evidence_payloads[event] = evidence_payload
         if evidence_events != set(covered_events):
             raise ValueError(
                 "named material covered_events do not match bound event "
                 f"production manifests: declared={sorted(covered_events)}, "
                 f"evidence={sorted(evidence_events)}"
+            )
+    else:
+        evidence_payloads = {}
+    derived_source_paths: dict[str, set[str]] = {}
+    if derive_clips:
+        for event in covered_events:
+            payload = evidence_payloads[event]
+            clips = payload.get("clips")
+            if not isinstance(clips, list) or not clips:
+                raise ValueError(
+                    f"covered event has no clips for derivation: {event}"
+                )
+            for clip in clips:
+                if not isinstance(clip, dict):
+                    raise ValueError(
+                        f"covered event clip is malformed: {event}"
+                    )
+                raw_path = str(
+                    clip.get("path") or clip.get("source_path") or ""
+                ).strip()
+                official_name = str(
+                    clip.get("dgm_name") or Path(raw_path).stem
+                ).strip()
+                if not raw_path or not official_name:
+                    raise ValueError(
+                        f"covered event clip identity differs: {event}"
+                    )
+                official_key = official_name.casefold()
+                first_occurrence = official_key not in derived_source_paths
+                paths = derived_source_paths.setdefault(official_key, set())
+                paths.add(raw_path)
+                if first_occurrence:
+                    planned_clips.append(
+                        {
+                            "official_name": official_name,
+                            "label": official_name,
+                        }
+                    )
+        if len(planned_clips) < 2:
+            raise ValueError(
+                "derived named material plan needs at least two unique clips"
             )
     source_root_overrides = plan.get("source_root_overrides", [])
     if not isinstance(source_root_overrides, list):
@@ -2705,6 +2757,36 @@ def _build_named_collection_in_place(
                 continue
             return (Path(override["to"]) / relative).resolve()
         return mapped_path.resolve()
+
+    def resolve_declared_source(raw_path: str) -> Path:
+        mapped_path = Path(raw_path)
+        for override in resolved_source_root_overrides:
+            try:
+                relative = mapped_path.relative_to(Path(override["from"]))
+            except ValueError:
+                continue
+            return (Path(override["to"]) / relative).resolve()
+        return mapped_path.resolve()
+
+    if derive_clips:
+        for official_name, raw_paths in derived_source_paths.items():
+            source_path = resolve_named_source(video_map.get(official_name, {}))
+            if not source_path.is_file():
+                raise FileNotFoundError(
+                    f"unresolved derived named material {official_name}: "
+                    f"{source_path}"
+                )
+            source_sha256 = file_sha256(source_path)
+            for raw_path in raw_paths:
+                declared_path = resolve_declared_source(raw_path)
+                if (
+                    not declared_path.is_file()
+                    or file_sha256(declared_path) != source_sha256
+                ):
+                    raise ValueError(
+                        "derived named material source differs from covered "
+                        f"event manifest: {official_name}"
+                    )
 
     for clip_index, planned in enumerate(planned_clips, start=1):
         if not isinstance(planned, dict):

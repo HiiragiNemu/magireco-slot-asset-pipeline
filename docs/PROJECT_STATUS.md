@@ -2,6 +2,36 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 其余纯原生 512 玩法素材 v45
+
+`material_collections_v45_native512_remaining_review_20260727` 已把
+production-manifest 库存中除 ac5102 外的纯 512x288 玩法／效果事件全部收口：
+ac3102、ac3103、ac3407、ac3409、ac8000 共 107 个事件，形成 5 个
+visual-only 审查产品、210 个唯一命名片段、349.443 秒。全部为原生
+512x288、30fps、H.264、无音轨、无字幕、直接复制视频包；自动技术 QA
+通过，但仍为 `review_only` / `human_playback_required`。
+
+具体产品为：ac3102 轮盘战斗 118 段、ac3103 轮盘颜色 32 段、ac3407
+角色揭示 28 段、ac3409 角色揭示 28 段、ac8000 下一段剧情界面 4 段。
+clip 清单不再人工抄写：构建器从哈希绑定总账指定的 107 个 v20 manifest
+按 event/clip 顺序派生官方名称，再校验 official-name map 解析出的源 MP4
+与 manifest 路径 exact SHA 一致。这批来源中的 378 个音频层与 150 条字幕
+cue 均明确排除，未消费 child-local 时序。
+
+增量审查根 `bilibili_incremental_review_v45_native512_remaining_20260727`
+为 U086-U090：15 个 none/JA/ZH 命名入口、5 个唯一 SHA、10 个合法同 inode
+别名，唯一播放时长 349.4431 秒；`00_UPLOAD_NOW` 和隔离媒体均为 0。
+
+总账推进到 `production_ledger_v14_20260727`：material manifest 16→21，
+material-covered event 181→288，`planned_unproduced` 227→120；剩余 120 个
+全部属于 ac5102。全局指南 `upload_guide_v45_20260727` 为 10 个已投稿、
+17 个可投稿、201 个待人工播放、8 类明确排除，共 228 个精确文件。详细
+证据见 `docs/research/2026-07-27-native512-remaining-materials-v45.md`。
+
+ac5102 的 120 个事件引用 49 个原生 416x232 clip 与 8 个原生 512x288
+clip；下一检查点必须建立分尺寸组件目录及覆盖关系，不得把两种尺寸塞进同一
+线性画布、不得 upscale。P16/P17/P18 与所有 timing blocker 继续隔离。
+
 ## 2026-07-27 原生 512 机会按钮玩法素材 v44
 
 其他原生尺寸玩法／素材产线首先收口了在多个 family 中重复出现的 ac8002

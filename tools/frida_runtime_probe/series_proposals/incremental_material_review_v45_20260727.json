@@ -1,0 +1,71 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v45-native512-remaining-materials",
+  "checkpoint_label": "v45",
+  "start_upload_id": 86,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V45.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v45_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "4CA5D539F5054124892D003A27BCAEEF3613B5C618B4661B6544513599324109"
+  },
+  "specific_exclusions": [
+    "107 个来源事件的对白、SE 与字幕未进入这五个视觉-only合集；不声明其 child-local 音频时序已闭合。",
+    "ac5102 的 416x232 与 512x288 混合组件未进入本批；必须分尺寸处理，禁止线性拼接或 upscale。"
+  ],
+  "products": [
+    {
+      "collection": "ac3102_roulette_battle_visual_catalog_v1",
+      "title": "轮盘战斗玩法视觉素材",
+      "family": "ac3102",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727\\ac3102_roulette_battle_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "8A898B242DB85B23E8EE06259E84B37A6D1DDC15D5E8BE8A9E1F881260D34E38"
+      },
+      "output_sha256": "7F232E2F9DC22E909CC9BC68135D8A14B4F9391745315EF68959FD3C26A89614"
+    },
+    {
+      "collection": "ac3103_roulette_color_visual_catalog_v1",
+      "title": "轮盘颜色玩法视觉素材",
+      "family": "ac3103",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727\\ac3103_roulette_color_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "EB7B74050DD22A022548898E041BA39D6FA1A2A519F14C166FB72DD19EEEE4C3"
+      },
+      "output_sha256": "8C310E30F0D1A632F0C8C38DC70D5EA89E0D71729E4C9E70212F72228A2BADB4"
+    },
+    {
+      "collection": "ac3407_character_reveal_visual_catalog_v1",
+      "title": "角色揭示玩法视觉素材",
+      "family": "ac3407",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727\\ac3407_character_reveal_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "D8B9CE93D5E30BA739CED8E8AF6B62E643E2276856AE314659948AFD80BACE1C"
+      },
+      "output_sha256": "D7DE9A52E2B882028EE6AED68E7E6A23055DFEC61A877A4109DCDDBAADB562BE"
+    },
+    {
+      "collection": "ac3409_character_reveal_visual_catalog_v1",
+      "title": "角色揭示玩法视觉素材",
+      "family": "ac3409",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727\\ac3409_character_reveal_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "39956869C57CDAEDAE0048A2C9CB2B2741C805347677D31AF1542DB3B1B6657D"
+      },
+      "output_sha256": "F835B1CF1C92D17D0666DC04EA0BF2D0C2F24C59A6733F36C9F24C1E2FE8B4FE"
+    },
+    {
+      "collection": "ac8000_next_story_visual_catalog_v1",
+      "title": "下一段剧情界面视觉素材",
+      "family": "ac8000",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v45_native512_remaining_review_20260727\\ac8000_next_story_visual_catalog_v1\\material_collection_manifest.json",
+        "sha256": "E70C54FCBBBC1EA0F3361FC0B4A426084A7E81564718D882A557A7C5BB07DFC0"
+      },
+      "output_sha256": "016F0D19587A0BA3AA00F27C5CE3BC9996B2B4489A71725B5BCCBEC85279150B"
+    }
+  ]
+}
