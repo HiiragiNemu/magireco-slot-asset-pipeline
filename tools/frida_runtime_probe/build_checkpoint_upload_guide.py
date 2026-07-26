@@ -171,6 +171,7 @@ def _batch_target(plan: Mapping[str, Any], family: str, product: str) -> str:
         "ac0908": "ac0908_route_catalog",
         "ac4902": "ac4902_route_catalog",
         "ac4903": "ac4903_route_catalog",
+        "ac6007": "ac6007_route_catalog",
         "ac7206": "ac7206_route_catalog",
         "ac7210": "story_collection",
     }
@@ -398,7 +399,10 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
         "v31_ac7206_manifest",
         "v32_ac0908_manifest",
         "v33_ac4903_manifest",
+        "v34_ac6007_manifest",
     ):
+        if source_name not in source_paths:
+            continue
         manifest_path = source_paths[source_name]
         value = read_json(manifest_path)
         family = str(value.get("family") or value.get("series") or "")

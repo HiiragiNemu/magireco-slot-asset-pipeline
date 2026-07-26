@@ -1,0 +1,169 @@
+{
+  "schema": "magireco-ac6007-complete-clean-routes-plan-v1",
+  "status": "finite_human_review_candidate",
+  "family": "ac6007",
+  "title": "P19 菲莉希亚与莎奈驰援彩羽 ac6007",
+  "audio_profile": "no_bgm",
+  "editions": [
+    "none",
+    "ja",
+    "zh"
+  ],
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "upscale": false
+  },
+  "dirinfo": {
+    "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+    "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01",
+    "kind": 174
+  },
+  "source_family": {
+    "manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+      "sha256": "87EFE5A473C105607A50D1C1D13454659B5499172CE1849700296535A410DEF2"
+    },
+    "automated_qa": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\qa\\automated_qa.json",
+      "sha256": "23E456E48D329FA9E5F161EED3AE1DDBEC701CCBFFAB2B61D99F622A47225D30"
+    },
+    "clean_visual_master": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\masters\\ac6007_full_no_bgm_editions_v1__clean_visual_master.mp4",
+      "sha256": "7BD31821079238D2D624316965E1FDC246F380D443B5241BA66B8A631B4F76B1"
+    },
+    "no_bgm_audio_master": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\masters\\ac6007_full_no_bgm_editions_v1__no_bgm_audio_master.m4a",
+      "sha256": "7031FF4D236B1711EC2778E534F89FF2E2BA478BA7BE3557328F0E00A2696595"
+    },
+    "subtitles_ja": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\subtitles\\ac6007_full_no_bgm_editions_v1__ja.srt",
+      "sha256": "E806D76E6B1BA164520FB1221B3E531A347165F1FD6DCCBCECEA1BBE9D016E5E"
+    },
+    "subtitles_zh": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v24_mass_20260724\\batch01_next_story\\ac6007_full_no_bgm_editions_v1\\subtitles\\ac6007_full_no_bgm_editions_v1__zh.srt",
+      "sha256": "322A8305938CE00E67FA74937D7065E5033C716363EE857EDE9C50FB94B37D2C"
+    }
+  },
+  "audience_event_catalog": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+    "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+  },
+  "audience_event_clips": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "event_audio_components": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+    "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+  },
+  "owner_uploaded_zh_attestation": {
+    "path": "../owner_attestations/owner_uploaded_10zh_20260725.json",
+    "sha256": "3BCB8A229B81DD66A4620CC415F95C7B858A97B76A6457BF9B21D4F1CD790453"
+  },
+  "subtitle_layout": {
+    "path": "../subtitle_layout_profiles/project_approved_zh_video_subtitle_layout_416x232_v1.json",
+    "sha256": "8F21374546B27361AB88DD8D61E646B60FE976B6E95FE0C94413E7646817B943"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "entry_event": {
+    "event": "ac6007_001",
+    "composition_policy": "show_lower_scene_until_parent_title_start_then_replace_with_opaque_title_intro_and_loop",
+    "visible_sequence": [
+      "ac6007_lev_c001_MR",
+      "ac6007_AT_kuma_title",
+      "ac6007_AT_kuma_title_LP"
+    ],
+    "underlay_not_linearly_appended": [
+      "ac6007_lev_c002",
+      "ac6007_lev_c002_LP"
+    ],
+    "excluded_missing_effect_layers": [
+      "ac6007_AT_kuma_title_add",
+      "ac6007_AT_kuma_title_add_LP"
+    ],
+    "output_frames": 203,
+    "clips": [
+      {
+        "name": "ac6007_lev_c001_MR",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac6007\\ac6007_lev_c001_MR.mp4",
+        "sha256": "7ED51864A15789A571E698F78E98F99E4DECDC2DFC7DFDA74D1F0911EB1F5A51",
+        "frames": 36
+      },
+      {
+        "name": "ac6007_lev_c002",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac6007\\ac6007_lev_c002.mp4",
+        "sha256": "A45485BFCE66D7BF7DFDCBF39261F1D447088DA1B5F6E9A0F7B1E0E9A9210A34",
+        "frames": 30
+      },
+      {
+        "name": "ac6007_lev_c002_LP",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac6007\\ac6007_lev_c002_LP.mp4",
+        "sha256": "5CD372695652D35CA17D0A8FC3420C039DE6EC6F9827B429974D410B5C462FEA",
+        "frames": 30
+      },
+      {
+        "name": "ac6007_AT_kuma_title",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac6007\\ac6007_AT_kuma_title.mp4",
+        "sha256": "33C914A8E34AB81937AE78EA1CDCE8BD90737DBC5DBF8BD7AE40F75F91E877BA",
+        "frames": 77
+      },
+      {
+        "name": "ac6007_AT_kuma_title_LP",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\patch\\ac6007\\ac6007_AT_kuma_title_LP.mp4",
+        "sha256": "FABDBCA2E281B712D99D6473BAD11102B2595E4C095F49FE9CAD9C46F2CC9CA5",
+        "frames": 90
+      }
+    ],
+    "audio_sources": [
+      {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_04010_bank06_ogg_08803.ogg",
+        "sha256": "F7F1F56DBF6A4ADF00C861EC2C2A0DE96E15F55A5CE43CDF0E75954712496401",
+        "request_id": 1034,
+        "sound_code": 4010,
+        "start_ms": 0,
+        "duration_ms": 10000
+      },
+      {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\audio_assets\\audio\\ogg_raw\\snd_10000_bank03_ogg_00359.ogg",
+        "sha256": "9E2EF4B82A6B06CCC7A6BEDD137FA8EBE5FF24D5951467E9C351DE24F14435B8",
+        "request_id": 2192,
+        "sound_code": 10000,
+        "start_ms": 0,
+        "duration_ms": 7566
+      }
+    ]
+  },
+  "included_dirinfo_rows": [
+    0,
+    1
+  ],
+  "excluded_dirinfo_rows": [
+    {
+      "row": 2,
+      "terminal_event": "ac6007_007",
+      "disposition": "gameplay_effect_collection",
+      "blocker": "terminal event is component-only 320x256 and 512x416"
+    },
+    {
+      "row": 3,
+      "terminal_event": "ac6007_008",
+      "disposition": "gameplay_effect_collection",
+      "blocker": "terminal event is component-only 320x256 and 512x416"
+    },
+    {
+      "row": 4,
+      "terminal_event": "ac6007_010",
+      "disposition": "gameplay_effect_collection",
+      "blocker": "route is entirely component-only 320x256 and 512x416"
+    }
+  ]
+}

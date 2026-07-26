@@ -712,7 +712,7 @@ def build(
             }
             for row in production_manifest_index
             if row["included_as_produced"]
-            and row["root_label"].startswith(("v30", "v31", "v32", "v33"))
+            and row["root_label"].startswith(("v30", "v31", "v32", "v33", "v34"))
         ],
         "superseded_audit_only_never_upload": superseded_audit_index,
     }

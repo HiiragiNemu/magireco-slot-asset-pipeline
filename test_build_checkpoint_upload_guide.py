@@ -45,6 +45,7 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
         plan = {
             "target_bvs": {
                 "ac4903_route_catalog": "new ac4903 BV",
+                "ac6007_route_catalog": "new ac6007 BV",
                 "future_catalog": "future BV",
             }
         }
@@ -55,6 +56,10 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
         self.assertEqual(
             module._batch_target(plan, "ac9999", "route"),
             "future BV",
+        )
+        self.assertEqual(
+            module._batch_target(plan, "ac6007", "route"),
+            "new ac6007 BV",
         )
 
 

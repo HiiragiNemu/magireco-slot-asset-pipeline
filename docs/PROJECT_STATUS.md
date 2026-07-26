@@ -2,6 +2,70 @@
 
 更新时间：2026-07-26
 
+## 2026-07-26 P19/ac6007 完整入口有限候选、总账 v3 与上传指南 v34
+
+P19/ac6007 的 DirInfo kind 174 已按当前静态证据完整分流。rows 0/1 是两条
+互斥的原生 416x232 clean-story 路线：
+
+```text
+row 0: ac6007_001 → ac6007_002 → ac6007_003 → ac6007_004
+row 1: ac6007_001 → ac6007_005 → ac6007_006 → ac6007_004
+```
+
+入口 `ac6007_001` 不是五个 component 的线性串接。父级 presentation interval
+证明底层场景从 0 开始；1.200 秒后由不透明标题层接管。候选因此使用
+`lev_c001_MR` 36 帧后接 `AT_kuma_title` 77 帧和标题 loop 90 帧，共
+203 帧／6.767 秒；同一时段的 `lev_c002/c002_LP` 仅是被标题遮挡的下层，
+没有机械接到片尾。缺失的 `title_add/title_add_LP` 明确作为效果层排除。
+request 1034 和 2192 两条 direct-parent 场景 SE 均从 event-global 0 开始，
+并允许尾音跨入下一事件。
+
+本轮在以下 D: 耐久根生成两路线 x none/JA/ZH 共 6 个 MP4：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  manual_review_candidates_v34_p19_ac6007_complete_routes_20260726\ac6007
+```
+
+`BATCH_MANIFEST.json`、`AUTOMATED_QA.json` 的 SHA-256 分别为
+`16C639C62688AE3570FB01EFE48E39861B64E87E3692DB213B6C9676B0E8380E`、
+`D9149F5CCDA81B55358CC303315067E2123191DAA4DE460CF5D39A405D7EDBDB`。
+6 个文件规格 QA 全部通过，但 exact file 尚未人工播放批准，禁止投稿。重点
+复看 0–10 秒、1.200 秒标题切换、6.767 秒入口到分支边界，以及全片张嘴、
+语音、字幕和场景音。旧 P19 已投稿 ZH 文件保持不变。
+
+rows 2/3/4 终止于或全部由 320x256／512x416 component-only 玩法效果构成，
+只进入玩法／效果合集，不混入干净剧情。
+
+穷尽式总账已推进到：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  production_ledger_v3_20260726
+```
+
+当前计入 173 个已产 audience event、53 条已产 DirInfo route、23 个 current
+manifest；`ac7210_superseded_verbose_audit` 仍只在 superseded 审计索引中。
+`SUMMARY.json` 与 `SHA256SUMS.json` SHA-256 分别为
+`2555DAE4E587E390D19593A00E65184B096D3B3E346E4CDB46E97BBEFCA7F366`、
+`420F3C69026622212C008FDC4F794EBAE657E180D4CEE19AB80D46F8BED38B96`。
+
+本检查点逐文件上传指南位于：
+
+```text
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\
+  upload_guide_v34_20260726
+```
+
+它包含 161 个精确文件：10 个已投稿且禁止重复、13 个目前可投稿、138 个
+必须先人工播放；另有 7 类明确排除。新增 6 个 ac6007 文件全部属于
+`human_playback_required`，没有扩大批准范围。`UPLOAD_GUIDE.json`、
+`UPLOAD_GUIDE.md`、`UPLOAD_GUIDE.csv` 的 SHA-256 分别为
+`BD9E16B9C2EFA7C71D6791F2E68D1429F5F91F5D9032C0DE2F0C71820DD4252C`、
+`ABC1C2B8A5046CA9B237C691E20B4136C973AF95757EE7EB5B02ABE596E66CCB`、
+`D35BF47B7674BF5561030265B841FB6F7620965D1F7193A2A41A770788FA29A3`。
+P16/P17/P18 继续硬隔离；Codex 不执行上传。
+
 ## 2026-07-26 原生 416 路线量产、穷尽式总账 v2 与上传指南
 
 本检查点继续以原生 416x232 路线为最高优先级，没有新增 512 系生产，也没有
