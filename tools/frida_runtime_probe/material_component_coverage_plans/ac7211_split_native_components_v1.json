@@ -1,0 +1,82 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac7211_split_native_components_v1",
+  "family": "ac7211",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_event_count": 15,
+  "expected_events": [
+    "ac7211_001",
+    "ac7211_005",
+    "ac7211_006",
+    "ac7211_007",
+    "ac7211_008",
+    "ac7211_009",
+    "ac7211_010",
+    "ac7211_011",
+    "ac7211_012",
+    "ac7211_013",
+    "ac7211_014",
+    "ac7211_015",
+    "ac7211_019",
+    "ac7211_020",
+    "ac7211_021"
+  ],
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v23_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "0BA072E963BEDD431715C6227996516316226D36D4C6E394C7BFD6199622337A"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac7211_native416x232_character_sequence_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727\\ac7211_character_sequence_components_416_v1\\material_collection_manifest.json",
+        "sha256": "CE38CDC763B5DA770AAD7C159D8569A6EE3018983BC65B921F3F7DE33BEE7F5F"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac7211_native512x288_event014_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 512,
+        "height": 288
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727\\ac7211_event014_components_512x288_v1\\material_collection_manifest.json",
+        "sha256": "486CDEDF71F7565566209D2C69B6E339EECF08B05B04C68360C20DE9B0B663F2"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac7211_native192x320_shared_portrait_standby_component",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 192,
+        "height": 320
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727\\ac7211_portrait_standby_component_192x320_v1\\material_collection_manifest.json",
+        "sha256": "17A29939979B5A4F4E13C59F19018E1A16B3F5279596CEDEE8B260146853B2B4"
+      },
+      "allowed_unused_sources": []
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v56-ac7211-native512x288",
+  "checkpoint_label": "v56",
+  "start_upload_id": 138,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 288
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V56.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v56_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "7EEA8B980CB19991FA6D53CEC02A8C2CC906F55CE1E0628452D8B85F50453EFB"
+  },
+  "specific_exclusions": [
+    "本批只含 ac7211_014 的 5 个原生 512x288 角色序列组件；416x232 角色组件与 192x320 立绘待机组件分别在 U137/U139。",
+    "本目录只是去重组件清单，不冒充完整事件、剧情路线或游戏自然 session。",
+    "ac7211_002至004与016至018仍未解析，明确排除。",
+    "三个原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac7211_event014_components_512x288_v1",
+      "title": "事件014角色序列组件",
+      "family": "ac7211",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727\\ac7211_event014_components_512x288_v1\\material_collection_manifest.json",
+        "sha256": "486CDEDF71F7565566209D2C69B6E339EECF08B05B04C68360C20DE9B0B663F2"
+      },
+      "output_sha256": "874281BFE5C58F317C09A8F1F7E378152443FD9545A610D262257CBDCA74B3CB"
+    }
+  ]
+}

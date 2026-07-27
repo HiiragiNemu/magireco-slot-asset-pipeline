@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v56-ac7211-native192x320",
+  "checkpoint_label": "v56",
+  "start_upload_id": 139,
+  "expected_dimensions": {
+    "width": 192,
+    "height": 320
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V56.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v56_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "7EEA8B980CB19991FA6D53CEC02A8C2CC906F55CE1E0628452D8B85F50453EFB"
+  },
+  "specific_exclusions": [
+    "本批只含 ac7211 的 1 个原生 192x320 角色立绘待机组件；416x232 与 512x288 角色序列组件分别在 U137/U138。",
+    "该源组件被 15 个已解析事件复用；本目录只保留一次去重素材，不将15次引用冒充15个视频。",
+    "ac7211_002至004与016至018仍未解析，明确排除。",
+    "三个原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac7211_portrait_standby_component_192x320_v1",
+      "title": "角色立绘待机组件",
+      "family": "ac7211",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727\\ac7211_portrait_standby_component_192x320_v1\\material_collection_manifest.json",
+        "sha256": "17A29939979B5A4F4E13C59F19018E1A16B3F5279596CEDEE8B260146853B2B4"
+      },
+      "output_sha256": "6EF3B9C5F0E749577EEBBEC34C63EFBE3A3D0D4AD16B0B2D6816CBC6642D2CD1"
+    }
+  ]
+}

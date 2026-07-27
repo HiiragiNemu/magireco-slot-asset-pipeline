@@ -96,6 +96,15 @@ MATERIAL_PART_NAMES = {
     "ac0916_text_effect_components_160x120_v1": (
         "玩法文字循环效果素材 ac0916"
     ),
+    "ac7211_character_sequence_components_416_v1": (
+        "角色序列动作素材 ac7211"
+    ),
+    "ac7211_event014_components_512x288_v1": (
+        "事件014角色序列素材 ac7211"
+    ),
+    "ac7211_portrait_standby_component_192x320_v1": (
+        "角色立绘待机素材 ac7211"
+    ),
 }
 ROUTE_BATCH_SOURCE_NAMES = (
     "v31_ac4902_manifest",

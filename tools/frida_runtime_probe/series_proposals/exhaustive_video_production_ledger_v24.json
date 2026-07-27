@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v23.json",
+    "sha256": "BCD97E50A2C2E1A591699C8A5B004F36835079F7E981EE9BEDDEA2D9E02E530B"
+  },
+  "checkpoint_id": "20260727-v56-ac7211-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v23 records plus fifteen fully resolved ac7211 gameplay/effect events whose 53 hash-bound visual component occurrences are preserved in separate native 416x232, 512x288 and 192x320 review catalogs. The catalogs do not resize, cross-compose or claim natural event timelines. ac7211_002-004 and _016-018 remain outside coverage because their audience inventories are unresolved.",
+  "append_current_material_roots": [
+    {
+      "label": "v56 ac7211 split-native character sequence and standby component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v56_ac7211_split_components_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v56_ac7211_20260727\\ac7211_split_native_components_v1.json",
+      "sha256": "815894AA77E27FDAD8665DCC4A264A767E33E48D3D4BEFB5C55947CED4DEA86D"
+    }
+  ]
+}

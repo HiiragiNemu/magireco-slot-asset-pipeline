@@ -21,6 +21,7 @@ from tools.frida_runtime_probe.build_material_collection import (
     file_sha256,
     material_lane,
     material_semantic_review_gate,
+    normalize_expected_classifications,
     transcript_gate,
 )
 
@@ -117,6 +118,22 @@ def transcript(
 
 
 class MaterialCollectionTranscriptGateTests(unittest.TestCase):
+    def test_audience_inventory_accepts_explicit_classification_set(self) -> None:
+        self.assertEqual(
+            normalize_expected_classifications(
+                [
+                    "mixed_full_frame_and_components",
+                    "component_only",
+                ]
+            ),
+            {
+                "mixed_full_frame_and_components",
+                "component_only",
+            },
+        )
+        with self.assertRaisesRegex(ValueError, "classifications differ"):
+            normalize_expected_classifications([])
+
     def test_ac5102_kyo_role_voice_is_detected_without_allowlist(self) -> None:
         result = classify_audio_semantic(
             {"code_name": "25472_kyo_AT_マギアタ上乗せ_はぁっ"}

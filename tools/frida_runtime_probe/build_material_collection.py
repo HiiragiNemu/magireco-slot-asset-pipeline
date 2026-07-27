@@ -255,6 +255,19 @@ def resolve_covered_event_index(
     return resolved
 
 
+def normalize_expected_classifications(raw: object) -> set[str]:
+    if isinstance(raw, str):
+        values = [raw]
+    elif isinstance(raw, list):
+        values = [str(value) for value in raw]
+    else:
+        raise ValueError("named material audience classifications differ")
+    normalized = {value.strip() for value in values if value.strip()}
+    if not normalized or len(normalized) != len(values):
+        raise ValueError("named material audience classifications differ")
+    return normalized
+
+
 def resolve_audience_event_inventory(
     *,
     event_index_raw: object,
@@ -307,6 +320,9 @@ def resolve_audience_event_inventory(
         clip_index_raw, "audience clip index"
     )
     selected: dict[str, dict[str, str]] = {}
+    expected_classifications = normalize_expected_classifications(
+        event_index_raw["classification"]
+    )
     with event_index.open("r", encoding="utf-8-sig", newline="") as source:
         for row in csv.DictReader(source):
             event = str(row.get("event_name", "")).strip()
@@ -322,7 +338,7 @@ def resolve_audience_event_inventory(
                 or str(row.get("disposition", ""))
                 != str(event_index_raw["disposition"])
                 or str(row.get("classification", ""))
-                != str(event_index_raw["classification"])
+                not in expected_classifications
                 or int(row.get("clip_count", 0))
                 != int(row.get("resolved_clip_count", -1))
             ):

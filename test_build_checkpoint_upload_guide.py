@@ -168,6 +168,12 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             ),
             "玩法文字循环效果素材 ac0916",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac7211_portrait_standby_component_192x320_v1"
+            ),
+            "角色立绘待机素材 ac7211",
+        )
 
     def test_current_selector_route_source_is_indexed(self) -> None:
         self.assertIn(

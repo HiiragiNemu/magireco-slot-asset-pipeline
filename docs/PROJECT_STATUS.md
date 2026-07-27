@@ -2,6 +2,28 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac7211 三尺寸角色组件 v56
+
+`material_collections_v56_ac7211_split_components_review_20260727` 已把
+ac7211 当前完全解析的 15 个事件拆成三个原生 visual-only 产品：33 个
+416x232 角色序列源、5 个 512x288 的 event014 角色序列源，以及 1 个
+被 15 个事件复用的 192x320 角色立绘待机源。39 个唯一源、53 个
+occurrence 均闭合，与此前 current material index 零重叠。两条内嵌
+ALAC 轨均为 -91 dB 数字静音，正式输出丢弃静音轨；不猜成对白、SE 或
+BGM。
+
+覆盖审计为 15/15 event、39/39 source、0 unused。三个尺寸保持独立，
+没有拉伸、补边、upscale、跨尺寸 composition 或自然 session 声明。
+`ac7211_002–004` 与 `_016–018` 仍未解析并明确排除。
+
+当前总账为 `production_ledger_v24_20260727`：produced audience 195、
+material-covered 618、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。正式指南 `upload_guide_v56_20260727` 为
+10 已投稿、17 可投稿、314 待人工播放、8 排除，共 341 个精确文件。
+U137/U138/U139 分别是 416x232、512x288、192x320 审查入口，三者
+`UPLOAD_NOW` 均为 0。详见
+`docs/research/2026-07-27-ac7211-split-native-component-checkpoint-v56.md`。
+
 ## 2026-07-27 ac8005 六条独立玩法告知路线 v55r2
 
 `production_manifests_v55r1_ac8005_six_silent_gameplay_routes_20260727`

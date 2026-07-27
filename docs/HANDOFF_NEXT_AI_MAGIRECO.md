@@ -6,15 +6,21 @@ Current checkpoint: 2026-07-24
 Current production delta (2026-07-27):
 
 ```text
-docs/research/2026-07-27-silent-native416-and-split-material-checkpoint-v48.md
+docs/research/2026-07-27-ac7211-split-native-component-checkpoint-v56.md
 ```
 
 The owner lifted the production freeze.  Continue from
-`production_ledger_v16_20260727`; keep the old freeze package immutable.
-The only current v48 upload guide is `upload_guide_v48_final_20260727`.
+`production_ledger_v24_20260727`; keep the old freeze package immutable.
+The current upload guide is `upload_guide_v56_20260727`.
 P16/P17/P18 and unresolved child-local timing remain fail-closed.  Formal
 with-BGM production still has zero ready candidates and starts only after the
 discovered no-BGM inventory is produced or precisely blocked.
+
+The v56 delta closes the currently resolved ac7211 component inventory as
+three separate native visual-only products: 416x232, 512x288 and 192x320.
+Use U137/U138/U139 for playback review.  Do not cross-compose those dimensions
+or describe the catalogs as complete events or natural sessions.
+`ac7211_002–004` and `_016–018` remain unresolved and excluded.
 
 The newest transfer delta is:
 
