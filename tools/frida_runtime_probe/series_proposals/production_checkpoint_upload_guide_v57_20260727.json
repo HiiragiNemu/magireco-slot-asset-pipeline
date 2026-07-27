@@ -1,0 +1,17 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v56_20260727.json",
+    "sha256": "BF69F89B832FEB616FB0FF78AB51DF97FAF8577DF08FC3E34A243A85D6998A8C"
+  },
+  "checkpoint_id": "20260727-v57-ac5102-nerae-split-native-components",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v25_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "ABE93B17C913C1ECDEB5B79E3BEE2C09A3A7DDF74D82E9EB7B5CF03CF4E47707"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v25_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "071B0EEFBD250429E02406C21B75CCE8D56C5FE970C8F3C88F34926BA6C0C54F"
+    }
+  }
+}

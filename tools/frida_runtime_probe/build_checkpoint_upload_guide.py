@@ -105,6 +105,12 @@ MATERIAL_PART_NAMES = {
     "ac7211_portrait_standby_component_192x320_v1": (
         "角色立绘待机素材 ac7211"
     ),
+    "ac5102_nerae_gameplay_components_416_v1": (
+        "瞄准玩法组件素材 ac5102"
+    ),
+    "ac5102_gyakuosi_indicator_144x56_v1": (
+        "逆押提示组件素材 ac5102"
+    ),
 }
 ROUTE_BATCH_SOURCE_NAMES = (
     "v31_ac4902_manifest",

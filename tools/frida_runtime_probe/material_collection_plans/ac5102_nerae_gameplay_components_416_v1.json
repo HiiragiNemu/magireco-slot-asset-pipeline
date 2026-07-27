@@ -1,0 +1,62 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac5102_nerae_gameplay_components_416_v1",
+  "classification": "ac5102_native416x232_nerae_gameplay_components",
+  "evidence": "Ten fully resolved ac5102 nerae gameplay/effect events contain six exact native 416x232 visual components plus one separate 144x56 gyakuosi indicator. This catalog preserves only the 416x232 sources and does not cross-compose dimensions or claim a natural event timeline.",
+  "expected_audio_state": "digital_silence",
+  "component_events": [
+    "ac5102_025",
+    "ac5102_051",
+    "ac5102_077",
+    "ac5102_103",
+    "ac5102_129",
+    "ac5102_155",
+    "ac5102_181",
+    "ac5102_207",
+    "ac5102_233",
+    "ac5102_259"
+  ],
+  "component_native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "derive_clips_from_audience_event_catalog": true,
+  "audience_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v24_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "2A3BE32B1E959730C44673071C981C243807887DD57F11C25950337DCAE4CB6A",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "classification": "mixed_full_frame_and_components"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "current_material_index_no_overlap": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v24_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+    "sha256": "2594297F11861B348CF8A4163AADA7D8C406132E6129AED279349A89560AFDA9"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "v24 component and mixed exhaustive ledger",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v24_20260727\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "E621093D354E8208C034090EAA829E8D6D69F6BA77870F4C3547F1589B27C8D8"
+    },
+    {
+      "label": "component and mixed audience-event catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\component_or_mixed_review.csv",
+      "sha256": "5EF3F01F9E766A6AFCE061D6965BD6826B58B314E5EA81A88291737EFFA10FCF"
+    },
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

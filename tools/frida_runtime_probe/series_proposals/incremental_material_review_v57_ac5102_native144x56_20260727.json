@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v57-ac5102-nerae-native144x56",
+  "checkpoint_label": "v57",
+  "start_upload_id": 141,
+  "expected_dimensions": {
+    "width": 144,
+    "height": 56
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V57.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v57_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "EDB43526CC27D8E3127FD9992242C60DC80AFB9BD61F77F18727FB618CC5E723"
+  },
+  "specific_exclusions": [
+    "本批只含 ac5102 十个 nerae 事件共享的 1 个原生 144x56 逆押提示组件；416x232 瞄准玩法组件在 U140。",
+    "同一源的十次引用只保留一个去重素材，不将十个 occurrence 冒充十个视频或完整事件。",
+    "既有 ac5102 120-event split-component bundle 保持独立，本批不覆盖、不替换该检查点。",
+    "两个原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac5102_gyakuosi_indicator_144x56_v1",
+      "title": "逆押提示组件",
+      "family": "ac5102",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v57_ac5102_nerae_delta_review_20260727\\ac5102_gyakuosi_indicator_144x56_v1\\material_collection_manifest.json",
+        "sha256": "38DF8249FEDFA8AE0D655C2DBCCD8E16592AEED3F1398414AD9AD61A963B9763"
+      },
+      "output_sha256": "A35943125B664D359E46FC0612547D16F5AECA6DABEB0E129EE5FFB003C18189"
+    }
+  ]
+}

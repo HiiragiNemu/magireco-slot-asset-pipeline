@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v24.json",
+    "sha256": "A1EF480254BE90614AE8D7707CC2A040D03F4B33337C4C63DB0BC4C41AA22043"
+  },
+  "checkpoint_id": "20260727-v57-ac5102-nerae-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v24 records plus ten fully resolved ac5102 nerae gameplay/effect events whose 70 hash-bound visual component occurrences are preserved in separate native 416x232 and 144x56 review catalogs. This delta does not replace the existing 120-event ac5102 split-component coverage bundle, resize or cross-compose components, or claim natural event timelines.",
+  "append_current_material_roots": [
+    {
+      "label": "v57 ac5102 nerae native416 gameplay and native144 indicator component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v57_ac5102_nerae_delta_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v57_ac5102_nerae_20260727\\ac5102_nerae_split_native_components_v1.json",
+      "sha256": "507BD5134FCA0BA98F2973F3535DE16925D9FF3E493C222B4E7A668273B13612"
+    }
+  ]
+}

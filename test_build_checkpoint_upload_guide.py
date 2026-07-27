@@ -174,6 +174,12 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             ),
             "角色立绘待机素材 ac7211",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac5102_gyakuosi_indicator_144x56_v1"
+            ),
+            "逆押提示组件素材 ac5102",
+        )
 
     def test_current_selector_route_source_is_indexed(self) -> None:
         self.assertIn(

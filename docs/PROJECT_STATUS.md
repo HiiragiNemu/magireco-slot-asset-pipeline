@@ -2,6 +2,27 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac5102 瞄准玩法分尺寸增量 v57
+
+`material_collections_v57_ac5102_nerae_delta_review_20260727` 已闭合
+ac5102 当前未覆盖的 10 个 nerae 玩法事件：70/70 occurrence 分为
+24 个原生 416x232 瞄准玩法源与 1 个原生 144x56 逆押提示源。25 个
+唯一源均为 30fps、无音轨，与 v24 current material index 的 542 个
+source SHA 零重叠。
+
+覆盖审计为 10/10 event、70/70 occurrence、25/25 source、0 unused。
+两个尺寸保持独立，没有跨尺寸 composition、拉伸、补边、upscale 或
+自然 session 声明；既有 ac5102 120-event split-component bundle 未被
+替换或改写。
+
+当前总账为 `production_ledger_v25_20260727`：produced audience 195、
+material-covered 628、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。正式指南 `upload_guide_v57_20260727` 为
+10 已投稿、17 可投稿、316 待人工播放、8 排除，共 343 个精确文件。
+U140/U141 分别是 416x232 与 144x56 审查入口，均无媒体进入
+`UPLOAD_NOW`。详见
+`docs/research/2026-07-27-ac5102-nerae-split-component-checkpoint-v57.md`。
+
 ## 2026-07-27 ac7211 三尺寸角色组件 v56
 
 `material_collections_v56_ac7211_split_components_review_20260727` 已把

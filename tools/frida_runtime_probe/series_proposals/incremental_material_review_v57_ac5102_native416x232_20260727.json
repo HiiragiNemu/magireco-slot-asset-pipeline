@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v57-ac5102-nerae-native416x232",
+  "checkpoint_label": "v57",
+  "start_upload_id": 140,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V57.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v57_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "EDB43526CC27D8E3127FD9992242C60DC80AFB9BD61F77F18727FB618CC5E723"
+  },
+  "specific_exclusions": [
+    "本批只含 ac5102 十个 nerae 事件的 24 个原生 416x232 玩法组件；共享的 144x56 逆押提示组件在 U141。",
+    "70 个 occurrence 的 split-native component coverage 已闭合，但本目录只是去重组件清单，不冒充十个完整事件或游戏自然 session。",
+    "既有 ac5102 120-event split-component bundle 保持独立，本批不覆盖、不替换该检查点。",
+    "两个原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批无对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac5102_nerae_gameplay_components_416_v1",
+      "title": "瞄准玩法组件",
+      "family": "ac5102",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v57_ac5102_nerae_delta_review_20260727\\ac5102_nerae_gameplay_components_416_v1\\material_collection_manifest.json",
+        "sha256": "43FF9B102CD01F57869EF7706D3548D72D43F08800879E057EEC0910935AE6CB"
+      },
+      "output_sha256": "0B07572E2C6B23B9FA29564EB7C7108DDC75F811C6CC5C160A896A3CC0E2A4F4"
+    }
+  ]
+}

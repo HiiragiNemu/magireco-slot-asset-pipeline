@@ -1,0 +1,65 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac5102_nerae_split_native_components_v1",
+  "family": "ac5102",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_classification": "mixed_full_frame_and_components",
+  "expected_event_count": 10,
+  "expected_events": [
+    "ac5102_025",
+    "ac5102_051",
+    "ac5102_077",
+    "ac5102_103",
+    "ac5102_129",
+    "ac5102_155",
+    "ac5102_181",
+    "ac5102_207",
+    "ac5102_233",
+    "ac5102_259"
+  ],
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v24_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "2A3BE32B1E959730C44673071C981C243807887DD57F11C25950337DCAE4CB6A"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac5102_native416x232_nerae_gameplay_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v57_ac5102_nerae_delta_review_20260727\\ac5102_nerae_gameplay_components_416_v1\\material_collection_manifest.json",
+        "sha256": "43FF9B102CD01F57869EF7706D3548D72D43F08800879E057EEC0910935AE6CB"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac5102_native144x56_shared_gyakuosi_indicator",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 144,
+        "height": 56
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v57_ac5102_nerae_delta_review_20260727\\ac5102_gyakuosi_indicator_144x56_v1\\material_collection_manifest.json",
+        "sha256": "38DF8249FEDFA8AE0D655C2DBCCD8E16592AEED3F1398414AD9AD61A963B9763"
+      },
+      "allowed_unused_sources": []
+    }
+  ]
+}
