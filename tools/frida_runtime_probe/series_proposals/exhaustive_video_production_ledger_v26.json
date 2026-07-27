@@ -1,0 +1,26 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v25.json",
+    "sha256": "4534662B73AA5135CB531B39647559567941CFACE6CA9D1B21330F50B461E403"
+  },
+  "checkpoint_id": "20260727-v58r2-ac2201-split-native-components",
+  "recorded_date": "2026-07-27",
+  "scope": "All v25 records plus ac2201_005 and ac2201_006, whose ten hash-bound visual component occurrences are preserved through the current shared 416x232 entry catalog and two new separate native 416x232 and 512x416 review catalogs. Embedded ALAC from the two new 416x232 CU clips is deliberately dropped because its semantic role is unresolved; this delta is visual-only and does not claim an audible edition, overlay placement, z-order, parent holds, loops, or a natural event timeline.",
+  "append_current_material_roots": [
+    {
+      "label": "v58r2 ac2201 native416 CU delta and native512 result or target component catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v58r2_ac2201_split_delta_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v58r2_ac2201_20260727\\ac2201_005_006_split_native_components_v1.json",
+      "sha256": "E6F14E9A14EFD5931305F003A374777249E6520A75822AEF6B85A2793220CF6E"
+    }
+  ]
+}

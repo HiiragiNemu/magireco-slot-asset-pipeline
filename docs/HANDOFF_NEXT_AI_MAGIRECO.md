@@ -6,21 +6,23 @@ Current checkpoint: 2026-07-24
 Current production delta (2026-07-27):
 
 ```text
-docs/research/2026-07-27-ac5102-nerae-split-component-checkpoint-v57.md
+docs/research/2026-07-27-ac2201-split-native-component-checkpoint-v58r2.md
 ```
 
 The owner lifted the production freeze.  Continue from
-`production_ledger_v25_20260727`; keep the old freeze package immutable.
-The current upload guide is `upload_guide_v57_20260727`.
+`production_ledger_v26_20260727`; keep the old freeze package immutable.
+The current upload guide is `upload_guide_v58r2_20260727`.
 P16/P17/P18 and unresolved child-local timing remain fail-closed.  Formal
 with-BGM production still has zero ready candidates and starts only after the
 discovered no-BGM inventory is produced or precisely blocked.
 
-The v57 delta closes ten previously uncovered ac5102 nerae gameplay events as
-separate native 416x232 and 144x56 visual-only catalogs. Use U140/U141 for
-playback review. Do not cross-compose the dimensions or describe the catalogs
-as complete events or natural sessions. The existing 120-event ac5102
-split-component bundle remains current and was not replaced.
+The v58r2 delta closes the exact visual-component inventory for ac2201_005 and
+ac2201_006 by reusing four current 416x232 sources and adding separate native
+416x232 and 512x416 catalogs. Use U142/U143 for playback review. The two new
+416 sources have unresolved embedded ALAC, so the review output deliberately
+drops it and is visual-only; do not construct an audible version. Do not
+cross-compose the dimensions or describe the catalogs as complete events or
+natural sessions. Earlier v58/v58r1 roots are superseded audit-only.
 
 The newest transfer delta is:
 

@@ -1739,6 +1739,76 @@ class MaterialCollectionRealMediaTests(unittest.TestCase):
         }
         self.assertEqual(evidence_paths, {ledger.resolve(), clips.resolve()})
 
+    def test_named_component_material_can_allowlist_a_derived_delta(
+        self,
+    ) -> None:
+        first = self.make_video("delta-red.mp4", "red")
+        second = self.make_video("delta-blue.mp4", "blue")
+        already_current = self.make_video("delta-green.mp4", "green")
+        event = "ac2201_006"
+        ledger = self.root / "delta-audience-ledger.csv"
+        ledger.write_text(
+            "event_name,code_hex,clip_count,resolved_clip_count,"
+            "classification,production_state,disposition\n"
+            f"{event},0x01,3,3,mixed_full_frame_and_components,"
+            "planned_unproduced,gameplay_effect_collection\n",
+            encoding="utf-8",
+        )
+        clips = self.root / "delta-audience-clips.csv"
+        clips.write_text(
+            "event_name,z2d_order,dgm_order,official_name,target_mp4,"
+            "interval_confidence\n"
+            f"{event},1,0,{first.stem},{first},exact_duration_unique\n"
+            f"{event},1,1,{second.stem},{second},exact_duration_unique\n"
+            f"{event},1,2,{already_current.stem},{already_current},"
+            "exact_duration_unique\n",
+            encoding="utf-8",
+        )
+        plan = {
+            "collection": "named_audience_component_delta",
+            "component_events": [event],
+            "component_native_dimensions": {"width": 96, "height": 64},
+            "component_official_name_allowlist": [
+                first.stem,
+                second.stem,
+            ],
+            "derive_clips_from_audience_event_catalog": True,
+            "audience_event_index": {
+                "path": str(ledger),
+                "sha256": file_sha256(ledger),
+                "production_state": "planned_unproduced",
+                "disposition": "gameplay_effect_collection",
+                "classification": "mixed_full_frame_and_components",
+            },
+            "audience_clip_index": {
+                "path": str(clips),
+                "sha256": file_sha256(clips),
+            },
+        }
+        plan_path = self.root / "named-audience-component-delta-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        row = build_named_collection(
+            plan_path,
+            {
+                path.stem: {"target_mp4": str(path)}
+                for path in (first, second, already_current)
+            },
+            self.out,
+            "ffmpeg",
+            "ffprobe",
+            False,
+        )
+        manifest = json.loads(Path(row["manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["clip_count"], 2)
+        self.assertEqual(
+            manifest["component_official_name_allowlist"],
+            [first.stem, second.stem],
+        )
+        self.assertEqual(
+            manifest["component_event_clip_map"][event],
+            [first.stem, second.stem],
+        )
+
     def test_named_component_material_allows_one_exact_source_when_declared(
         self,
     ) -> None:

@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v58r2-ac2201-native416x232",
+  "checkpoint_label": "v58",
+  "start_upload_id": 142,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V58R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v58r2_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "C2BF7A21BDC397DB4C43DB93D8E799E9E13AB9783AB88F53D9F47E571E1C134D"
+  },
+  "specific_exclusions": [
+    "本批只含 ac2201_006 新增的两个原生 416x232 黑江 CU 瞄准组件；既有四个 416x232 入场组件仍由当前 ac2201 素材目录保存，512x416 结果与文字组件在 U143。",
+    "两个源文件内嵌 ALAC 的语义尚未解析，审查 MP4 已明确丢弃全部内嵌音频；本批只能作为 visual-only 素材，禁止据此制作或上传有声版。",
+    "10 个 occurrence 的 split-native component coverage 已闭合，但本目录不声明叠加位置、z-order、alpha/blend、父级 hold、循环次数或完整自然事件。",
+    "不同原生尺寸禁止机械拼接、拉伸、补边或 upscale；本批没有对白、已验证 SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac2201_kuroe_cu_gameplay_delta_416_v1",
+      "title": "黑江CU瞄准玩法组件",
+      "family": "ac2201",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v58r2_ac2201_split_delta_review_20260727\\ac2201_kuroe_cu_gameplay_delta_416_v1\\material_collection_manifest.json",
+        "sha256": "5D50393641003B14EA6D60394F94854CE014DE272C513DD0E21C871EC15C3058"
+      },
+      "output_sha256": "2E48FC6909127C935BF441308926488F5A183920426B8E62F562F10FBAB1E58F"
+    }
+  ]
+}

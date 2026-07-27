@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260727-v58r2-ac2201-native512x416",
+  "checkpoint_label": "v58",
+  "start_upload_id": 143,
+  "expected_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V58R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v58r2_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "C2BF7A21BDC397DB4C43DB93D8E799E9E13AB9783AB88F53D9F47E571E1C134D"
+  },
+  "specific_exclusions": [
+    "本批只含 ac2201_005/ac2201_006 的四个原生 512x416 成功结果与瞄准文字组件；416x232 组件在既有 ac2201 目录和 U142。",
+    "10 个 occurrence 的 split-native component coverage 已闭合，但本目录不声明叠加位置、z-order、alpha/blend、父级 hold、循环次数或完整自然事件。",
+    "不同原生尺寸禁止机械拼接、拉伸、补边或 upscale。",
+    "四个源均无音频流；本批没有对白、已验证 SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac2201_result_and_target_components_512x416_v1",
+      "title": "成功结果与瞄准文字组件",
+      "family": "ac2201",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v58r2_ac2201_split_delta_review_20260727\\ac2201_result_and_target_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "3849D664A67CDD7A456DF02BB95CADD7E4506057CB6AF88E906487542C3F13D0"
+      },
+      "output_sha256": "3F0D873F8179AE1C658FAE9D0A85A946ACEE1B0EB97D97BA3349D440ABC24D77"
+    }
+  ]
+}

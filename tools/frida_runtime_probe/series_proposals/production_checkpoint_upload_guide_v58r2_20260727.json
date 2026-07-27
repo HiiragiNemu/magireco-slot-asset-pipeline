@@ -1,0 +1,17 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v57_20260727.json",
+    "sha256": "A0F0297EC16BAFD4D844F905EB6A2342B25BE626D450BD7485560791A49ED197"
+  },
+  "checkpoint_id": "20260727-v58r2-ac2201-split-native-components",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v26_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "ABE93B17C913C1ECDEB5B79E3BEE2C09A3A7DDF74D82E9EB7B5CF03CF4E47707"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v26_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "6485ABA451F0089A9C8252B7B468E383DB444BD067F248332FFB1B97EF2C3540"
+    }
+  }
+}

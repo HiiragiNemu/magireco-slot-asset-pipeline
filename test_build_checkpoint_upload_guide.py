@@ -180,6 +180,18 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             ),
             "逆押提示组件素材 ac5102",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac2201_kuroe_cu_gameplay_delta_416_v1"
+            ),
+            "黑江CU瞄准玩法组件素材 ac2201",
+        )
+        self.assertEqual(
+            module.material_part_name(
+                "ac2201_result_and_target_components_512x416_v1"
+            ),
+            "成功结果与瞄准文字组件素材 ac2201",
+        )
 
     def test_current_selector_route_source_is_indexed(self) -> None:
         self.assertIn(

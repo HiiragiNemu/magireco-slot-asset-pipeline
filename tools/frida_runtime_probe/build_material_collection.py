@@ -2933,6 +2933,40 @@ def _build_named_collection_in_place(
         raise ValueError("named material plan covered_events contains invalid event")
     if len(set(scoped_events)) != len(scoped_events):
         raise ValueError("named material plan covered_events contains duplicates")
+    component_allowlist_raw = plan.get(
+        "component_official_name_allowlist", []
+    )
+    if not isinstance(component_allowlist_raw, list):
+        raise ValueError(
+            "named material plan component_official_name_allowlist "
+            "must be a list"
+        )
+    component_allowlist = [
+        str(official_name).strip()
+        for official_name in component_allowlist_raw
+    ]
+    component_allowlist_keys = {
+        official_name.casefold() for official_name in component_allowlist
+    }
+    if any(not official_name for official_name in component_allowlist):
+        raise ValueError(
+            "named material component_official_name_allowlist contains "
+            "an empty name"
+        )
+    if len(component_allowlist_keys) != len(component_allowlist):
+        raise ValueError(
+            "named material component_official_name_allowlist contains "
+            "duplicates"
+        )
+    if component_allowlist and (
+        not component_events
+        or not derive_clips
+        or plan.get("component_native_dimensions") is None
+    ):
+        raise ValueError(
+            "named material component_official_name_allowlist requires "
+            "derived component events and native dimensions"
+        )
     if derive_audience_clips:
         (
             audience_evidence_sources,
@@ -3115,6 +3149,11 @@ def _build_named_collection_in_place(
         selected_keys: set[str] = set()
         for planned in planned_clips:
             official_name = str(planned["official_name"])
+            if (
+                component_allowlist_keys
+                and official_name.casefold() not in component_allowlist_keys
+            ):
+                continue
             source_path = resolve_named_source(
                 video_map.get(official_name.casefold(), {})
             )
@@ -3133,6 +3172,15 @@ def _build_named_collection_in_place(
                 filtered_clips.append(planned)
                 selected_keys.add(official_name.casefold())
         planned_clips = filtered_clips
+        if (
+            component_allowlist_keys
+            and selected_keys != component_allowlist_keys
+        ):
+            missing = sorted(component_allowlist_keys - selected_keys)
+            raise ValueError(
+                "named material component_official_name_allowlist did not "
+                f"resolve at the declared native dimensions: {missing}"
+            )
         if len(planned_clips) < minimum_unique_clips:
             raise ValueError(
                 "derived component material lacks the required unique clips"
@@ -3506,6 +3554,7 @@ def _build_named_collection_in_place(
         "covered_events": covered_events,
         "component_events": component_events,
         "component_native_dimensions": component_dimensions,
+        "component_official_name_allowlist": component_allowlist,
         "allow_single_source_component_catalog": (
             allow_single_source_component_catalog
         ),

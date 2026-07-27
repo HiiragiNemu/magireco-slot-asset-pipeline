@@ -2,6 +2,27 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac2201 分尺寸组件增量 v58r2
+
+`material_collections_v58r2_ac2201_split_delta_review_20260727` 已闭合
+`ac2201_005/_006` 的 10 个精确 visual component occurrence：复用 current
+ac2201 目录中的 4 个原生 416x232 入场源，新产 2 个原生 416x232 CU 源与
+4 个原生 512x416 结果／文字源。两个尺寸保持独立，无机械拼接、拉伸、
+补边或 upscale。
+
+两个 CU 源的内嵌 ALAC 语义未解析，因此正式 visual-only 输出全部丢弃
+内嵌音频，`unknown_audio_count=2`，禁止据此发布有声版。覆盖审计为
+2/2 event、10/10 occurrence。先前 v58/v58r1 尝试只保留审计，不是
+current，也不得上传。
+
+当前总账为 `production_ledger_v26_20260727`：produced audience 195、
+material-covered 630、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。正式指南 `upload_guide_v58r2_20260727` 为
+10 已投稿、17 可投稿、318 待人工播放、8 排除，共 345 个精确文件。
+U142/U143 分别是 416x232 与 512x416 审查入口，均无媒体进入
+`UPLOAD_NOW`。详见
+`docs/research/2026-07-27-ac2201-split-native-component-checkpoint-v58r2.md`。
+
 ## 2026-07-27 ac5102 瞄准玩法分尺寸增量 v57
 
 `material_collections_v57_ac5102_nerae_delta_review_20260727` 已闭合
