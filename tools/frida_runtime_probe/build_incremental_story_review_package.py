@@ -145,6 +145,21 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
     expected_width = int(expected_dimensions["width"])
     expected_height = int(expected_dimensions["height"])
     no_dialogue_aliases = plan.get("no_dialogue_aliases") is True
+    review_queue = str(
+        plan.get("review_queue", "01_REVIEW_STORY")
+    ).strip()
+    if review_queue not in {"01_REVIEW_STORY", "02_REVIEW_MATERIAL"}:
+        raise ValueError("incremental story review queue differs")
+    product_category = str(
+        plan.get("product_category", "story")
+    ).strip()
+    if product_category not in {"story", "gameplay_announcement"}:
+        raise ValueError("incremental story product category differs")
+    if (
+        product_category == "gameplay_announcement"
+        and review_queue != "02_REVIEW_MATERIAL"
+    ):
+        raise ValueError("gameplay announcement review queue differs")
     checkpoint_label = str(plan.get("checkpoint_label", "")).strip() or "incremental"
     source_guide_copy_name = str(
         plan.get("source_guide_copy_name", "SOURCE_GLOBAL_UPLOAD_GUIDE.json")
@@ -299,14 +314,17 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             "00_UPLOAD_NOW/none",
             "00_UPLOAD_NOW/ja",
             "00_UPLOAD_NOW/zh",
-            "01_REVIEW_STORY/batch_001/none",
-            "01_REVIEW_STORY/batch_001/ja",
-            "01_REVIEW_STORY/batch_001/zh",
+            "01_REVIEW_STORY",
             "02_REVIEW_MATERIAL",
             "03_QUARANTINED_DO_NOT_UPLOAD",
             "manifests",
         ):
             (staging / relative).mkdir(parents=True, exist_ok=True)
+        for edition in EDITIONS:
+            (staging / review_queue / "batch_001" / edition).mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
         index_rows: list[dict] = []
         alias_rows: list[dict] = []
@@ -320,7 +338,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                     f"__{edition}.mp4"
                 )
                 relative = (
-                    Path("01_REVIEW_STORY")
+                    Path(review_queue)
                     / "batch_001"
                     / edition
                     / filename
@@ -352,7 +370,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                 index_rows.append(
                     {
                         "upload_id": upload_id,
-                        "queue": "01_REVIEW_STORY",
+                        "queue": review_queue,
                         "batch": "batch_001",
                         "packaged_file": relative.as_posix(),
                         "packaged_absolute_path": str(output_root / relative),
@@ -455,12 +473,21 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                     "绝不表示 none 未生产。",
                     "",
                     "请先完整播放：",
-                    f"`{output_root}\\01_REVIEW_STORY\\batch_001`。",
+                    f"`{output_root}\\{review_queue}\\batch_001`。",
                     "",
                     f"{len(prepared)} 个作品均为独立 event-exact 原生 "
                     f"{expected_width}×{expected_height} 单事件产品，每个都有 "
                     "none/JA/ZH；它们不宣称完整 natural family，也没有把"
                     "互斥路线机械串联。",
+                    *(
+                        [
+                            "",
+                            "本批属于玩法／告知动画，不是剧情；六条 sibling "
+                            "DirInfo 路线必须分别审查，禁止合并成自然会话。",
+                        ]
+                        if product_category == "gameplay_announcement"
+                        else []
+                    ),
                     *(
                         [
                             "",
@@ -549,7 +576,12 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             ),
             "legal_cross_target_alias_count": len(alias_rows),
             "upload_now_file_count": 0,
-            "review_story_batch_count": 1,
+            "review_story_batch_count": (
+                1 if review_queue == "01_REVIEW_STORY" else 0
+            ),
+            "review_material_batch_count": (
+                1 if review_queue == "02_REVIEW_MATERIAL" else 0
+            ),
             "unique_duration_seconds": round(
                 sum(row["duration_seconds"] for row in prepared), 6
             ),

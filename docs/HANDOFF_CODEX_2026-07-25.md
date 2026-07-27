@@ -9,19 +9,22 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v54r1
+## 0. 2026-07-27 当前检查点 v55r2
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v22_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v23_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v54r1_20260727`。
+`upload_guide_v55r2_20260727`。
 
-v54r1 新增一个有界 `ac7118_001` 资料型产品：原生 416x232，100 帧开场后
-只取一遍 600 帧完整源循环，none/JA/ZH 是同哈希 hardlink。该产品明确不宣称
-自然 runtime session、runtime loop count 或自然停留时长。U130 是唯一人工
-审查入口，`UPLOAD_NOW` 为 0；未正确传递 scope 的两个早期 v54 试验根不是
-current，绝不上传。路径、哈希与上传目标见
+v55r2 新增 ac8005 的六条独立原生 416x232 exact-silent 玩法／告知路线，
+U131–U136 全部放在 `02_REVIEW_MATERIAL`，分别进入新建 none/JA/ZH
+玩法告知合集；不是剧情，禁止机械串联。v55r1 guide/review 的剧情目标分类
+错误，已 supersede 且禁止上传。路径、哈希与目标见
+`docs/research/2026-07-27-ac8005-independent-silent-gameplay-checkpoint-v55r2.md`。
+
+v54r1 的有界 `ac7118_001` 资料型产品继续 current：U130 待人工播放；
+它只声明开场＋一遍源循环，不声明自然 runtime session。详见
 `docs/research/2026-07-27-ac7118-bounded-profile-material-checkpoint-v54r1.md`。
 
 上一检查点 v53 的 ac0916 三尺寸 visual-only 组件和 ac0903 exact compositor

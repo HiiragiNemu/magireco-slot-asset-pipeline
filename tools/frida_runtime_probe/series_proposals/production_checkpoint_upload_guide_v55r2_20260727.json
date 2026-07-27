@@ -1,0 +1,80 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v55_20260727.json",
+    "sha256": "E77365D6FA715D672E3BB3AEFA35A807B1F8A315E458594D4194216237A0D3F7"
+  },
+  "checkpoint_id": "20260727-v55r2-ac8005-gameplay-catalog-target-correction",
+  "target_bvs": {
+    "gameplay_announcement_none_catalog": "新建：MagiaReco Slot 原生416玩法／告知动画 none BV",
+    "gameplay_announcement_ja_catalog": "新建：MagiaReco Slot 原生416玩法／告知动画 JA BV",
+    "gameplay_announcement_zh_catalog": "新建：MagiaReco Slot 原生416玩法／告知动画 ZH BV"
+  },
+  "incremental_story_products": {
+    "ac8005_001": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线1",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    },
+    "ac8005_002": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线2",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    },
+    "ac8005_003": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线3",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    },
+    "ac8005_004": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线4",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    },
+    "ac8005_005": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线5",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    },
+    "ac8005_014": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线6",
+      "no_dialogue_aliases": true,
+      "product_category": "gameplay_announcement",
+      "target_bv_keys": {
+        "none": "gameplay_announcement_none_catalog",
+        "ja": "gameplay_announcement_ja_catalog",
+        "zh": "gameplay_announcement_zh_catalog"
+      }
+    }
+  }
+}

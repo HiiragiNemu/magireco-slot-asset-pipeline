@@ -1753,7 +1753,7 @@ def validate_series_proposal_bindings(
         raise ValueError(f"{family} ordering is not an upstream ordered subsequence")
 
     bounded_scope: dict[str, Any] = {}
-    if "product_scope" in series:
+    if "natural_session_claimed" in series or "loop_scope" in series:
         product_scope = str(series["product_scope"]).strip()
         natural_session_claimed = series.get("natural_session_claimed")
         loop_scope = series.get("loop_scope")

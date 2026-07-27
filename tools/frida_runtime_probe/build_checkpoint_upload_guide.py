@@ -767,6 +767,25 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 raise ValueError(
                     f"incremental story title is empty: {family}"
                 )
+            product_category = str(
+                spec.get("product_category", "story")
+            ).strip()
+            if product_category not in {"story", "gameplay_announcement"}:
+                raise ValueError(
+                    f"incremental product category differs: {family}"
+                )
+            target_keys = spec.get("target_bv_keys")
+            if target_keys is not None and (
+                not isinstance(target_keys, Mapping)
+                or set(target_keys) != {"none", "ja", "zh"}
+                or any(
+                    not str(target_keys[edition]).strip()
+                    for edition in ("none", "ja", "zh")
+                )
+            ):
+                raise ValueError(
+                    f"incremental product target keys differ: {family}"
+                )
             for row in rows:
                 edition = row["edition"]
                 path = Path(row["path"])
@@ -775,11 +794,15 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     suggested += "__ja"
                 elif edition == "zh":
                     suggested += " 中文版"
-                target_key = {
-                    "none": "none_collection",
-                    "ja": "future_ja_catalog",
-                    "zh": "story_collection",
-                }[edition]
+                target_key = (
+                    str(target_keys[edition])
+                    if target_keys is not None
+                    else {
+                        "none": "none_collection",
+                        "ja": "future_ja_catalog",
+                        "zh": "story_collection",
+                    }[edition]
+                )
                 items.append(
                     _item(
                         path=path,
@@ -815,6 +838,16 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                                 "legal cross-target hardlink aliases."
                             )
                             if bounded_product_scope
+                            else (
+                                "Independent exact-silent native-size gameplay "
+                                "or announcement route bound to one DirInfo row. "
+                                "Sibling routes are mutually independent and "
+                                "must not be concatenated as a story or natural "
+                                "gameplay session. Current direct, child-Z2D and "
+                                "subtitle catalogs prove zero event audio or "
+                                "subtitle rows."
+                            )
+                            if product_category == "gameplay_announcement"
                             else (
                                 "Independent event-exact native-size product "
                                 "bound to one exact DirInfo row. Current direct, "

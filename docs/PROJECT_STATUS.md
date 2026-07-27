@@ -2,6 +2,36 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac8005 六条独立玩法告知路线 v55r2
+
+`production_manifests_v55r1_ac8005_six_silent_gameplay_routes_20260727`
+闭合了 DirInfo kind 214 的 rows 0–4、13：`ac8005_001–005` 与
+`ac8005_014`。六条均为 selector 0 的单事件、单层、原生 416x232、
+exact-duration、非循环画面；direct-parent audio、child-Z2D audio、
+subtitle 三个哈希绑定目录均为零匹配。总计 2,460 帧／82 秒。
+
+成品根
+`no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727`
+包含 6 个相互独立产品、18 个 none/JA/ZH 目标文件；每个产品三轨是合法
+同哈希 hardlink。它们属于玩法／告知动画，不是剧情或自然游戏 session，
+禁止把六条 sibling 路线机械串联。
+
+正确人工审查根是
+`bilibili_incremental_review_v55r2_ac8005_gameplay_six_routes_20260727`：
+U131–U136 全部位于 `02_REVIEW_MATERIAL\batch_001`，没有媒体进入
+`01_REVIEW_STORY` 或 `UPLOAD_NOW`。目标是三个新建的原生416玩法／告知
+none、JA、ZH 合集，不指向现有剧情 BV。先前 `v55r1` guide/review 错误
+使用剧情目标与剧情队列，已被 v55r2 supersede，禁止上传；媒体生产根不受
+该元数据纠正影响。
+
+总账当前为 `production_ledger_v23_20260727`：produced audience 195、
+material-covered 603、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。正式全局指南 `upload_guide_v55r2_20260727`
+为 10 已投稿、17 可投稿、311 待人工播放、8 排除，共 338 个精确文件。
+`ac8005_012` 的 loop 合同及 4 个原生 512x416 component-only 事件未混入。
+详见
+`docs/research/2026-07-27-ac8005-independent-silent-gameplay-checkpoint-v55r2.md`。
+
 ## 2026-07-27 ac7118 有限资料型产品 v54r1
 
 当前正式总账为 `production_ledger_v22_20260727`，正式全局上传指南为

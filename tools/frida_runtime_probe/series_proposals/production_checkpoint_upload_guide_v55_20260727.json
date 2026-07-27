@@ -1,0 +1,49 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v54_20260727.json",
+    "sha256": "E9BCE4E43B0AA03BDEAEC98E377E8B079B6F7FF70FE822717B705A0069BA3DBF"
+  },
+  "checkpoint_id": "20260727-v55r1-ac8005-six-independent-silent-gameplay-routes",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v23_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "ABE93B17C913C1ECDEB5B79E3BEE2C09A3A7DDF74D82E9EB7B5CF03CF4E47707"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v23_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "AC2894DB62CC1478580CB9C430B8087EDA2341101700BCACE1A3457166C6565C"
+    }
+  },
+  "incremental_story_products": {
+    "ac8005_001": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线1",
+      "no_dialogue_aliases": true
+    },
+    "ac8005_002": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线2",
+      "no_dialogue_aliases": true
+    },
+    "ac8005_003": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线3",
+      "no_dialogue_aliases": true
+    },
+    "ac8005_004": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线4",
+      "no_dialogue_aliases": true
+    },
+    "ac8005_005": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线5",
+      "no_dialogue_aliases": true
+    },
+    "ac8005_014": {
+      "root_label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "title": "玩法告知动画路线6",
+      "no_dialogue_aliases": true
+    }
+  }
+}

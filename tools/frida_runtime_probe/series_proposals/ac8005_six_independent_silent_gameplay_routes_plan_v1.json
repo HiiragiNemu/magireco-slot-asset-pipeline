@@ -1,0 +1,125 @@
+{
+  "schema": "magireco-silent-audience-event-manifest-plan-v1",
+  "plan_id": "ac8005_six_independent_silent_gameplay_routes_plan_v1",
+  "scope": "Six independent native 416x232 exact-silent gameplay or announcement routes from DirInfo kind 214 rows 0-4 and 13. Each row is a separate product; the batch is not a natural story session and sibling rows must never be concatenated.",
+  "inputs": {
+    "audience_event_catalog": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+      "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+    },
+    "audience_event_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "audience_event_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v22_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "95152B01088BC02147645E09A8017601011A5A77C22624B2D825152B65FFA46E"
+    },
+    "dirinfo_routes": {
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    "dirinfo_route_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v22_20260727\\DIRINFO_ROUTE_LEDGER.csv",
+      "sha256": "65FB48FB406829FD1755FE02840C79E6B668A5D7A7D2D596D1BBBDACC558BB35"
+    },
+    "direct_parent_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+      "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+    },
+    "child_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    "subtitles": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    }
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "events": [
+    {
+      "event": "ac8005_001",
+      "title_zh": "玩法告知动画路线1 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 0,
+        "event_info_index": 8776,
+        "code_hex": "0x6c7a50582b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_kyo_hatten": "39B0EBBB1F3C3A822E3B993FDCC2C43A4D52CB4A087FFEBA343E1B0722B82907"
+      }
+    },
+    {
+      "event": "ac8005_002",
+      "title_zh": "玩法告知动画路线2 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 1,
+        "event_info_index": 8777,
+        "code_hex": "0x344e4d4c2b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_kyo_choseiya": "636F3DAAD1CC94E4C635809268CAC7D721684ADD0A7302D1EC70481BA4A05E91"
+      }
+    },
+    {
+      "event": "ac8005_003",
+      "title_zh": "玩法告知动画路线3 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 2,
+        "event_info_index": 8778,
+        "code_hex": "0x736673712b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_kyo_magichalle": "D00542D9B18ECC5720E961471A52380E52E8DBEC3E677AEE529CB73B49D6C25A"
+      }
+    },
+    {
+      "event": "ac8005_004",
+      "title_zh": "玩法告知动画路线4 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 3,
+        "event_info_index": 8779,
+        "code_hex": "0x245673642b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_hat_WIN": "B5265790A49F241097F35AC6559FE172A32C90F8E76D5B31FBA08CEF1DD62EB8"
+      }
+    },
+    {
+      "event": "ac8005_005",
+      "title_zh": "玩法告知动画路线5 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 4,
+        "event_info_index": 8780,
+        "code_hex": "0x5976404b2b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_kyo_gekiatu": "2A47BC2F4CCE9EB48F9067A74D507D46A940460F52975CA39F4D89243EFBA559"
+      }
+    },
+    {
+      "event": "ac8005_014",
+      "title_zh": "玩法告知动画路线6 ac8005",
+      "dirinfo": {
+        "kind": 214,
+        "row_index": 13,
+        "event_info_index": 8789,
+        "code_hex": "0x537576382b473179"
+      },
+      "source_sha256_by_official_name": {
+        "ac8005_kyo_chance": "1893719CCB6C37F0F829EDDF5F0537FA955881C5C9A6E886DFEF7574A42D4FEE"
+      }
+    }
+  ]
+}

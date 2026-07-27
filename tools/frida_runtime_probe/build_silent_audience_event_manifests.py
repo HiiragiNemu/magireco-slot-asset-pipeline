@@ -355,10 +355,11 @@ def write_series_proposals(
             },
             "natural_session_claims": {
                 str(row["event"]): parse_declared_bool(
-                    row.get("natural_session_claimed", True),
+                    row["natural_session_claimed"],
                     label=f"{row['event']} natural-session claim",
                 )
                 for row in rows
+                if str(row.get("natural_session_claimed", "")).strip()
             },
         }
         write_json(source_path, source_series)
@@ -414,8 +415,9 @@ def write_series_proposals(
                         "not claim a natural runtime session or runtime loop "
                         "count, and does not concatenate any sibling event."
                     )
-                    if not parse_declared_bool(
-                        row.get("natural_session_claimed", True),
+                    if str(row.get("natural_session_claimed", "")).strip()
+                    and not parse_declared_bool(
+                        row["natural_session_claimed"],
                         label=f"{event} natural-session claim",
                     )
                     else (
@@ -426,11 +428,12 @@ def write_series_proposals(
                 "product_scope": str(
                     row.get("product_scope") or "independent_event_exact"
                 ),
-                "natural_session_claimed": parse_declared_bool(
-                    row.get("natural_session_claimed", True),
-                    label=f"{event} natural-session claim",
-                ),
             }
+            if str(row.get("natural_session_claimed", "")).strip():
+                proposal["natural_session_claimed"] = parse_declared_bool(
+                    row["natural_session_claimed"],
+                    label=f"{event} natural-session claim",
+                )
             if row.get("loop_scope"):
                 loop_scope = row["loop_scope"]
                 if isinstance(loop_scope, str):
@@ -866,7 +869,7 @@ def build_manifest_root(
                     else "independent_event_exact"
                 ),
                 "natural_session_claimed": (
-                    "no" if product_contract is not None else "yes"
+                    "no" if product_contract is not None else ""
                 ),
                 "loop_scope": (
                     json.dumps(

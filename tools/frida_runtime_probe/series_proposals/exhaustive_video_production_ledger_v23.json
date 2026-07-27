@@ -1,0 +1,20 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v22.json",
+    "sha256": "A388892F9A3D87751A2F090278DFAD5947E37903FA685C413C71764EC22CE603"
+  },
+  "checkpoint_id": "20260727-v55r1-ac8005-six-independent-silent-gameplay-routes",
+  "recorded_date": "2026-07-27",
+  "scope": "All v22 records plus six independent native 416x232 exact-silent ac8005 gameplay or announcement routes from DirInfo kind 214 rows 0-4 and 13. The six sibling rows remain separate products and are not concatenated into a natural story or gameplay session. ac8005_012 loop content and the 512x416 component-only rows remain outside this batch.",
+  "append_current_production_roots": [
+    {
+      "label": "v55r1 ac8005 six independent exact-silent gameplay routes",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727",
+      "manifest_glob": "*/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ]
+}

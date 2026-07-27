@@ -1,0 +1,72 @@
+{
+  "schema": "magireco-incremental-story-review-plan-v1",
+  "checkpoint_id": "20260727-v55r1-ac8005-six-independent-silent-gameplay-routes-review",
+  "checkpoint_label": "v55r1",
+  "start_upload_id": 131,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "no_dialogue_aliases": true,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V55R1.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v55r1_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "13DD70741F45CBC397C791A9043C5C2C084FEF415F0F803E3F8A629B4356B61A"
+  },
+  "products": [
+    {
+      "family": "ac8005_001",
+      "title": "玩法告知动画路线1",
+      "filename_title": "玩法告知动画路线1",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "01C040469A605DF7BAF3B53EC81BE845C5C21E9500BCC13F5CB2D4A17956300E"
+      }
+    },
+    {
+      "family": "ac8005_002",
+      "title": "玩法告知动画路线2",
+      "filename_title": "玩法告知动画路线2",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_002_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "4A2F1338A75156D95874E2709C4AA16FDCCE8333F666240C55F6DC33C386494E"
+      }
+    },
+    {
+      "family": "ac8005_003",
+      "title": "玩法告知动画路线3",
+      "filename_title": "玩法告知动画路线3",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_003_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "36DE32AA6402FB1731418DF31C1B862F70A441D1E2BC10E9287418557E381BB0"
+      }
+    },
+    {
+      "family": "ac8005_004",
+      "title": "玩法告知动画路线4",
+      "filename_title": "玩法告知动画路线4",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_004_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "B62BA9247DC300E3BF58A5FFAE81F1C083A96C168C134E15E73D7C00B30C8758"
+      }
+    },
+    {
+      "family": "ac8005_005",
+      "title": "玩法告知动画路线5",
+      "filename_title": "玩法告知动画路线5",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_005_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "095FA4C87C0309795C3AB89E858173244106B61F5BBB10AAB19E3A5CEABB8698"
+      }
+    },
+    {
+      "family": "ac8005_014",
+      "title": "玩法告知动画路线6",
+      "filename_title": "玩法告知动画路线6",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v55r1_ac8005_six_silent_gameplay_routes_review_20260727\\ac8005_014_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "40E66EFCBFE37C1680F419AE0055CA3F8FCD1B9E21E9F6DA80F67FF774AAAFE1"
+      }
+    }
+  ]
+}
