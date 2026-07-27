@@ -273,6 +273,34 @@ class NoBgmStoryFamilyEditionTests(unittest.TestCase):
             self.assertEqual(binding["status"], "current_identity_bound")
             self.assertEqual(len(sources), 1)
 
+            source_payload = json.loads(source_path.read_text(encoding="utf-8"))
+            source_payload["product_scopes"] = {
+                "ac0001_001": "finite_profile_product",
+                "ac0001_002": "independent_event_exact",
+            }
+            source_payload["natural_session_claims"] = {
+                "ac0001_001": False,
+                "ac0001_002": True,
+            }
+            write_json(source_path, source_payload)
+            proposal["product_scope"] = "finite_profile_product"
+            proposal["natural_session_claimed"] = False
+            proposal["loop_scope"] = {
+                "policy": "intro_then_exactly_one_complete_source_loop"
+            }
+            proposal["source_series_manifest"]["sha256"] = hashlib.sha256(
+                source_path.read_bytes()
+            ).hexdigest().upper()
+            binding, _ = validate_series_proposal_bindings(
+                family="ac0001_split",
+                series=proposal,
+                series_path=proposal_path,
+                manifest_root=manifest_root,
+                ordered_events=["ac0001_001"],
+            )
+            self.assertEqual(binding["product_scope"], "finite_profile_product")
+            self.assertFalse(binding["natural_session_claimed"])
+
             event_path.write_text('{"event": "changed"}\n', encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "SHA-256 differs"):
                 validate_series_proposal_bindings(

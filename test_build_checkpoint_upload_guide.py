@@ -21,14 +21,16 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             top = root / "top.json"
             base.write_text(
                 '{"schema":"x","target_bvs":{"a":"A"},'
-                '"directories":{"d":"D"},"sources":{"s":{"path":"x"}}}\n',
+                '"directories":{"d":"D"},"sources":{"s":{"path":"x"}},'
+                '"incremental_story_products":{"ac0001":{"title":"one"}}}\n',
                 encoding="utf-8",
             )
             middle.write_text(
                 (
                     '{"base_plan":{"path":"base.json","sha256":"'
                     + module.file_sha256(base)
-                    + '"},"target_bvs":{"b":"B"}}\n'
+                    + '"},"target_bvs":{"b":"B"},'
+                    '"incremental_story_products":{"ac0002":{"title":"two"}}}\n'
                 ),
                 encoding="utf-8",
             )
@@ -43,6 +45,13 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             plan, snapshots = module._load_plan_with_bases(top)
             self.assertEqual(plan["target_bvs"], {"a": "A", "b": "B"})
             self.assertEqual(plan["directories"], {"d": "D", "e": "E"})
+            self.assertEqual(
+                plan["incremental_story_products"],
+                {
+                    "ac0001": {"title": "one"},
+                    "ac0002": {"title": "two"},
+                },
+            )
             self.assertEqual(len(snapshots), 2)
 
     def test_media_extraction_ignores_excluded_rows(self) -> None:

@@ -48,6 +48,23 @@ AUDIO_ABSENCE_KEYS = {
     "child_audio",
     "subtitles",
 }
+BASE_EVENT_DECLARATION_FIELDS = {
+    "event",
+    "title_zh",
+    "dirinfo",
+    "source_sha256_by_official_name",
+}
+BOUNDED_PRODUCT_CONTRACT_FIELDS = {
+    "product_scope",
+    "natural_session_claimed",
+    "loop_scope",
+}
+LOOP_SCOPE_FIELDS = {
+    "policy",
+    "loop_clip_official_name",
+    "loop_source_frame_count",
+    "runtime_loop_count_claimed",
+}
 
 
 def file_sha256(path: Path) -> str:
@@ -116,6 +133,17 @@ def parse_int(value: object, *, label: str) -> int:
         return int(float(str(value)))
     except (TypeError, ValueError) as error:
         raise ValueError(f"{label} is not an integer") from error
+
+
+def parse_declared_bool(value: object, *, label: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().casefold()
+    if normalized in {"true", "yes", "1"}:
+        return True
+    if normalized in {"false", "no", "0"}:
+        return False
+    raise ValueError(f"{label} is not boolean")
 
 
 def probe_video(path: Path, ffprobe: str) -> dict[str, Any]:
@@ -212,6 +240,57 @@ def zero_audio_matches(
     return counts
 
 
+def validate_bounded_product_contract(
+    raw: object,
+    *,
+    event: str,
+    clip_rows: list[dict[str, str]],
+    frame_counts: Mapping[str, int],
+) -> dict[str, Any]:
+    """Validate a finite review product that deliberately avoids session claims."""
+
+    if not isinstance(raw, Mapping) or set(raw) != BOUNDED_PRODUCT_CONTRACT_FIELDS:
+        raise ValueError(f"{event} bounded product contract fields differ")
+    product_scope = str(raw["product_scope"]).strip()
+    if not product_scope:
+        raise ValueError(f"{event} bounded product scope is empty")
+    if raw["natural_session_claimed"] is not False:
+        raise ValueError(f"{event} bounded product claims a natural session")
+    loop_scope = raw["loop_scope"]
+    if not isinstance(loop_scope, Mapping) or set(loop_scope) != LOOP_SCOPE_FIELDS:
+        raise ValueError(f"{event} bounded loop scope fields differ")
+    if loop_scope["policy"] != "intro_then_exactly_one_complete_source_loop":
+        raise ValueError(f"{event} bounded loop policy differs")
+    if loop_scope["runtime_loop_count_claimed"] is not False:
+        raise ValueError(f"{event} bounded loop count claims runtime evidence")
+    loop_name = str(loop_scope["loop_clip_official_name"]).strip()
+    expected_frames = parse_int(
+        loop_scope["loop_source_frame_count"],
+        label=f"{event} bounded loop frame count",
+    )
+    matching_rows = [
+        row for row in clip_rows if str(row.get("official_name", "")) == loop_name
+    ]
+    if (
+        len(matching_rows) != 1
+        or matching_rows[0].get("dgm_role") != "orphan_loop_cycle"
+        or frame_counts.get(loop_name) != expected_frames
+    ):
+        raise ValueError(f"{event} bounded loop source binding differs")
+    if len(clip_rows) != 2 or clip_rows[0].get("dgm_role") != "single_layer_segment":
+        raise ValueError(f"{event} bounded intro/loop occurrence set differs")
+    return {
+        "product_scope": product_scope,
+        "natural_session_claimed": False,
+        "loop_scope": {
+            "policy": "intro_then_exactly_one_complete_source_loop",
+            "loop_clip_official_name": loop_name,
+            "loop_source_frame_count": expected_frames,
+            "runtime_loop_count_claimed": False,
+        },
+    }
+
+
 def write_series_proposals(
     *,
     output_root: Path,
@@ -268,6 +347,19 @@ def write_series_proposals(
                 "production_manifest_root": str(published_root.resolve()),
                 "ready_event_names": [str(row["event"]) for row in rows],
             },
+            "product_scopes": {
+                str(row["event"]): str(
+                    row.get("product_scope") or "independent_event_exact"
+                )
+                for row in rows
+            },
+            "natural_session_claims": {
+                str(row["event"]): parse_declared_bool(
+                    row.get("natural_session_claimed", True),
+                    label=f"{row['event']} natural-session claim",
+                )
+                for row in rows
+            },
         }
         write_json(source_path, source_series)
         source_sha256 = file_sha256(source_path)
@@ -315,10 +407,37 @@ def write_series_proposals(
                     event: str(row["manifest_sha256"]).upper()
                 },
                 "scope_boundary": (
-                    f"Independent DirInfo row {row['row_index']} only; does "
-                    "not concatenate any sibling event or outcome."
+                    (
+                        f"Independent DirInfo row {row['row_index']} only; "
+                        "finite profile-material review product contains the "
+                        "intro and exactly one complete source loop. It does "
+                        "not claim a natural runtime session or runtime loop "
+                        "count, and does not concatenate any sibling event."
+                    )
+                    if not parse_declared_bool(
+                        row.get("natural_session_claimed", True),
+                        label=f"{event} natural-session claim",
+                    )
+                    else (
+                        f"Independent DirInfo row {row['row_index']} only; "
+                        "does not concatenate any sibling event or outcome."
+                    )
+                ),
+                "product_scope": str(
+                    row.get("product_scope") or "independent_event_exact"
+                ),
+                "natural_session_claimed": parse_declared_bool(
+                    row.get("natural_session_claimed", True),
+                    label=f"{event} natural-session claim",
                 ),
             }
+            if row.get("loop_scope"):
+                loop_scope = row["loop_scope"]
+                if isinstance(loop_scope, str):
+                    loop_scope = json.loads(loop_scope)
+                if not isinstance(loop_scope, Mapping):
+                    raise ValueError(f"{event} proposal loop scope differs")
+                proposal["loop_scope"] = dict(loop_scope)
             write_json(proposal_path, proposal)
             proposal_rows.append(
                 {
@@ -414,12 +533,10 @@ def build_manifest_root(
     events_dir.mkdir(parents=True)
     catalog_rows: list[dict[str, Any]] = []
     for declaration in events_raw:
-        if not isinstance(declaration, Mapping) or set(declaration) != {
-            "event",
-            "title_zh",
-            "dirinfo",
-            "source_sha256_by_official_name",
-        }:
+        if not isinstance(declaration, Mapping) or set(declaration) not in (
+            BASE_EVENT_DECLARATION_FIELDS,
+            BASE_EVENT_DECLARATION_FIELDS | {"product_contract"},
+        ):
             raise ValueError("silent audience event declaration fields differ")
         event = str(declaration["event"])
         if not re.fullmatch(EVENT_PATTERN, event):
@@ -553,6 +670,7 @@ def build_manifest_root(
 
         clips: list[dict[str, Any]] = []
         plan_clips: list[dict[str, Any]] = []
+        frame_counts_by_name: dict[str, int] = {}
         cumulative_frames = 0
         for order, row in enumerate(clip_rows):
             name = str(row.get("official_name", "")).strip()
@@ -572,6 +690,7 @@ def build_manifest_root(
             ):
                 raise ValueError(f"{event} source SHA-256 differs: {name}")
             media = probe_video(source_path, ffprobe)
+            frame_counts_by_name[name] = int(media["frame_count"])
             start_ms = round(Fraction(cumulative_frames * 1000, 30))
             cumulative_frames += int(media["frame_count"])
             end_ms = round(Fraction(cumulative_frames * 1000, 30))
@@ -586,7 +705,7 @@ def build_manifest_root(
                 {
                     "order": order,
                     "dgm_name": name,
-                    "dgm_role": "single_layer_segment",
+                    "dgm_role": str(row.get("dgm_role", "")).strip(),
                     "path": str(source_path),
                     "event_start_ms": start_ms,
                     "event_end_ms": end_ms,
@@ -600,6 +719,14 @@ def build_manifest_root(
                     "role": "background",
                     "start_ms": start_ms,
                 }
+            )
+        product_contract = None
+        if "product_contract" in declaration:
+            product_contract = validate_bounded_product_contract(
+                declaration["product_contract"],
+                event=event,
+                clip_rows=clip_rows,
+                frame_counts=frame_counts_by_name,
             )
         render_duration_ms = round(Fraction(cumulative_frames * 1000, 30))
         total_source_duration_ms = round(
@@ -700,6 +827,22 @@ def build_manifest_root(
                 "ready": True,
             },
         }
+        if product_contract is not None:
+            manifest.update(product_contract)
+            manifest["composition_plan"]["evidence"] = (
+                "Hash-bound audience clip catalog exact-duration intervals "
+                "prove the finite intro plus one complete source-loop product. "
+                "The exact one-event DirInfo row binds event identity only; "
+                "runtime loop count and natural-session duration are not claimed."
+            )
+            manifest["composition_plan"]["product_scope"] = product_contract[
+                "product_scope"
+            ]
+            manifest["composition_plan"]["natural_session_claimed"] = False
+            manifest["composition_plan"]["loop_scope"] = product_contract[
+                "loop_scope"
+            ]
+            manifest["quality_gates"]["natural_session_timeline_proven"] = False
         manifest_path = events_dir / f"{event}.json"
         write_json(manifest_path, manifest)
         catalog_rows.append(
@@ -717,6 +860,24 @@ def build_manifest_root(
                 "height": 232,
                 "audio_match_count": 0,
                 "subtitle_match_count": 0,
+                "product_scope": (
+                    product_contract["product_scope"]
+                    if product_contract is not None
+                    else "independent_event_exact"
+                ),
+                "natural_session_claimed": (
+                    "no" if product_contract is not None else "yes"
+                ),
+                "loop_scope": (
+                    json.dumps(
+                        product_contract["loop_scope"],
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    if product_contract is not None
+                    else ""
+                ),
                 "ready": "yes",
                 "manifest_path": str(
                     (published_root / "events" / manifest_path.name).resolve()
@@ -743,6 +904,9 @@ def build_manifest_root(
             "height",
             "audio_match_count",
             "subtitle_match_count",
+            "product_scope",
+            "natural_session_claimed",
+            "loop_scope",
             "ready",
             "manifest_path",
             "manifest_sha256",

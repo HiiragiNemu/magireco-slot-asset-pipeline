@@ -1,0 +1,71 @@
+{
+  "schema": "magireco-silent-audience-event-manifest-plan-v1",
+  "plan_id": "ac7118_001_profile_material_bounded_silent_plan_v1",
+  "scope": "One native 416x232 finite profile-material review product: exact intro followed by exactly one complete source loop. This is not a natural runtime-session or runtime loop-count claim.",
+  "inputs": {
+    "audience_event_catalog": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_catalog.csv",
+      "sha256": "2BC2F3BD17A3B7FCBA94D7D6AD29C80B5ABE0D72BEF38651EC9E999AEE346EFC"
+    },
+    "audience_event_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "audience_event_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v21_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "90F51BE9C166FAAD48B3B877F9D857E85CBEF95425A8CDCEEDB8736FB96DCE87"
+    },
+    "dirinfo_routes": {
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    },
+    "dirinfo_route_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v21_20260727\\DIRINFO_ROUTE_LEDGER.csv",
+      "sha256": "65FB48FB406829FD1755FE02840C79E6B668A5D7A7D2D596D1BBBDACC558BB35"
+    },
+    "direct_parent_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\event_timeline_official\\event_audio_components.csv",
+      "sha256": "9E7A1B1F2948305E1472BDEF7DD9713B7E271FCB4A0DFDA91E456F58A382602B"
+    },
+    "child_audio": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911"
+    },
+    "subtitles": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E"
+    }
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "events": [
+    {
+      "event": "ac7118_001",
+      "title_zh": "环彩羽角色资料动画 ac7118",
+      "dirinfo": {
+        "kind": 194,
+        "row_index": 0,
+        "event_info_index": 8292,
+        "code_hex": "0x4d667a4b374d4554"
+      },
+      "source_sha256_by_official_name": {
+        "ac7118_at_ch_profile_iro_IN": "738DB3B86BFB632A1B70C6A87FC54773762656F582C5DE8ABE1F150E534F77A4",
+        "ac7118_at_ch_profile_iro_LP": "82831D8E30BC52AA08A83D656C15440EE29513AA9AE5991D8292477A70D1DD11"
+      },
+      "product_contract": {
+        "product_scope": "profile_material_intro_plus_one_complete_source_loop_not_natural_session",
+        "natural_session_claimed": false,
+        "loop_scope": {
+          "policy": "intro_then_exactly_one_complete_source_loop",
+          "loop_clip_official_name": "ac7118_at_ch_profile_iro_LP",
+          "loop_source_frame_count": 600,
+          "runtime_loop_count_claimed": false
+        }
+      }
+    }
+  ]
+}

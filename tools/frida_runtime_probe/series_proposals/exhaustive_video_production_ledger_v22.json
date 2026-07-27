@@ -1,0 +1,20 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v21.json",
+    "sha256": "292AC78030F3CF912404AFE40BA47D7B1D85C272ED3AB8A8C8EC218983E3D51A"
+  },
+  "checkpoint_id": "20260727-v54r1-ac7118-bounded-profile-material",
+  "recorded_date": "2026-07-27",
+  "scope": "All v21 records plus one native 416x232 ac7118_001 finite profile-material product. The product contains the exact 100-frame intro and exactly one complete 600-frame source loop. It is not a natural runtime session and makes no runtime loop-count claim. Earlier v54 ac7118 trial roots are superseded and are not listed as current inputs.",
+  "append_current_production_roots": [
+    {
+      "label": "v54r1 ac7118 finite profile material intro plus one source loop",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v54r1_ac7118_profile_bounded_review_20260727",
+      "manifest_glob": "*/manifests/family_editions_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ]
+}

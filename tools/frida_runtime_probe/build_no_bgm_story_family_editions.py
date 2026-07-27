@@ -1496,7 +1496,12 @@ def build_family_editions(
             "status": "AUTOMATED_QA_PASSED",
             "release_id": release_id,
             "family": family,
-            "release_scope": "no_bgm_family_expansion_candidates",
+            "release_scope": str(
+                series_binding.get(
+                    "product_scope",
+                    "no_bgm_family_expansion_candidates",
+                )
+            ),
             "audio_profile": "no_bgm",
             "selected_editions": list(selected),
             "subtitle_profiles": {
@@ -1559,6 +1564,10 @@ def build_family_editions(
             "dialogue_relationship_rule_audit": list(relationship_rule_audit),
             "artifacts": artifacts,
         }
+        if "product_scope" in series_binding:
+            manifest["product_scope"] = str(series_binding["product_scope"])
+            manifest["natural_session_claimed"] = False
+            manifest["loop_scope"] = dict(series_binding["loop_scope"])
         write_json(manifest_path, manifest)
         marker_artifacts = dict(artifacts)
         marker_artifacts["manifest"] = {
@@ -1577,6 +1586,15 @@ def build_family_editions(
                 "HUMAN_PLAYBACK_APPROVED": False,
                 "BILIBILI_RELEASE_READY": False,
             },
+            **(
+                {
+                    "product_scope": str(series_binding["product_scope"]),
+                    "natural_session_claimed": False,
+                    "loop_scope": dict(series_binding["loop_scope"]),
+                }
+                if "product_scope" in series_binding
+                else {}
+            ),
             "artifacts": marker_artifacts,
             "artifact_set_sha256": canonical_sha256(marker_artifacts),
         }
@@ -1734,6 +1752,32 @@ def validate_series_proposal_bindings(
     ] != sorted(source_positions[event] for event in ordered):
         raise ValueError(f"{family} ordering is not an upstream ordered subsequence")
 
+    bounded_scope: dict[str, Any] = {}
+    if "product_scope" in series:
+        product_scope = str(series["product_scope"]).strip()
+        natural_session_claimed = series.get("natural_session_claimed")
+        loop_scope = series.get("loop_scope")
+        source_product_scopes = source_series.get("product_scopes")
+        source_natural_claims = source_series.get("natural_session_claims")
+        if (
+            not product_scope
+            or natural_session_claimed is not False
+            or not isinstance(loop_scope, Mapping)
+            or not isinstance(source_product_scopes, Mapping)
+            or not isinstance(source_natural_claims, Mapping)
+            or any(
+                source_product_scopes.get(event) != product_scope
+                or source_natural_claims.get(event) is not False
+                for event in ordered
+            )
+        ):
+            raise ValueError(f"{family} bounded product scope binding differs")
+        bounded_scope = {
+            "product_scope": product_scope,
+            "natural_session_claimed": False,
+            "loop_scope": dict(loop_scope),
+        }
+
     source_snapshot = snapshot(
         source_path, label=f"{family} hash-bound source series manifest"
     )
@@ -1750,6 +1794,7 @@ def validate_series_proposal_bindings(
                 "path": str(source_path),
                 "sha256": expected_source_hash,
             },
+            **bounded_scope,
         },
         [
             source_snapshot,

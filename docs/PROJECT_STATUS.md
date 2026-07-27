@@ -2,6 +2,29 @@
 
 更新时间：2026-07-27
 
+## 2026-07-27 ac7118 有限资料型产品 v54r1
+
+当前正式总账为 `production_ledger_v22_20260727`，正式全局上传指南为
+`upload_guide_v54r1_20260727`。本检查点只新增 `ac7118_001`：DirInfo kind
+194 row 0 精确绑定该事件；两个原生 416x232 来源分别是 100 帧开场和
+600 帧 `orphan_loop_cycle`。当前目录对 direct-parent audio、child-Z2D
+audio、subtitle 都是零匹配。
+
+成品根 `no_bgm_editions_v54r1_ac7118_profile_bounded_review_20260727`
+包含 none/JA/ZH 三个目标入口，均为同一 23.333 秒 exact SHA 的合法
+hardlink alias。产品合同明确限定为“开场＋恰好一遍完整源循环”；它不宣称
+自然运行时会话、运行时循环次数或自然停留时长。人工审查入口为
+`bilibili_incremental_review_v54r1_ac7118_profile_bounded_20260727` 的 U130，
+`UPLOAD_NOW` 为 0。
+
+总账当前为 produced audience 189、material-covered 603、produced DirInfo
+route 79、timing blocker 330、quarantine audience 53。指南当前为
+10 已投稿、17 可投稿、293 待人工播放、8 排除，共 320 个精确文件。
+先前未正确传递布尔／loop scope 的两个 v54 试验根不是 current，禁止上传；
+唯一 current 来源带 `v54r1`。P16/P17/P18 继续 hard quarantine，正式
+with-BGM 候选仍为 0。详见
+`docs/research/2026-07-27-ac7118-bounded-profile-material-checkpoint-v54r1.md`。
+
 ## 2026-07-27 ac0916 三尺寸玩法组件 v53
 
 `material_collections_v53_ac0916_split_components_review_20260727` 已把
@@ -72,8 +95,10 @@ quarantine audience 53；P16/P17/P18 继续 hard quarantine。全局指南
 增量审查根；none/JA/ZH 是合法跨目标 hardlink，全部待人工播放，
 `UPLOAD_NOW` 为 0。
 
-当前严格 silent-story 门禁已无新增候选：不能因未找到音频行就继续扩大 v48
-通道。正式 with-BGM 候选仍为 0；继续从 ledger v18 穷尽 no-BGM。详见
+当前严格 natural silent-story 门禁已无新增候选：不能因未找到音频行就继续
+扩大 v48 通道。后续 `ac7118_001` 是明确标注“开场＋一遍源循环、非自然会话”
+的资料型例外，不推翻这项结论。正式 with-BGM 候选仍为 0；继续从 ledger v18
+穷尽 no-BGM。详见
 `docs/research/2026-07-27-ac5001-split-native-component-checkpoint-v50.md`。
 
 ## 2026-07-27 ac905x 分尺寸连打组件 v49

@@ -151,7 +151,12 @@ def _load_plan_with_bases(
         for key, value in raw.items():
             if key == "base_plan":
                 continue
-            if key in {"target_bvs", "directories", "sources"}:
+            if key in {
+                "target_bvs",
+                "directories",
+                "sources",
+                "incremental_story_products",
+            }:
                 if not isinstance(value, Mapping):
                     raise ValueError(f"upload guide overlay {key} must be an object")
                 plan[key] = {**dict(plan.get(key, {})), **dict(value)}
@@ -741,6 +746,22 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 raise ValueError(
                     f"incremental no-dialogue alias contract differs: {family}"
                 )
+            bounded_product_scope = str(
+                spec.get("bounded_product_scope", "")
+            ).strip()
+            if bounded_product_scope and (
+                value.get("product_scope") != bounded_product_scope
+                or value.get("natural_session_claimed") is not False
+                or value.get("loop_scope", {}).get("policy")
+                != "intro_then_exactly_one_complete_source_loop"
+                or value.get("loop_scope", {}).get(
+                    "runtime_loop_count_claimed"
+                )
+                is not False
+            ):
+                raise ValueError(
+                    f"incremental bounded product contract differs: {family}"
+                )
             title = str(spec.get("title", "")).strip()
             if not title:
                 raise ValueError(
@@ -774,13 +795,27 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                         ),
                         suggested_part_name=suggested,
                         action="hold_for_owner_playback",
-                        automated_qa_status="passed_event_exact_no_bgm",
+                        automated_qa_status=(
+                            "passed_bounded_profile_product_no_bgm"
+                            if bounded_product_scope
+                            else "passed_event_exact_no_bgm"
+                        ),
                         human_approval_status=(
                             "exact_output_not_yet_playback_approved"
                         ),
                         publication_instruction="DO NOT UPLOAD YET",
                         scope_note=(
                             (
+                                "Finite native-size profile-material product: "
+                                "exact intro plus exactly one complete source "
+                                "loop. It is not a natural runtime session and "
+                                "does not claim a runtime loop count. Current "
+                                "direct, child-Z2D and subtitle catalogs prove "
+                                "zero event audio/subtitle rows; none/JA/ZH are "
+                                "legal cross-target hardlink aliases."
+                            )
+                            if bounded_product_scope
+                            else (
                                 "Independent event-exact native-size product "
                                 "bound to one exact DirInfo row. Current direct, "
                                 "child-Z2D and subtitle catalogs prove zero event "

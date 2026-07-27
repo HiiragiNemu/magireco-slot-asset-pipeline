@@ -1,0 +1,25 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v53_20260727.json",
+    "sha256": "35D4D70EC6989A07A6E3765660C0B8F28C7DAB8AF15384BDA3A61D66D127FB1A"
+  },
+  "checkpoint_id": "20260727-v54r1-ac7118-bounded-profile-material",
+  "sources": {
+    "current_production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v22_20260727\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "3B1E574C710A62C3DBB2F6836258BDF34DF277D7760DC7F8DF121486BE9624D2"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v22_20260727\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "AC2894DB62CC1478580CB9C430B8087EDA2341101700BCACE1A3457166C6565C"
+    }
+  },
+  "incremental_story_products": {
+    "ac7118_001": {
+      "root_label": "v54r1 ac7118 finite profile material intro plus one source loop",
+      "title": "环彩羽角色资料动画",
+      "no_dialogue_aliases": true,
+      "bounded_product_scope": "profile_material_intro_plus_one_complete_source_loop_not_natural_session"
+    }
+  }
+}

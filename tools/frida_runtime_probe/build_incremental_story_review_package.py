@@ -164,6 +164,9 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
         family = str(raw.get("family", "")).casefold()
         title = str(raw.get("title", "")).strip()
         filename_title = str(raw.get("filename_title", "")).strip()
+        bounded_product_scope = str(
+            raw.get("bounded_product_scope", "")
+        ).strip()
         if (
             not re.fullmatch(r"ac\d+_\d+", family)
             or family in seen_families
@@ -202,6 +205,17 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             )
         ):
             raise ValueError(f"{family} no-dialogue alias contract differs")
+        if bounded_product_scope and (
+            manifest.get("product_scope") != bounded_product_scope
+            or manifest.get("natural_session_claimed") is not False
+            or manifest.get("loop_scope", {}).get("policy")
+            != "intro_then_exactly_one_complete_source_loop"
+            or manifest.get("loop_scope", {}).get(
+                "runtime_loop_count_claimed"
+            )
+            is not False
+        ):
+            raise ValueError(f"{family} bounded product contract differs")
         artifacts = manifest.get("artifacts")
         if not isinstance(artifacts, dict):
             raise ValueError(f"{family} story artifacts differ")
@@ -264,6 +278,7 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                 "family": family,
                 "title": title,
                 "filename_title": filename_title,
+                "bounded_product_scope": bounded_product_scope,
                 "manifest_path": manifest_path,
                 "manifest_sha256": manifest_sha256,
                 "editions": editions,
@@ -427,6 +442,9 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                 f"`{names['none']}` | `{names['ja']}` | `{names['zh']}` | "
                 "完整播放后按 exact SHA-256 批准 |"
             )
+        bounded_count = sum(
+            bool(product["bounded_product_scope"]) for product in prepared
+        )
         (manifests / "START_HERE_UPLOAD_GUIDE.md").write_text(
             "\n".join(
                 [
@@ -443,6 +461,16 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
                     f"{expected_width}×{expected_height} 单事件产品，每个都有 "
                     "none/JA/ZH；它们不宣称完整 natural family，也没有把"
                     "互斥路线机械串联。",
+                    *(
+                        [
+                            "",
+                            f"其中 {bounded_count} 个是有限资料型产品：仅含"
+                            "精确开场与一遍完整源循环，不宣称自然运行时会话"
+                            "或运行时循环次数。",
+                        ]
+                        if bounded_count
+                        else []
+                    ),
                     *(
                         [
                             "",
@@ -480,7 +508,13 @@ def build(*, plan_path: Path, output_root: Path, ffprobe: str) -> Path:
             f"- [ ] 原生 {expected_width}×{expected_height}、30fps、"
             "H.264/AAC 48kHz stereo，无 upscale\n"
             "- [ ] 单事件边界自然，但不把它误认作完整 family\n"
-            "- [ ] 按 `UPLOAD_INDEX.csv` 的 exact SHA-256 记录批准或失败\n",
+            + (
+                "- [ ] 有限资料型产品仅核对开场与一遍完整源循环；"
+                "不得把它误认作自然运行时停留时长\n"
+                if bounded_count
+                else ""
+            )
+            + "- [ ] 按 `UPLOAD_INDEX.csv` 的 exact SHA-256 记录批准或失败\n",
             encoding="utf-8",
         )
         (manifests / "EXCLUSIONS.md").write_text(

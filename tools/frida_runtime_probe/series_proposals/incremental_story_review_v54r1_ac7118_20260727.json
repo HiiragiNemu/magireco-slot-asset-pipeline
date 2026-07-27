@@ -1,0 +1,28 @@
+{
+  "schema": "magireco-incremental-story-review-plan-v1",
+  "checkpoint_id": "20260727-v54r1-ac7118-bounded-profile-material-review",
+  "checkpoint_label": "v54r1",
+  "start_upload_id": 130,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "no_dialogue_aliases": true,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V54R1.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v54r1_20260727\\UPLOAD_GUIDE.json",
+    "sha256": "804532EB5E34F00C1CCB6F6DB40CCA8E5E188F21D75E07509A92E51F24438BCF"
+  },
+  "products": [
+    {
+      "family": "ac7118_001",
+      "title": "环彩羽角色资料动画",
+      "filename_title": "环彩羽角色资料动画",
+      "bounded_product_scope": "profile_material_intro_plus_one_complete_source_loop_not_natural_session",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v54r1_ac7118_profile_bounded_review_20260727\\ac7118_001_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "4382B43FEE9C37ECED22617F00023022DF24F05C5BE4D9A1E86FA8B44570E16B"
+      }
+    }
+  ]
+}

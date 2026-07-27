@@ -9,20 +9,23 @@
 如旧文档与本文件、项目所有者在 2026-07-25 的播放审查结论冲突，以最新播放审查
 结论为准。
 
-## 0. 2026-07-27 当前检查点 v53
+## 0. 2026-07-27 当前检查点 v54r1
 
 项目所有者已解除生产冻结。冻结交接根
 `bilibili_human_review_upload_freeze_20260727` 是不可覆盖的历史检查点，而非
-当前产线。最新穷尽总账为 `production_ledger_v21_20260727`；从这里继续所有
+当前产线。最新穷尽总账为 `production_ledger_v22_20260727`；从这里继续所有
 已发现 no-BGM 库存，不因普通待人工播放而停产。当前正式全局上传指南是
-`upload_guide_v53_20260727`。
+`upload_guide_v54r1_20260727`。
 
-v53 新增 ac0916 的 104 个 mixed 玩法／效果事件覆盖：652 个 occurrence、
-39 个唯一源，拆成原生 416x232、416x120、160x120 三个 visual-only
-组件产品，覆盖审计无缺失或 unused。U127/U128/U129 是三种尺寸的审查入口，
-全部待人工播放，`UPLOAD_NOW` 为 0。`ac0903_001` 虽已闭合事件、层区间和
-direct-parent SE，但 exact native compositor 合同缺失，明确不允许渲染。
-路径、哈希与上传目标见
+v54r1 新增一个有界 `ac7118_001` 资料型产品：原生 416x232，100 帧开场后
+只取一遍 600 帧完整源循环，none/JA/ZH 是同哈希 hardlink。该产品明确不宣称
+自然 runtime session、runtime loop count 或自然停留时长。U130 是唯一人工
+审查入口，`UPLOAD_NOW` 为 0；未正确传递 scope 的两个早期 v54 试验根不是
+current，绝不上传。路径、哈希与上传目标见
+`docs/research/2026-07-27-ac7118-bounded-profile-material-checkpoint-v54r1.md`。
+
+上一检查点 v53 的 ac0916 三尺寸 visual-only 组件和 ac0903 exact compositor
+阻断继续有效；详见
 `docs/research/2026-07-27-ac0916-split-native-component-checkpoint-v53.md`。
 P16/ac6003、P17/ac6004、P18/ac6005 继续 hard quarantine；未闭合 child-local
 Z2D 时序继续 fail closed。
