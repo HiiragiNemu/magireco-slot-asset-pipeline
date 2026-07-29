@@ -1,0 +1,45 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac2202_005_shared_result_components_v1",
+  "family": "ac2202",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_event_count": 1,
+  "expected_events": [
+    "ac2202_005"
+  ],
+  "composition_policy": "reuse_hash_identical_current_native_component_catalog_without_duplicate_media",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v26_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "4575AC5D52398280994C592657407D1BD2D20127390F85E7F6B9D979C4E794D9"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac2201_current_native512x416_shared_result_components",
+      "role": "shared_components",
+      "native_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v58r2_ac2201_split_delta_review_20260727\\ac2201_result_and_target_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "3849D664A67CDD7A456DF02BB95CADD7E4506057CB6AF88E906487542C3F13D0"
+      },
+      "allowed_unused_sources": [
+        "ac2101_cz1_iroha_nerae_L_moji",
+        "ac2101_cz1_iroha_nerae_L_moji_LP"
+      ]
+    }
+  ]
+}

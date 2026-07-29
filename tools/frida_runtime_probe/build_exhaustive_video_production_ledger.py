@@ -53,6 +53,12 @@ COMPONENT_CLASSIFICATIONS = {
     "component_only",
     "mixed_full_frame_and_components",
 }
+SPLIT_COMPONENT_COVERAGE_POLICY = (
+    "separate_native_size_catalogs_never_concat_or_upscale"
+)
+REUSED_COMPONENT_COVERAGE_POLICY = (
+    "reuse_hash_identical_current_native_component_catalog_without_duplicate_media"
+)
 
 
 def _bound(
@@ -576,6 +582,15 @@ def _material_component_coverage_bundles(
         value = read_json(path)
         events_raw = value.get("covered_events")
         catalogs_raw = value.get("component_catalogs")
+        composition_policy = str(
+            value.get("composition_policy")
+            or SPLIT_COMPONENT_COVERAGE_POLICY
+        )
+        minimum_catalogs = (
+            1
+            if composition_policy == REUSED_COMPONENT_COVERAGE_POLICY
+            else 2
+        )
         if (
             value.get("schema")
             != "magireco-material-component-coverage-audit-v1"
@@ -584,7 +599,12 @@ def _material_component_coverage_bundles(
             or not events_raw
             or len(events_raw) != int(value.get("covered_event_count", -1))
             or not isinstance(catalogs_raw, list)
-            or len(catalogs_raw) < 2
+            or composition_policy
+            not in {
+                SPLIT_COMPONENT_COVERAGE_POLICY,
+                REUSED_COMPONENT_COVERAGE_POLICY,
+            }
+            or len(catalogs_raw) < minimum_catalogs
         ):
             raise ValueError(f"material component coverage bundle differs: {path}")
         events = {str(event) for event in events_raw}
@@ -645,7 +665,12 @@ def _material_component_coverage_bundles(
                 "events": sorted(events),
                 "event_count": len(events),
                 "component_catalogs": catalog_bindings,
-                "coverage_status": "split_native_component_coverage_passed",
+                "coverage_status": (
+                    "current_hash_identical_component_reuse_passed"
+                    if composition_policy
+                    == REUSED_COMPONENT_COVERAGE_POLICY
+                    else "split_native_component_coverage_passed"
+                ),
                 "claim_boundary": str(value.get("coverage_claim", "")),
                 "upload_status": "review_only_never_auto_upload",
             }

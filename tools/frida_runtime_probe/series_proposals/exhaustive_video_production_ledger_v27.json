@@ -1,0 +1,30 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v26.json",
+    "sha256": "FEB5D905E3D17055BCDB5BE8A922B3BC59731AC8FA718D759A8F0067B7E05453"
+  },
+  "checkpoint_id": "20260730-v59-ac4906-initial-split-and-ac2202-shared-reuse",
+  "recorded_date": "2026-07-30",
+  "scope": "All v26 records plus ac4906_001 through ac4906_003, whose twelve exact visual occurrences are preserved in separate native 416x232 and 208x120 catalogs, and ac2202_005, whose two native 512x416 occurrences are hash-identical to sources already current in the ac2201 result catalog. The ac4906 overlay intro and loop official names alias one physical source SHA. This delta creates no duplicate ac2202 media and does not claim overlay placement, parent holds, loop counts, audio, or natural event timelines.",
+  "append_current_material_roots": [
+    {
+      "label": "v59 ac4906 native416 progression and native208 shared overlay catalogs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727",
+      "manifest_glob": "*/material_collection_manifest.json",
+      "exclude_path_fragments": [
+        "superseded",
+        "quarantine"
+      ]
+    }
+  ],
+  "append_material_component_coverage_bundles": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v59_ac4906_ac2202_20260727\\ac4906_001_003_split_native_components_v1.json",
+      "sha256": "3202500D603BD4E22CC4A96668A02256D3DB5E096878FABC933F94B67CD02BEB"
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_component_coverage_v59_ac4906_ac2202_20260727\\ac2202_005_shared_result_components_v1.json",
+      "sha256": "086B496A7534547AA65820C6150527C9E2AB4C6A5E1FE51C823BBEBD2C5062BD"
+    }
+  ]
+}

@@ -117,6 +117,12 @@ MATERIAL_PART_NAMES = {
     "ac2201_result_and_target_components_512x416_v1": (
         "成功结果与瞄准文字组件素材 ac2201"
     ),
+    "ac4906_magius_white_progression_components_416_v1": (
+        "Magius白色阶段玩法组件素材 ac4906"
+    ),
+    "ac4906_magius_dark_overlay_component_208x120_v1": (
+        "Magius暗转叠加组件素材 ac4906"
+    ),
 }
 ROUTE_BATCH_SOURCE_NAMES = (
     "v31_ac4902_manifest",

@@ -1,0 +1,33 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v1",
+  "checkpoint_id": "20260730-v59-ac4906-native416x232",
+  "checkpoint_label": "v59",
+  "start_upload_id": 144,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59_20260730\\UPLOAD_GUIDE.json",
+    "sha256": "AA3F2D4D6FE192A93CF1052EA92CA2398A958B80344F3496D4ADDB2A5E4AC280"
+  },
+  "specific_exclusions": [
+    "本批只含 ac4906_001/_002/_003 的六个原生 416x232 白色阶段玩法组件；三事件共享的 208x120 暗转叠加组件在 U145。",
+    "12 个 occurrence 的 split-native component coverage 已闭合，但本目录只是去重组件清单，不冒充三个完整事件或自然游戏 session。",
+    "叠加位置、z-order、alpha/blend、父级 hold 和循环次数均未声明。",
+    "两个原生尺寸禁止机械拼接、拉伸、补边或 upscale；六个源均无音频流，本批没有对白、SE、BGM 或字幕。"
+  ],
+  "products": [
+    {
+      "collection": "ac4906_magius_white_progression_components_416_v1",
+      "title": "Magius白色阶段玩法组件",
+      "family": "ac4906",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_white_progression_components_416_v1\\material_collection_manifest.json",
+        "sha256": "50220EB49E054A2FFC2FB4E4B2D7886202B1AE445BCFD71B9F5001036DF04DAB"
+      },
+      "output_sha256": "D9E47A1F98CF5311AE4FC434D55ECE3EB6BD035CB3BD633D7205A574012F9259"
+    }
+  ]
+}

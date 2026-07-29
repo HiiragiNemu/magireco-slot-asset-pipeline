@@ -1,6 +1,26 @@
 # Project Status
 
-更新时间：2026-07-27
+更新时间：2026-07-30
+
+## 2026-07-30 ac4906 分尺寸初批与 ac2202 复用 v59
+
+`material_collections_v59_ac4906_initial_split_review_20260727` 已闭合
+`ac4906_001/_002/_003` 的 12 个精确 visual occurrence：6 个原生
+416x232 白色阶段源与 1 个原生 208x120 暗转源。暗转 intro/loop 两个
+官方名称为同一 SHA，只保存一份物理媒体并保留全部别名／事件绑定。
+所有源均无音轨；两个尺寸不机械拼接、不拉伸、不 upscale。
+
+`ac2202_005` 的两个原生 512x416 源与 current ac2201 结果素材完全同哈希，
+已用 coverage-only 合同闭合，不重复生产媒体。当前总账为
+`production_ledger_v27_20260730`：produced audience 195、
+material-covered 634、produced DirInfo route 79、timing blocker 330、
+quarantine audience 53。正式指南 `upload_guide_v59_20260730` 为
+10 已投稿、17 可投稿、320 待人工播放、8 排除，共 347 个精确文件。
+U144/U145 是新增审查入口，均无媒体进入 `UPLOAD_NOW`。
+
+P13/ac4903 的 v33 仍保持 19 条安全独立路线／57 个三轨文件；rows 14/18/21
+仍因 `ac4903_015` 混合组件合成未闭合而阻断。详见
+`docs/research/2026-07-30-ac4906-initial-split-and-ac2202-shared-reuse-v59.md`。
 
 ## 2026-07-27 ac2201 分尺寸组件增量 v58r2
 

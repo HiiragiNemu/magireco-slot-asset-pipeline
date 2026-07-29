@@ -31,6 +31,10 @@ except ImportError:  # direct script execution
 PLAN_SCHEMA = "magireco-material-component-coverage-plan-v1"
 RESULT_SCHEMA = "magireco-material-component-coverage-audit-v1"
 EVENT_PATTERN = re.compile(r"^ac\d+(?:_\d+)+$")
+SPLIT_POLICY = "separate_native_size_catalogs_never_concat_or_upscale"
+REUSE_POLICY = (
+    "reuse_hash_identical_current_native_component_catalog_without_duplicate_media"
+)
 
 
 def _bound(
@@ -57,11 +61,12 @@ def _source_index(
     manifest: Mapping[str, Any],
     manifest_path: Path,
     expected_dimensions: tuple[int, int],
-) -> dict[str, dict[str, Any]]:
+) -> tuple[dict[str, dict[str, Any]], set[str]]:
     sources = manifest.get("sources")
     if not isinstance(sources, list) or not sources:
         raise ValueError(f"component catalog has no sources: {manifest_path}")
     result: dict[str, dict[str, Any]] = {}
+    canonical_names: set[str] = set()
     for raw in sources:
         if not isinstance(raw, Mapping):
             raise ValueError(f"component catalog source is not an object: {manifest_path}")
@@ -85,8 +90,42 @@ def _source_index(
             raise ValueError(
                 f"component catalog source identity differs: {manifest_path} {name}"
             )
-        result[name] = dict(raw)
-    return result
+        canonical = dict(raw)
+        canonical["_coverage_canonical_official_name"] = name
+        result[name] = canonical
+        canonical_names.add(name)
+        aliases = raw.get("source_event_aliases", [])
+        if not isinstance(aliases, list):
+            raise ValueError(
+                f"component catalog source aliases differ: {manifest_path} {name}"
+            )
+        for alias in aliases:
+            if not isinstance(alias, Mapping):
+                raise ValueError(
+                    f"component catalog source alias differs: {manifest_path} {name}"
+                )
+            alias_name = str(
+                alias.get("dgm_name") or alias.get("official_name") or ""
+            ).strip()
+            alias_path = Path(str(alias.get("path", ""))).resolve()
+            if alias_name == name and alias_path == path:
+                continue
+            if (
+                not alias_name
+                or alias_name in result
+                or not alias_path.is_file()
+                or file_sha256(alias_path) != sha256
+            ):
+                raise ValueError(
+                    f"component catalog source alias identity differs: "
+                    f"{manifest_path} {alias_name}"
+                )
+            alias_source = dict(raw)
+            alias_source["official_name"] = alias_name
+            alias_source["path"] = str(alias_path)
+            alias_source["_coverage_canonical_official_name"] = name
+            result[alias_name] = alias_source
+    return result, canonical_names
 
 
 def audit(
@@ -95,11 +134,11 @@ def audit(
     output_path: Path,
 ) -> Path:
     plan = read_json(plan_path)
+    composition_policy = str(plan.get("composition_policy", ""))
     if (
         plan.get("schema") != PLAN_SCHEMA
         or plan.get("status") != "active_fail_closed"
-        or plan.get("composition_policy")
-        != "separate_native_size_catalogs_never_concat_or_upscale"
+        or composition_policy not in {SPLIT_POLICY, REUSE_POLICY}
     ):
         raise ValueError("unsupported material component coverage plan")
     plan_dir = plan_path.parent
@@ -244,7 +283,11 @@ def audit(
         return path.resolve()
 
     catalog_declarations = plan.get("component_catalogs")
-    if not isinstance(catalog_declarations, list) or len(catalog_declarations) < 2:
+    minimum_catalogs = 1 if composition_policy == REUSE_POLICY else 2
+    if (
+        not isinstance(catalog_declarations, list)
+        or len(catalog_declarations) < minimum_catalogs
+    ):
         raise ValueError("component coverage plan lacks split catalogs")
     catalog_by_name: dict[str, dict[str, Any]] = {}
     source_owner: dict[str, str] = {}
@@ -289,7 +332,7 @@ def audit(
             or file_sha256(output) != output_sha256
         ):
             raise ValueError(f"component catalog QA/output differs: {manifest_path}")
-        sources = _source_index(
+        sources, canonical_source_names = _source_index(
             manifest=manifest,
             manifest_path=manifest_path,
             expected_dimensions=dimensions,
@@ -312,6 +355,7 @@ def audit(
             "output_path": str(output),
             "output_sha256": output_sha256,
             "sources": sources,
+            "canonical_source_names": canonical_source_names,
             "component_events": {
                 str(value) for value in manifest.get("component_events", [])
             },
@@ -338,7 +382,11 @@ def audit(
         for value in catalog_by_name.values()
         if value["role"] == "event_components"
     ]
-    if not event_component_catalogs:
+    if composition_policy == REUSE_POLICY and event_component_catalogs:
+        raise ValueError(
+            "hash-identical reuse coverage requires shared component catalogs"
+        )
+    if composition_policy == SPLIT_POLICY and not event_component_catalogs:
         raise ValueError("at least one event-components catalog is required")
     for event_catalog in event_component_catalogs:
         if not isinstance(
@@ -400,7 +448,9 @@ def audit(
                     f"event clip source differs from catalog: {event} {source_name}"
                 )
             per_catalog[catalog_name].append(source_name)
-            used_by_catalog[catalog_name].add(source_name)
+            used_by_catalog[catalog_name].add(
+                str(source["_coverage_canonical_official_name"])
+            )
         for event_catalog in event_component_catalogs:
             catalog_name = event_catalog["name"]
             local_names = per_catalog[catalog_name]
@@ -451,7 +501,7 @@ def audit(
             )
     catalog_results = []
     for name, catalog in catalog_by_name.items():
-        all_sources = set(catalog["sources"])
+        all_sources = set(catalog["canonical_source_names"])
         unused = all_sources - used_by_catalog[name]
         if unused != catalog["allowed_unused_sources"]:
             raise ValueError(f"component catalog unused source set differs: {name}")
@@ -498,12 +548,20 @@ def audit(
         "coverage_id": str(plan.get("coverage_id", "")),
         "family": family_label,
         "families": sorted(families),
-        "composition_policy": plan["composition_policy"],
+        "composition_policy": composition_policy,
         "coverage_claim": (
-            "Every hash-bound event clip is present in the declared native-size "
-            "component catalogs. This is visual component coverage only; the "
-            "catalogs remain separate review products and are not a reconstructed "
-            "natural event timeline."
+            (
+                "Every hash-bound event clip is present in the declared native-size "
+                "component catalogs. This is visual component coverage only; the "
+                "catalogs remain separate review products and are not a reconstructed "
+                "natural event timeline."
+            )
+            if composition_policy == SPLIT_POLICY
+            else (
+                "Every hash-bound event clip reuses a source already present in "
+                "the declared current native component catalog. No duplicate media "
+                "is created, and the claim does not reconstruct a natural timeline."
+            )
         ),
         "covered_events": sorted(row["event"] for row in event_rows),
         "covered_event_count": len(event_rows),

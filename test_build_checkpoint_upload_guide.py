@@ -192,6 +192,18 @@ class BuildCheckpointUploadGuideTest(unittest.TestCase):
             ),
             "成功结果与瞄准文字组件素材 ac2201",
         )
+        self.assertEqual(
+            module.material_part_name(
+                "ac4906_magius_white_progression_components_416_v1"
+            ),
+            "Magius白色阶段玩法组件素材 ac4906",
+        )
+        self.assertEqual(
+            module.material_part_name(
+                "ac4906_magius_dark_overlay_component_208x120_v1"
+            ),
+            "Magius暗转叠加组件素材 ac4906",
+        )
 
     def test_current_selector_route_source_is_indexed(self) -> None:
         self.assertIn(

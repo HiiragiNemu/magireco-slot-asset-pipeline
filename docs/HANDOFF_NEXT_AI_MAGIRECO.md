@@ -3,26 +3,25 @@
 Original date: 2026-06-28
 Current checkpoint: 2026-07-24
 
-Current production delta (2026-07-27):
+Current production delta (2026-07-30):
 
 ```text
-docs/research/2026-07-27-ac2201-split-native-component-checkpoint-v58r2.md
+docs/research/2026-07-30-ac4906-initial-split-and-ac2202-shared-reuse-v59.md
 ```
 
 The owner lifted the production freeze.  Continue from
-`production_ledger_v26_20260727`; keep the old freeze package immutable.
-The current upload guide is `upload_guide_v58r2_20260727`.
+`production_ledger_v27_20260730`; keep the old freeze package immutable.
+The current upload guide is `upload_guide_v59_20260730`.
 P16/P17/P18 and unresolved child-local timing remain fail-closed.  Formal
 with-BGM production still has zero ready candidates and starts only after the
 discovered no-BGM inventory is produced or precisely blocked.
 
-The v58r2 delta closes the exact visual-component inventory for ac2201_005 and
-ac2201_006 by reusing four current 416x232 sources and adding separate native
-416x232 and 512x416 catalogs. Use U142/U143 for playback review. The two new
-416 sources have unresolved embedded ALAC, so the review output deliberately
-drops it and is visual-only; do not construct an audible version. Do not
-cross-compose the dimensions or describe the catalogs as complete events or
-natural sessions. Earlier v58/v58r1 roots are superseded audit-only.
+The v59 delta closes ac4906_001 through _003 as separate native 416x232 and
+208x120 visual-only catalogs; use U144/U145 for playback review. Two official
+overlay names are hash-identical aliases of one physical source. It also
+closes ac2202_005 by reusing the already-current ac2201 native512 result
+sources, without creating duplicate media. P13/ac4903 remains on v33 with
+19 safe routes; rows 14/18/21 remain component-composition blockers.
 
 The newest transfer delta is:
 

@@ -146,6 +146,104 @@ class AuditMaterialComponentCoverageTest(unittest.TestCase):
             self.assertEqual(len(result["component_catalogs"]), 2)
             self.assertEqual(result["families"], ["ac5102"])
 
+    def test_hash_identical_official_aliases_share_one_catalog_source(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            plan, event_manifest = self._fixture(root)
+            alias = root / "clip416-alias.mp4"
+            alias.write_bytes((root / "clip416.mp4").read_bytes())
+            event = json.loads(event_manifest.read_text(encoding="utf-8"))
+            event["clips"].insert(
+                1,
+                {"dgm_name": "clip416_alias", "path": str(alias)},
+            )
+            self._write_json(event_manifest, event)
+
+            plan_value = json.loads(plan.read_text(encoding="utf-8"))
+            ledger = Path(plan_value["event_ledger"]["path"])
+            with ledger.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            rows[0]["manifest_sha256"] = module.file_sha256(event_manifest)
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(rows)
+
+            component_path = Path(
+                plan_value["component_catalogs"][0]["manifest"]["path"]
+            )
+            component = json.loads(component_path.read_text(encoding="utf-8"))
+            component["sources"][0]["source_event_aliases"] = [
+                {
+                    "dgm_name": "clip416",
+                    "path": str(root / "clip416.mp4"),
+                },
+                {
+                    "dgm_name": "clip416_alias",
+                    "path": str(alias),
+                },
+            ]
+            component["component_event_clip_map"]["ac5102_001"] = [
+                "clip416",
+                "clip416_alias",
+            ]
+            self._write_json(component_path, component)
+            plan_value["event_ledger"]["sha256"] = module.file_sha256(ledger)
+            plan_value["component_catalogs"][0]["manifest"]["sha256"] = (
+                module.file_sha256(component_path)
+            )
+            self._write_json(plan, plan_value)
+
+            output = root / "alias-audit.json"
+            module.audit(plan_path=plan, output_path=output)
+            result = json.loads(output.read_text(encoding="utf-8"))
+            first = result["component_catalogs"][0]
+            self.assertEqual(first["source_count"], 1)
+            self.assertEqual(first["used_source_count"], 1)
+            self.assertEqual(
+                result["events"][0]["catalog_sources"]["c416"],
+                ["clip416", "clip416_alias"],
+            )
+
+    def test_current_hash_identical_catalog_can_cover_without_new_media(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            plan, event_manifest = self._fixture(root)
+            event = json.loads(event_manifest.read_text(encoding="utf-8"))
+            event["clips"] = [event["clips"][1]]
+            self._write_json(event_manifest, event)
+
+            plan_value = json.loads(plan.read_text(encoding="utf-8"))
+            ledger = Path(plan_value["event_ledger"]["path"])
+            with ledger.open(encoding="utf-8", newline="") as handle:
+                rows = list(csv.DictReader(handle))
+            rows[0]["manifest_sha256"] = module.file_sha256(event_manifest)
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(rows)
+
+            plan_value["composition_policy"] = module.REUSE_POLICY
+            plan_value["event_ledger"]["sha256"] = module.file_sha256(ledger)
+            plan_value["component_catalogs"] = [
+                plan_value["component_catalogs"][1]
+            ]
+            self._write_json(plan, plan_value)
+
+            output = root / "reuse-audit.json"
+            module.audit(plan_path=plan, output_path=output)
+            result = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "PASSED")
+            self.assertEqual(len(result["component_catalogs"]), 1)
+            self.assertEqual(
+                result["composition_policy"],
+                module.REUSE_POLICY,
+            )
+
     def test_split_catalogs_can_cover_an_explicit_multi_family_event_set(
         self,
     ) -> None:

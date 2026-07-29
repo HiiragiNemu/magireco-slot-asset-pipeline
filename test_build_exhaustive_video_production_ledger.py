@@ -369,6 +369,64 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             )
             self.assertEqual(len(snapshots), 1)
 
+    def test_hash_identical_component_reuse_accepts_one_current_catalog(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as value:
+            root = Path(value)
+            catalog = root / "catalog.json"
+            catalog.write_text('{"catalog":"shared"}\n', encoding="utf-8")
+            bundle = root / "reuse-bundle.json"
+            bundle.write_text(
+                json.dumps(
+                    {
+                        "schema": (
+                            "magireco-material-component-coverage-audit-v1"
+                        ),
+                        "status": "PASSED",
+                        "coverage_id": "reuse-fixture",
+                        "family": "ac2202",
+                        "composition_policy": (
+                            module.REUSED_COMPONENT_COVERAGE_POLICY
+                        ),
+                        "coverage_claim": "current source reuse",
+                        "covered_events": ["ac2202_005"],
+                        "covered_event_count": 1,
+                        "component_catalogs": [
+                            {
+                                "name": "shared",
+                                "manifest_path": str(catalog),
+                                "manifest_sha256": module.file_sha256(catalog),
+                            }
+                        ],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            index, events, _snapshots = (
+                module._material_component_coverage_bundles(
+                    raw_bundles=[
+                        {
+                            "path": str(bundle),
+                            "sha256": module.file_sha256(bundle),
+                        }
+                    ],
+                    plan_dir=root,
+                    current_material_manifests={
+                        str(catalog.resolve()).casefold(): (
+                            module.file_sha256(catalog)
+                        )
+                    },
+                    quarantines={},
+                )
+            )
+            self.assertEqual(events, {"ac2202_005"})
+            self.assertEqual(
+                index[0]["coverage_status"],
+                "current_hash_identical_component_reuse_passed",
+            )
+
     def test_dirinfo_row_collection_supports_source_alias_rows(self) -> None:
         value = {
             "dirinfo_kind": 113,

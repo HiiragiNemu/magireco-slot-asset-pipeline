@@ -1,0 +1,57 @@
+{
+  "schema": "magireco-material-component-coverage-plan-v1",
+  "status": "active_fail_closed",
+  "coverage_id": "ac4906_001_003_split_native_components_v1",
+  "family": "ac4906",
+  "expected_production_state": "planned_unproduced",
+  "expected_disposition": "gameplay_effect_collection",
+  "expected_event_count": 3,
+  "expected_events": [
+    "ac4906_001",
+    "ac4906_002",
+    "ac4906_003"
+  ],
+  "composition_policy": "separate_native_size_catalogs_never_concat_or_upscale",
+  "event_ledger": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v26_20260727\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "4575AC5D52398280994C592657407D1BD2D20127390F85E7F6B9D979C4E794D9"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "component_catalogs": [
+    {
+      "name": "ac4906_native416x232_white_progression_components",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_white_progression_components_416_v1\\material_collection_manifest.json",
+        "sha256": "50220EB49E054A2FFC2FB4E4B2D7886202B1AE445BCFD71B9F5001036DF04DAB"
+      },
+      "allowed_unused_sources": []
+    },
+    {
+      "name": "ac4906_native208x120_shared_dark_overlay_component",
+      "role": "event_components",
+      "native_dimensions": {
+        "width": 208,
+        "height": 120
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_dark_overlay_component_208x120_v1\\material_collection_manifest.json",
+        "sha256": "18AB72E16838B862375BE430AAADA6F14C1B7658294F1A04B2964B6AC74CA12D"
+      },
+      "allowed_unused_sources": []
+    }
+  ]
+}
