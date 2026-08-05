@@ -370,6 +370,15 @@ class CompositionPlanTests(unittest.TestCase):
         # A plan remains the floor when indexed AV ends slightly earlier.
         self.assertEqual(production_content_end_ms(9565, 9538, plan(9565)), 9565)
 
+    def test_legacy_plan_without_duration_uses_proven_av_tail(self) -> None:
+        plan = {
+            "event": "ac0908_009",
+            "model": "linear_full_frame_sequence",
+            "extension_policy": "hold_last_frame",
+            "evidence": "verified visual order without an authored duration",
+        }
+        self.assertEqual(production_content_end_ms(4000, 4624, plan), 4624)
+
     def test_runtime_manifest_equivalent_duplicates_preserve_all_sources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

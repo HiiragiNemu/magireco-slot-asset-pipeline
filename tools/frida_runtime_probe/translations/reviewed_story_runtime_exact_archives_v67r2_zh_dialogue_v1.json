@@ -1,0 +1,37 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac0915_ac7205_v67r2_runtime_exact_standalone_archives",
+  "status": "machine_draft_pending_owner",
+  "source_translation_map": {
+    "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\translations\\reviewed_story_ac0915_ac5203_ac6005_ac7205_zh_dialogue_v1.json",
+    "sha256": "DA3F05A95F8DB2C77092883356EA7E209FE4FA54244402177A06BE63139112E4",
+    "binding": "whitespace-only projection from reviewed keys to current runtime-exact manifest text"
+  },
+  "translations": [
+    {
+      "ja": "マギウスのひとりだよ",
+      "zh": "我是Magius的一员。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "アリナ・グレイ ヨロシク",
+      "zh": "阿莉娜·格雷，\n请多关照。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔法少女の存在と怒りは アリナが世界中へシャウトしてあげる！",
+      "zh": "魔法少女的存在与愤怒，\n就由阿莉娜向全世界呐喊出来！",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "つまり君達は ドッペルという現象によって 魔女化を防いでいたわけだ",
+      "zh": "也就是说，你们通过\n名为魔女化身的现象避免了魔女化。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "さあ 君はどうしたい?",
+      "zh": "那么，\n你想怎么做？",
+      "status": "machine_draft_pending_owner"
+    }
+  ]
+}

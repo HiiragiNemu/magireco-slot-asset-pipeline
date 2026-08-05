@@ -1,0 +1,52 @@
+{
+  "schema": "magireco-evidence-bound-audio-role-overrides-v1",
+  "status": "audited",
+  "scope": "v67r2 runtime-exact standalone event archives only",
+  "overrides": [
+    {
+      "event": "ac0915_006",
+      "request_id": "808",
+      "code_name": "2853_ｱﾘﾅﾙｰﾄ_006",
+      "ogg_name": "snd_02853_bank03_ogg_06807.ogg",
+      "source_sha256": "768F60C0293FBD907144F745E46DAB63DCF5C35A7A13D57798D74874670C97DA",
+      "role": "scene_se",
+      "evidence": "current official runtime capture binds the exact request and global timing; historical manifest ac0915_006.json binds the same request and OGG as event_audio_component, independently from the voice-bound dialogue request"
+    },
+    {
+      "event": "ac0915_007",
+      "request_id": "811",
+      "code_name": "2856_ｱﾘﾅ告知【告強】_007",
+      "ogg_name": "snd_02856_bank03_ogg_06810.ogg",
+      "source_sha256": "EBA875BB6ADC38CD5385EB86DF827027F6629A1E6EFD21F3F36069B5EC2896DF",
+      "role": "scene_se",
+      "evidence": "current official runtime capture binds the exact request and global timing; historical manifest ac0915_007.json binds the same request and OGG as event_audio_component, independently from the voice-bound dialogue request"
+    },
+    {
+      "event": "ac0915_021",
+      "request_id": "811",
+      "code_name": "2856_ｱﾘﾅ告知【告強】_007",
+      "ogg_name": "snd_02856_bank03_ogg_06810.ogg",
+      "source_sha256": "EBA875BB6ADC38CD5385EB86DF827027F6629A1E6EFD21F3F36069B5EC2896DF",
+      "role": "scene_se",
+      "evidence": "current official runtime capture binds the exact request and global timing; historical manifest ac0915_021.json binds the same request and OGG as event_audio_component, independently from the voice-bound dialogue request"
+    },
+    {
+      "event": "ac7205_008",
+      "request_id": "10390",
+      "code_name": "42305_ｲﾌﾞ_ﾆｭｰｽ_QB_1onCU",
+      "ogg_name": "snd_42305_bank03_ogg_08955.ogg",
+      "source_sha256": "B839DEA6F45A35C157CBD2E7CF1DD7D1BD97ABD73CCE08A23481001A02F28633",
+      "role": "scene_se",
+      "evidence": "current official runtime capture binds the exact request and global timing; historical manifest ac7205_008.json binds the same request and OGG as event_audio_component, independently from the voice-bound dialogue request"
+    },
+    {
+      "event": "ac7205_016",
+      "request_id": "10390",
+      "code_name": "42305_ｲﾌﾞ_ﾆｭｰｽ_QB_1onCU",
+      "ogg_name": "snd_42305_bank03_ogg_08955.ogg",
+      "source_sha256": "B839DEA6F45A35C157CBD2E7CF1DD7D1BD97ABD73CCE08A23481001A02F28633",
+      "role": "scene_se",
+      "evidence": "current official runtime capture binds the exact request and global timing; historical manifest ac7205_016.json binds the same request and OGG as event_audio_component, independently from the voice-bound dialogue request"
+    }
+  ]
+}

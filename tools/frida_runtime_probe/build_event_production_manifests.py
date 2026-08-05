@@ -912,7 +912,13 @@ def composition_plan_authored_duration_ms(composition_plan: dict | None) -> int:
     if not composition_plan:
         return 0
     event = str(composition_plan.get("event", "<unknown>"))
-    duration_ms = number(composition_plan.get("duration_ms", ""))
+    raw_duration_ms = composition_plan.get("duration_ms", "")
+    if raw_duration_ms in (None, ""):
+        # Legacy composition plans can bind ordering/layering without claiming
+        # an authored presentation duration.  Their AV evidence remains the
+        # duration authority; only an explicitly authored duration is a floor.
+        return 0
+    duration_ms = number(raw_duration_ms)
     if duration_ms <= 0:
         raise ValueError(
             f"composition plan {event} has no positive authored duration_ms"

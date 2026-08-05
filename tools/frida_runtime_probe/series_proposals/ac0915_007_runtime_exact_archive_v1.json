@@ -1,0 +1,27 @@
+{
+  "schema": "magireco-runtime-exact-event-archive-series-v1",
+  "series": "ac0915_007",
+  "status": "passed",
+  "errors": [],
+  "event_count": 1,
+  "ordering": "single exact event; product identity equals full event; no natural-family claim",
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v67r2_runtime_event_exact_failclosed_20260803",
+    "known_family_events": 1,
+    "ready_family_events": 1,
+    "not_ready_family_events": [],
+    "ready_event_names": [
+      "ac0915_007"
+    ]
+  },
+  "event_manifest_sha256": {
+    "ac0915_007": "FA7EFDA754CC341F5AFF3E37927A6BDDE547948442CEEF9415595833E14CDE2E"
+  },
+  "source_series_manifest": {
+    "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac0915_20260619\\ac0915\\series_manifest.json",
+    "sha256": "E94F81F9D6AB87FAEDE8C43AD21F08B0E1D62DDF9532AE39A50F6CF73963BAEF",
+    "evidence": "upstream passed series used only to prove base-family identity and relative event occurrence; current v67r2 runtime manifest supplies exact AV timing"
+  },
+  "human_playback_required": true,
+  "bilibili_release_ready": false
+}
