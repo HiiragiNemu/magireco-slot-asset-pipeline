@@ -199,9 +199,17 @@ def apply_inventory_deltas(
         supersession_path, supersession = load_bound_json(
             config["supersession_delta"], f"supersession delta {index}"
         )
-        if delta.get("schema") != "magireco-authoritative-production-inventory-delta-v2":
+        delta_schema = str(delta.get("schema", ""))
+        supersession_schema = str(supersession.get("schema", ""))
+        if delta_schema not in {
+            "magireco-authoritative-production-inventory-delta-v2",
+            "magireco-authoritative-production-inventory-delta-v3",
+        }:
             raise ValueError("unexpected inventory delta schema")
-        if supersession.get("schema") != "magireco-production-inventory-supersession-delta-v1":
+        if supersession_schema not in {
+            "magireco-production-inventory-supersession-delta-v1",
+            "magireco-production-inventory-supersession-delta-v2",
+        }:
             raise ValueError("unexpected supersession delta schema")
         base_binding = delta.get("base_inventory", {})
         if (
@@ -221,9 +229,71 @@ def apply_inventory_deltas(
                 raise ValueError(f"duplicate delta inventory item: {item_id}")
             addition_by_id[item_id] = item
 
+        extra_bindings: dict[str, dict[str, Any]] = {}
+        if delta_schema.endswith("-v3"):
+            prior = delta.get("prior_delta", {})
+            prior_path = normalized_source(str(prior.get("path", "")))
+            prior_sha = str(prior.get("sha256", "")).upper()
+            loaded_prior = {
+                (
+                    normalized_source(str(binding["inventory_delta"]["path"])),
+                    str(binding["inventory_delta"]["sha256"]).upper(),
+                )
+                for binding in bindings
+            }
+            if (prior_path, prior_sha) not in loaded_prior:
+                raise ValueError("v3 inventory delta is not bound to the loaded prior delta")
+            verification_path, verification = load_bound_json(
+                config["verification_record"], f"inventory delta verification {index}"
+            )
+            source_bindings_path, source_bindings = load_bound_json(
+                config["source_bindings"], f"inventory delta source bindings {index}"
+            )
+            if (
+                verification.get("schema")
+                != "magireco-authoritative-production-inventory-delta-verification-v3"
+                or verification.get("result") != "PASS"
+                or int(verification.get("counts", {}).get("items", -1)) != len(additions)
+            ):
+                raise ValueError("v3 inventory delta verification did not pass")
+            if source_bindings.get("schema") != "magireco-inventory-delta-source-bindings-v2":
+                raise ValueError("unexpected v3 inventory source binding schema")
+            measured = {
+                normalized_source(str(path)): str(sha).upper()
+                for path, sha in source_bindings.get("measured_source_hashes", {}).items()
+            }
+            required_evidence = {
+                normalized_source(str(path))
+                for item in additions
+                for path in [item.get("source_manifest", ""), *item.get("evidence_paths", [])]
+                if path
+            }
+            if not required_evidence <= set(measured):
+                raise ValueError("v3 inventory source bindings do not cover all evidence")
+            for path_text, expected_sha in measured.items():
+                path = Path(path_text)
+                if not path.is_file() or file_sha256(path) != expected_sha:
+                    raise ValueError(f"v3 inventory evidence SHA-256 mismatch: {path}")
+            extra_bindings = {
+                "verification_record": {
+                    "path": str(verification_path),
+                    "sha256": file_sha256(verification_path),
+                },
+                "source_bindings": {
+                    "path": str(source_bindings_path),
+                    "sha256": file_sha256(source_bindings_path),
+                },
+            }
+
         for rule in supersession.get("items", []):
-            old_sha = str(rule.get("superseded_sha256", "")).upper()
-            old_path = normalized_source(str(rule.get("superseded_source_path", "")))
+            if supersession_schema.endswith("-v2"):
+                old_sha = str(rule.get("withdrawn_sha256", "")).upper()
+                old_path = normalized_source(str(rule.get("withdrawn_source_path", "")))
+                old_id = str(rule.get("withdrawn_inventory_item_id", ""))
+            else:
+                old_sha = str(rule.get("superseded_sha256", "")).upper()
+                old_path = normalized_source(str(rule.get("superseded_source_path", "")))
+                old_id = ""
             candidates = [
                 item
                 for item in items
@@ -231,8 +301,12 @@ def apply_inventory_deltas(
                 and normalized_source(str(item.get("source_path", ""))) == old_path
                 and str(item.get("family", "")) == str(rule.get("family", ""))
                 and str(item.get("edition", "")) == str(rule.get("edition", ""))
-                and normalized_route_identity(item.get("route_id"))
-                == normalized_route_identity(rule.get("route_id"))
+                and (not old_id or str(item.get("inventory_item_id", "")) == old_id)
+                and (
+                    supersession_schema.endswith("-v2")
+                    or normalized_route_identity(item.get("route_id"))
+                    == normalized_route_identity(rule.get("route_id"))
+                )
             ]
             if len(candidates) != 1:
                 raise ValueError(f"supersession source did not resolve uniquely: {old_sha}")
@@ -241,21 +315,46 @@ def apply_inventory_deltas(
             replacement = addition_by_id.get(replacement_id)
             if replacement is None:
                 raise ValueError(f"supersession replacement is absent: {replacement_id}")
-            for field in ("family", "edition"):
-                if (
-                    str(old.get(field, "")) != str(rule.get(field, ""))
-                    or str(old.get(field, "")) != str(replacement.get(field, ""))
-                ):
-                    raise ValueError(f"supersession identity mismatch for {field}")
-            route_identities = {
-                normalized_route_identity(old.get("route_id")),
-                normalized_route_identity(rule.get("route_id")),
-                normalized_route_identity(replacement.get("route_id")),
-            }
-            if len(route_identities) != 1:
-                raise ValueError("supersession identity mismatch for route_id")
-            if old.get("already_uploaded") or old.get("owner_approved"):
-                raise ValueError("supersession attempted to demote an owner-approved exact file")
+            if str(replacement.get("sha256", "")).upper() != str(
+                rule.get("replacement_sha256", replacement.get("sha256", ""))
+            ).upper():
+                raise ValueError("supersession replacement SHA-256 differs")
+            replacement_scope = str(rule.get("replacement_scope", "exact_reference_replacement"))
+            is_bounded_candidate = replacement_scope == (
+                "bounded_event_candidate_only_not_full_chapter_replacement"
+            )
+            if not is_bounded_candidate:
+                for field in ("family", "edition"):
+                    if (
+                        str(old.get(field, "")) != str(rule.get(field, ""))
+                        or str(old.get(field, "")) != str(replacement.get(field, ""))
+                    ):
+                        raise ValueError(f"supersession identity mismatch for {field}")
+                route_identities = {
+                    normalized_route_identity(old.get("route_id")),
+                    normalized_route_identity(rule.get("route_id", old.get("route_id"))),
+                    normalized_route_identity(replacement.get("route_id")),
+                }
+                if len(route_identities) != 1:
+                    raise ValueError("supersession identity mismatch for route_id")
+                if old.get("already_uploaded") or old.get("owner_approved"):
+                    raise ValueError("supersession attempted to demote an owner-approved exact file")
+            elif (
+                not old.get("owner_approved")
+                or not rule.get("owner_playback_approval_preserved")
+            ):
+                raise ValueError("bounded candidate did not preserve exact owner approval")
+            old["strict_no_bgm_review_ready_withdrawn"] = bool(
+                rule.get("strict_no_bgm_review_ready_withdrawn", False)
+            )
+            old["replacement_scope"] = replacement_scope
+            old["strict_no_bgm_withdrawal_reason"] = str(rule.get("reason", ""))
+            if is_bounded_candidate:
+                old["bounded_replacement_candidate_inventory_item_id"] = replacement_id
+                old["bounded_replacement_candidate_sha256"] = str(
+                    replacement.get("sha256", "")
+                ).upper()
+                continue
             old["not_in_primary_review_reason"] = str(
                 rule.get("reason", "superseded_reference")
             )
@@ -285,8 +384,7 @@ def apply_inventory_deltas(
                         ),
                     }
                 )
-        bindings.append(
-            {
+        binding_record = {
                 "inventory_delta": {
                     "path": str(delta_path),
                     "sha256": file_sha256(delta_path),
@@ -296,7 +394,8 @@ def apply_inventory_deltas(
                     "sha256": file_sha256(supersession_path),
                 },
             }
-        )
+        binding_record.update(extra_bindings)
+        bindings.append(binding_record)
     return items, mapping, bindings
 
 
@@ -326,7 +425,64 @@ def apply_authority_audit(
     ):
         raise ValueError("authority verification record did not pass")
     by_id = {str(item["inventory_item_id"]): item for item in items}
-    audit_rows = audit.get("items", [])
+    audit_rows = list(audit.get("items", []))
+    safe_rows = list(safe.get("items", []))
+    extension_bindings: list[dict[str, Any]] = []
+    for index, binding in enumerate(config.get("extensions", [])):
+        extension_path, extension = load_bound_json(
+            binding["audit_extension"], f"authority audit extension {index}"
+        )
+        extension_verification_path, extension_verification = load_bound_json(
+            binding["verification_record"],
+            f"authority audit extension verification {index}",
+        )
+        if (
+            extension.get("schema")
+            != "magireco.ida_past_product_accuracy_audit_extension.v1"
+            or extension_verification.get("schema")
+            != "magireco.ida_past_product_accuracy_audit_extension_verification.v1"
+            or extension_verification.get("status") != "PASS"
+        ):
+            raise ValueError("authority audit extension did not pass")
+        delta_path, delta = load_bound_json(
+            extension["inventory_delta"], f"authority extension inventory delta {index}"
+        )
+        extension_rows = list(extension.get("items", []))
+        extension_ids = {str(row.get("inventory_item_id", "")) for row in extension_rows}
+        delta_ids = {str(item.get("inventory_item_id", "")) for item in delta.get("items", [])}
+        safe_ids = {str(value) for value in extension.get("safe_review_item_ids", [])}
+        if (
+            delta.get("schema") != "magireco-authoritative-production-inventory-delta-v3"
+            or not extension_ids
+            or extension_ids != delta_ids
+            or safe_ids != extension_ids
+            or int(extension_verification.get("counts", {}).get("items", -1))
+            != len(extension_rows)
+        ):
+            raise ValueError("authority audit extension coverage differs from inventory delta")
+        for evidence in extension.get("evidence_bindings", []):
+            evidence_path = Path(str(evidence.get("path", ""))).resolve()
+            expected_sha = str(evidence.get("sha256", "")).upper()
+            if not evidence_path.is_file() or file_sha256(evidence_path) != expected_sha:
+                raise ValueError(f"authority extension evidence SHA differs: {evidence_path}")
+        audit_rows.extend(extension_rows)
+        safe_rows.extend(extension_rows)
+        extension_bindings.append(
+            {
+                "audit_extension": {
+                    "path": str(extension_path),
+                    "sha256": file_sha256(extension_path),
+                },
+                "verification_record": {
+                    "path": str(extension_verification_path),
+                    "sha256": file_sha256(extension_verification_path),
+                },
+                "inventory_delta": {
+                    "path": str(delta_path),
+                    "sha256": file_sha256(delta_path),
+                },
+            }
+        )
     audit_by_id = {str(row.get("inventory_item_id", "")): row for row in audit_rows}
     if len(audit_by_id) != len(audit_rows) or set(audit_by_id) != set(by_id):
         raise ValueError("authority audit does not cover inventory exactly")
@@ -335,7 +491,6 @@ def apply_authority_audit(
         for item_id, item in by_id.items()
         if item.get("review_disposition") == "REVIEW_READY"
     }
-    safe_rows = safe.get("items", [])
     safe_by_id = {str(row.get("inventory_item_id", "")): row for row in safe_rows}
     if len(safe_by_id) != len(safe_rows) or set(safe_by_id) != ready_ids:
         raise ValueError("safe review index does not equal REVIEW_READY inventory")
@@ -379,6 +534,7 @@ def apply_authority_audit(
                 "path": str(verification_path),
                 "sha256": file_sha256(verification_path),
             },
+            "extensions": extension_bindings,
         }
     ]
 
@@ -531,6 +687,14 @@ def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
     mapping, sound_bus_bindings, sound_bus_withdrawals = apply_sound_bus_audit(
         plan, items, mapping
     )
+    expected_sound_bus_withdrawals = {
+        str(item.get("inventory_item_id", ""))
+        for item in items
+        if item.get("strict_no_bgm_review_ready_withdrawn")
+    }
+    if not expected_sound_bus_withdrawals <= sound_bus_withdrawals:
+        missing = sorted(expected_sound_bus_withdrawals - sound_bus_withdrawals)
+        raise ValueError(f"v3 strict-no-BGM withdrawals were not applied: {missing}")
     expected = plan.get("expected_counts", {})
     dispositions = {name: 0 for name in DISPOSITIONS}
     by_id: dict[str, Mapping[str, Any]] = {}
@@ -676,6 +840,13 @@ def review_row(item: Mapping[str, Any], review_path: str, canonical_path: str) -
         "superseded_by_inventory_item_id": item.get(
             "superseded_by_inventory_item_id", ""
         ),
+        "replacement_scope": item.get("replacement_scope", ""),
+        "bounded_replacement_candidate_inventory_item_id": item.get(
+            "bounded_replacement_candidate_inventory_item_id", ""
+        ),
+        "bounded_replacement_candidate_sha256": item.get(
+            "bounded_replacement_candidate_sha256", ""
+        ),
         "ida_accuracy_category": item.get("ida_accuracy_category", ""),
         "ida_audit_action": item.get("ida_audit_action", ""),
         "ida_rationale": item.get("ida_rationale", ""),
@@ -710,6 +881,8 @@ CSV_FIELDS = [
     "event_ids", "evidence", "source_manifest", "source_manifest_sha256",
     "exclusion_reason", "quarantine_flags", "already_uploaded", "owner_approved",
     "superseded", "superseded_by_inventory_item_id", "ida_accuracy_category",
+    "replacement_scope", "bounded_replacement_candidate_inventory_item_id",
+    "bounded_replacement_candidate_sha256",
     "ida_audit_action", "ida_rationale", "ida_authority_report",
     "ida_authority_report_sha256", "target_bv",
     "pre_sound_bus_review_disposition", "sound_bus_audit_action",

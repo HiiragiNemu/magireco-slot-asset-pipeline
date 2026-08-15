@@ -7,6 +7,7 @@ import unittest
 from unittest import mock
 
 from tools.frida_runtime_probe.build_manual_review_hub import (
+    apply_inventory_deltas,
     build,
     file_sha256,
     probe_media,
@@ -423,6 +424,188 @@ class ManualReviewHubBuilderTests(unittest.TestCase):
             rows["I_READY"]["superseded_by_inventory_item_id"], "I_REPLACEMENT"
         )
         self.assertFalse(rows["I_READY"]["review_absolute_path"])
+
+    def test_v3_bounded_candidate_preserves_owner_approved_full_product(self):
+        old = self.item(
+            "I_READY",
+            "REVIEW_READY",
+            owner_approved=True,
+            family="ac0001",
+            route_id="full",
+        )
+        inventory = {
+            "schema": "magireco-authoritative-production-inventory-v1",
+            "items": [old],
+        }
+        inventory_path = self.root / "inventory-v3-base.json"
+        inventory_path.write_text(json.dumps(inventory), encoding="utf-8")
+        inventory_sha = file_sha256(inventory_path)
+        prior = {
+            "schema": "magireco-authoritative-production-inventory-delta-v2",
+            "base_inventory": {"path": str(inventory_path), "sha256": inventory_sha},
+            "items": [],
+        }
+        prior_path = self.root / "prior-delta.json"
+        prior_path.write_text(json.dumps(prior), encoding="utf-8")
+        prior_supersession_path = self.root / "prior-supersession.json"
+        prior_supersession_path.write_text(
+            json.dumps(
+                {
+                    "schema": "magireco-production-inventory-supersession-delta-v1",
+                    "items": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        candidate_source = self.source_root / "bounded-candidate.mp4"
+        candidate_source.write_bytes(b"bounded-candidate-media")
+        candidate_sha = file_sha256(candidate_source)
+        evidence_path = self.root / "bounded-evidence.json"
+        evidence_path.write_text('{"result":"PASS"}\n', encoding="utf-8")
+        candidate = self.item(
+            "I_BOUNDED",
+            "REVIEW_READY",
+            source_path=str(candidate_source),
+            source_root=str(self.source_root),
+            sha256=candidate_sha,
+            actual_sha256=candidate_sha,
+            canonical_sha256=candidate_sha,
+            canonical_review_item_id="I_BOUNDED",
+            size=candidate_source.stat().st_size,
+            family="ac0001_013",
+            series="ac0001",
+            route_id="013",
+            source_manifest=str(evidence_path),
+            source_manifest_sha256=file_sha256(evidence_path),
+            evidence_paths=[str(evidence_path)],
+            proposed_hub_relative_path=(
+                "REVIEW_READY/material/sample/material/R0002_单事件候选_ac0001_013.mp4"
+            ),
+            proposed_review_filename="R0002_单事件候选_ac0001_013.mp4",
+        )
+        delta = {
+            "schema": "magireco-authoritative-production-inventory-delta-v3",
+            "base_inventory": {"path": str(inventory_path), "sha256": inventory_sha},
+            "prior_delta": {
+                "path": str(prior_path),
+                "sha256": file_sha256(prior_path),
+            },
+            "items": [candidate],
+        }
+        delta_path = self.root / "delta-v3.json"
+        delta_path.write_text(json.dumps(delta), encoding="utf-8")
+        supersession_path = self.root / "supersession-v2.json"
+        supersession_path.write_text(
+            json.dumps(
+                {
+                    "schema": "magireco-production-inventory-supersession-delta-v2",
+                    "items": [
+                        {
+                            "withdrawn_inventory_item_id": "I_READY",
+                            "family": "ac0001",
+                            "edition": "material",
+                            "withdrawn_source_path": str(self.source),
+                            "withdrawn_sha256": self.sha,
+                            "owner_playback_approval_preserved": True,
+                            "strict_no_bgm_review_ready_withdrawn": True,
+                            "replacement_scope": (
+                                "bounded_event_candidate_only_not_full_chapter_replacement"
+                            ),
+                            "replacement_inventory_item_id": "I_BOUNDED",
+                            "replacement_sha256": candidate_sha,
+                            "reason": "bounded fixture only",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        verification_path = self.root / "delta-v3-verification.json"
+        verification_path.write_text(
+            json.dumps(
+                {
+                    "schema": (
+                        "magireco-authoritative-production-inventory-delta-verification-v3"
+                    ),
+                    "result": "PASS",
+                    "counts": {"items": 1},
+                }
+            ),
+            encoding="utf-8",
+        )
+        source_bindings_path = self.root / "delta-v3-source-bindings.json"
+        source_bindings_path.write_text(
+            json.dumps(
+                {
+                    "schema": "magireco-inventory-delta-source-bindings-v2",
+                    "measured_source_hashes": {
+                        str(evidence_path): file_sha256(evidence_path)
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        plan = {
+            "inputs": {
+                "deltas": [
+                    {
+                        "inventory_delta": {
+                            "path": str(prior_path),
+                            "sha256": file_sha256(prior_path),
+                        },
+                        "supersession_delta": {
+                            "path": str(prior_supersession_path),
+                            "sha256": file_sha256(prior_supersession_path),
+                        },
+                    },
+                    {
+                        "inventory_delta": {
+                            "path": str(delta_path),
+                            "sha256": file_sha256(delta_path),
+                        },
+                        "supersession_delta": {
+                            "path": str(supersession_path),
+                            "sha256": file_sha256(supersession_path),
+                        },
+                        "verification_record": {
+                            "path": str(verification_path),
+                            "sha256": file_sha256(verification_path),
+                        },
+                        "source_bindings": {
+                            "path": str(source_bindings_path),
+                            "sha256": file_sha256(source_bindings_path),
+                        },
+                    },
+                ]
+            }
+        }
+        items, mapping, bindings = apply_inventory_deltas(
+            plan=plan,
+            inventory_path=inventory_path,
+            inventory_sha256=inventory_sha,
+            base_items=[old],
+            base_mapping=[
+                {
+                    "inventory_item_id": "I_READY",
+                    "source_path": str(self.source),
+                    "sha256": self.sha,
+                    "proposed_hub_relative_path": (
+                        "REVIEW_READY/material/sample/material/R0001_完整成品_ac0001.mp4"
+                    ),
+                }
+            ],
+        )
+        rows = {item["inventory_item_id"]: item for item in items}
+        self.assertTrue(rows["I_READY"]["owner_approved"])
+        self.assertFalse(rows["I_READY"]["superseded"])
+        self.assertEqual(
+            rows["I_READY"]["bounded_replacement_candidate_inventory_item_id"],
+            "I_BOUNDED",
+        )
+        self.assertEqual({row["inventory_item_id"] for row in mapping}, {"I_READY", "I_BOUNDED"})
+        self.assertIn("verification_record", bindings[1])
+        self.assertIn("source_bindings", bindings[1])
 
     def test_authority_audit_must_cover_inventory_and_ready_set_exactly(self):
         plan, inventory_path, _ = self.write_fixture()

@@ -1,0 +1,20 @@
+{
+  "schema": "magireco.ida_past_product_accuracy_audit_extension_verification.v1",
+  "verified_utc": "2026-08-14T18:47:33.650525+00:00",
+  "status": "PASS",
+  "counts": {
+    "items": 9,
+    "safe_review_items": 9,
+    "owner_approved_items": 0,
+    "p16_p17_p18_items": 0,
+    "child_local_fail_closed_items": 0
+  },
+  "checks": {
+    "inventory_delta_exact_coverage": true,
+    "all_items_runtime_exact": true,
+    "all_media_remain_human_playback_required": true,
+    "auto_qa_not_promoted_to_human_approval": true,
+    "owner_approval_not_invented": true,
+    "bounded_ac1103_candidate_does_not_replace_full_chapter": true
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "schema": "magireco-manual-review-hub-plan-v1",
+  "release_id": "authoritative_inventory_v1_plus_v69_strict_no_bgm_20260815",
+  "supersedes_release_id": "authoritative_inventory_v1_plus_v68_reverified_20260813",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_hub_v1",
+  "allowed_source_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612",
+  "inputs": {
+    "inventory": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_v1_20260805\\PRODUCTION_INVENTORY.json",
+      "sha256": "DC921BDA1B6E1954168B4A8795C7D33BE3426859E21949CDBD80A834B93A4ED4"
+    },
+    "mapping": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_v1_20260805\\PROPOSED_HUB_MAPPING.csv",
+      "sha256": "12161CD2909E98625157E2B9341F4A8F1DE63A242307357443B5BB5D669897C7"
+    },
+    "deltas": [
+      {
+        "inventory_delta": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v2_20260810\\INVENTORY_DELTA.json",
+          "sha256": "BE7C5194EB733F1ADB6C478E4277C81B1423AF0DD166814EDE1BA21595F1401C"
+        },
+        "supersession_delta": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v2_20260810\\SUPERSESSION_DELTA.json",
+          "sha256": "66F9973D5E419F27F5BE9056901A6A44DF1EEDAFE408BFDCF4DFB2CD206819FF"
+        }
+      },
+      {
+        "inventory_delta": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v3r1_20260813\\INVENTORY_DELTA.json",
+          "sha256": "E8DD569F0973D4D0C2DC7DEBB6BE23852411F0001649F1846EF47F9523EA2462"
+        },
+        "supersession_delta": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v3r1_20260813\\SUPERSESSION_DELTA.json",
+          "sha256": "05BB74DF8F5A27C7CAC03F809C44B0BFB7F0C2AE0780AA8A59E6FCAA550B1DCC"
+        },
+        "verification_record": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v3r1_20260813\\VERIFICATION_RECORD.json",
+          "sha256": "906A0E8F3F1E25CD1E4E34CF23C95B05CB0FAEAFA7610705EBCB046ACB9B25E5"
+        },
+        "source_bindings": {
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\authoritative_production_inventory_delta_v3r1_20260813\\SOURCE_BINDINGS.json",
+          "sha256": "6BC2F9CBDFB48D335BD24C9A2EB257AA681724F77B5C8D9DCF5666D67F05AAC6"
+        }
+      }
+    ],
+    "authority_audit": {
+      "safe_review_index": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_past_product_accuracy_audit_v1_20260810\\SAFE_REVIEW_INDEX.json",
+        "sha256": "B51318EE795B79253ADE056A74975DF1F1025A2A15B005C91A637B3F798DDAED"
+      },
+      "product_accuracy_audit": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_past_product_accuracy_audit_v1_20260810\\PRODUCT_ACCURACY_AUDIT.json",
+        "sha256": "1BFEE04AD9E40B367B086075105177174AD270818410CE23D1DAC5492761C2B1"
+      },
+      "verification_record": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_past_product_accuracy_audit_v1_20260810\\VERIFICATION_RECORD.json",
+        "sha256": "71C39645232D9F11736484432399D8528C0336DA2FA8B541F6EFA91C86495A58"
+      },
+      "extensions": [
+        {
+          "audit_extension": {
+            "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\series_proposals\\manual_review_hub_v69_strict_no_bgm_authority_extension_20260815.json",
+            "sha256": "3D4767F5C96E2B82D6F0169EBAF7AADBAA35866A8951925392C9E287FA5095EF"
+          },
+          "verification_record": {
+            "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\series_proposals\\manual_review_hub_v69_strict_no_bgm_authority_extension_verification_20260815.json",
+            "sha256": "74204E90D8D006F6CCF4356D5564F3D248AD2D06AF873366D07B7FD32D2271D2"
+          }
+        }
+      ]
+    },
+    "sound_bus_audit": {
+      "product_impact_delta": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sound_divide_manifest_audit_v1b_20260810\\final\\PRODUCT_IMPACT_DELTA.json",
+        "sha256": "7C5135F714B87F5E397E9FE97914726518D5714020449533950AB9E2298ECCE8"
+      },
+      "ready_risk": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sound_divide_manifest_audit_v1b_20260810\\final\\READY_EVENT_BGM_BUS_RISK.json",
+        "sha256": "BFF91DE39AE8C388E3B22FDB8716865511C2BAE4A94EDCA4B8DEEA955D941485"
+      },
+      "v68_withdrawal": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sound_divide_manifest_audit_v1b_20260810\\final\\V68_WITHDRAWAL.json",
+        "sha256": "1F63F5621472E02244F311A3AB67BF625AF7E195F325287EBEEAB9F4D84706CC"
+      },
+      "verification_record": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sound_divide_manifest_audit_v1b_20260810\\final\\VERIFICATION_RECORD.json",
+        "sha256": "AB50906BA6D3581A91DE1B906CFBD66E3FCECAF8B7EDFA0155C7A12622A9CE85"
+      }
+    }
+  },
+  "expected_counts": {
+    "inventory_items": 407,
+    "review_ready": 127,
+    "needs_decision": 223,
+    "excluded_reference": 57,
+    "mapping_rows": 127
+  },
+  "publication_contract": {
+    "source_media_mutated": false,
+    "transcode_or_upscale": false,
+    "review_ready_physical_policy": "same-volume-hardlink",
+    "same_sha_review_once": true,
+    "auto_qa_is_human_approval": false,
+    "quarantine_families": [
+      "ac6003",
+      "ac6004",
+      "ac6005"
+    ],
+    "allowed_audio_profiles": [
+      "no_bgm",
+      "silent"
+    ]
+  },
+  "integrated_corrections": {
+    "strict_no_bgm_candidates": 9,
+    "direct_exact_replacements": 6,
+    "bounded_event_candidates_not_full_chapter_replacements": 1,
+    "legacy_owner_approval_preserved": true,
+    "human_playback_required": true
+  }
+}
