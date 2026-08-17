@@ -1,0 +1,47 @@
+{
+  "schema": "magireco-ac0911-event-global-mature-routes-plan-v1",
+  "checkpoint_id": "ac0911_event_global_mature_routes_v75r1_20260817",
+  "status": "approved_for_bounded_render_human_playback_required",
+  "family": "ac0911",
+  "native_dimensions": {"width": 416, "height": 232},
+  "native_frame_rate": "30/1",
+  "audio_profile": "strict_no_bgm",
+  "source_v35_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v35_ac0911_mature_routes_20260726\\ac0911",
+  "strict_row006_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v69r2_ac0911_row006_strict_no_bgm_20260813\\ac0911",
+  "strict_row006_route_manifest_sha256": "962A217143FEA29F5EC114AB163DB1B9407630A24B23342AD84CBDD09BC3BC49",
+  "strict_no_bgm_plan": "tools/frida_runtime_probe/series_proposals/strict_no_bgm_sound_bus_corrections_v69_20260813.json",
+  "timing_authority_summary": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0911_mature_routes_event_global_timing_authority_v1_20260817\\SUMMARY.json",
+  "replacement_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v75_ac0911_event_global_20260817",
+  "source_event_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v68_ac0911_011_audio_repair_20260806\\events",
+  "subtitle_layout": "tools/frida_runtime_probe/subtitle_layout_profiles/project_approved_zh_video_subtitle_layout_416x232_v1.json",
+  "font": "D:\\magia\\MyProducts\\casino\\magireco_tool_dependencies\\fonts\\noto-sans-cjk-sc-2.004\\NotoSansSC-VF.ttf",
+  "route_order": [
+    "dirinfo-row-000",
+    "dirinfo-row-001",
+    "dirinfo-row-002",
+    "dirinfo-row-003",
+    "dirinfo-row-004",
+    "dirinfo-row-005",
+    "dirinfo-row-006",
+    "dirinfo-row-007",
+    "dirinfo-row-009"
+  ],
+  "strict_no_bgm_route": "dirinfo-row-006",
+  "subtitle_end_corrections": {
+    "dirinfo-row-001": [
+      {"cue_index": 2, "expected_start_ms": 21266, "expected_old_end_ms": 22804, "new_end_ms": 22266, "event": "ac0911_004"}
+    ],
+    "dirinfo-row-007": [
+      {"cue_index": 2, "expected_start_ms": 21266, "expected_old_end_ms": 24226, "new_end_ms": 22266, "event": "ac0911_012"}
+    ],
+    "dirinfo-row-009": [
+      {"cue_index": 1, "expected_start_ms": 10866, "expected_old_end_ms": 16214, "new_end_ms": 11866, "event": "ac0911_006"},
+      {"cue_index": 2, "expected_start_ms": 16567, "expected_old_end_ms": 22103, "new_end_ms": 17567, "event": "ac0911_008"}
+    ]
+  },
+  "edited_showcase_claim": "edited_route_chapter_showcase_not_single_native_session",
+  "excluded_dirinfo_rows": [8, 10, 11, 12, 13],
+  "human_playback_required": true,
+  "publication_approved": false,
+  "source_media_policy": "read_only_preserve_no_move_no_delete_no_overwrite"
+}

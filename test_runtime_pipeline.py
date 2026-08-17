@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import csv
 import hashlib
 import json
@@ -102,6 +103,23 @@ from tools.frida_runtime_probe.build_ac7206_route_replacement_manifests import (
     BLOCKER as AC7206_TIMING_BLOCKER,
     ROLLBACK_SCRIPT as AC7206_ROLLBACK_SCRIPT,
     repair_manifest as repair_ac7206_manifest,
+)
+from tools.frida_runtime_probe.build_ac0911_mature_route_timing_authority import (
+    EVENT_SPEC as AC0911_EVENT_SPEC,
+    extract_event_authority as extract_ac0911_event_authority,
+)
+from tools.frida_runtime_probe.build_ac0911_mature_route_replacement_manifests import (
+    BLOCKER as AC0911_TIMING_BLOCKER,
+    CHANGED_EVENTS as AC0911_CHANGED_EVENTS,
+    EXPECTED_AFTER as AC0911_EXPECTED_AFTER,
+    ROLLBACK_SCRIPT as AC0911_ROLLBACK_SCRIPT,
+    repair_manifest as repair_ac0911_manifest,
+)
+from tools.frida_runtime_probe.build_ac0911_event_global_mature_routes import (
+    DEFAULT_PLAN as AC0911_ROUTE_PLAN,
+    ROLLBACK_SCRIPT as AC0911_ROUTE_ROLLBACK_SCRIPT,
+    patch_cues as patch_ac0911_route_cues,
+    validate_plan as validate_ac0911_route_plan,
 )
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
@@ -798,6 +816,200 @@ class AC7206RouteTimingClosureTests(unittest.TestCase):
             any(line.startswith("+") for line in AC7206_ROLLBACK_SCRIPT.splitlines())
         )
         self.assertIn("source manifests or media", AC7206_ROLLBACK_SCRIPT)
+
+
+class AC0911MatureRouteTimingClosureTests(unittest.TestCase):
+    def source(self, event: str, audio_path: Path) -> dict:
+        spec = AC0911_EVENT_SPEC[event]
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": event,
+            "event_code_hex": spec["code"],
+            "native_frame_rate": "30/1",
+            "audio": [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": spec["request"],
+                    "z2d_name": spec["z2d"],
+                    "start_ms": spec["source_start_ms"],
+                    "duration_ms": max(
+                        1, spec["source_end_ms"] - spec["source_start_ms"]
+                    ),
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                }
+            ],
+            "subtitles": [
+                {
+                    "voice_request_id": spec["request"],
+                    "voice_start_ms": spec["source_start_ms"],
+                    "z2d_name": spec["z2d"],
+                    "start_ms": spec["source_start_ms"],
+                    "end_ms": spec["source_end_ms"],
+                }
+            ],
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [AC0911_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def runtime_event(self, event: str) -> dict:
+        spec = AC0911_EVENT_SPEC[event]
+        top = {
+            "name": "字幕",
+            "hash_low": 31,
+            "hash_high": 37,
+            "children": [
+                {
+                    "name": spec["z2d"] + ".z2d",
+                    "time_remap_pointer": None,
+                    "motions": [
+                        {
+                            "is_z2d_motion": True,
+                            "keys": [
+                                {
+                                    "index": 0,
+                                    "floats": list(spec["key_floats"]),
+                                    "flags": list(spec["key_flags"]),
+                                }
+                            ],
+                        }
+                    ],
+                    "children": [],
+                }
+            ],
+        }
+        return {
+            "event_code": spec["code"],
+            "layers": [{"hash_low": 31, "hash_high": 37, "speed": 1}],
+            "scenes": [
+                {
+                    "name": event,
+                    "cuts": [
+                        {
+                            "cut_name": event,
+                            "instance_offset_frames": 0,
+                            "cut_start_frame": 0,
+                            "cut_end_frame": 199,
+                            "nodes": [top],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def override(self, event: str, source: dict) -> dict:
+        _, override = extract_ac0911_event_authority(
+            event, self.runtime_event(event), source
+        )
+        override.update(
+            {
+                "_source_path": "bound-override.json",
+                "_source_sha256": "D" * 64,
+                "authority_path": "authority.json",
+                "source_bindings": [],
+            }
+        )
+        return override
+
+    def test_all_nine_events_bind_exact_parent_global_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event, spec in AC0911_EVENT_SPEC.items():
+                source = self.source(event, audio)
+                evidence, override = extract_ac0911_event_authority(
+                    event, self.runtime_event(event), source
+                )
+                self.assertEqual(evidence["parent_cut"]["instance_offset_frames"], 0)
+                self.assertEqual(
+                    override["cues"][0]["event_global_start_frame"],
+                    spec["key_floats"][0],
+                )
+
+    def test_all_nine_events_promote_and_only_four_graphical_ends_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            changed = []
+            for event, spec in AC0911_EVENT_SPEC.items():
+                source = self.source(event, audio)
+                repaired, application = repair_ac0911_manifest(
+                    source, self.override(event, source)
+                )
+                self.assertTrue(application["applied"])
+                self.assertTrue(repaired["quality_gates"]["ready"])
+                self.assertEqual(repaired["audio"][0]["start_ms"], spec["source_start_ms"])
+                self.assertEqual(
+                    (
+                        repaired["subtitles"][0]["start_ms"],
+                        repaired["subtitles"][0]["end_ms"],
+                    ),
+                    AC0911_EXPECTED_AFTER[event],
+                )
+                if repaired["subtitles"][0]["end_ms"] != spec["source_end_ms"]:
+                    changed.append(event)
+            self.assertEqual(tuple(changed), AC0911_CHANGED_EVENTS)
+
+    def test_wrong_motion_flag_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            event = "ac0911_008"
+            runtime = self.runtime_event(event)
+            runtime["scenes"][0]["cuts"][0]["nodes"][0]["children"][0][
+                "motions"
+            ][0]["keys"][0]["flags"][1] = 9
+            with self.assertRaisesRegex(ValueError, "runtime motion key differs"):
+                extract_ac0911_event_authority(event, runtime, self.source(event, audio))
+
+    def test_rollback_script_preserves_sources(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in AC0911_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", AC0911_ROLLBACK_SCRIPT)
+
+    def test_route_subtitle_end_patch_is_exact_and_bounded(self) -> None:
+        cues = [
+            {"start_ms": 200, "end_ms": 2667, "text": "prefix"},
+            {"start_ms": 10866, "end_ms": 16214, "text": "route cue"},
+        ]
+        rows = [
+            {
+                "cue_index": 1,
+                "expected_start_ms": 10866,
+                "expected_old_end_ms": 16214,
+                "new_end_ms": 11866,
+                "event": "ac0911_006",
+            }
+        ]
+        patched = patch_ac0911_route_cues(cues, rows, "dirinfo-row-009")
+        self.assertEqual(cues[1]["end_ms"], 16214)
+        self.assertEqual(patched[1]["end_ms"], 11866)
+        bad = copy.deepcopy(rows)
+        bad[0]["expected_old_end_ms"] = 9999
+        with self.assertRaisesRegex(ValueError, "source timing differs"):
+            patch_ac0911_route_cues(cues, bad, "dirinfo-row-009")
+
+    def test_route_rollback_preserves_v35_v69_and_sources(self) -> None:
+        self.assertIn("without touching v35, v69r2", AC0911_ROUTE_ROLLBACK_SCRIPT)
+        self.assertNotIn("Remove-Item", AC0911_ROUTE_ROLLBACK_SCRIPT)
+
+    def test_route_plan_requires_strict_row006_manifest_binding(self) -> None:
+        plan = json.loads(AC0911_ROUTE_PLAN.read_text(encoding="utf-8"))
+        self.assertEqual(
+            validate_ac0911_route_plan(plan, AC0911_ROUTE_PLAN)["routes"][-1],
+            "dirinfo-row-009",
+        )
+        plan.pop("strict_row006_route_manifest_sha256")
+        with self.assertRaisesRegex(ValueError, "plan contract differs"):
+            validate_ac0911_route_plan(plan, AC0911_ROUTE_PLAN)
 
 
 class P16ReplacementManifestTests(unittest.TestCase):
