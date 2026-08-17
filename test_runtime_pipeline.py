@@ -14,6 +14,7 @@ from tools.frida_runtime_probe.generate_verified_family_composition_plans import
     lev_plan,
 )
 from tools.frida_runtime_probe.build_event_production_manifests import (
+    apply_z2d_event_timing_override,
     apply_path_prefix_maps,
     apply_runtime_voice_subtitle_overrides,
     composition_plan_uses_authored_timing,
@@ -45,6 +46,15 @@ from tools.frida_runtime_probe.build_series_editions import (
     event_sort_key,
     shifted_srt_cues,
 )
+from tools.frida_runtime_probe.build_p16_family_replacement_manifests import (
+    BLOCKER as P16_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as P16_ROLLBACK_SCRIPT,
+    repair_manifest as repair_p16_manifest,
+)
+from tools.frida_runtime_probe.build_p16_replacement_review_package import (
+    ROLLBACK_SCRIPT as P16_REVIEW_ROLLBACK_SCRIPT,
+    safe_relative_path as p16_review_safe_relative_path,
+)
 
 
 def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> None:
@@ -52,6 +62,114 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
         writer = csv.DictWriter(output, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+
+
+class P16ReplacementManifestTests(unittest.TestCase):
+    def p16_source(self) -> dict:
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": "ac6003_006",
+            "event_code_hex": "0x2573376b25647163",
+            "native_frame_rate": "30/1",
+            "video_duration_ms": 5000,
+            "composition_plan": {},
+            "video_extension_policy": "none",
+            "clips": [{"event_start_ms": 0, "event_end_ms": 5000}],
+            "audio": [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "5842",
+                    "z2d_name": "cap6003_mb_mif_006",
+                    "start_ms": 0,
+                    "duration_ms": 1000,
+                    "event_global_start_resolved": False,
+                }
+            ],
+            "subtitles": [
+                {
+                    "voice_request_id": "5842",
+                    "z2d_name": "cap6003_mb_mif_006",
+                    "voice_start_ms": 0,
+                    "start_ms": 0,
+                    "end_ms": 4000,
+                    "event_global_start_resolved": False,
+                }
+            ],
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [P16_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def p16_override(self) -> dict:
+        return {
+            "event": "ac6003_006",
+            "event_code_hex": "0x2573376b25647163",
+            "frame_rate": "30/1",
+            "_source_path": "bound-override.json",
+            "_source_sha256": "A" * 64,
+            "source_bindings": [],
+            "authority_path": "authority.json",
+            "cues": [
+                {
+                    "request_id": "5842",
+                    "z2d_name": "cap6003_mb_mif_006",
+                    "event_global_start_frame": 88,
+                    "event_global_start_ms": 2933,
+                    "event_global_end_frame_exclusive": 129,
+                    "event_global_end_ms": 4300,
+                }
+            ],
+        }
+
+    def test_p16_repair_promotes_only_exact_matched_timing(self) -> None:
+        override = self.p16_override()
+        override["frame_rate"] = "30"
+        repaired, application = repair_p16_manifest(self.p16_source(), override)
+        self.assertTrue(application["applied"])
+        self.assertEqual(repaired["audio"][0]["start_ms"], 2933)
+        self.assertEqual(repaired["subtitles"][0]["start_ms"], 2933)
+        self.assertEqual(repaired["subtitles"][0]["end_ms"], 4300)
+        self.assertEqual(repaired["timeline_duration_ms"], 5000)
+        self.assertEqual(repaired["render_frame_count"], 150)
+        self.assertTrue(repaired["quality_gates"]["ready"])
+        self.assertEqual(repaired["quality_gates"]["errors"], [])
+
+    def test_p16_repair_fails_closed_on_unmatched_cue(self) -> None:
+        override = self.p16_override()
+        override["cues"][0]["request_id"] = "wrong-request"
+        with self.assertRaisesRegex(ValueError, "unmatched override cues"):
+            repair_p16_manifest(self.p16_source(), override)
+
+    def test_p16_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in P16_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", P16_ROLLBACK_SCRIPT)
+
+    def test_p16_review_path_is_language_first_and_flat(self) -> None:
+        path = p16_review_safe_relative_path(
+            "ZH/story/P16_八千代与美冬的冲突_ac6003__zh.mp4",
+            edition="zh",
+        )
+        self.assertEqual(len(path.parts), 3)
+        with self.assertRaisesRegex(ValueError, "unsafe review path"):
+            p16_review_safe_relative_path(
+                "ZH/story/../escape__zh.mp4", edition="zh"
+            )
+
+    def test_p16_review_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(
+                line.startswith("+")
+                for line in P16_REVIEW_ROLLBACK_SCRIPT.splitlines()
+            )
+        )
 
 
 class CompositionPlanTests(unittest.TestCase):
@@ -1003,6 +1121,229 @@ class ManifestBuilderTests(unittest.TestCase):
                 "unresolved_parent_dgm_to_child_z2d_instantiation_offset",
                 manifest["quality_gates"]["errors"],
             )
+
+            authority = root / "timing_authority.json"
+            authority.write_text("bound P16-style evidence\n", encoding="utf-8")
+            timing_override = root / "timing_override.json"
+            timing_override.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-z2d-event-timing-override-v1",
+                        "event": "ac_test_001",
+                        "event_code_hex": "0x1",
+                        "frame_rate": "30/1",
+                        "authority_path": str(authority),
+                        "source_bindings": [
+                            {
+                                "path": str(authority),
+                                "sha256": file_sha256(authority),
+                            }
+                        ],
+                        "cues": [
+                            {
+                                "request_id": "20",
+                                "z2d_name": "cap_test",
+                                "event_global_start_frame": 6,
+                                "event_global_start_ms": 200,
+                            }
+                        ],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            resolved_out_dir = root / "resolved_out"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--event-catalog",
+                    str(catalog),
+                    "--event-clips",
+                    str(clips),
+                    "--audio-components",
+                    str(audio),
+                    "--event-sounds",
+                    str(sounds),
+                    "--subtitle-timeline",
+                    str(subtitles),
+                    "--composition-plans",
+                    str(root / "no_plans"),
+                    "--z2d-event-timing-overrides",
+                    str(timing_override),
+                    "--out-dir",
+                    str(resolved_out_dir),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            resolved = json.loads(
+                (resolved_out_dir / "events" / "ac_test_001.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            resolved_voice = resolved["audio"][1]
+            self.assertEqual(resolved_voice["child_local_start_ms"], 100)
+            self.assertEqual(resolved_voice["start_ms"], 200)
+            self.assertEqual(resolved_voice["event_global_start_frame"], 6)
+            self.assertTrue(resolved_voice["event_global_start_resolved"])
+            self.assertEqual(
+                resolved_voice["timing_scope"],
+                "event_global_exact_parent_scene_and_motion_key",
+            )
+            self.assertTrue(
+                resolved["quality_gates"]["event_global_z2d_timing_ready"]
+            )
+            self.assertTrue(resolved["quality_gates"]["render_ready"])
+            self.assertNotIn(
+                "unresolved_parent_dgm_to_child_z2d_instantiation_offset",
+                resolved["quality_gates"]["errors"],
+            )
+            application = resolved["z2d_event_timing_override_application"]
+            self.assertTrue(application["applied"])
+            self.assertEqual(application["matched_audio_cue_count"], 1)
+            self.assertEqual(application["matched_subtitle_cue_count"], 0)
+            self.assertEqual(application["unmatched_cues"], [])
+
+            authority.write_text("tampered evidence\n", encoding="utf-8")
+            stale = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--event-catalog",
+                    str(catalog),
+                    "--event-clips",
+                    str(clips),
+                    "--audio-components",
+                    str(audio),
+                    "--event-sounds",
+                    str(sounds),
+                    "--subtitle-timeline",
+                    str(subtitles),
+                    "--composition-plans",
+                    str(root / "no_plans"),
+                    "--z2d-event-timing-overrides",
+                    str(timing_override),
+                    "--out-dir",
+                    str(root / "stale_out"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(stale.returncode, 0)
+            self.assertIn("Z2D timing source SHA-256 mismatch", stale.stderr)
+
+    def test_z2d_timing_override_keeps_unmatched_child_local_rows_blocked(self) -> None:
+        override = {
+            "cues": [
+                {
+                    "request_id": "99",
+                    "z2d_name": "cap_other",
+                    "event_global_start_frame": 29,
+                    "event_global_start_ms": 967,
+                }
+            ],
+            "source_bindings": [],
+            "authority_path": "authority.json",
+            "_source_path": "override.json",
+            "_source_sha256": "A" * 64,
+        }
+        audio_rows = [
+            {
+                "source": "z2d_req_sound",
+                "request_id": "20",
+                "z2d_name": "cap_test",
+                "start_ms": 100,
+                "event_global_start_resolved": False,
+            }
+        ]
+        result = apply_z2d_event_timing_override(audio_rows, [], override)
+        self.assertFalse(result["applied"])
+        self.assertEqual(
+            result["unmatched_cues"],
+            [{"request_id": "99", "z2d_name": "cap_other"}],
+        )
+        self.assertEqual(audio_rows[0]["start_ms"], 100)
+        self.assertFalse(audio_rows[0]["event_global_start_resolved"])
+
+    def test_z2d_timing_override_shifts_matching_voice_and_subtitle(self) -> None:
+        override = {
+            "cues": [
+                {
+                    "request_id": "5843",
+                    "z2d_name": "cap6003_mb_mif_007",
+                    "event_global_start_frame": 29,
+                    "event_global_start_ms": 967,
+                    "event_global_end_frame_exclusive": 138,
+                    "event_global_end_ms": 4600,
+                },
+                {
+                    "request_id": "",
+                    "z2d_name": "cap6003_mb_mif_007_01",
+                    "subtitle_only": True,
+                    "event_global_start_frame": 139,
+                    "event_global_start_ms": 4633,
+                    "event_global_end_frame_exclusive": 221,
+                    "event_global_end_ms": 7367,
+                }
+            ],
+            "source_bindings": [{"path": "authority.json", "sha256": "A" * 64}],
+            "authority_path": "authority.json",
+            "_source_path": "override.json",
+            "_source_sha256": "B" * 64,
+        }
+        audio_rows = [
+            {
+                "source": "z2d_req_sound",
+                "request_id": "5843",
+                "z2d_name": "cap6003_mb_mif_007",
+                "start_ms": 0,
+                "absolute_start_frame": "0.0",
+                "event_global_start_resolved": False,
+            }
+        ]
+        subtitle_rows = [
+            {
+                "voice_request_id": "5843",
+                "z2d_name": "cap6003_mb_mif_007",
+                "start_ms": 0,
+                "end_ms": 5733,
+                "voice_start_ms": 0,
+                "event_global_start_resolved": False,
+            },
+            {
+                "voice_request_id": "",
+                "z2d_name": "cap6003_mb_mif_007_01",
+                "start_ms": 0,
+                "end_ms": 5733,
+                "voice_start_ms": 0,
+                "event_global_start_resolved": False,
+            }
+        ]
+        result = apply_z2d_event_timing_override(
+            audio_rows, subtitle_rows, override
+        )
+        self.assertTrue(result["applied"])
+        self.assertEqual(result["matched_audio_cue_count"], 1)
+        self.assertEqual(result["matched_subtitle_cue_count"], 2)
+        self.assertEqual(result["unmatched_cues"], [])
+        self.assertEqual(audio_rows[0]["start_ms"], 967)
+        self.assertEqual(audio_rows[0]["child_local_start_ms"], 0)
+        self.assertEqual(audio_rows[0]["event_global_start_frame"], 29)
+        self.assertTrue(audio_rows[0]["event_global_start_resolved"])
+        self.assertEqual(subtitle_rows[0]["start_ms"], 967)
+        self.assertEqual(subtitle_rows[0]["end_ms"], 4600)
+        self.assertEqual(subtitle_rows[0]["voice_start_ms"], 967)
+        self.assertEqual(subtitle_rows[0]["child_local_end_ms"], 5733)
+        self.assertTrue(subtitle_rows[0]["event_global_start_resolved"])
+        self.assertEqual(subtitle_rows[1]["start_ms"], 4633)
+        self.assertEqual(subtitle_rows[1]["end_ms"], 7367)
+        self.assertEqual(
+            subtitle_rows[1]["event_global_end_frame_exclusive"], 221
+        )
+        self.assertTrue(subtitle_rows[1]["event_global_start_resolved"])
 
     def test_explicit_audience_component_is_not_render_ready(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

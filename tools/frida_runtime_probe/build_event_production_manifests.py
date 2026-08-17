@@ -131,6 +131,15 @@ def parse_args() -> argparse.Namespace:
         help="accepted full dialogue recovered for truncated official labels",
     )
     parser.add_argument(
+        "--z2d-event-timing-overrides",
+        action="append",
+        default=[],
+        help=(
+            "hash-bound exact event/request/Z2D parent-to-child timing overrides; "
+            "unmatched or stale evidence fails closed"
+        ),
+    )
+    parser.add_argument(
         "--runtime-event-manifests",
         action="append",
         default=[],
@@ -321,6 +330,152 @@ def load_voice_subtitle_overrides(paths: list[Path]) -> dict[str, dict]:
             if has_text or has_cues:
                 merged[str(request_id)] = row
     return merged
+
+
+def load_z2d_event_timing_overrides(paths: list[Path]) -> dict[str, dict]:
+    overrides: dict[str, dict] = {}
+    for path in paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"Z2D event timing override not found: {path}")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("schema") != "magireco-z2d-event-timing-override-v1":
+            raise ValueError(f"invalid Z2D event timing override schema: {path}")
+        event = validate_output_identifier(
+            str(payload.get("event", "")).strip(),
+            label=f"Z2D event timing override event in {path}",
+        )
+        event_code_hex = str(payload.get("event_code_hex", "")).strip()
+        try:
+            frame_rate = Fraction(str(payload.get("frame_rate", "")))
+        except (ValueError, ZeroDivisionError) as exc:
+            raise ValueError(f"invalid Z2D timing frame rate in {path}") from exc
+        if frame_rate <= 0:
+            raise ValueError(f"non-positive Z2D timing frame rate in {path}")
+
+        source_bindings = payload.get("source_bindings")
+        if not isinstance(source_bindings, list) or not source_bindings:
+            raise ValueError(f"Z2D timing override has no source bindings: {path}")
+        verified_bindings: list[dict[str, object]] = []
+        for index, row in enumerate(source_bindings):
+            if not isinstance(row, dict):
+                raise ValueError(
+                    f"invalid Z2D timing source binding {index} in {path}"
+                )
+            source_path = Path(str(row.get("path", ""))).resolve()
+            expected_sha256 = str(row.get("sha256", "")).strip().upper()
+            if not re.fullmatch(r"[0-9A-F]{64}", expected_sha256):
+                raise ValueError(
+                    f"invalid Z2D timing source SHA-256 at binding {index} in {path}"
+                )
+            if not source_path.is_file():
+                raise FileNotFoundError(
+                    f"Z2D timing source binding not found: {source_path}"
+                )
+            actual_sha256 = file_sha256(source_path)
+            if actual_sha256 != expected_sha256:
+                raise ValueError(
+                    f"Z2D timing source SHA-256 mismatch: {source_path}"
+                )
+            verified_bindings.append(
+                {
+                    "path": str(source_path),
+                    "sha256": actual_sha256,
+                    "size_bytes": source_path.stat().st_size,
+                }
+            )
+
+        cue_rows = payload.get("cues")
+        if not isinstance(cue_rows, list) or not cue_rows:
+            raise ValueError(f"Z2D timing override has no cues: {path}")
+        cues: list[dict[str, object]] = []
+        seen: set[tuple[str, str]] = set()
+        for index, row in enumerate(cue_rows):
+            if not isinstance(row, dict):
+                raise ValueError(f"invalid Z2D timing cue {index} in {path}")
+            request_id = str(row.get("request_id", "")).strip()
+            z2d_name = str(row.get("z2d_name", "")).strip()
+            subtitle_only = row.get("subtitle_only") is True
+            if not z2d_name or (not request_id and not subtitle_only):
+                raise ValueError(f"incomplete Z2D timing cue {index} in {path}")
+            key = (request_id, z2d_name)
+            if key in seen:
+                raise ValueError(f"duplicate Z2D timing cue {key!r} in {path}")
+            seen.add(key)
+            event_global_start_frame = number(
+                row.get("event_global_start_frame", -1), -1
+            )
+            event_global_start_ms = number(
+                row.get("event_global_start_ms", -1), -1
+            )
+            if event_global_start_frame < 0 or event_global_start_ms < 0:
+                raise ValueError(f"negative Z2D timing cue {index} in {path}")
+            expected_ms = int(
+                Fraction(event_global_start_frame * 1000, 1) / frame_rate
+                + Fraction(1, 2)
+            )
+            if event_global_start_ms != expected_ms:
+                raise ValueError(
+                    f"Z2D timing cue frame/ms mismatch at {index} in {path}: "
+                    f"expected {expected_ms}, got {event_global_start_ms}"
+                )
+            normalized_cue: dict[str, object] = {
+                "request_id": request_id,
+                "z2d_name": z2d_name,
+                "subtitle_only": subtitle_only,
+                "event_global_start_frame": event_global_start_frame,
+                "event_global_start_ms": event_global_start_ms,
+            }
+            has_end_frame = "event_global_end_frame_exclusive" in row
+            has_end_ms = "event_global_end_ms" in row
+            if has_end_frame != has_end_ms:
+                raise ValueError(
+                    f"incomplete Z2D timing cue end boundary {index} in {path}"
+                )
+            if has_end_frame:
+                end_frame_exclusive = number(
+                    row["event_global_end_frame_exclusive"], -1
+                )
+                end_ms = number(row["event_global_end_ms"], -1)
+                if end_frame_exclusive <= event_global_start_frame or end_ms <= 0:
+                    raise ValueError(
+                        f"invalid Z2D timing cue end boundary {index} in {path}"
+                    )
+                expected_end_ms = int(
+                    Fraction(end_frame_exclusive * 1000, 1) / frame_rate
+                    + Fraction(1, 2)
+                )
+                if end_ms != expected_end_ms:
+                    raise ValueError(
+                        f"Z2D timing cue end frame/ms mismatch at {index} in "
+                        f"{path}: expected {expected_end_ms}, got {end_ms}"
+                    )
+                normalized_cue.update(
+                    {
+                        "event_global_end_frame_exclusive": end_frame_exclusive,
+                        "event_global_end_ms": end_ms,
+                    }
+                )
+            elif subtitle_only:
+                raise ValueError(
+                    f"subtitle-only Z2D timing cue lacks end boundary {index} in {path}"
+                )
+            cues.append(normalized_cue)
+
+        normalized = {
+            "schema": payload["schema"],
+            "event": event,
+            "event_code_hex": event_code_hex,
+            "frame_rate": str(frame_rate),
+            "source_bindings": verified_bindings,
+            "cues": cues,
+            "authority_path": str(payload.get("authority_path", "")).strip(),
+            "_source_path": str(path.resolve()),
+            "_source_sha256": file_sha256(path.resolve()),
+        }
+        if event in overrides and overrides[event] != normalized:
+            raise ValueError(f"conflicting Z2D event timing overrides for {event}")
+        overrides[event] = normalized
+    return overrides
 
 
 def load_runtime_event_manifests(paths: list[Path]) -> dict[str, dict]:
@@ -1218,6 +1373,119 @@ def graphical_subtitle_row(row: dict) -> dict:
     }
 
 
+def apply_z2d_event_timing_override(
+    audio_rows: list[dict],
+    subtitle_rows: list[dict],
+    override: dict | None,
+) -> dict:
+    if not override:
+        return {
+            "applied": False,
+            "matched_audio_cue_count": 0,
+            "matched_subtitle_cue_count": 0,
+            "unmatched_cues": [],
+        }
+    cue_map = {
+        (str(row["request_id"]), str(row["z2d_name"])): row
+        for row in override["cues"]
+    }
+    matched_audio: set[tuple[str, str]] = set()
+    matched_subtitle: set[tuple[str, str]] = set()
+    for row in audio_rows:
+        if row.get("source") != "z2d_req_sound":
+            continue
+        key = (str(row.get("request_id", "")), str(row.get("z2d_name", "")))
+        cue = cue_map.get(key)
+        if not cue:
+            continue
+        child_local_start_ms = number(row.get("start_ms", ""))
+        row.update(
+            {
+                "child_local_start_ms": child_local_start_ms,
+                "child_local_absolute_start_frame": row.get(
+                    "absolute_start_frame", ""
+                ),
+                "start_ms": cue["event_global_start_ms"],
+                "event_global_start_frame": cue["event_global_start_frame"],
+                "event_global_start_resolved": True,
+                "timing_scope": (
+                    "event_global_exact_parent_scene_and_motion_key"
+                ),
+                "timing_override_source": override["_source_path"],
+                "timing_override_sha256": override["_source_sha256"],
+                "event_global_shift_ms": (
+                    cue["event_global_start_ms"] - child_local_start_ms
+                ),
+            }
+        )
+        matched_audio.add(key)
+
+    for row in subtitle_rows:
+        key = (
+            str(row.get("voice_request_id", "")),
+            str(row.get("z2d_name", "")),
+        )
+        cue = cue_map.get(key)
+        if not cue:
+            continue
+        child_local_voice_start_ms = number(row.get("voice_start_ms", ""))
+        child_local_start_ms = number(row.get("start_ms", ""))
+        child_local_end_ms = number(row.get("end_ms", ""))
+        shift_ms = cue["event_global_start_ms"] - child_local_voice_start_ms
+        if "event_global_end_ms" in cue:
+            event_start_ms = cue["event_global_start_ms"]
+            event_end_ms = cue["event_global_end_ms"]
+        else:
+            event_start_ms = child_local_start_ms + shift_ms
+            event_end_ms = child_local_end_ms + shift_ms
+        row.update(
+            {
+                "child_local_start_ms": child_local_start_ms,
+                "child_local_end_ms": child_local_end_ms,
+                "child_local_voice_start_ms": child_local_voice_start_ms,
+                "start_ms": event_start_ms,
+                "end_ms": event_end_ms,
+                "voice_start_ms": cue["event_global_start_ms"],
+                "event_global_start_frame": cue["event_global_start_frame"],
+                "event_global_start_resolved": True,
+                "timing_scope": (
+                    "event_global_exact_parent_scene_and_motion_key"
+                ),
+                "timing_override_source": override["_source_path"],
+                "timing_override_sha256": override["_source_sha256"],
+                "event_global_shift_ms": shift_ms,
+            }
+        )
+        if "event_global_end_frame_exclusive" in cue:
+            row["event_global_end_frame_exclusive"] = cue[
+                "event_global_end_frame_exclusive"
+            ]
+        matched_subtitle.add(key)
+
+    unmatched = [
+        {"request_id": request_id, "z2d_name": z2d_name}
+        for request_id, z2d_name in sorted(
+            key
+            for key, cue in cue_map.items()
+            if (
+                key not in matched_subtitle
+                if cue.get("subtitle_only") is True
+                else key not in matched_audio
+            )
+        )
+    ]
+    return {
+        "applied": bool(matched_audio),
+        "source": override["_source_path"],
+        "sha256": override["_source_sha256"],
+        "authority_path": override.get("authority_path", ""),
+        "source_bindings": override["source_bindings"],
+        "matched_audio_cue_count": len(matched_audio),
+        "matched_subtitle_cue_count": len(matched_subtitle),
+        "unmatched_cues": unmatched,
+    }
+
+
 def merge_runtime_graphical_subtitle_rows(
     runtime_rows: list[dict],
     static_rows: list[dict],
@@ -1398,6 +1666,9 @@ def main() -> int:
     voice_subtitle_overrides = load_voice_subtitle_overrides(
         [Path(path) for path in args.voice_subtitle_overrides]
     )
+    z2d_event_timing_overrides = load_z2d_event_timing_overrides(
+        [Path(path) for path in args.z2d_event_timing_overrides]
+    )
     runtime_event_manifests = apply_path_prefix_maps(
         load_runtime_event_manifests(
             [Path(path) for path in args.runtime_event_manifests]
@@ -1449,6 +1720,12 @@ def main() -> int:
             )
         )
     }
+    unused_timing_overrides = sorted(set(z2d_event_timing_overrides) - set(selected))
+    if unused_timing_overrides:
+        raise ValueError(
+            "Z2D event timing overrides do not match selected events: "
+            + ", ".join(unused_timing_overrides)
+        )
     if args.reviewed_subtitle_manifests:
         missing_reviewed = sorted(set(selected) - set(reviewed_subtitle_manifests))
         if missing_reviewed:
@@ -1500,6 +1777,7 @@ def main() -> int:
         event_row = selected[event]
         composition_plan = composition_plans.get(event)
         runtime_manifest = runtime_event_manifests.get(event)
+        z2d_timing_override = z2d_event_timing_overrides.get(event)
         reviewed_subtitle_manifest = reviewed_subtitle_manifests.get(event)
         reviewed_subtitle_reconciliation: dict = {}
         authored_plan_timing = bool(composition_plan) and (
@@ -1555,6 +1833,27 @@ def main() -> int:
             for row in event_clips
         ]
         errors: list[str] = []
+        z2d_timing_override_application: dict = {
+            "applied": False,
+            "matched_audio_cue_count": 0,
+            "matched_subtitle_cue_count": 0,
+            "unmatched_cues": [],
+        }
+        if z2d_timing_override:
+            if (
+                str(z2d_timing_override.get("event_code_hex", "")).lower()
+                != str(event_row.get("code_hex", "")).lower()
+            ):
+                raise ValueError(f"Z2D timing override event-code mismatch for {event}")
+            try:
+                override_rate = Fraction(str(z2d_timing_override["frame_rate"]))
+                catalog_rate = Fraction(str(next(iter(frame_rates))))
+            except (ValueError, ZeroDivisionError, StopIteration) as exc:
+                raise ValueError(
+                    f"Z2D timing override frame-rate validation failed for {event}"
+                ) from exc
+            if override_rate != catalog_rate:
+                raise ValueError(f"Z2D timing override frame-rate mismatch for {event}")
         child_local_sound_rows = sounds_by_event.get(event, [])
         child_local_subtitle_rows = subtitles_by_event.get(event, [])
         event_global_z2d_timing_ready = bool(runtime_manifest) or not (
@@ -1814,6 +2113,14 @@ def main() -> int:
             subtitle_rows,
             composition_plan,
         )
+        if not runtime_manifest:
+            z2d_timing_override_application = apply_z2d_event_timing_override(
+                audio_rows,
+                subtitle_rows,
+                z2d_timing_override,
+            )
+            if z2d_timing_override_application["unmatched_cues"]:
+                errors.append("z2d_event_timing_override_cue_unmatched")
         if reviewed_subtitle_manifest:
             reviewed_projection = {
                 **reviewed_subtitle_manifest,
@@ -1838,11 +2145,10 @@ def main() -> int:
                 row["subtitle_source"],
             )
         )
-        if any(
+        event_global_z2d_timing_ready = bool(runtime_manifest) or not any(
             row.get("event_global_start_resolved") is False
             for row in [*audio_rows, *subtitle_rows]
-        ):
-            event_global_z2d_timing_ready = False
+        )
         if not event_global_z2d_timing_ready:
             errors.append(
                 "unresolved_parent_dgm_to_child_z2d_instantiation_offset"
@@ -2094,6 +2400,9 @@ def main() -> int:
                 runtime_manifest.get("_source_provenance", [])
                 if runtime_manifest
                 else []
+            ),
+            "z2d_event_timing_override_application": (
+                z2d_timing_override_application
             ),
             "reviewed_subtitle_manifest_sources": (
                 reviewed_subtitle_manifest.get("_source_provenance", [])

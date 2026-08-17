@@ -1,0 +1,84 @@
+{
+  "schema": "magireco-p16-replacement-review-plan-v1",
+  "checkpoint_id": "20260817-v70r1-p16-ac6003-event-global-timing",
+  "title_zh": "八千代与美冬的冲突",
+  "family": "ac6003",
+  "source_family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v70r1_p16_ac6003_event_global_timing_20260817\\ac6003_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "6FDF12A67A7E4F520CD06A03D2E4D170728AA26173D93317DEEB13FE4A95972E"
+  },
+  "source_qa": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v70r1_p16_ac6003_event_global_timing_20260817\\ac6003_full_no_bgm_editions_v1\\qa\\automated_qa.json",
+    "sha256": "44C38B79A7CF2F2D904057DDFB23AE5E4D0D9D1EC77BC8993993A3958F9C2B6D"
+  },
+  "replacement_manifest_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v70r1_p16_ac6003_event_global_timing_20260817\\P16_AC6003_REPLACEMENT_MANIFEST_SUMMARY.json",
+    "sha256": "1260B80525603046C5694D34B8E5AB4B17AE73C168F852B4FB7F8AC745E60793"
+  },
+  "timing_authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p16_ac6003_family_event_global_timing_authority_v1r1_20260817\\P16_AC6003_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "61264AB31DED3BBB5B8ED3F0F100007D2C4C2A6F5699548A1DEBF2574F7B565B"
+  },
+  "expected_media": {
+    "duration_ms": 74067,
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "audio_profile": "no_bgm"
+  },
+  "editions": {
+    "none": {
+      "source_relative_path": "video/ac6003_full_no_bgm_editions_v1__none.mp4",
+      "sha256": "514ABB7D6BCD523360C113DC1123C2BFBE6F9C7FA2F49C789F22D5E4715E20E7",
+      "hub_relative_path": "NONE/story/P16_八千代与美冬的冲突_ac6003__none.mp4"
+    },
+    "ja": {
+      "source_relative_path": "video/ac6003_full_no_bgm_editions_v1__ja.mp4",
+      "sha256": "7132B866C5F77DBAF0ED7034BA3D552C9CFDBADA3CF0DB2B350580872A06AF59",
+      "hub_relative_path": "JP/story/P16_八千代与美冬的冲突_ac6003__ja.mp4"
+    },
+    "zh": {
+      "source_relative_path": "video/ac6003_full_no_bgm_editions_v1__zh.mp4",
+      "sha256": "218FE4B833A11A9EEB2C378713BAFE6EECDD68D1C422202B1F2F4FBE36EA50D1",
+      "hub_relative_path": "ZH/story/P16_八千代与美冬的冲突_ac6003__zh.mp4"
+    }
+  },
+  "review_status": "HUMAN_PLAYBACK_REQUIRED",
+  "publishable": false,
+  "review_intervals": [
+    {
+      "start_ms": 0,
+      "end_ms": 15767,
+      "focus": "ac6003_005→006；复核 7.766–12.200 秒两段美冬对白与画面开口"
+    },
+    {
+      "start_ms": 15767,
+      "end_ms": 22567,
+      "focus": "ac6003_007；复核 17.934–22.567 秒三段八千代对白"
+    },
+    {
+      "start_ms": 45667,
+      "end_ms": 52467,
+      "focus": "ac6003_009；最高优先，复核 46.633–50.267 秒美冬对白及进入 ac6003_010 的边界"
+    },
+    {
+      "start_ms": 52467,
+      "end_ms": 60300,
+      "focus": "ac6003_010；复核 53.134–57.167 秒八千代对白"
+    },
+    {
+      "start_ms": 60300,
+      "end_ms": 68900,
+      "focus": "ac6003_014；复核 62.600–63.600 与 64.800–67.167 秒两人对白"
+    },
+    {
+      "start_ms": 68900,
+      "end_ms": 74067,
+      "focus": "ac6003_015；复核 69.033–73.067 秒八千代对白和尾帧"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "magireco-series-editions-v1",
+  "status": "passed",
+  "series": "ac6003",
+  "event_count": 7,
+  "family_state": {
+    "production_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v70r1_p16_ac6003_event_global_timing_20260817",
+    "known_family_events": 7,
+    "ready_event_names": [
+      "ac6003_005",
+      "ac6003_006",
+      "ac6003_007",
+      "ac6003_009",
+      "ac6003_010",
+      "ac6003_014",
+      "ac6003_015"
+    ],
+    "not_ready_family_events": []
+  },
+  "event_manifest_sha256": {
+    "ac6003_005": "B81E9F0E0223991A5B420632D537C5880EF8CC8AD078718594461E78259CBC07",
+    "ac6003_006": "673B3BDAD9861DAB8A8C88C9EDBFD42DBA35819603204F48BAF318802FDD3882",
+    "ac6003_007": "E39FBE8ED31D6B1835B3088637E429BC0CC17684A54E1C4AB621458E81AB3C41",
+    "ac6003_009": "865E95D9E5756BF77047B865CCA9F2D48E5C5398366D65865EFF46B3441CCC95",
+    "ac6003_010": "9452ADF8F66FCE57C4F65A55826AF4FCBF97D9D528548B43E36F7D6FD281C0DA",
+    "ac6003_014": "3C0DF59623D996E058031F1EFB03560DA5279FD3CF7921DD4A44B9C2A8E6CC38",
+    "ac6003_015": "365039D8DCE620DF49C049CBD69F3E40432E10CE9A63F9538961B5AA1E3B3908"
+  },
+  "source_series_manifest": {
+    "path": "D:\\MagiReco_Reverse\\magireco_verified_series_v18_clean_story_ac6003_20260619\\ac6003\\series_manifest.json",
+    "sha256": "61E278F363C82A654A405E13F7D5622C00574123362361BA685094A54C13CED0",
+    "evidence": "passed upstream ac6003 family order; event-global Z2D timing repair changes cue placement only"
+  },
+  "repair_authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p16_ac6003_family_event_global_timing_authority_v1r1_20260817\\P16_AC6003_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "61264AB31DED3BBB5B8ED3F0F100007D2C4C2A6F5699548A1DEBF2574F7B565B",
+    "scope": "six hash-bound parent-scene and child-motion-key timing overrides; ac6003_005 remains upstream runtime-exact"
+  },
+  "release_policy": {
+    "audio_profile": "no_bgm",
+    "editions": [
+      "none",
+      "ja",
+      "zh"
+    ],
+    "human_playback_required": true,
+    "publishable": false,
+    "supersedes_quarantined_media": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "magireco-z2d-event-timing-override-v1",
+  "event": "ac6003_014",
+  "event_code_hex": "0x7151727225647163",
+  "frame_rate": "30/1",
+  "authority_path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p16_ac6003_family_event_global_timing_authority_v1r1_20260817\\P16_AC6003_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+  "source_bindings": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p16_ac6003_family_event_global_timing_authority_v1r1_20260817\\P16_AC6003_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "61264AB31DED3BBB5B8ED3F0F100007D2C4C2A6F5699548A1DEBF2574F7B565B",
+      "size_bytes": 20399
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sample\\libGameProc.so",
+      "sha256": "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF",
+      "size_bytes": 79683640
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p16_family_scene_motion_v15_20260817\\P16_AC6003_FAMILY_RUNTIME_SCENE_MOTION.json",
+      "sha256": "2725A6EEC39CA03386520D952F646D6C1EC862187997E3972245DF1C95B76762",
+      "size_bytes": 270926
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\parent_child_timing_authority_v1_20260815\\IDA_Z2D_MOTION_FIELDS.json",
+      "sha256": "CD3AE5F12CB3952350C0FC19AA023787F9D688C1F04D8C3741F01BF72FE3BEF0",
+      "size_bytes": 42426
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\parent_child_timing_authority_v1_20260815\\IDA_PARENT_CHILD_PSEUDOCODE.json",
+      "sha256": "F9BFE2D1ADB744BCBD6B3E9ECE2752BFB95A34D593D0960A0F44E01CFE51313B",
+      "size_bytes": 37372
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\_repro_audit_v67r2_inputs_r3_20260806\\events\\ac6003_014.json",
+      "sha256": "453B5EB117BBE465FCCE030524CBC9A9F38F279FB383504E861123FFF4B77D95",
+      "size_bytes": 6782
+    }
+  ],
+  "cues": [
+    {
+      "request_id": "5844",
+      "z2d_name": "cap6003_mb_mif_012",
+      "event_global_start_frame": 135,
+      "event_global_start_ms": 4500,
+      "event_global_end_frame_exclusive": 206,
+      "event_global_end_ms": 6867
+    },
+    {
+      "request_id": "3257",
+      "z2d_name": "cap6003_mb_yac_011",
+      "event_global_start_frame": 69,
+      "event_global_start_ms": 2300,
+      "event_global_end_frame_exclusive": 99,
+      "event_global_end_ms": 3300
+    }
+  ]
+}
