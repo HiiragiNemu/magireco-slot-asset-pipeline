@@ -1,0 +1,193 @@
+{
+  "schema": "magireco-p18-cu-success-replacement-review-plan-v1",
+  "plan_id": "p18_ac6005_cu_success_event_global_review_v72_20260817",
+  "status": "AUTOMATED_BUILD_AUTHORIZED_HUMAN_PLAYBACK_REQUIRED",
+  "family": "ac6005",
+  "route_id": "kind173_row10_cu_success",
+  "title_zh": "彩羽追上灯花与音梦 CU成功路线",
+  "ordered_events": [
+    "ac6005_010",
+    "ac6005_013",
+    "ac6005_014"
+  ],
+  "audio_profile": "no_bgm",
+  "bgm_policy": "intentionally_excluded",
+  "human_playback_required": true,
+  "publishable": false,
+  "replacement_manifest_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_p18_ac6005_cu_success_event_global_timing_20260817\\P18_AC6005_CU_SUCCESS_REPLACEMENT_MANIFEST_SUMMARY.json",
+    "sha256": "C54D35AE0593E714F279213E143BFC448A52C0A29712CB13DD3C39AF20746BC8"
+  },
+  "timing_authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p18_ac6005_cu_success_event_global_timing_authority_v1_20260817\\P18_AC6005_CU_SUCCESS_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "66CBCA28AA71AD132672ED9791A0A27D228DD4E0E62725AA99382DA0F98D4CD6"
+  },
+  "clean_visual_source": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p18_ac6005_cu_success\\route_v1\\masters\\ac6005_cu_success__clean_visual_master.mp4",
+    "sha256": "3B52B812CF203991D2BE2ABAD2CF742D456C5B4322FA0E976E3ECFC966E471C6",
+    "scope": "visual_only_master; old audio and subtitles are not reused"
+  },
+  "old_rejected_route_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p18_ac6005_cu_success\\route_v1\\route_manifest.json",
+    "sha256": "23AAFC982668E15E0D41ABBFB859B771CE36C322E78ED0D46B3E690F54E51CDB"
+  },
+  "old_rejection_status": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\QUARANTINE_REJECTED_P18_20260725\\REJECTION_STATUS.json",
+    "sha256": "35BC5419986A5A2D45478E731E7260022BD428E260C7F0D7675C29F166CD5736"
+  },
+  "font": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_candidates_v26_corrections_20260725\\p18_ac6005_cu_success\\route_v1\\work\\NotoSansSC-VF.ttf",
+    "sha256": "D68BAFCB48A2707749396AA12BBBD833CB70401F3A9A689FD2902C7E0D295964"
+  },
+  "layout": {
+    "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\subtitle_layout_profiles\\project_approved_zh_video_subtitle_layout_512x416_v1.json",
+    "sha256": "5F8067A5CC3AB6944FF4B7043A99B9D3EE027BE589529C3919E9FDEBD0717094"
+  },
+  "events": [
+    {
+      "event": "ac6005_010",
+      "manifest_sha256": "BEDF216C1F02514090258A4B2C7C63017CD4E10C215746332A7163DF7D3D2F8F",
+      "frame_count": 319,
+      "presentation_samples": 510400
+    },
+    {
+      "event": "ac6005_013",
+      "manifest_sha256": "B744B5A34A24E0D383464F9CE041E42832F456B8CFA69B038AD25E6A67177D32",
+      "frame_count": 162,
+      "presentation_samples": 259200
+    },
+    {
+      "event": "ac6005_014",
+      "manifest_sha256": "E34D34761D17AACB4A73A4877AC9F6E336F3493EA9D6E659DAB530247F65E4F8",
+      "frame_count": 460,
+      "presentation_samples": 736000
+    }
+  ],
+  "dialogue": [
+    {
+      "event": "ac6005_010",
+      "request_id": "5612",
+      "z2d_name": "cap6005_mb_nem_011",
+      "ja_text": "冷静に考えて欲しい",
+      "zh_text": "希望你们冷静想一想。",
+      "speaker_ja": "柊ねむ",
+      "speaker_zh": "柊音梦",
+      "speaker_evidence": "official request code 21051_nemu and exact cap6005_mb_nem_011 identity"
+    },
+    {
+      "event": "ac6005_010",
+      "request_id": "5409",
+      "z2d_name": "cap6005_mb_tou_012",
+      "ja_text": "これが\n最善で最短の方法だよ！",
+      "zh_text": "这就是最好、\n也最快的方法！",
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "speaker_evidence": "official request code 20584_toka and exact cap6005_mb_tou_012 identity"
+    },
+    {
+      "event": "ac6005_013",
+      "request_id": "2791",
+      "z2d_name": "",
+      "ja_text": "それでもやめて！",
+      "zh_text": "即便如此也住手！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "official runtime manifest plus request code 15549_iro"
+    },
+    {
+      "event": "ac6005_014",
+      "request_id": "2793",
+      "z2d_name": "cap6005_mb_iro_014",
+      "ja_text": "灯花ちゃん！\nねむちゃん！",
+      "zh_text": "灯花！\n音梦！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "official request code 15551_iro and exact cap6005_mb_iro_014 identity"
+    },
+    {
+      "event": "ac6005_014",
+      "request_id": "2794",
+      "z2d_name": "cap6005_mb_iro_015",
+      "ja_text": "もうお姉ちゃんを置いていかないでよ！",
+      "zh_text": "别再丢下姐姐了！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "official request code 15552_iro and exact cap6005_mb_iro_015 identity"
+    },
+    {
+      "event": "ac6005_014",
+      "request_id": "",
+      "z2d_name": "cap6005_mb_iro_015_01",
+      "ja_text": "少しでも長く一緒にいてよ…",
+      "zh_text": "哪怕只是久一点，\n也和姐姐在一起吧……",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "exact graphical continuation inside request 2794's parent-scene interval and iro-named Z2D"
+    },
+    {
+      "event": "ac6005_014",
+      "request_id": "2795",
+      "z2d_name": "cap6005_mb_iro_015_02",
+      "ja_text": "１秒でも長く",
+      "zh_text": "哪怕只多一秒，",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "official request code 15553_iro and exact cap6005_mb_iro_015_02 identity"
+    },
+    {
+      "event": "ac6005_014",
+      "request_id": "",
+      "z2d_name": "cap6005_mb_iro_015_03",
+      "ja_text": "大好きなふたりのお姉ちゃんでいさせて",
+      "zh_text": "也让我继续做最喜欢的你们两人的姐姐。",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "speaker_evidence": "exact graphical continuation inside request 2795's parent-scene interval and iro-named Z2D"
+    }
+  ],
+  "expected_media": {
+    "width": 512,
+    "height": 416,
+    "frame_rate": "30/1",
+    "frame_count": 941,
+    "presentation_samples": 1505600,
+    "duration_ms": 31367,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "upscaled": false
+  },
+  "review_paths": {
+    "none": "NONE/routes/P18_彩羽追上灯花与音梦_CU成功路线_ac6005__none.mp4",
+    "ja": "JP/routes/P18_彩羽追上灯花与音梦_CU成功路线_ac6005__ja.mp4",
+    "zh": "ZH/routes/P18_彩羽追上灯花与音梦_CU成功路线_ac6005__zh.mp4"
+  },
+  "review_intervals": [
+    {
+      "start_ms": 900,
+      "end_ms": 2900,
+      "focus": "音梦 request5612 保持 frame27 起点"
+    },
+    {
+      "start_ms": 3200,
+      "end_ms": 6533,
+      "focus": "灯花 request5409 从错误的 0 秒改为 parent frame96"
+    },
+    {
+      "start_ms": 10633,
+      "end_ms": 16033,
+      "focus": "ac6005_013 保持官方 runtime-exact，检查两侧事件边界"
+    },
+    {
+      "start_ms": 20600,
+      "end_ms": 25700,
+      "focus": "request2794 与 frame227 图形续句分开显示"
+    },
+    {
+      "start_ms": 25866,
+      "end_ms": 30500,
+      "focus": "request2795 的 frame295 首句与 frame335 续句不再提前合并"
+    }
+  ]
+}

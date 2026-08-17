@@ -70,6 +70,11 @@ from tools.frida_runtime_probe.build_p18_cu_success_replacement_manifests import
     ROLLBACK_SCRIPT as P18_ROLLBACK_SCRIPT,
     repair_manifest as repair_p18_manifest,
 )
+from tools.frida_runtime_probe.build_p18_cu_success_replacement_review import (
+    ROLLBACK_SCRIPT as P18_REVIEW_ROLLBACK_SCRIPT,
+    _format_cue as format_p18_review_cue,
+    safe_review_path as p18_review_safe_review_path,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     is_exact_graphical_continuation,
@@ -649,6 +654,48 @@ class P18CUSuccessReplacementManifestTests(unittest.TestCase):
             any(line.startswith("+") for line in P18_ROLLBACK_SCRIPT.splitlines())
         )
         self.assertIn("source manifests or media", P18_ROLLBACK_SCRIPT)
+
+    def test_p18_review_path_is_language_first_and_flat(self) -> None:
+        path = p18_review_safe_review_path(
+            "ZH/routes/P18_彩羽追上灯花与音梦_CU成功路线_ac6005__zh.mp4",
+            edition="zh",
+        )
+        self.assertEqual(len(path.parts), 3)
+        with self.assertRaisesRegex(ValueError, "unsafe P18 review path"):
+            p18_review_safe_review_path(
+                "ZH/routes/../escape__zh.mp4", edition="zh"
+            )
+
+    def test_p18_review_cue_requires_and_preserves_speaker_evidence(self) -> None:
+        dialogue = {
+            "speaker_zh": "环彩羽",
+            "zh_text": "灯花！音梦！",
+            "speaker_evidence": "official request code 15551_iro",
+        }
+        self.assertEqual(
+            format_p18_review_cue(
+                dialogue, language="zh", start_ms=16066, end_ms=17733
+            ),
+            {
+                "start_ms": 16066,
+                "end_ms": 17733,
+                "text": "环彩羽：灯花！音梦！",
+            },
+        )
+        dialogue["speaker_evidence"] = ""
+        with self.assertRaisesRegex(ValueError, "speaker/text evidence differs"):
+            format_p18_review_cue(
+                dialogue, language="zh", start_ms=16066, end_ms=17733
+            )
+
+    def test_p18_review_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(
+                line.startswith("+")
+                for line in P18_REVIEW_ROLLBACK_SCRIPT.splitlines()
+            )
+        )
+        self.assertIn("source media remain untouched", P18_REVIEW_ROLLBACK_SCRIPT)
 
 
 class CompositionPlanTests(unittest.TestCase):
