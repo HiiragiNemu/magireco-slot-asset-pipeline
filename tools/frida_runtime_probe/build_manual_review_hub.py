@@ -25,6 +25,8 @@ DISPOSITIONS = {"REVIEW_READY", "NEEDS_DECISION", "EXCLUDED_REFERENCE"}
 CONTENT_FOLDERS = {"story", "routes", "gameplay_effect", "material"}
 EDITIONS = {"none", "ja", "zh", "material"}
 QUARANTINE_TOKENS = {"ac6003", "ac6004", "ac6005", "p16", "p17", "p18"}
+LAYOUT_MODES = {"nested_v1", "flat_language_v2"}
+LANGUAGE_LANES = {"zh": "ZH", "ja": "JP", "none": "NONE"}
 
 
 def file_sha256(path: Path) -> str:
@@ -81,6 +83,49 @@ def safe_relative_path(raw: str) -> Path:
     if posix.suffix.casefold() != ".mp4":
         raise ValueError(f"hub media is not MP4: {raw!r}")
     return Path(*posix.parts)
+
+
+def flat_review_relative_path(item: Mapping[str, Any], legacy: Path) -> Path:
+    """Map the bound v1 review path into the owner-approved flat v2 layout."""
+
+    edition = str(item.get("edition", "")).casefold()
+    content_folder = legacy.parts[1]
+    filename = legacy.name
+    identity_tokens = [str(item.get("family", ""))]
+    identity_tokens.extend(str(value) for value in item.get("event_ids", []))
+    identity_tokens.append(str(item.get("route_id", "")))
+    lowered = filename.casefold()
+    if not any(token and token.casefold() in lowered for token in identity_tokens):
+        raise ValueError(
+            f"flat review filename lacks family/event/route identity: {filename}"
+        )
+    if edition == "material":
+        if content_folder != "material":
+            raise ValueError("material item is outside the legacy material lane")
+        relative = Path("REVIEW_READY_FLAT", "MATERIAL", filename)
+    else:
+        lane = LANGUAGE_LANES.get(edition)
+        if lane is None or content_folder not in {
+            "story",
+            "routes",
+            "gameplay_effect",
+        }:
+            raise ValueError(
+                f"invalid flat review language/type classification: {edition}/{content_folder}"
+            )
+        relative = Path("REVIEW_READY_FLAT", lane, content_folder, filename)
+    parts = relative.parts
+    if edition == "material":
+        if len(parts) != 3 or parts[:2] != ("REVIEW_READY_FLAT", "MATERIAL"):
+            raise ValueError(f"invalid flat material path: {relative.as_posix()}")
+    elif (
+        len(parts) != 4
+        or parts[0] != "REVIEW_READY_FLAT"
+        or parts[1] not in set(LANGUAGE_LANES.values())
+        or parts[2] not in {"story", "routes", "gameplay_effect"}
+    ):
+        raise ValueError(f"invalid flat language path: {relative.as_posix()}")
+    return relative
 
 
 def probe_media(path: Path, ffprobe: str = "ffprobe") -> dict[str, Any]:
@@ -665,6 +710,9 @@ def apply_sound_bus_audit(
 def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
     if plan.get("schema") != "magireco-manual-review-hub-plan-v1":
         raise ValueError("unexpected manual review hub plan schema")
+    layout_mode = str(plan.get("layout_mode", "nested_v1"))
+    if layout_mode not in LAYOUT_MODES:
+        raise ValueError(f"unsupported review layout mode: {layout_mode}")
     inputs = plan.get("inputs")
     if not isinstance(inputs, Mapping):
         raise ValueError("plan inputs are malformed")
@@ -741,7 +789,14 @@ def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
             raise ValueError(f"unknown or duplicate mapping item: {item_id}")
         item = by_id[item_id]
         sha = str(row.get("sha256", "")).upper()
-        relative = safe_relative_path(row.get("proposed_hub_relative_path", ""))
+        legacy_relative = safe_relative_path(
+            row.get("proposed_hub_relative_path", "")
+        )
+        relative = (
+            flat_review_relative_path(item, legacy_relative)
+            if layout_mode == "flat_language_v2"
+            else legacy_relative
+        )
         relative_key = relative.as_posix().casefold()
         if sha in mapped_sha or relative_key in mapped_paths:
             raise ValueError("duplicate canonical SHA or hub path")
@@ -776,7 +831,15 @@ def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
         mapped_ids.add(item_id)
         mapped_sha.add(sha)
         mapped_paths.add(relative_key)
-        prepared.append({"item": item, "source": source, "relative": relative, "sha256": sha})
+        prepared.append(
+            {
+                "item": item,
+                "source": source,
+                "relative": relative,
+                "legacy_relative": legacy_relative,
+                "sha256": sha,
+            }
+        )
     if mapped_ids != ready_ids:
         missing = sorted(ready_ids - mapped_ids)
         extra = sorted(mapped_ids - ready_ids)
@@ -794,6 +857,7 @@ def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
         "authority_bindings": authority_bindings,
         "sound_bus_bindings": sound_bus_bindings,
         "sound_bus_withdrawals": sound_bus_withdrawals,
+        "layout_mode": layout_mode,
     }
 
 
@@ -953,12 +1017,16 @@ def build(
     if dry_run:
         return {
             "status": "DRY_RUN_PASS",
+            "layout_mode": validated["layout_mode"],
             "inventory_items": len(validated["items"]),
             "review_ready_files": len(validated["prepared"]),
             "needs_decision": validated["counts"]["needs_decision"],
             "excluded_reference": validated["counts"]["excluded_reference"],
             "output_root": str(root),
             "release_path": str(release),
+            "review_ready_relative_paths": [
+                entry["relative"].as_posix() for entry in validated["prepared"]
+            ],
         }
 
     root.mkdir(parents=True, exist_ok=True)
@@ -1006,11 +1074,16 @@ def build(
         write_json(
             staging / "review_index.json",
             {
-                "schema": "magireco-manual-review-index-v1",
+                "schema": (
+                    "magireco-manual-review-index-v2"
+                    if validated["layout_mode"] == "flat_language_v2"
+                    else "magireco-manual-review-index-v1"
+                ),
                 "summary": {
                     **validated["counts"],
                     "canonical_review_files": len(link_records),
                     "auto_qa_is_human_approval": False,
+                    "layout_mode": validated["layout_mode"],
                 },
                 "items": rows,
             },
@@ -1037,7 +1110,11 @@ def build(
             },
         )
         verification = {
-            "schema": "magireco-manual-review-hub-verification-v1",
+            "schema": (
+                "magireco-manual-review-hub-verification-v2"
+                if validated["layout_mode"] == "flat_language_v2"
+                else "magireco-manual-review-hub-verification-v1"
+            ),
             "status": "PASS",
             "checks": {
                 "inventory_count_matches": True,
@@ -1058,8 +1135,31 @@ def build(
                 "all_review_destinations_reopened_and_probed": len(link_records)
                 == len(validated["prepared"]),
                 "auto_qa_not_promoted_to_human": True,
+                "flat_language_first_layout": (
+                    validated["layout_mode"] != "flat_language_v2"
+                    or all(
+                        record["relative_path"].startswith(
+                            (
+                                "REVIEW_READY_FLAT/ZH/",
+                                "REVIEW_READY_FLAT/JP/",
+                                "REVIEW_READY_FLAT/NONE/",
+                                "REVIEW_READY_FLAT/MATERIAL/",
+                            )
+                        )
+                        for record in link_records
+                    )
+                ),
+                "flat_paths_have_no_family_subdirectories": (
+                    validated["layout_mode"] != "flat_language_v2"
+                    or all(
+                        len(Path(record["relative_path"]).parts)
+                        == (3 if "/MATERIAL/" in record["relative_path"] else 4)
+                        for record in link_records
+                    )
+                ),
             },
             "counts": validated["counts"],
+            "layout_mode": validated["layout_mode"],
             "source_records": source_records,
             "link_records": link_records,
         }
@@ -1068,6 +1168,16 @@ def build(
                 raise ValueError(f"source changed during build: {entry['source']}")
         write_json(staging / "VERIFICATION_RECORD.json", verification)
 
+        if validated["layout_mode"] == "flat_language_v2":
+            playback_line = (
+                "从 `REVIEW_READY_FLAT` 开始：ZH/JP/NONE 下仅按 "
+                "story/routes/gameplay_effect 分层，MP4 直接可见；静音素材统一在 MATERIAL。"
+            )
+        else:
+            playback_line = (
+                "从 `REVIEW_READY` 开始播放；按 "
+                "story/routes/gameplay_effect/material、系列、none/ja/zh/material 分层。"
+            )
         start = "\n".join(
             [
                 "# MagiaReco Slot 单一人工审查入口",
@@ -1080,7 +1190,7 @@ def build(
                 f"- EXCLUDED_REFERENCE（仅索引）：{validated['counts']['excluded_reference']}",
                 "- AUTO_QA_PASS 不代表人工已经看过。",
                 "",
-                "从 `REVIEW_READY` 开始播放；按 story/routes/gameplay_effect/material、系列、none/ja/zh/material 分层。",
+                playback_line,
                 "完整状态请看 `review_index.csv` 或 `review_index.json`。",
                 "",
             ]
@@ -1114,9 +1224,22 @@ Write-Output 'ROLLBACK_POINTER_PASS'
         raise
 
     current = {
-        "schema": "magireco-manual-review-hub-current-v1",
+        "schema": (
+            "magireco-manual-review-hub-current-v2"
+            if validated["layout_mode"] == "flat_language_v2"
+            else "magireco-manual-review-hub-current-v1"
+        ),
         "release_id": release_id,
+        "layout_mode": validated["layout_mode"],
         "release_path": str(release),
+        "review_root": str(
+            release
+            / (
+                "REVIEW_READY_FLAT"
+                if validated["layout_mode"] == "flat_language_v2"
+                else "REVIEW_READY"
+            )
+        ),
         "start_here": str(release / "00_START_HERE.md"),
         "review_index_json": str(release / "review_index.json"),
         "review_index_csv": str(release / "review_index.csv"),

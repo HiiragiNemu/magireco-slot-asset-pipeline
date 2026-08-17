@@ -181,6 +181,68 @@ class ManualReviewHubBuilderTests(unittest.TestCase):
         self.assertEqual(probe.call_count, 4)
         self.assertFalse((self.root / "hub").exists())
 
+    def test_builds_flat_language_first_material_lane(self):
+        plan, _, _ = self.write_fixture()
+        payload = json.loads(plan.read_text(encoding="utf-8"))
+        payload["layout_mode"] = "flat_language_v2"
+        plan.write_text(json.dumps(payload), encoding="utf-8")
+        result = build(plan, probe_func=self.fake_probe)
+        release = Path(result["release_path"])
+        media = release / "REVIEW_READY_FLAT/MATERIAL/R0001_测试素材_ac0001.mp4"
+        self.assertTrue(os.path.samefile(self.source, media))
+        self.assertFalse((release / "REVIEW_READY_FLAT/MATERIAL/material").exists())
+        self.assertEqual(result["layout_mode"], "flat_language_v2")
+        self.assertEqual(result["review_root"], str(release / "REVIEW_READY_FLAT"))
+        verification = json.loads(
+            (release / "VERIFICATION_RECORD.json").read_text(encoding="utf-8")
+        )
+        self.assertTrue(verification["checks"]["flat_language_first_layout"])
+        self.assertTrue(
+            verification["checks"]["flat_paths_have_no_family_subdirectories"]
+        )
+
+    def test_builds_flat_zh_route_without_family_subdirectory(self):
+        plan, _, mapping_path = self.write_fixture(
+            ready_overrides={
+                "content_type": "story_route",
+                "edition": "zh",
+                "audio_profile": "no_bgm",
+            },
+            mapping_overrides={
+                "proposed_hub_relative_path": (
+                    "REVIEW_READY/routes/ac0001/zh/"
+                    "R0001_测试路线_ac0001_001__zh.mp4"
+                )
+            },
+        )
+        payload = json.loads(plan.read_text(encoding="utf-8"))
+        payload["layout_mode"] = "flat_language_v2"
+        payload["inputs"]["mapping"]["sha256"] = file_sha256(mapping_path)
+        plan.write_text(json.dumps(payload), encoding="utf-8")
+        result = build(plan, probe_func=self.fake_probe)
+        release = Path(result["release_path"])
+        media = (
+            release
+            / "REVIEW_READY_FLAT/ZH/routes/R0001_测试路线_ac0001_001__zh.mp4"
+        )
+        self.assertTrue(os.path.samefile(self.source, media))
+        self.assertEqual(len(media.relative_to(release).parts), 4)
+
+    def test_flat_layout_rejects_filename_without_identity(self):
+        plan, _, mapping_path = self.write_fixture(
+            mapping_overrides={
+                "proposed_hub_relative_path": (
+                    "REVIEW_READY/material/sample/material/R0001_测试素材.mp4"
+                )
+            }
+        )
+        payload = json.loads(plan.read_text(encoding="utf-8"))
+        payload["layout_mode"] = "flat_language_v2"
+        payload["inputs"]["mapping"]["sha256"] = file_sha256(mapping_path)
+        plan.write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "lacks family/event/route identity"):
+            build(plan, dry_run=True, probe_func=self.fake_probe)
+
     def test_rejects_non_ready_source_hash_drift(self):
         plan, inventory_path, _ = self.write_fixture()
         payload = json.loads(inventory_path.read_text(encoding="utf-8"))
