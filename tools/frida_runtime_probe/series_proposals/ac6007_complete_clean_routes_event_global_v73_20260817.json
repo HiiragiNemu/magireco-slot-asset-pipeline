@@ -1,0 +1,26 @@
+{
+  "schema": "magireco-ac6007-complete-clean-routes-plan-overlay-v1",
+  "status": "finite_human_review_candidate",
+  "base_plan": {
+    "path": "ac6007_complete_clean_routes_v1.json",
+    "sha256": "54D0D5C848A02C8B8FBD9F834F1AD7083CEA3B24249CFA21D126A885AB3B4209"
+  },
+  "event_timing_replacement_manifests": {
+    "ac6007_002": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v73_ac6007_rows0_1_event_global_20260817\\events\\ac6007_002.json",
+      "sha256": "8C74BE99D8C8C1B3448CF05B4C05AD6F13D2CBC4987C2785DC47B40E0741EC7C"
+    },
+    "ac6007_003": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v73_ac6007_rows0_1_event_global_20260817\\events\\ac6007_003.json",
+      "sha256": "A59C157ED707F1AD11F1DAB581AB55C60E672861EBE46A9DAA31E32244825CD1"
+    },
+    "ac6007_005": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v73_ac6007_rows0_1_event_global_20260817\\events\\ac6007_005.json",
+      "sha256": "A2EB5193D871B0911EE97FADEF7A189B6B7B39DBBD8759D33720D0EA3F407E85"
+    },
+    "ac6007_006": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v73_ac6007_rows0_1_event_global_20260817\\events\\ac6007_006.json",
+      "sha256": "0D92462D6BC38FE31EDAC58002D5FC7A1420E6AC8568242D60F3F08B9499AA5A"
+    }
+  }
+}

@@ -35,6 +35,7 @@ except ImportError:  # direct script execution
 
 
 PLAN_SCHEMA = "magireco-ac6007-complete-clean-routes-plan-v1"
+PLAN_OVERLAY_SCHEMA = "magireco-ac6007-complete-clean-routes-plan-overlay-v1"
 MANIFEST_SCHEMA = "magireco-ac6007-complete-clean-routes-manifest-v1"
 ROUTE_SCHEMA = "magireco-ac6007-complete-clean-route-manifest-v1"
 QA_SCHEMA = "magireco-ac6007-complete-clean-routes-qa-v1"
@@ -67,6 +68,30 @@ ENTRY_FRAMES = 203
 
 def _read_json(path: Path) -> dict[str, Any]:
     return reference.read_json(path)
+
+
+def _load_plan(path: Path) -> dict[str, Any]:
+    raw = _read_json(path)
+    if raw.get("schema") != PLAN_OVERLAY_SCHEMA:
+        return raw
+    if set(raw) != {
+        "schema",
+        "status",
+        "base_plan",
+        "event_timing_replacement_manifests",
+    } or raw.get("status") != "finite_human_review_candidate":
+        raise ValueError("ac6007 route overlay identity differs")
+    base_path, snapshot = _bound(
+        raw["base_plan"], label="ac6007 inherited route plan", plan_dir=path.parent
+    )
+    base = _read_json(base_path)
+    if base.get("schema") != PLAN_SCHEMA:
+        raise ValueError("ac6007 inherited plan schema differs")
+    base["event_timing_replacement_manifests"] = raw[
+        "event_timing_replacement_manifests"
+    ]
+    base["_inherited_plan_binding"] = snapshot
+    return base
 
 
 def _bound(
@@ -365,6 +390,87 @@ def _validate_catalogs(
             raise ValueError("ac6007_001 direct parent scene-SE evidence differs")
 
 
+def _apply_event_timing_replacements(
+    *,
+    plan: Mapping[str, Any],
+    plan_path: Path,
+    source: dict[str, Any],
+    snapshots: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    raw_replacements = plan.get("event_timing_replacement_manifests")
+    if raw_replacements is None:
+        return []
+    if not isinstance(raw_replacements, Mapping) or set(raw_replacements) != {
+        "ac6007_002",
+        "ac6007_003",
+        "ac6007_005",
+        "ac6007_006",
+    }:
+        raise ValueError("ac6007 timing replacement event set differs")
+
+    corrections: list[dict[str, Any]] = []
+    for event, raw in raw_replacements.items():
+        path, snapshot = _bound(
+            raw,
+            label=f"{event} event-global replacement manifest",
+            plan_dir=plan_path.parent,
+        )
+        snapshots.append(snapshot)
+        manifest = _read_json(path)
+        gates = manifest.get("quality_gates", {})
+        if (
+            manifest.get("schema") != "magireco-event-production-v3"
+            or manifest.get("event") != event
+            or gates.get("ready") is not True
+            or gates.get("event_global_z2d_timing_ready") is not True
+            or gates.get("errors") != []
+        ):
+            raise ValueError(f"{event} replacement manifest is not event-global READY")
+        subtitles = list(manifest.get("subtitles", []))
+        if any(row.get("event_global_start_resolved") is not True for row in subtitles):
+            raise ValueError(f"{event} replacement subtitle remains child-local")
+        subtitles.sort(key=lambda row: (int(row["start_ms"]), int(row["end_ms"])))
+        for edition in ("ja", "zh"):
+            cues = source["local_cues"][edition][event]
+            if len(cues) != len(subtitles):
+                raise ValueError(f"{event}/{edition} replacement cue count differs")
+            for cue, subtitle in zip(cues, subtitles):
+                before = (int(cue["start_ms"]), int(cue["end_ms"]))
+                child_before = (
+                    int(subtitle.get("child_local_start_ms", subtitle["start_ms"])),
+                    int(subtitle.get("child_local_end_ms", subtitle["end_ms"])),
+                )
+                if before != child_before:
+                    raise ValueError(
+                        f"{event}/{edition} source cue does not match bound child-local cue"
+                    )
+                after = (int(subtitle["start_ms"]), int(subtitle["end_ms"]))
+                cue["start_ms"], cue["end_ms"] = after
+                if after != before:
+                    corrections.append(
+                        {
+                            "event": event,
+                            "edition": edition,
+                            "request_id": str(subtitle.get("voice_request_id", "")),
+                            "before_ms": list(before),
+                            "after_ms": list(after),
+                        }
+                    )
+    expected = [
+        {
+            "event": "ac6007_005",
+            "edition": edition,
+            "request_id": "4091",
+            "before_ms": [33, 3030],
+            "after_ms": [33, 2867],
+        }
+        for edition in ("ja", "zh")
+    ]
+    if corrections != expected:
+        raise ValueError("ac6007 route subtitle correction set differs")
+    return corrections
+
+
 def validate_plan(
     plan: Mapping[str, Any], *, plan_path: Path, ffprobe: str
 ) -> dict[str, Any]:
@@ -399,6 +505,8 @@ def validate_plan(
             "sha256": mature.file_sha256(plan_path),
         }
     ]
+    if plan.get("_inherited_plan_binding"):
+        snapshots.append(dict(plan["_inherited_plan_binding"]))
     dirinfo_path, snapshot = _bound(
         plan["dirinfo"], label="DirInfo route evidence", plan_dir=plan_path.parent
     )
@@ -409,6 +517,12 @@ def validate_plan(
         plan_path=plan_path,
         snapshots=snapshots,
         ffprobe=ffprobe,
+    )
+    timing_corrections = _apply_event_timing_replacements(
+        plan=plan,
+        plan_path=plan_path,
+        source=source,
+        snapshots=snapshots,
     )
     _validate_catalogs(plan=plan, plan_path=plan_path, snapshots=snapshots)
 
@@ -506,6 +620,7 @@ def validate_plan(
         "entry_audio_sources": audio_sources,
         "snapshots": snapshots,
         "uploaded_p19": uploaded_p19,
+        "timing_corrections": timing_corrections,
     }
 
 
@@ -674,7 +789,7 @@ def _build_route_pcm(
 def build(
     *, plan_path: Path, output_root: Path, ffmpeg: str, ffprobe: str
 ) -> tuple[Path, dict[str, Any]]:
-    plan = _read_json(plan_path)
+    plan = _load_plan(plan_path)
     resolved = validate_plan(plan, plan_path=plan_path, ffprobe=ffprobe)
     destination = output_root.resolve() / FAMILY
     if destination.exists():
@@ -785,6 +900,12 @@ def build(
                 "rows_2_3_4_excluded_as_component_gameplay_effect_routes": True,
                 "source_family_hash_bound_and_automated_qa_passed": True,
                 "source_p19_exact_zh_owner_uploaded_but_not_inherited": True,
+                "four_dialogue_events_event_global_timing_bound": bool(
+                    resolved["timing_corrections"]
+                ),
+                "ac6007_005_graphical_subtitle_end_corrected_to_frame_86": (
+                    len(resolved["timing_corrections"]) == 2
+                ),
                 "entry_parent_intervals_hash_bound": True,
                 "entry_visible_sequence_is_not_mechanical_component_concat": True,
                 "entry_missing_additive_effect_layers_explicitly_excluded": True,
@@ -824,6 +945,7 @@ def build(
             "excluded_dirinfo_rows": plan["excluded_dirinfo_rows"],
             "source_snapshots": resolved["snapshots"],
             "owner_uploaded_source_p19": resolved["uploaded_p19"],
+            "event_global_timing_corrections": resolved["timing_corrections"],
             "human_playback_approved": False,
             "publication_approved": False,
         }
@@ -881,7 +1003,7 @@ def main() -> int:
     plan_path = args.plan.resolve()
     if args.validate_only:
         resolved = validate_plan(
-            _read_json(plan_path), plan_path=plan_path, ffprobe=args.ffprobe
+            _load_plan(plan_path), plan_path=plan_path, ffprobe=args.ffprobe
         )
         print(
             json.dumps(

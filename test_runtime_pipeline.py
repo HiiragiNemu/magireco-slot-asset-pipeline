@@ -84,6 +84,17 @@ from tools.frida_runtime_probe.build_ac7210_rows0_1_replacement_manifests import
     ROLLBACK_SCRIPT as AC7210_ROLLBACK_SCRIPT,
     repair_manifest as repair_ac7210_manifest,
 )
+from tools.frida_runtime_probe.build_ac6007_rows0_1_timing_authority import (
+    extract_event_authority as extract_ac6007_event_authority,
+)
+from tools.frida_runtime_probe.build_ac6007_rows0_1_replacement_manifests import (
+    BLOCKER as AC6007_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as AC6007_ROLLBACK_SCRIPT,
+    repair_manifest as repair_ac6007_manifest,
+)
+from tools.frida_runtime_probe.build_ac6007_complete_clean_routes import (
+    _apply_event_timing_replacements as apply_ac6007_route_timing_replacements,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     is_exact_graphical_continuation,
@@ -338,6 +349,265 @@ class AC7210Rows01TimingClosureTests(unittest.TestCase):
             any(line.startswith("+") for line in AC7210_ROLLBACK_SCRIPT.splitlines())
         )
         self.assertIn("source manifests or media", AC7210_ROLLBACK_SCRIPT)
+
+
+class AC6007Rows01TimingClosureTests(unittest.TestCase):
+    SPECS = {
+        "ac6007_002": (
+            "0x6d34576656306f6e",
+            [
+                ("4093", "cap6007_qkuma_fer_001", 1, 30, 33, 982, 1033),
+                ("4356", "cap6007_qkuma_san_002", 19, 48, 633, 1022, 1655),
+            ],
+        ),
+        "ac6007_003": (
+            "0x6648437a56306f6e",
+            [("4090", "cap6007_qkuma_fer_003", 1, 30, 33, 1302, 1335)],
+        ),
+        "ac6007_005": (
+            "0x6e6f543356306f6e",
+            [("4091", "cap6007_qkuma_fer_005", 1, 85, 33, 2997, 3030)],
+        ),
+        "ac6007_006": (
+            "0x48574c7456306f6e",
+            [("4096", "cap6007_qkuma_fer_006", 1, 45, 33, 1403, 1533)],
+        ),
+    }
+
+    def source(self, event: str, audio_path: Path) -> dict:
+        code, specs = self.SPECS[event]
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": event,
+            "event_code_hex": code,
+            "native_frame_rate": "30/1",
+            "audio": [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": request_id,
+                    "z2d_name": z2d_name,
+                    "start_ms": start_ms,
+                    "duration_ms": duration_ms,
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                }
+                for request_id, z2d_name, _, _, start_ms, duration_ms, _ in specs
+            ],
+            "subtitles": [
+                {
+                    "voice_request_id": request_id,
+                    "voice_start_ms": start_ms,
+                    "z2d_name": z2d_name,
+                    "start_ms": start_ms,
+                    "end_ms": old_end_ms,
+                    **(
+                        {"event_global_start_resolved": False}
+                        if request_id in {"4093", "4091", "4096"}
+                        else {}
+                    ),
+                }
+                for request_id, z2d_name, _, _, start_ms, _, old_end_ms in specs
+            ],
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [AC6007_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def runtime_event(self, event: str) -> dict:
+        code, specs = self.SPECS[event]
+        top = {
+            "name": "字幕",
+            "hash_low": 7,
+            "hash_high": 9,
+            "children": [
+                {
+                    "name": "2DLayer",
+                    "children": [
+                        {
+                            "name": z2d_name + ".z2d",
+                            "time_remap_pointer": None,
+                            "motions": [
+                                {
+                                    "is_z2d_motion": True,
+                                    "keys": [
+                                        {
+                                            "index": 0,
+                                            "floats": [
+                                                start_frame,
+                                                end_frame,
+                                                start_frame,
+                                                end_frame,
+                                                start_frame,
+                                                end_frame,
+                                                -1,
+                                            ],
+                                            "flags": [0, 2, 0],
+                                        }
+                                    ],
+                                }
+                            ],
+                            "children": [],
+                        }
+                        for _, z2d_name, start_frame, end_frame, _, _, _ in specs
+                    ],
+                }
+            ],
+        }
+        return {
+            "event_code": code,
+            "layers": [{"hash_low": 7, "hash_high": 9, "speed": 1}],
+            "scenes": [
+                {
+                    "name": event,
+                    "cuts": [
+                        {
+                            "cut_name": event,
+                            "instance_offset_frames": 0,
+                            "cut_start_frame": 0,
+                            "cut_end_frame": 500,
+                            "nodes": [top],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def override(self, event: str, source: dict) -> dict:
+        _, override = extract_ac6007_event_authority(
+            event, self.runtime_event(event), source
+        )
+        override.update(
+            {
+                "_source_path": "bound-override.json",
+                "_source_sha256": "B" * 64,
+                "authority_path": "authority.json",
+                "source_bindings": [],
+            }
+        )
+        return override
+
+    def test_authority_extracts_parent_global_starts_and_graphical_end(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            source = self.source("ac6007_005", audio)
+            event, override = extract_ac6007_event_authority(
+                "ac6007_005", self.runtime_event("ac6007_005"), source
+            )
+        self.assertEqual(event["parent_cut"]["instance_offset_frames"], 0)
+        self.assertEqual(override["cues"][0]["event_global_start_frame"], 1)
+        self.assertEqual(override["cues"][0]["event_global_end_frame_exclusive"], 86)
+        self.assertEqual(override["cues"][0]["event_global_end_ms"], 2867)
+
+    def test_repair_promotes_all_four_events(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event in self.SPECS:
+                source = self.source(event, audio)
+                repaired, application = repair_ac6007_manifest(
+                    source, self.override(event, source)
+                )
+                self.assertTrue(application["applied"])
+                self.assertTrue(repaired["quality_gates"]["ready"])
+                self.assertNotIn(
+                    AC6007_TIMING_BLOCKER, repaired["quality_gates"]["errors"]
+                )
+                self.assertTrue(
+                    all(
+                        row["event_global_start_resolved"]
+                        for row in repaired["audio"]
+                    )
+                )
+
+    def test_only_ac6007_005_graphical_end_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event in self.SPECS:
+                source = self.source(event, audio)
+                repaired, _ = repair_ac6007_manifest(
+                    source, self.override(event, source)
+                )
+                before = [row["end_ms"] for row in source["subtitles"]]
+                after = [row["end_ms"] for row in repaired["subtitles"]]
+                if event == "ac6007_005":
+                    self.assertEqual((before, after), ([3030], [2867]))
+                else:
+                    self.assertEqual(after, before)
+
+    def test_rollback_script_preserves_sources(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in AC6007_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", AC6007_ROLLBACK_SCRIPT)
+
+    def test_route_cues_apply_only_bound_graphical_end_correction(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = {"event_timing_replacement_manifests": {}}
+            source = {"local_cues": {"ja": {}, "zh": {}}}
+            for event, (_, specs) in self.SPECS.items():
+                subtitles = []
+                for request_id, _, _, _, start_ms, _, old_end_ms in specs:
+                    new_end_ms = 2867 if event == "ac6007_005" else old_end_ms
+                    subtitles.append(
+                        {
+                            "voice_request_id": request_id,
+                            "start_ms": start_ms,
+                            "end_ms": new_end_ms,
+                            "child_local_start_ms": start_ms,
+                            "child_local_end_ms": old_end_ms,
+                            "event_global_start_resolved": True,
+                        }
+                    )
+                path = root / f"{event}.json"
+                path.write_text(
+                    json.dumps(
+                        {
+                            "schema": "magireco-event-production-v3",
+                            "event": event,
+                            "subtitles": subtitles,
+                            "quality_gates": {
+                                "ready": True,
+                                "event_global_z2d_timing_ready": True,
+                                "errors": [],
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                plan["event_timing_replacement_manifests"][event] = {
+                    "path": str(path),
+                    "sha256": file_sha256(path),
+                }
+                for edition in ("ja", "zh"):
+                    source["local_cues"][edition][event] = [
+                        {
+                            "start_ms": start_ms,
+                            "end_ms": old_end_ms,
+                            "text": f"{edition}-{request_id}",
+                        }
+                        for request_id, _, _, _, start_ms, _, old_end_ms in specs
+                    ]
+            snapshots = []
+            corrections = apply_ac6007_route_timing_replacements(
+                plan=plan,
+                plan_path=root / "plan.json",
+                source=source,
+                snapshots=snapshots,
+            )
+        self.assertEqual(len(corrections), 2)
+        self.assertEqual(
+            source["local_cues"]["zh"]["ac6007_005"][0]["end_ms"], 2867
+        )
+        self.assertEqual(len(snapshots), 4)
 
 
 class P16ReplacementManifestTests(unittest.TestCase):
