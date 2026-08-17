@@ -95,6 +95,14 @@ from tools.frida_runtime_probe.build_ac6007_rows0_1_replacement_manifests import
 from tools.frida_runtime_probe.build_ac6007_complete_clean_routes import (
     _apply_event_timing_replacements as apply_ac6007_route_timing_replacements,
 )
+from tools.frida_runtime_probe.build_ac7206_route_timing_authority import (
+    extract_event_authority as extract_ac7206_event_authority,
+)
+from tools.frida_runtime_probe.build_ac7206_route_replacement_manifests import (
+    BLOCKER as AC7206_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as AC7206_ROLLBACK_SCRIPT,
+    repair_manifest as repair_ac7206_manifest,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     is_exact_graphical_continuation,
@@ -608,6 +616,188 @@ class AC6007Rows01TimingClosureTests(unittest.TestCase):
             source["local_cues"]["zh"]["ac6007_005"][0]["end_ms"], 2867
         )
         self.assertEqual(len(snapshots), 4)
+
+
+class AC7206RouteTimingClosureTests(unittest.TestCase):
+    SPECS = {
+        "ac7206_002": (
+            "0x253f336a4e516467",
+            "5323",
+            "cap7206_paint_ari_003",
+            10,
+            39,
+            333,
+            4554,
+            4887,
+        ),
+        "ac7206_013": (
+            "0x464d434f4e516467",
+            "5324",
+            "cap7206_paint_ari_004",
+            1,
+            30,
+            33,
+            2716,
+            2749,
+        ),
+    }
+
+    def source(self, event: str, audio_path: Path) -> dict:
+        code, request, z2d, _, _, start_ms, duration_ms, end_ms = self.SPECS[event]
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": event,
+            "event_code_hex": code,
+            "native_frame_rate": "30/1",
+            "audio": [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": request,
+                    "z2d_name": z2d,
+                    "start_ms": start_ms,
+                    "duration_ms": duration_ms,
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                }
+            ],
+            "subtitles": [
+                {
+                    "voice_request_id": request,
+                    "voice_start_ms": start_ms,
+                    "z2d_name": z2d,
+                    "start_ms": start_ms,
+                    "end_ms": end_ms,
+                }
+            ],
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [AC7206_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def runtime_event(self, event: str) -> dict:
+        code, _, z2d, start_frame, end_frame, _, _, _ = self.SPECS[event]
+        top = {
+            "name": "字幕",
+            "hash_low": 11,
+            "hash_high": 13,
+            "children": [
+                {
+                    "name": z2d + ".z2d",
+                    "time_remap_pointer": None,
+                    "motions": [
+                        {
+                            "is_z2d_motion": True,
+                            "keys": [
+                                {
+                                    "index": 0,
+                                    "floats": [
+                                        start_frame,
+                                        end_frame,
+                                        start_frame,
+                                        end_frame,
+                                        start_frame,
+                                        end_frame,
+                                        -1,
+                                    ],
+                                    "flags": [0, 2, 0],
+                                }
+                            ],
+                        }
+                    ],
+                    "children": [],
+                }
+            ],
+        }
+        return {
+            "event_code": code,
+            "layers": [{"hash_low": 11, "hash_high": 13, "speed": 1}],
+            "scenes": [
+                {
+                    "name": event,
+                    "cuts": [
+                        {
+                            "cut_name": event,
+                            "instance_offset_frames": 0,
+                            "cut_start_frame": 0,
+                            "cut_end_frame": 99,
+                            "nodes": [top],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def override(self, event: str, source: dict) -> dict:
+        _, override = extract_ac7206_event_authority(
+            event, self.runtime_event(event), source
+        )
+        override.update(
+            {
+                "_source_path": "bound-override.json",
+                "_source_sha256": "C" * 64,
+                "authority_path": "authority.json",
+                "source_bindings": [],
+            }
+        )
+        return override
+
+    def test_authority_extracts_exact_parent_global_frames(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event, expected in (("ac7206_002", 10), ("ac7206_013", 1)):
+                source = self.source(event, audio)
+                evidence, override = extract_ac7206_event_authority(
+                    event, self.runtime_event(event), source
+                )
+                self.assertEqual(evidence["parent_cut"]["instance_offset_frames"], 0)
+                self.assertEqual(
+                    override["cues"][0]["event_global_start_frame"], expected
+                )
+
+    def test_repair_is_evidence_only_for_both_events(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event in self.SPECS:
+                source = self.source(event, audio)
+                repaired, application = repair_ac7206_manifest(
+                    source, self.override(event, source)
+                )
+                self.assertTrue(application["applied"])
+                self.assertTrue(repaired["quality_gates"]["ready"])
+                self.assertEqual(
+                    [row["start_ms"] for row in repaired["audio"]],
+                    [row["start_ms"] for row in source["audio"]],
+                )
+                self.assertEqual(
+                    [row["end_ms"] for row in repaired["subtitles"]],
+                    [row["end_ms"] for row in source["subtitles"]],
+                )
+
+    def test_wrong_parent_key_start_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            source = self.source("ac7206_013", audio)
+            runtime = self.runtime_event("ac7206_013")
+            runtime["scenes"][0]["cuts"][0]["nodes"][0]["children"][0][
+                "motions"
+            ][0]["keys"][0]["floats"][0] = 2
+            with self.assertRaisesRegex(ValueError, "motion interval differs"):
+                extract_ac7206_event_authority("ac7206_013", runtime, source)
+
+    def test_rollback_script_preserves_sources(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in AC7206_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", AC7206_ROLLBACK_SCRIPT)
 
 
 class P16ReplacementManifestTests(unittest.TestCase):

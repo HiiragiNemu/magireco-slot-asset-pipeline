@@ -1,0 +1,50 @@
+{
+  "schema": "magireco-ac7206-event-global-review-v1",
+  "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+  "family": "ac7206",
+  "native_media": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2,
+    "upscale": false
+  },
+  "current_event_manifests": {
+    "root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v74r1_ac7206_event_global_20260817",
+    "events": {
+      "ac7206_002": "569A49892FFEFDED82480C6D2A03280E605471D5EB50A7A67AF7054DE3B85845",
+      "ac7206_013": "1026859A016701000C81990D03B6B3096DBC1C31D7A58CF4ADC2ADF9B84BF9A2"
+    }
+  },
+  "existing_review_media": {
+    "root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v31_mature_416_route_expansion_20260726\\ac7206",
+    "batch_manifest_sha256": "9D313015D2B04E8C0EDA5A3FB53F31B8B006106310600386553CFB8BE315FE47",
+    "automated_qa_sha256": "56BF9D75E6BBDF39C9B7C3300739A429DA90EEC5EBFF130F66F31858F51C1AD9",
+    "independent_route_product_count": 6,
+    "independent_route_edition_file_count": 18,
+    "edited_showcase_edition_file_count": 3,
+    "audience_file_count": 21,
+    "media_reencode_required": false
+  },
+  "route_sequences": [
+    ["ac7206_002", "ac7206_009"],
+    ["ac7206_002", "ac7206_010"],
+    ["ac7206_002", "ac7206_011"],
+    ["ac7206_002", "ac7206_012"],
+    ["ac7206_002", "ac7206_013"],
+    ["ac7206_002", "ac7206_014"]
+  ],
+  "timing_authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7206_routes_event_global_timing_authority_v1_20260817\\AC7206_ROUTE_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "9507972949596CD11E5E055F2C0DA6238DD46C361520A954527E12A07C1FD943",
+    "closed_events": ["ac7206_002", "ac7206_013"],
+    "numeric_timing_changed": false
+  },
+  "showcase_scope": "edited_route_chapter_showcase_not_single_native_session",
+  "human_playback_approved": false,
+  "publication_approved": false,
+  "source_media_modified": false
+}
