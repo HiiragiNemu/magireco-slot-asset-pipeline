@@ -574,6 +574,13 @@ def attach_speaker_evidence(
         }
     for cue in resolved["dialogue_cues"]:
         request_id = str(cue["request_id"])
+        if not request_id:
+            if (
+                cue.get("event_global_graphical_continuation") is not True
+                or cue.get("subtitle_source") != "graphical_display_text"
+            ):
+                raise ValueError(f"{event} has an unbound non-exact subtitle cue")
+            continue
         evidence = evidence_by_request.get(request_id)
         if evidence is None:
             raise ValueError(f"{event} cue lacks source speaker evidence: {request_id}")
@@ -742,7 +749,7 @@ def resolve_story_event(
     """Resolve a normal voiced event or one exactly proven silent event."""
 
     if not is_evidence_bound_silent_manifest(manifest):
-        return resolve_event(
+        resolved, sources = resolve_event(
             manifest,
             clean_visual=clean_visual,
             clean_report=clean_report,
@@ -750,6 +757,10 @@ def resolve_story_event(
             require_scene_se=False,
             reject_unsubtitled_audio=reject_unsubtitled_audio,
         )
+        promote_exact_graphical_continuation_cues(
+            resolved, manifest, translations
+        )
+        return resolved, sources
     absence_sources = validate_audio_absence_evidence(manifest)
     event = str(manifest["event"])
     report = read_json(clean_report)
@@ -794,6 +805,79 @@ def resolve_story_event(
         },
         [clean_source, report_source, *absence_sources],
     )
+
+
+def is_exact_graphical_continuation(row: Mapping[str, Any]) -> bool:
+    """Accept only unvoiced graphical text with an exact event-global override."""
+
+    return (
+        not str(row.get("voice_request_id", "")).strip()
+        and str(row.get("subtitle_source", "")) == "graphical_display_text"
+        and row.get("event_global_start_resolved") is True
+        and str(row.get("timing_scope", ""))
+        == "event_global_exact_parent_scene_and_motion_key"
+        and bool(str(row.get("timing_override_source", "")).strip())
+        and int(row.get("start_ms", -1)) >= 0
+        and int(row.get("end_ms", -1)) > int(row.get("start_ms", -1))
+        and bool(str(row.get("text", "")).strip())
+    )
+
+
+def promote_exact_graphical_continuation_cues(
+    resolved: dict[str, Any],
+    manifest: Mapping[str, Any],
+    translations: Mapping[str, str],
+) -> list[dict[str, Any]]:
+    """Restore exact graphical continuation text omitted by dialogue-only logic."""
+
+    event = str(resolved["event"])
+    promoted: list[dict[str, Any]] = []
+    for row in manifest.get("subtitles", []):
+        if not isinstance(row, Mapping) or not is_exact_graphical_continuation(row):
+            continue
+        text = str(row["text"]).strip()
+        if text not in translations:
+            raise ValueError(
+                f"{event} lacks Chinese translation for exact graphical text {text!r}"
+            )
+        cue = {
+            "event": event,
+            "request_id": "",
+            "start_ms": int(row["start_ms"]),
+            "end_ms": int(row["end_ms"]),
+            "ja_text": text,
+            "zh_text": translations[text],
+            "speaker_code": str(row.get("speaker_code", "")).strip(),
+            "subtitle_source": "graphical_display_text",
+            "evidence": str(row.get("evidence", "")).strip(),
+            "translation_status": "machine_draft_pending_owner",
+            "event_global_graphical_continuation": True,
+        }
+        resolved["dialogue_cues"].append(cue)
+        promoted.append(cue)
+    resolved["dialogue_cues"].sort(
+        key=lambda cue: (
+            int(cue["start_ms"]),
+            int(cue["end_ms"]),
+            str(cue.get("request_id", "")),
+        )
+    )
+    if promoted:
+        promoted_keys = {
+            (cue["ja_text"], cue["start_ms"], cue["end_ms"]) for cue in promoted
+        }
+        resolved["excluded_source_cues"] = [
+            row
+            for row in resolved.get("excluded_source_cues", [])
+            if (
+                str(row.get("text", "")),
+                int(row.get("start_ms", -1)),
+                int(row.get("end_ms", -1)),
+            )
+            not in promoted_keys
+        ]
+    resolved["promoted_graphical_continuation_cues"] = promoted
+    return promoted
 
 
 def build_event_pcm_or_verified_silence(
@@ -2106,13 +2190,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         for rows in batch_rows.values()
         for event in rows
         for cue in event["projected"].get("subtitles", [])
-        if str(cue.get("voice_request_id", "")).strip()
-        and str(cue.get("voice_request_id", "")).strip()
-        in {
-            str(audio.get("request_id", "")).strip()
-            for audio in event["projected"].get("audio", [])
-            if isinstance(audio, Mapping)
-        }
+        if (
+            str(cue.get("voice_request_id", "")).strip()
+            and str(cue.get("voice_request_id", "")).strip()
+            in {
+                str(audio.get("request_id", "")).strip()
+                for audio in event["projected"].get("audio", [])
+                if isinstance(audio, Mapping)
+            }
+        )
+        or (isinstance(cue, Mapping) and is_exact_graphical_continuation(cue))
     }
     missing = sorted(required_texts - set(translations))
     if missing:
@@ -2132,6 +2219,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                                 for event in rows
                                 for cue in event["projected"].get("subtitles", [])
                                 if str(cue.get("voice_request_id", "")).strip()
+                                or (
+                                    isinstance(cue, Mapping)
+                                    and is_exact_graphical_continuation(cue)
+                                )
                             ),
                         }
                         for family, rows in batch_rows.items()

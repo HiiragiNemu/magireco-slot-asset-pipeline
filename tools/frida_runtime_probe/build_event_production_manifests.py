@@ -384,6 +384,27 @@ def load_z2d_event_timing_overrides(paths: list[Path]) -> dict[str, dict]:
                 }
             )
 
+        expected_request_rows = payload.get("expected_z2d_request_ids")
+        expected_z2d_request_ids: list[str] | None = None
+        if expected_request_rows is not None:
+            if not isinstance(expected_request_rows, list) or not expected_request_rows:
+                raise ValueError(
+                    f"invalid expected Z2D request set in {path}"
+                )
+            expected_z2d_request_ids = []
+            for request_value in expected_request_rows:
+                request_id = str(request_value).strip()
+                if not request_id or request_id in expected_z2d_request_ids:
+                    raise ValueError(
+                        f"invalid expected Z2D request id {request_value!r} in {path}"
+                    )
+                expected_z2d_request_ids.append(request_id)
+            expected_z2d_request_ids.sort()
+
+        binding_index = {
+            (str(row["path"]), str(row["sha256"])) for row in verified_bindings
+        }
+
         cue_rows = payload.get("cues")
         if not isinstance(cue_rows, list) or not cue_rows:
             raise ValueError(f"Z2D timing override has no cues: {path}")
@@ -425,6 +446,108 @@ def load_z2d_event_timing_overrides(paths: list[Path]) -> dict[str, dict]:
                 "event_global_start_frame": event_global_start_frame,
                 "event_global_start_ms": event_global_start_ms,
             }
+
+            recover_missing_audio = row.get("recover_missing_audio")
+            if recover_missing_audio is not None:
+                if subtitle_only or not request_id or not isinstance(
+                    recover_missing_audio, dict
+                ):
+                    raise ValueError(
+                        f"invalid missing-audio recovery cue {index} in {path}"
+                    )
+                audio_path = Path(
+                    str(recover_missing_audio.get("path", ""))
+                ).resolve()
+                audio_sha256 = str(
+                    recover_missing_audio.get("sha256", "")
+                ).strip().upper()
+                if not re.fullmatch(r"[0-9A-F]{64}", audio_sha256):
+                    raise ValueError(
+                        f"invalid recovered audio SHA-256 at cue {index} in {path}"
+                    )
+                if not audio_path.is_file():
+                    raise FileNotFoundError(
+                        f"recovered Z2D audio not found: {audio_path}"
+                    )
+                actual_audio_sha256 = file_sha256(audio_path)
+                if actual_audio_sha256 != audio_sha256:
+                    raise ValueError(
+                        f"recovered Z2D audio SHA-256 mismatch: {audio_path}"
+                    )
+                if (str(audio_path), audio_sha256) not in binding_index:
+                    raise ValueError(
+                        f"recovered Z2D audio lacks an exact source binding: {audio_path}"
+                    )
+                code_name = str(
+                    recover_missing_audio.get("code_name", "")
+                ).strip()
+                ogg_name = str(
+                    recover_missing_audio.get("ogg_name", "")
+                ).strip()
+                evidence = str(
+                    recover_missing_audio.get("evidence", "")
+                ).strip()
+                duration_ms = number(
+                    recover_missing_audio.get("duration_ms", -1), -1
+                )
+                child_local_start_ms = number(
+                    recover_missing_audio.get("child_local_start_ms", -1), -1
+                )
+                callback_exec_frame = number(
+                    recover_missing_audio.get("callback_exec_frame", -1), -1
+                )
+                if (
+                    not code_name
+                    or not ogg_name
+                    or not evidence
+                    or duration_ms <= 0
+                    or child_local_start_ms < 0
+                    or callback_exec_frame < 0
+                ):
+                    raise ValueError(
+                        f"incomplete missing-audio recovery cue {index} in {path}"
+                    )
+                normalized_cue["recover_missing_audio"] = {
+                    "code_name": code_name,
+                    "ogg_name": ogg_name,
+                    "path": str(audio_path),
+                    "sha256": audio_sha256,
+                    "duration_ms": duration_ms,
+                    "child_local_start_ms": child_local_start_ms,
+                    "callback_exec_frame": callback_exec_frame,
+                    "child_local_absolute_start_frame": str(
+                        recover_missing_audio.get(
+                            "child_local_absolute_start_frame", ""
+                        )
+                    ).strip(),
+                    "evidence": evidence,
+                }
+
+            recover_missing_subtitle = row.get("recover_missing_subtitle")
+            if recover_missing_subtitle is not None:
+                if not isinstance(recover_missing_subtitle, dict):
+                    raise ValueError(
+                        f"invalid missing-subtitle recovery cue {index} in {path}"
+                    )
+                text = str(recover_missing_subtitle.get("text", "")).strip()
+                subtitle_source = str(
+                    recover_missing_subtitle.get("subtitle_source", "")
+                ).strip()
+                evidence = str(
+                    recover_missing_subtitle.get("evidence", "")
+                ).strip()
+                if not text or not subtitle_source or not evidence:
+                    raise ValueError(
+                        f"incomplete missing-subtitle recovery cue {index} in {path}"
+                    )
+                normalized_cue["recover_missing_subtitle"] = {
+                    "text": text,
+                    "speaker_code": str(
+                        recover_missing_subtitle.get("speaker_code", "")
+                    ).strip(),
+                    "subtitle_source": subtitle_source,
+                    "evidence": evidence,
+                }
             has_end_frame = "event_global_end_frame_exclusive" in row
             has_end_ms = "event_global_end_ms" in row
             if has_end_frame != has_end_ms:
@@ -459,6 +582,10 @@ def load_z2d_event_timing_overrides(paths: list[Path]) -> dict[str, dict]:
                 raise ValueError(
                     f"subtitle-only Z2D timing cue lacks end boundary {index} in {path}"
                 )
+            if "recover_missing_subtitle" in normalized_cue and not has_end_frame:
+                raise ValueError(
+                    f"recovered subtitle lacks an exact end boundary {index} in {path}"
+                )
             cues.append(normalized_cue)
 
         normalized = {
@@ -468,6 +595,7 @@ def load_z2d_event_timing_overrides(paths: list[Path]) -> dict[str, dict]:
             "frame_rate": str(frame_rate),
             "source_bindings": verified_bindings,
             "cues": cues,
+            "expected_z2d_request_ids": expected_z2d_request_ids,
             "authority_path": str(payload.get("authority_path", "")).strip(),
             "_source_path": str(path.resolve()),
             "_source_sha256": file_sha256(path.resolve()),
@@ -1384,6 +1512,8 @@ def apply_z2d_event_timing_override(
             "matched_audio_cue_count": 0,
             "matched_subtitle_cue_count": 0,
             "unmatched_cues": [],
+            "recovery_conflicts": [],
+            "request_set_matches": True,
         }
     cue_map = {
         (str(row["request_id"]), str(row["z2d_name"])): row
@@ -1391,6 +1521,7 @@ def apply_z2d_event_timing_override(
     }
     matched_audio: set[tuple[str, str]] = set()
     matched_subtitle: set[tuple[str, str]] = set()
+    recovery_conflicts: list[dict[str, str]] = []
     for row in audio_rows:
         if row.get("source") != "z2d_req_sound":
             continue
@@ -1462,6 +1593,138 @@ def apply_z2d_event_timing_override(
             ]
         matched_subtitle.add(key)
 
+    existing_audio_keys = {
+        (str(row.get("request_id", "")), str(row.get("z2d_name", "")))
+        for row in audio_rows
+        if row.get("source") == "z2d_req_sound"
+    }
+    existing_subtitle_keys = {
+        (str(row.get("voice_request_id", "")), str(row.get("z2d_name", "")))
+        for row in subtitle_rows
+    }
+    recovered_audio_count = 0
+    recovered_subtitle_count = 0
+    for key, cue in cue_map.items():
+        recovered_audio = cue.get("recover_missing_audio")
+        if isinstance(recovered_audio, dict):
+            if key in existing_audio_keys:
+                recovery_conflicts.append(
+                    {
+                        "request_id": key[0],
+                        "z2d_name": key[1],
+                        "kind": "audio_row_already_exists",
+                    }
+                )
+            else:
+                child_local_start_ms = int(recovered_audio["child_local_start_ms"])
+                audio_rows.append(
+                    {
+                        "source": "z2d_req_sound",
+                        "request_id": key[0],
+                        "code_name": recovered_audio["code_name"],
+                        "ogg_name": recovered_audio["ogg_name"],
+                        "path": recovered_audio["path"],
+                        "source_sha256": recovered_audio["sha256"],
+                        "start_ms": cue["event_global_start_ms"],
+                        "duration_ms": recovered_audio["duration_ms"],
+                        "z2d_name": key[1],
+                        "callback_exec_frame": recovered_audio[
+                            "callback_exec_frame"
+                        ],
+                        "absolute_start_frame": recovered_audio[
+                            "child_local_absolute_start_frame"
+                        ],
+                        "evidence": recovered_audio["evidence"],
+                        "timing_scope": (
+                            "event_global_exact_parent_scene_and_motion_key"
+                        ),
+                        "event_global_start_resolved": True,
+                        "child_local_start_ms": child_local_start_ms,
+                        "child_local_absolute_start_frame": recovered_audio[
+                            "child_local_absolute_start_frame"
+                        ],
+                        "event_global_start_frame": cue[
+                            "event_global_start_frame"
+                        ],
+                        "event_global_shift_ms": (
+                            cue["event_global_start_ms"] - child_local_start_ms
+                        ),
+                        "timing_override_source": override["_source_path"],
+                        "timing_override_sha256": override["_source_sha256"],
+                        "recovered_missing_source_row": True,
+                    }
+                )
+                existing_audio_keys.add(key)
+                matched_audio.add(key)
+                recovered_audio_count += 1
+
+        recovered_subtitle = cue.get("recover_missing_subtitle")
+        if isinstance(recovered_subtitle, dict):
+            if key in existing_subtitle_keys:
+                recovery_conflicts.append(
+                    {
+                        "request_id": key[0],
+                        "z2d_name": key[1],
+                        "kind": "subtitle_row_already_exists",
+                    }
+                )
+            else:
+                subtitle_rows.append(
+                    {
+                        "text": recovered_subtitle["text"],
+                        "start_ms": cue["event_global_start_ms"],
+                        "end_ms": cue["event_global_end_ms"],
+                        "voice_request_id": key[0],
+                        "voice_start_ms": cue["event_global_start_ms"],
+                        "z2d_name": key[1],
+                        "speaker_code": recovered_subtitle["speaker_code"],
+                        "subtitle_source": recovered_subtitle[
+                            "subtitle_source"
+                        ],
+                        "evidence": recovered_subtitle["evidence"],
+                        "event_global_start_frame": cue[
+                            "event_global_start_frame"
+                        ],
+                        "event_global_end_frame_exclusive": cue[
+                            "event_global_end_frame_exclusive"
+                        ],
+                        "event_global_start_resolved": True,
+                        "timing_scope": (
+                            "event_global_exact_parent_scene_and_motion_key"
+                        ),
+                        "timing_override_source": override["_source_path"],
+                        "timing_override_sha256": override["_source_sha256"],
+                        "recovered_missing_source_row": True,
+                    }
+                )
+                existing_subtitle_keys.add(key)
+                matched_subtitle.add(key)
+                recovered_subtitle_count += 1
+
+    audio_rows.sort(key=lambda row: (number(row.get("start_ms", "")), str(row.get("request_id", ""))))
+    subtitle_rows.sort(
+        key=lambda row: (
+            number(row.get("start_ms", "")),
+            number(row.get("end_ms", "")),
+            str(row.get("z2d_name", "")),
+        )
+    )
+
+    expected_request_ids = override.get("expected_z2d_request_ids")
+    observed_request_ids = sorted(
+        {
+            str(row.get("request_id", ""))
+            for row in audio_rows
+            if row.get("source") == "z2d_req_sound"
+            and str(row.get("request_id", ""))
+        }
+    )
+    request_set_matches = (
+        True
+        if expected_request_ids is None
+        else observed_request_ids == sorted(str(value) for value in expected_request_ids)
+    )
+
     unmatched = [
         {"request_id": request_id, "z2d_name": z2d_name}
         for request_id, z2d_name in sorted(
@@ -1475,14 +1738,20 @@ def apply_z2d_event_timing_override(
         )
     ]
     return {
-        "applied": bool(matched_audio),
+        "applied": bool(matched_audio or matched_subtitle),
         "source": override["_source_path"],
         "sha256": override["_source_sha256"],
         "authority_path": override.get("authority_path", ""),
         "source_bindings": override["source_bindings"],
         "matched_audio_cue_count": len(matched_audio),
         "matched_subtitle_cue_count": len(matched_subtitle),
+        "recovered_audio_cue_count": recovered_audio_count,
+        "recovered_subtitle_cue_count": recovered_subtitle_count,
         "unmatched_cues": unmatched,
+        "recovery_conflicts": recovery_conflicts,
+        "expected_z2d_request_ids": expected_request_ids,
+        "observed_z2d_request_ids": observed_request_ids,
+        "request_set_matches": request_set_matches,
     }
 
 
@@ -1838,6 +2107,8 @@ def main() -> int:
             "matched_audio_cue_count": 0,
             "matched_subtitle_cue_count": 0,
             "unmatched_cues": [],
+            "recovery_conflicts": [],
+            "request_set_matches": True,
         }
         if z2d_timing_override:
             if (
@@ -2121,6 +2392,10 @@ def main() -> int:
             )
             if z2d_timing_override_application["unmatched_cues"]:
                 errors.append("z2d_event_timing_override_cue_unmatched")
+            if z2d_timing_override_application["recovery_conflicts"]:
+                errors.append("z2d_event_timing_override_recovery_conflict")
+            if not z2d_timing_override_application["request_set_matches"]:
+                errors.append("z2d_event_timing_override_request_set_mismatch")
         if reviewed_subtitle_manifest:
             reviewed_projection = {
                 **reviewed_subtitle_manifest,

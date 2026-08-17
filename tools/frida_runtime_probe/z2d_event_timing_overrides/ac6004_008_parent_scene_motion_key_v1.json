@@ -1,0 +1,72 @@
+{
+  "schema": "magireco-z2d-event-timing-override-v1",
+  "event": "ac6004_008",
+  "event_code_hex": "0x4c30463d34596654",
+  "frame_rate": "30/1",
+  "authority_path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p17_ac6004_family_event_global_timing_authority_v1_20260817\\P17_AC6004_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+  "expected_z2d_request_ids": [
+    "2787"
+  ],
+  "source_bindings": [
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p17_ac6004_family_event_global_timing_authority_v1_20260817\\P17_AC6004_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "0ADFCE16B774DDDBDB7A6887C10D5473C5E22B9C0AD88C0679DCCA193466D0D1",
+      "size_bytes": 19771
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\sample\\libGameProc.so",
+      "sha256": "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF",
+      "size_bytes": 79683640
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p17_family_scene_motion_v16_20260817\\P17_AC6004_FAMILY_RUNTIME_SCENE_MOTION.json",
+      "sha256": "B8BCF584D6217A3903F595A5426C2E0DA6ABCFDB04BAB32E6A6830D59CDD9041",
+      "size_bytes": 202890
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p17_family_scene_motion_v16_20260817\\capture_family_scene_motion.py",
+      "sha256": "050EA798B1C70AB5EA6318AD34080AD63197E61E14D373030F3CE4F68B2DD293",
+      "size_bytes": 2198
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p17_family_scene_motion_v16_20260817\\inspect_event_scene_motion.js",
+      "sha256": "68FF37A9188CD612E0C7437FB0F9F67D8DDD28DA090E476F7014A7E2675A1AE3",
+      "size_bytes": 6293
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\parent_child_timing_authority_v1_20260815\\IDA_Z2D_MOTION_FIELDS.json",
+      "sha256": "CD3AE5F12CB3952350C0FC19AA023787F9D688C1F04D8C3741F01BF72FE3BEF0",
+      "size_bytes": 42426
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ida_static_scheduler_analysis_v1_20260808\\parent_child_timing_authority_v1_20260815\\IDA_PARENT_CHILD_PSEUDOCODE.json",
+      "sha256": "F9BFE2D1ADB744BCBD6B3E9ECE2752BFB95A34D593D0960A0F44E01CFE51313B",
+      "size_bytes": 37372
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\event_sound_timeline.csv",
+      "sha256": "46A3065810F1E304881D01B6A3AE5037E50535A651C64B5128B72CEF5D731911",
+      "size_bytes": 3877569
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\z2d_audio_timeline_v2\\subtitle_event_timeline.csv",
+      "sha256": "662CEB1BE36FF8FEE070CEDDC6678BC01CC9268B597C0C157DA7D3FFB4F2083E",
+      "size_bytes": 4475962
+    },
+    {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\_repro_audit_v67r2_inputs_r3_20260806\\events\\ac6004_008.json",
+      "sha256": "CA63292708924D7D646B8208A3177CA2FF6F3B8B4A5D7B577883A8018EDECC75",
+      "size_bytes": 5792
+    }
+  ],
+  "cues": [
+    {
+      "request_id": "2787",
+      "z2d_name": "cap6004_mb_iro_006",
+      "event_global_start_frame": 10,
+      "event_global_start_ms": 333,
+      "event_global_end_frame_exclusive": 49,
+      "event_global_end_ms": 1633
+    }
+  ]
+}

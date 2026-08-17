@@ -1,0 +1,91 @@
+{
+  "schema": "magireco-p17-replacement-review-plan-v1",
+  "family": "ac6004",
+  "title_zh": "八千代等人拯救谣鹤乃",
+  "review_status": "HUMAN_PLAYBACK_REQUIRED",
+  "publishable": false,
+  "supersedes_old_quarantine": false,
+  "source_family_manifest": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v71r3_p17_ac6004_event_global_timing_20260817\\ac6004_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+    "sha256": "EF9B0B4033CE6F458ABCBCD5CF6C6EFE63FF9F196D316FEA7C9F4663127D82CE"
+  },
+  "source_qa": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v71r3_p17_ac6004_event_global_timing_20260817\\ac6004_full_no_bgm_editions_v1\\qa\\automated_qa.json",
+    "sha256": "C86A8AA5B4B6FF76F542B9B57B860812E87A7BD28AB0637E3B64F2E1A74AA353"
+  },
+  "replacement_manifest_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v71r2_p17_ac6004_event_global_timing_20260817\\P17_AC6004_REPLACEMENT_MANIFEST_SUMMARY.json",
+    "sha256": "FFCB95F6A1C89E5FDBCEB3D528574B8EC8DFB2D1CAC955F0A29C23C34422DCA4"
+  },
+  "timing_authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\p17_ac6004_family_event_global_timing_authority_v1_20260817\\P17_AC6004_FAMILY_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "0ADFCE16B774DDDBDB7A6887C10D5473C5E22B9C0AD88C0679DCCA193466D0D1"
+  },
+  "expected_media": {
+    "duration_ms": 46900,
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": "48000",
+    "audio_channels": 2,
+    "upscaled": false,
+    "audio_profile": "no_bgm"
+  },
+  "editions": {
+    "none": {
+      "source_relative_path": "video/ac6004_full_no_bgm_editions_v1__none.mp4",
+      "sha256": "1B93537ECA6CCCCA2A46DAB69185DEF44DFB3E0D7E6FCC44CE7D9D37D0F07AED",
+      "hub_relative_path": "NONE/story/P17_八千代等人拯救谣鹤乃_ac6004__none.mp4"
+    },
+    "ja": {
+      "source_relative_path": "video/ac6004_full_no_bgm_editions_v1__ja.mp4",
+      "sha256": "CBE42E05A6CCDFBC2A4189A366D7E78BF76498003608E03F7F755A387E46B0B3",
+      "hub_relative_path": "JP/story/P17_八千代等人拯救谣鹤乃_ac6004__ja.mp4"
+    },
+    "zh": {
+      "source_relative_path": "video/ac6004_full_no_bgm_editions_v1__zh.mp4",
+      "sha256": "1784FE07A4B44A99250AE63AFDD8B9C399105F6A00E35D4393174E989F925A5E",
+      "hub_relative_path": "ZH/story/P17_八千代等人拯救谣鹤乃_ac6004__zh.mp4"
+    }
+  },
+  "review_intervals": [
+    {
+      "start_ms": 0,
+      "end_ms": 8400,
+      "focus": "ac6004_005 两条对白须分别在 0.033 秒与 4.567 秒进入，并与角色开口一致"
+    },
+    {
+      "start_ms": 8400,
+      "end_ms": 12533,
+      "focus": "ac6004_006 前段对白与 req3260 开始边界；禁止沿用旧 child-local 0 秒"
+    },
+    {
+      "start_ms": 12533,
+      "end_ms": 20432,
+      "focus": "补回的 req3260 整条 7.899 秒对白持续跨越三段画面文本，声音、张嘴、字幕需连续对应"
+    },
+    {
+      "start_ms": 22600,
+      "end_ms": 28333,
+      "focus": "ac6004_008 对白从 22.933 秒进入，并保留父 cut 的完整 172 帧边界"
+    },
+    {
+      "start_ms": 28333,
+      "end_ms": 38400,
+      "focus": "ac6004_011 保持原 runtime-exact 时间线，检查前后事件边界"
+    },
+    {
+      "start_ms": 38400,
+      "end_ms": 46900,
+      "focus": "ac6004_012 两条对白从 38.500 秒与 42.067 秒进入，尾帧不得截断"
+    }
+  ],
+  "exclusions": [
+    "old P17 none/JA/ZH quarantine remains human_playback_failed",
+    "failed v71 shortened ac6004_008 media",
+    "P16 and P18",
+    "with-BGM"
+  ]
+}

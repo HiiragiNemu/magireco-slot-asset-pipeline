@@ -20,6 +20,7 @@ from tools.frida_runtime_probe.build_event_production_manifests import (
     composition_plan_uses_authored_timing,
     file_sha256,
     filter_subtitle_rows_for_plan,
+    load_z2d_event_timing_overrides,
     load_reviewed_subtitle_manifests,
     load_runtime_event_manifests,
     load_voice_subtitle_overrides,
@@ -54,6 +55,20 @@ from tools.frida_runtime_probe.build_p16_family_replacement_manifests import (
 from tools.frida_runtime_probe.build_p16_replacement_review_package import (
     ROLLBACK_SCRIPT as P16_REVIEW_ROLLBACK_SCRIPT,
     safe_relative_path as p16_review_safe_relative_path,
+)
+from tools.frida_runtime_probe.build_p17_family_replacement_manifests import (
+    BLOCKER as P17_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as P17_ROLLBACK_SCRIPT,
+    repair_manifest as repair_p17_manifest,
+)
+from tools.frida_runtime_probe.build_p17_replacement_review_package import (
+    ROLLBACK_SCRIPT as P17_REVIEW_ROLLBACK_SCRIPT,
+    safe_relative_path as p17_review_safe_relative_path,
+)
+from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
+    attach_speaker_evidence,
+    is_exact_graphical_continuation,
+    promote_exact_graphical_continuation_cues,
 )
 
 
@@ -168,6 +183,236 @@ class P16ReplacementManifestTests(unittest.TestCase):
             any(
                 line.startswith("+")
                 for line in P16_REVIEW_ROLLBACK_SCRIPT.splitlines()
+            )
+        )
+
+
+class P17ReplacementManifestTests(unittest.TestCase):
+    def test_exact_graphical_continuations_are_restored_without_child_local_leak(self) -> None:
+        exact = {
+            "text": "あなたはいつも呆れるほど元気に頑張ってる",
+            "start_ms": 5967,
+            "end_ms": 9367,
+            "voice_request_id": "",
+            "speaker_code": "",
+            "subtitle_source": "graphical_display_text",
+            "evidence": "runtime_scene_motion",
+            "timing_scope": "event_global_exact_parent_scene_and_motion_key",
+            "event_global_start_resolved": True,
+            "timing_override_source": "bound-override.json",
+        }
+        child_local = {
+            **exact,
+            "text": "child-local risk",
+            "timing_scope": "child_z2d_local_only",
+            "event_global_start_resolved": False,
+            "timing_override_source": "",
+        }
+        resolved = {
+            "event": "ac6004_006",
+            "dialogue_cues": [],
+            "excluded_source_cues": [
+                {
+                    "text": exact["text"],
+                    "start_ms": exact["start_ms"],
+                    "end_ms": exact["end_ms"],
+                    "reason": "unvoiced graphical text excluded",
+                },
+                {
+                    "text": child_local["text"],
+                    "start_ms": child_local["start_ms"],
+                    "end_ms": child_local["end_ms"],
+                    "reason": "unvoiced graphical text excluded",
+                },
+            ],
+        }
+        manifest = {"subtitles": [exact, child_local]}
+
+        promoted = promote_exact_graphical_continuation_cues(
+            resolved,
+            manifest,
+            {exact["text"]: "你不是一直都\n精神十足地努力着吗？"},
+        )
+
+        self.assertTrue(is_exact_graphical_continuation(exact))
+        self.assertFalse(is_exact_graphical_continuation(child_local))
+        self.assertEqual(len(promoted), 1)
+        self.assertEqual(resolved["dialogue_cues"][0]["request_id"], "")
+        self.assertTrue(
+            resolved["dialogue_cues"][0]["event_global_graphical_continuation"]
+        )
+        self.assertEqual(
+            [row["text"] for row in resolved["excluded_source_cues"]],
+            ["child-local risk"],
+        )
+        attach_speaker_evidence(resolved, manifest)
+
+    def test_p17_repair_recovers_request_3260_exactly_once(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            audio_path = Path(temp) / "req3260.ogg"
+            existing_path = Path(temp) / "req3735.ogg"
+            audio_path.write_bytes(b"req3260")
+            existing_path.write_bytes(b"req3735")
+            source = {
+                "schema": "magireco-event-production-v3",
+                "event": "ac6004_006",
+                "event_code_hex": "0x446d4e7634596654",
+                "native_frame_rate": "30/1",
+                "video_duration_ms": 14200,
+                "composition_plan": {},
+                "video_extension_policy": "none",
+                "clips": [{"event_start_ms": 0, "event_end_ms": 14200}],
+                "audio": [
+                    {
+                        "source": "z2d_req_sound",
+                        "request_id": "3735",
+                        "z2d_name": "cap6004_mb_uwt_004",
+                        "path": str(existing_path),
+                        "start_ms": 167,
+                        "duration_ms": 4150,
+                        "event_global_start_resolved": False,
+                    }
+                ],
+                "subtitles": [
+                    {
+                        "voice_request_id": "3735",
+                        "z2d_name": "cap6004_mb_uwt_004",
+                        "start_ms": 167,
+                        "end_ms": 4317,
+                        "voice_start_ms": 167,
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    },
+                    {
+                        "voice_request_id": "",
+                        "z2d_name": "cap6004_mb_yac_005_01",
+                        "start_ms": 5967,
+                        "end_ms": 9367,
+                        "voice_start_ms": 5967,
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    },
+                    {
+                        "voice_request_id": "",
+                        "z2d_name": "cap6004_mb_yac_005_02",
+                        "start_ms": 0,
+                        "end_ms": 5733,
+                        "voice_start_ms": 0,
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    },
+                ],
+                "quality_gates": {
+                    "errors": [P17_TIMING_BLOCKER],
+                    "all_audio_exist": True,
+                    "composition_resolved": True,
+                    "event_global_z2d_timing_ready": False,
+                    "audio_timeline_ready": False,
+                    "render_ready": False,
+                    "ready": False,
+                },
+            }
+            override = {
+                "event_code_hex": source["event_code_hex"],
+                "frame_rate": "30/1",
+                "expected_z2d_request_ids": ["3260", "3735"],
+                "cues": [
+                    {
+                        "request_id": "3735",
+                        "z2d_name": "cap6004_mb_uwt_004",
+                        "event_global_start_frame": 5,
+                        "event_global_start_ms": 167,
+                        "event_global_end_frame_exclusive": 121,
+                        "event_global_end_ms": 4033,
+                    },
+                    {
+                        "request_id": "3260",
+                        "z2d_name": "cap6004_mb_yac_005",
+                        "event_global_start_frame": 124,
+                        "event_global_start_ms": 4133,
+                        "event_global_end_frame_exclusive": 161,
+                        "event_global_end_ms": 5367,
+                        "recover_missing_audio": {
+                            "code_name": "16214_yac_voice",
+                            "ogg_name": audio_path.name,
+                            "path": str(audio_path),
+                            "sha256": "C" * 64,
+                            "duration_ms": 7899,
+                            "child_local_start_ms": 0,
+                            "callback_exec_frame": 0,
+                            "child_local_absolute_start_frame": "",
+                            "evidence": "official_ogg_and_z2d_callback",
+                        },
+                        "recover_missing_subtitle": {
+                            "text": "何言ってるの！",
+                            "speaker_code": "",
+                            "subtitle_source": "graphical_display_text",
+                            "evidence": "runtime_scene_motion",
+                        },
+                    },
+                    {
+                        "request_id": "",
+                        "z2d_name": "cap6004_mb_yac_005_01",
+                        "subtitle_only": True,
+                        "event_global_start_frame": 179,
+                        "event_global_start_ms": 5967,
+                        "event_global_end_frame_exclusive": 281,
+                        "event_global_end_ms": 9367,
+                    },
+                    {
+                        "request_id": "",
+                        "z2d_name": "cap6004_mb_yac_005_02",
+                        "subtitle_only": True,
+                        "event_global_start_frame": 290,
+                        "event_global_start_ms": 9667,
+                        "event_global_end_frame_exclusive": 356,
+                        "event_global_end_ms": 11867,
+                    },
+                ],
+                "source_bindings": [],
+                "authority_path": "authority.json",
+                "_source_path": "override.json",
+                "_source_sha256": "B" * 64,
+            }
+
+            repaired, application = repair_p17_manifest(source, override)
+
+            self.assertTrue(repaired["quality_gates"]["ready"])
+            self.assertTrue(application["request_set_matches"])
+            self.assertEqual(application["recovered_audio_cue_count"], 1)
+            self.assertEqual(application["recovered_subtitle_cue_count"], 1)
+            recovered = [
+                row for row in repaired["audio"] if row["request_id"] == "3260"
+            ]
+            self.assertEqual(len(recovered), 1)
+            self.assertEqual(recovered[0]["start_ms"], 4133)
+            self.assertEqual(recovered[0]["duration_ms"], 7899)
+            self.assertEqual(
+                [row["start_ms"] for row in repaired["subtitles"]],
+                [167, 4133, 5967, 9667],
+            )
+
+    def test_p17_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in P17_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", P17_ROLLBACK_SCRIPT)
+
+    def test_p17_review_path_is_language_first_and_flat(self) -> None:
+        path = p17_review_safe_relative_path(
+            "ZH/story/P17_八千代等人拯救谣鹤乃_ac6004__zh.mp4", edition="zh"
+        )
+        self.assertEqual(len(path.parts), 3)
+        with self.assertRaisesRegex(ValueError, "unsafe review path"):
+            p17_review_safe_relative_path(
+                "ZH/story/../escape__zh.mp4", edition="zh"
+            )
+
+    def test_p17_review_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(
+                line.startswith("+")
+                for line in P17_REVIEW_ROLLBACK_SCRIPT.splitlines()
             )
         )
 
@@ -1344,6 +1589,175 @@ class ManifestBuilderTests(unittest.TestCase):
             subtitle_rows[1]["event_global_end_frame_exclusive"], 221
         )
         self.assertTrue(subtitle_rows[1]["event_global_start_resolved"])
+
+    def test_z2d_timing_override_recovers_exact_missing_rows(self) -> None:
+        override = {
+            "cues": [
+                {
+                    "request_id": "3260",
+                    "z2d_name": "cap6004_mb_yac_005",
+                    "event_global_start_frame": 124,
+                    "event_global_start_ms": 4133,
+                    "event_global_end_frame_exclusive": 161,
+                    "event_global_end_ms": 5367,
+                    "recover_missing_audio": {
+                        "code_name": "16214_yac_voice",
+                        "ogg_name": "req3260.ogg",
+                        "path": "D:/evidence/req3260.ogg",
+                        "sha256": "C" * 64,
+                        "duration_ms": 7899,
+                        "child_local_start_ms": 0,
+                        "callback_exec_frame": 0,
+                        "child_local_absolute_start_frame": "0.0",
+                        "evidence": "official_ogg_and_z2d_callback",
+                    },
+                    "recover_missing_subtitle": {
+                        "text": "何言ってるの！",
+                        "speaker_code": "",
+                        "subtitle_source": "graphical_display_text",
+                        "evidence": "runtime_scene_motion_and_graphical_text",
+                    },
+                }
+            ],
+            "expected_z2d_request_ids": ["3260", "3735"],
+            "source_bindings": [],
+            "authority_path": "authority.json",
+            "_source_path": "override.json",
+            "_source_sha256": "B" * 64,
+        }
+        audio_rows = [
+            {
+                "source": "z2d_req_sound",
+                "request_id": "3735",
+                "z2d_name": "cap6004_mb_uwt_004",
+                "start_ms": 167,
+                "event_global_start_resolved": True,
+            }
+        ]
+        subtitle_rows: list[dict] = []
+
+        result = apply_z2d_event_timing_override(
+            audio_rows, subtitle_rows, override
+        )
+
+        self.assertTrue(result["applied"])
+        self.assertEqual(result["recovered_audio_cue_count"], 1)
+        self.assertEqual(result["recovered_subtitle_cue_count"], 1)
+        self.assertEqual(result["recovery_conflicts"], [])
+        self.assertTrue(result["request_set_matches"])
+        self.assertEqual(result["observed_z2d_request_ids"], ["3260", "3735"])
+        recovered_audio = next(
+            row for row in audio_rows if row.get("request_id") == "3260"
+        )
+        self.assertEqual(recovered_audio["start_ms"], 4133)
+        self.assertEqual(recovered_audio["duration_ms"], 7899)
+        self.assertEqual(recovered_audio["event_global_shift_ms"], 4133)
+        self.assertTrue(recovered_audio["event_global_start_resolved"])
+        self.assertTrue(recovered_audio["recovered_missing_source_row"])
+        self.assertEqual(subtitle_rows[0]["start_ms"], 4133)
+        self.assertEqual(subtitle_rows[0]["end_ms"], 5367)
+        self.assertEqual(subtitle_rows[0]["text"], "何言ってるの！")
+
+    def test_z2d_timing_override_expected_request_set_fails_closed(self) -> None:
+        override = {
+            "cues": [
+                {
+                    "request_id": "3260",
+                    "z2d_name": "cap6004_mb_yac_005",
+                    "event_global_start_frame": 124,
+                    "event_global_start_ms": 4133,
+                }
+            ],
+            "expected_z2d_request_ids": ["3260", "3735"],
+            "source_bindings": [],
+            "authority_path": "authority.json",
+            "_source_path": "override.json",
+            "_source_sha256": "B" * 64,
+        }
+        audio_rows = [
+            {
+                "source": "z2d_req_sound",
+                "request_id": "3260",
+                "z2d_name": "cap6004_mb_yac_005",
+                "start_ms": 0,
+                "event_global_start_resolved": False,
+            }
+        ]
+
+        result = apply_z2d_event_timing_override(audio_rows, [], override)
+
+        self.assertFalse(result["request_set_matches"])
+        self.assertEqual(result["expected_z2d_request_ids"], ["3260", "3735"])
+        self.assertEqual(result["observed_z2d_request_ids"], ["3260"])
+
+    def test_z2d_timing_override_recovered_audio_is_hash_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            authority = root / "authority.json"
+            audio = root / "req3260.ogg"
+            authority.write_text("exact authority\n", encoding="utf-8")
+            audio.write_bytes(b"official ogg fixture")
+            override_path = root / "override.json"
+            override_path.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-z2d-event-timing-override-v1",
+                        "event": "ac6004_006",
+                        "event_code_hex": "0x1",
+                        "frame_rate": "30/1",
+                        "authority_path": str(authority),
+                        "expected_z2d_request_ids": ["3260"],
+                        "source_bindings": [
+                            {
+                                "path": str(authority),
+                                "sha256": file_sha256(authority),
+                            },
+                            {
+                                "path": str(audio),
+                                "sha256": file_sha256(audio),
+                            },
+                        ],
+                        "cues": [
+                            {
+                                "request_id": "3260",
+                                "z2d_name": "cap6004_mb_yac_005",
+                                "event_global_start_frame": 124,
+                                "event_global_start_ms": 4133,
+                                "event_global_end_frame_exclusive": 161,
+                                "event_global_end_ms": 5367,
+                                "recover_missing_audio": {
+                                    "code_name": "16214_yac_voice",
+                                    "ogg_name": audio.name,
+                                    "path": str(audio),
+                                    "sha256": file_sha256(audio),
+                                    "duration_ms": 7899,
+                                    "child_local_start_ms": 0,
+                                    "callback_exec_frame": 0,
+                                    "child_local_absolute_start_frame": "0.0",
+                                    "evidence": "official_ogg_and_z2d_callback",
+                                },
+                                "recover_missing_subtitle": {
+                                    "text": "何言ってるの！",
+                                    "speaker_code": "",
+                                    "subtitle_source": "graphical_display_text",
+                                    "evidence": "runtime_scene_motion",
+                                },
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            loaded = load_z2d_event_timing_overrides([override_path])
+            self.assertEqual(
+                loaded["ac6004_006"]["expected_z2d_request_ids"], ["3260"]
+            )
+
+            audio.write_bytes(b"tampered")
+            with self.assertRaisesRegex(
+                ValueError, "Z2D timing source SHA-256 mismatch"
+            ):
+                load_z2d_event_timing_overrides([override_path])
 
     def test_explicit_audience_component_is_not_render_ready(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
