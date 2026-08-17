@@ -121,8 +121,23 @@ from tools.frida_runtime_probe.build_ac0911_event_global_mature_routes import (
     patch_cues as patch_ac0911_route_cues,
     validate_plan as validate_ac0911_route_plan,
 )
+from tools.frida_runtime_probe.build_ac7101_ac7107_timing_authority import (
+    BLOCKER as AC7101_AC7107_TIMING_BLOCKER,
+    EVENTS as AC7101_AC7107_EVENTS,
+    extract_event_authority as extract_ac7101_ac7107_event_authority,
+    validate_dirinfo as validate_ac7101_ac7107_dirinfo,
+)
+from tools.frida_runtime_probe.build_ac7101_ac7107_replacement_manifests import (
+    ROLLBACK_SCRIPT as AC7101_AC7107_REPLACEMENT_ROLLBACK_SCRIPT,
+    repair_manifest as repair_ac7101_ac7107_manifest,
+)
+from tools.frida_runtime_probe.build_ac7101_ac7107_archive_series_inputs import (
+    DEFAULT_PLAN as AC7101_AC7107_ARCHIVE_PLAN,
+    ROLLBACK_SCRIPT as AC7101_AC7107_ARCHIVE_INPUT_ROLLBACK_SCRIPT,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
+    display_text,
     is_exact_graphical_continuation,
     promote_exact_graphical_continuation_cues,
 )
@@ -1010,6 +1025,275 @@ class AC0911MatureRouteTimingClosureTests(unittest.TestCase):
         plan.pop("strict_row006_route_manifest_sha256")
         with self.assertRaisesRegex(ValueError, "plan contract differs"):
             validate_ac0911_route_plan(plan, AC0911_ROUTE_PLAN)
+
+
+class AC7101AC7107EventArchiveTimingClosureTests(unittest.TestCase):
+    def source(self, audio_path: Path) -> dict:
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": "ac7104_001",
+            "event_code_hex": "0x554749633f647837",
+            "native_dimensions": {"width": 416, "height": 232},
+            "native_frame_rate": "30/1",
+            "audio": [
+                {
+                    "source": "event_audio_component",
+                    "request_id": "10273",
+                    "code_name": "story-se",
+                    "ogg_name": "story-se.ogg",
+                    "path": str(audio_path),
+                    "start_ms": 0,
+                    "duration_ms": 10000,
+                },
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "8547",
+                    "code_name": "30000_001_fer_voice-a",
+                    "ogg_name": "voice-a.ogg",
+                    "path": str(audio_path),
+                    "z2d_name": "cap7104_story4_fer_001",
+                    "start_ms": 1967,
+                    "duration_ms": 2636,
+                    "absolute_start_frame": "59.0",
+                    "event_global_start_resolved": False,
+                },
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "8548",
+                    "code_name": "30001_002_fer_voice-b",
+                    "ogg_name": "voice-b.ogg",
+                    "path": str(audio_path),
+                    "z2d_name": "cap7104_story4_fer_002",
+                    "start_ms": 6633,
+                    "duration_ms": 2657,
+                    "absolute_start_frame": "199.0",
+                    "event_global_start_resolved": False,
+                },
+            ],
+            "subtitles": [
+                {
+                    "voice_request_id": "8547",
+                    "subtitle_source": "graphical_display_text",
+                    "z2d_name": "cap7104_story4_fer_001",
+                    "start_ms": 1967,
+                    "end_ms": 4603,
+                    "voice_start_ms": 1967,
+                    "event_global_start_resolved": False,
+                },
+                {
+                    "voice_request_id": "8548",
+                    "subtitle_source": "official_voice_label",
+                    "z2d_name": "cap7104_story4_fer_002",
+                    "start_ms": 6633,
+                    "end_ms": 9290,
+                    "voice_start_ms": 6633,
+                },
+                {
+                    "voice_request_id": "",
+                    "subtitle_source": "graphical_display_text",
+                    "z2d_name": "cap7104_story4_fer_002_01",
+                    "start_ms": 7600,
+                    "end_ms": 9200,
+                    "voice_start_ms": 7600,
+                    "event_global_start_resolved": False,
+                },
+            ],
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "video_composition_model": "linear_full_frame_sequence",
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [AC7101_AC7107_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def runtime_event(self) -> dict:
+        children = []
+        for name, start, end in (
+            ("cap7104_story4_fer_001", 59, 131),
+            ("cap7104_story4_fer_002", 199, 278),
+            ("cap7104_story4_fer_002_01", 228, 275),
+        ):
+            children.append(
+                {
+                    "name": name + ".z2d",
+                    "time_remap_pointer": None,
+                    "motions": [
+                        {
+                            "is_z2d_motion": True,
+                            "keys": [
+                                {
+                                    "index": 0,
+                                    "floats": [start, end, 0, 0],
+                                    "flags": [0, 0, 0, 0],
+                                }
+                            ],
+                        }
+                    ],
+                    "children": [],
+                }
+            )
+        top = {
+            "name": "captions",
+            "hash_low": 31,
+            "hash_high": 37,
+            "children": children,
+        }
+        return {
+            "event_code": "0x554749633f647837",
+            "layers": [{"hash_low": 31, "hash_high": 37, "speed": 1}],
+            "scenes": [
+                {
+                    "name": "ac7104_001",
+                    "cuts": [
+                        {
+                            "cut_name": "ac7104_001",
+                            "instance_offset_frames": 0,
+                            "cut_start_frame": 0,
+                            "cut_end_frame": 300,
+                            "nodes": [top],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def sound_rows(self) -> list[dict[str, str]]:
+        return [
+            {
+                "event": "ac7104_001",
+                "request_id": "10273",
+                "volume_bus": "SE",
+                "strict_no_bgm_disposition": "NOT_BGM_BUS",
+                "code_name": "story-se",
+                "ogg_name": "story-se.ogg",
+            },
+            {
+                "event": "ac7104_001",
+                "request_id": "8547",
+                "volume_bus": "VOICE",
+                "strict_no_bgm_disposition": "NOT_BGM_BUS",
+                "code_name": "30000_001_fer_voice-a",
+                "ogg_name": "voice-a.ogg",
+            },
+            {
+                "event": "ac7104_001",
+                "request_id": "8548",
+                "volume_bus": "VOICE",
+                "strict_no_bgm_disposition": "NOT_BGM_BUS",
+                "code_name": "30001_002_fer_voice-b",
+                "ogg_name": "voice-b.ogg",
+            },
+        ]
+
+    def test_parent_zero_promotes_graphical_end_and_preserves_voice_end(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "audio.ogg"
+            audio.write_bytes(b"audio")
+            source = self.source(audio)
+            evidence, override = extract_ac7101_ac7107_event_authority(
+                "ac7104_001", self.runtime_event(), source, self.sound_rows()
+            )
+            self.assertEqual(evidence["parent_cut"]["instance_offset_frames"], 0)
+            self.assertEqual(len(override["cues"]), 3)
+            override.update(
+                {
+                    "_source_path": "bound-override.json",
+                    "_source_sha256": "D" * 64,
+                    "authority_path": "authority.json",
+                    "source_bindings": [],
+                }
+            )
+            repaired, application, changes = repair_ac7101_ac7107_manifest(
+                source, override
+            )
+            self.assertTrue(application["applied"])
+            self.assertTrue(repaired["quality_gates"]["ready"])
+            self.assertEqual(
+                [row["start_ms"] for row in repaired["audio"] if row["source"] == "z2d_req_sound"],
+                [1967, 6633],
+            )
+            self.assertEqual(repaired["subtitles"][0]["end_ms"], 4400)
+            self.assertEqual(repaired["subtitles"][0]["speaker_code"], "fer")
+            self.assertEqual(repaired["subtitles"][1]["end_ms"], 9290)
+            self.assertEqual(repaired["subtitles"][1]["speaker_code"], "fer")
+            self.assertEqual(repaired["subtitles"][2]["end_ms"], 9200)
+            self.assertEqual(len(changes["graphical_end_changes"]), 1)
+
+    def test_wrong_layer_speed_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "audio.ogg"
+            audio.write_bytes(b"audio")
+            runtime = self.runtime_event()
+            runtime["layers"][0]["speed"] = 2
+            with self.assertRaisesRegex(ValueError, "layer speed differs"):
+                extract_ac7101_ac7107_event_authority(
+                    "ac7104_001", runtime, self.source(audio), self.sound_rows()
+                )
+
+    def test_dirinfo_grid_does_not_claim_001_to_002_session(self) -> None:
+        rows = []
+        for offset, family in enumerate(f"ac710{i}" for i in range(1, 8)):
+            kind = str(180 + offset)
+            for row_index in range(20):
+                rows.append(
+                    {
+                        "kind": kind,
+                        "row_index": str(row_index),
+                        "selector_raw": "0",
+                        "scene_name": f"{family}_{'001' if row_index < 10 else '002'}",
+                        "resolved_source_count": "2",
+                    }
+                )
+            rows.append(
+                {
+                    "kind": kind,
+                    "row_index": "19",
+                    "selector_raw": "5",
+                    "scene_name": f"{family}_003",
+                    "resolved_source_count": "0",
+                }
+            )
+        result = validate_ac7101_ac7107_dirinfo(rows)
+        self.assertEqual(len(AC7101_AC7107_EVENTS), 14)
+        self.assertTrue(
+            all(row["natural_001_to_002_session_proven"] is False for row in result.values())
+        )
+
+    def test_rollback_contracts_preserve_sources(self) -> None:
+        for script in (
+            AC7101_AC7107_REPLACEMENT_ROLLBACK_SCRIPT,
+            AC7101_AC7107_ARCHIVE_INPUT_ROLLBACK_SCRIPT,
+        ):
+            self.assertNotIn("Remove-Item", script)
+            self.assertIn("without touching", script)
+
+    def test_archive_plan_uses_event_manifest_renderer(self) -> None:
+        plan = json.loads(AC7101_AC7107_ARCHIVE_PLAN.read_text(encoding="utf-8"))
+        self.assertEqual(
+            Path(plan["renderer"]).name,
+            "render_event_manifest.py",
+        )
+
+    def test_kuroe_display_is_distinct_and_raw_kuro_stays_unprefixed(self) -> None:
+        speakers = {"kuroe": {"ja": "黒江", "zh": "黑江"}}
+        base = {
+            "ja_text": "環さん！？",
+            "zh_text": "环同学！？",
+            "subtitle_source": "graphical_display_text",
+            "evidence": "exact_official_voice_request_code_name_speaker_token",
+        }
+        self.assertEqual(
+            display_text({**base, "speaker_code": "kuroe"}, "zh", speakers),
+            "黑江：环同学！？",
+        )
+        self.assertEqual(
+            display_text({**base, "speaker_code": "kuro"}, "zh", speakers),
+            "环同学！？",
+        )
 
 
 class P16ReplacementManifestTests(unittest.TestCase):

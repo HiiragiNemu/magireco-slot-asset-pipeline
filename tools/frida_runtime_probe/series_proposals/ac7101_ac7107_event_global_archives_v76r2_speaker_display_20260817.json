@@ -1,0 +1,30 @@
+{
+  "schema": "magireco-ac7101-ac7107-speaker-display-correction-plan-v1",
+  "checkpoint_id": "ac7101_ac7107_event_global_archives_v76r2_20260817",
+  "status": "approved_for_bounded_render_human_playback_required",
+  "source_plan_archive": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r1_ac7101_ac7107_event_global_archives_20260817\\SOURCE_PLAN_A32BE4BC83293B1F.json",
+    "sha256": "A32BE4BC83293B1F7D6F48254F924BF81BA89BB702603AF264D9C49F3EB0B3F4"
+  },
+  "series_input_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_event_archive_series_inputs_v1r1_20260817",
+  "replacement_manifest_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v76_ac7101_ac7107_event_global_20260817",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r2_ac7101_ac7107_event_global_archives_20260817",
+  "speaker_display_registry": {
+    "path": "tools/frida_runtime_probe/speaker_display_registry_v1.json",
+    "sha256": "AAF5A6A3826F9412F0DC21974E993135FBA28D4783FA527E9D0FC3FE76F38DE0"
+  },
+  "speaker_identity_overrides": {
+    "path": "tools/frida_runtime_probe/speaker_identity_overrides_v1.json",
+    "sha256": "585F1663ABE0815B4A913B05FE1FD318E194D55B5DB76BF499070722A788BBD7"
+  },
+  "correction": "JA and ZH render evidence-bound speaker display prefixes; none remains an exact semantic alias of v76r1",
+  "identity_policy": "kuro is never globally mapped; kuroe displays as 黑江; only exact registered identities receive prefixes",
+  "native_dimensions": {"width": 416, "height": 232},
+  "native_frame_rate": "30/1",
+  "audio_profile": "strict_no_bgm",
+  "audience_product_count": 14,
+  "edition_file_count": 42,
+  "human_playback_required": true,
+  "publication_approved": false,
+  "source_media_policy": "read_only_preserve_no_move_no_delete_no_overwrite"
+}
