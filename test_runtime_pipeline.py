@@ -65,6 +65,11 @@ from tools.frida_runtime_probe.build_p17_replacement_review_package import (
     ROLLBACK_SCRIPT as P17_REVIEW_ROLLBACK_SCRIPT,
     safe_relative_path as p17_review_safe_relative_path,
 )
+from tools.frida_runtime_probe.build_p18_cu_success_replacement_manifests import (
+    BLOCKER as P18_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as P18_ROLLBACK_SCRIPT,
+    repair_manifest as repair_p18_manifest,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     is_exact_graphical_continuation,
@@ -415,6 +420,235 @@ class P17ReplacementManifestTests(unittest.TestCase):
                 for line in P17_REVIEW_ROLLBACK_SCRIPT.splitlines()
             )
         )
+
+
+class P18CUSuccessReplacementManifestTests(unittest.TestCase):
+    @staticmethod
+    def gates() -> dict:
+        return {
+            "errors": [P18_TIMING_BLOCKER],
+            "all_audio_exist": True,
+            "composition_resolved": True,
+            "event_global_z2d_timing_ready": False,
+            "audio_timeline_ready": False,
+            "render_ready": False,
+            "ready": False,
+        }
+
+    def test_ac6005_010_moves_only_touka_to_parent_frame_96(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths = {}
+            for request_id in ("5409", "5612"):
+                path = Path(temp) / f"{request_id}.ogg"
+                path.write_bytes(request_id.encode("ascii"))
+                paths[request_id] = path
+            source = {
+                "event": "ac6005_010",
+                "event_code_hex": "0x635337534c444566",
+                "native_frame_rate": "30/1",
+                "video_duration_ms": 10633,
+                "timeline_content_end_ms": 10633,
+                "video_extension_policy": "none",
+                "composition_plan": {},
+                "clips": [{"event_start_ms": 0, "event_end_ms": 10633}],
+                "audio": [
+                    {
+                        "source": "z2d_req_sound",
+                        "request_id": "5409",
+                        "z2d_name": "cap6005_mb_tou_012",
+                        "path": str(paths["5409"]),
+                        "start_ms": 0,
+                        "duration_ms": 3110,
+                        "event_global_start_resolved": False,
+                    },
+                    {
+                        "source": "z2d_req_sound",
+                        "request_id": "5612",
+                        "z2d_name": "cap6005_mb_nem_011",
+                        "path": str(paths["5612"]),
+                        "start_ms": 900,
+                        "duration_ms": 1973,
+                        "event_global_start_resolved": False,
+                    },
+                ],
+                "subtitles": [
+                    {
+                        "text": "これが最善で最短の方法だよ！",
+                        "start_ms": 0,
+                        "end_ms": 5733,
+                        "voice_request_id": "5409",
+                        "voice_start_ms": 0,
+                        "z2d_name": "cap6005_mb_tou_012",
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    },
+                    {
+                        "text": "冷静に考えて欲しい",
+                        "start_ms": 900,
+                        "end_ms": 2900,
+                        "voice_request_id": "5612",
+                        "voice_start_ms": 900,
+                        "z2d_name": "cap6005_mb_nem_011",
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    },
+                ],
+                "quality_gates": self.gates(),
+            }
+            override = {
+                "event_code_hex": source["event_code_hex"],
+                "frame_rate": "30/1",
+                "expected_z2d_request_ids": ["5409", "5612"],
+                "source_bindings": [],
+                "authority_path": "authority.json",
+                "_source_path": "override.json",
+                "_source_sha256": "A" * 64,
+                "cues": [
+                    {
+                        "request_id": "5612",
+                        "z2d_name": "cap6005_mb_nem_011",
+                        "event_global_start_frame": 27,
+                        "event_global_start_ms": 900,
+                        "event_global_end_frame_exclusive": 87,
+                        "event_global_end_ms": 2900,
+                    },
+                    {
+                        "request_id": "5409",
+                        "z2d_name": "cap6005_mb_tou_012",
+                        "event_global_start_frame": 96,
+                        "event_global_start_ms": 3200,
+                        "event_global_end_frame_exclusive": 196,
+                        "event_global_end_ms": 6533,
+                    },
+                ],
+            }
+
+            repaired, application = repair_p18_manifest(source, override)
+
+            starts = {row["request_id"]: row["start_ms"] for row in repaired["audio"]}
+            self.assertEqual(starts, {"5612": 900, "5409": 3200})
+            subtitles = {
+                row["voice_request_id"]: (row["start_ms"], row["end_ms"])
+                for row in repaired["subtitles"]
+            }
+            self.assertEqual(subtitles["5612"], (900, 2900))
+            self.assertEqual(subtitles["5409"], (3200, 6533))
+            self.assertTrue(application["request_set_matches"])
+            self.assertTrue(repaired["quality_gates"]["ready"])
+
+    def test_ac6005_014_restores_separate_frame_335_continuation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            audio = []
+            for request_id, z2d_name, start_ms, duration_ms in (
+                ("2793", "cap6005_mb_iro_014", 33, 3703),
+                ("2794", "cap6005_mb_iro_015", 4567, 5094),
+                ("2795", "cap6005_mb_iro_015_02", 9833, 4425),
+            ):
+                path = Path(temp) / f"{request_id}.ogg"
+                path.write_bytes(request_id.encode("ascii"))
+                audio.append(
+                    {
+                        "source": "z2d_req_sound",
+                        "request_id": request_id,
+                        "z2d_name": z2d_name,
+                        "path": str(path),
+                        "start_ms": start_ms,
+                        "duration_ms": duration_ms,
+                        "event_global_start_resolved": False,
+                    }
+                )
+            source = {
+                "event": "ac6005_014",
+                "event_code_hex": "0x455f642a4c444566",
+                "native_frame_rate": "30/1",
+                "video_duration_ms": 15333,
+                "timeline_content_end_ms": 15333,
+                "video_extension_policy": "none",
+                "composition_plan": {
+                    "excluded_audio_request_ids": ["225"],
+                    "excluded_subtitle_z2d_names": ["cap6005_mb_iro_015_03"],
+                },
+                "clips": [{"event_start_ms": 0, "event_end_ms": 15333}],
+                "audio": audio,
+                "subtitles": [
+                    {
+                        "text": text,
+                        "start_ms": start_ms,
+                        "end_ms": end_ms,
+                        "voice_request_id": request_id,
+                        "voice_start_ms": start_ms,
+                        "z2d_name": z2d_name,
+                        "subtitle_source": "graphical_display_text",
+                        "event_global_start_resolved": False,
+                    }
+                    for text, start_ms, end_ms, request_id, z2d_name in (
+                        ("灯花ちゃん！ねむちゃん！", 33, 3736, "2793", "cap6005_mb_iro_014"),
+                        ("もうお姉ちゃんを置いていかないでよ！", 4567, 9661, "2794", "cap6005_mb_iro_015"),
+                        ("少しでも長く一緒にいてよ…", 7567, 9667, "", "cap6005_mb_iro_015_01"),
+                        ("１秒でも長く", 9833, 14258, "2795", "cap6005_mb_iro_015_02"),
+                    )
+                ],
+                "quality_gates": self.gates(),
+            }
+            override = {
+                "event_code_hex": source["event_code_hex"],
+                "frame_rate": "30/1",
+                "expected_z2d_request_ids": ["2793", "2794", "2795"],
+                "source_bindings": [],
+                "authority_path": "authority.json",
+                "_source_path": "override.json",
+                "_source_sha256": "B" * 64,
+                "cues": [
+                    {
+                        "request_id": request_id,
+                        "z2d_name": z2d_name,
+                        "subtitle_only": not bool(request_id),
+                        "event_global_start_frame": start_frame,
+                        "event_global_start_ms": start_ms,
+                        "event_global_end_frame_exclusive": end_frame,
+                        "event_global_end_ms": end_ms,
+                        **(
+                            {
+                                "recover_missing_subtitle": {
+                                    "text": "大好きなふたりのお姉ちゃんでいさせて",
+                                    "speaker_code": "",
+                                    "subtitle_source": "graphical_display_text",
+                                    "evidence": "runtime_scene_motion",
+                                }
+                            }
+                            if z2d_name == "cap6005_mb_iro_015_03"
+                            else {}
+                        ),
+                    }
+                    for request_id, z2d_name, start_frame, start_ms, end_frame, end_ms in (
+                        ("2793", "cap6005_mb_iro_014", 1, 33, 51, 1700),
+                        ("2794", "cap6005_mb_iro_015", 137, 4567, 206, 6867),
+                        ("", "cap6005_mb_iro_015_01", 227, 7567, 290, 9667),
+                        ("2795", "cap6005_mb_iro_015_02", 295, 9833, 331, 11033),
+                        ("", "cap6005_mb_iro_015_03", 335, 11167, 434, 14467),
+                    )
+                ],
+            }
+
+            repaired, application = repair_p18_manifest(source, override)
+
+            timings = {
+                row["z2d_name"]: (row["start_ms"], row["end_ms"])
+                for row in repaired["subtitles"]
+            }
+            self.assertEqual(timings["cap6005_mb_iro_015_02"], (9833, 11033))
+            self.assertEqual(timings["cap6005_mb_iro_015_03"], (11167, 14467))
+            self.assertEqual(application["recovered_subtitle_cue_count"], 1)
+            self.assertNotIn(
+                "excluded_subtitle_z2d_names", repaired["composition_plan"]
+            )
+            self.assertTrue(repaired["quality_gates"]["ready"])
+
+    def test_p18_rollback_script_has_no_patch_prefixes(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in P18_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", P18_ROLLBACK_SCRIPT)
 
 
 class CompositionPlanTests(unittest.TestCase):

@@ -1,0 +1,47 @@
+{
+  "schema": "magireco-video-composition-v1",
+  "event": "ac6005_014",
+  "model": "timed_full_frame_layers",
+  "duration_ms": 15333,
+  "extension_policy": "none",
+  "excluded_audio_request_ids": [
+    "225"
+  ],
+  "native_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "evidence": "DirInfo kind 173 row 10 binds the CU-success route to ac6005_010 -> ac6005_013 -> ac6005_014. The static DGM timeline and bounded runtime parent-scene capture agree on six native 512x416 clean-story layers at exact starts 0, 1333, 2667, 4167, 9833, and 14467 ms through 15333 ms. The separate ac8040 victory/gameplay layers and WIN presentation are excluded from the clean-story edition. Request 225 is the independently named battle-victory jingle and remains excluded from no-BGM. Runtime parent-scene motion keys now bind requests 2793/2794/2795 and the graphical continuations cap6005_mb_iro_015_01 and cap6005_mb_iro_015_03 to exact event-global intervals, so the latter is retained as a separate subtitle rather than merged early into request 2795. Human playback approval remains required.",
+  "clips": [
+    {
+      "dgm_name": "ac6005_014_c01",
+      "role": "background",
+      "start_ms": 0
+    },
+    {
+      "dgm_name": "ac6005_014_c03",
+      "role": "background",
+      "start_ms": 1333
+    },
+    {
+      "dgm_name": "ac6005_014_c04",
+      "role": "background",
+      "start_ms": 2667
+    },
+    {
+      "dgm_name": "ac6005_014_c05",
+      "role": "background",
+      "start_ms": 4167
+    },
+    {
+      "dgm_name": "ac6005_014_c06",
+      "role": "background",
+      "start_ms": 9833
+    },
+    {
+      "dgm_name": "ac6005_014_c06_LP",
+      "role": "loop_background",
+      "start_ms": 14467
+    }
+  ]
+}
