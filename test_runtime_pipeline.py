@@ -135,6 +135,20 @@ from tools.frida_runtime_probe.build_ac7101_ac7107_archive_series_inputs import 
     DEFAULT_PLAN as AC7101_AC7107_ARCHIVE_PLAN,
     ROLLBACK_SCRIPT as AC7101_AC7107_ARCHIVE_INPUT_ROLLBACK_SCRIPT,
 )
+from tools.frida_runtime_probe.build_ac1102_event_global_route_inputs import (
+    DEFAULT_OUTPUT_ROOT as AC1102_ROUTE_INPUT_ROOT,
+    EVENTS as AC1102_EVENTS,
+    ROUTES as AC1102_ROUTES,
+    ROLLBACK_SCRIPT as AC1102_ROUTE_INPUT_ROLLBACK_SCRIPT,
+    annotate_speakers as annotate_ac1102_speakers,
+    verify_output as verify_ac1102_route_inputs,
+)
+from tools.frida_runtime_probe.build_ac1102_route_human_review import (
+    DEFAULT_OUTPUT as AC1102_REVIEW_ROOT,
+    DEFAULT_SOURCE as AC1102_MEDIA_ROOT,
+    review_name as ac1102_review_name,
+    verify as verify_ac1102_review,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     display_text,
@@ -1294,6 +1308,83 @@ class AC7101AC7107EventArchiveTimingClosureTests(unittest.TestCase):
             display_text({**base, "speaker_code": "kuro"}, "zh", speakers),
             "环同学！？",
         )
+
+
+class AC1102EventGlobalRouteArchiveTests(unittest.TestCase):
+    def test_route_inventory_is_bounded_to_sixteen_source_resolved_rows(self) -> None:
+        self.assertEqual(len(AC1102_EVENTS), 11)
+        self.assertEqual(len(AC1102_ROUTES), 16)
+        self.assertEqual(
+            tuple(AC1102_ROUTES),
+            (0, 1, 2, 4, 6, 7, 8, 10, 12, 13, 14, 16, 18, 19, 20, 22),
+        )
+        self.assertNotIn("ac1102_007", {event for route in AC1102_ROUTES.values() for event in route})
+        self.assertNotIn("ac1102_013", {event for route in AC1102_ROUTES.values() for event in route})
+
+    def test_official_code_name_speaker_token_is_second_field(self) -> None:
+        manifest = {
+            "event": "ac1102_001",
+            "audio": [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "4021",
+                    "code_name": "17721_fer_酪農体験_フェリシアの",
+                },
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "8370",
+                    "code_name": "28021_mix_CZタイトル_酪農体験",
+                },
+            ],
+            "subtitles": [
+                {"voice_request_id": "4021", "speaker_code": "fer"},
+                {"voice_request_id": "8370", "speaker_code": ""},
+            ],
+        }
+        rows = annotate_ac1102_speakers(manifest)
+        self.assertEqual([row["speaker_code"] for row in rows], ["fer", "multiple"])
+        self.assertEqual(
+            [row["speaker_code"] for row in manifest["subtitles"]],
+            ["fer", "multiple"],
+        )
+
+    def test_published_route_inputs_reverify_when_durable_root_is_present(self) -> None:
+        if not AC1102_ROUTE_INPUT_ROOT.is_dir():
+            self.skipTest("durable ac1102 route input root is not mounted")
+        result = verify_ac1102_route_inputs(AC1102_ROUTE_INPUT_ROOT)
+        self.assertEqual(result["result"], "PASS")
+        self.assertEqual(result["route_count"], 16)
+        self.assertEqual(result["blocked_route_count"], 15)
+        self.assertFalse(result["fixed_native_session_gap_claimed"])
+        self.assertTrue(result["human_playback_required"])
+        self.assertFalse(result["publication_approved"])
+
+    def test_rollback_is_non_destructive_and_dry_run_is_runnable(self) -> None:
+        self.assertNotIn("Remove-Item", AC1102_ROUTE_INPUT_ROLLBACK_SCRIPT)
+        self.assertIn("ROLLBACK_VALIDATED", AC1102_ROUTE_INPUT_ROLLBACK_SCRIPT)
+
+    def test_review_name_uses_owner_spelling_and_route_identity(self) -> None:
+        self.assertEqual(
+            ac1102_review_name(
+                {
+                    "route_row": 12,
+                    "route_label": "黑江加入白标题_回避",
+                    "edition": "zh",
+                }
+            ),
+            "菲利希亚牧场_ac1102_路线12_黑江加入白标题_回避__zh.mp4",
+        )
+
+    def test_published_human_review_reverifies_when_durable_root_is_present(self) -> None:
+        if not AC1102_REVIEW_ROOT.is_dir():
+            self.skipTest("durable ac1102 human-review root is not mounted")
+        result = verify_ac1102_review(
+            AC1102_MEDIA_ROOT, AC1102_REVIEW_ROOT, "ffprobe"
+        )
+        self.assertEqual(result["result"], "PASS")
+        self.assertEqual(result["review_file_count"], 48)
+        self.assertEqual(result["source_target_samefile_count"], 48)
+        self.assertEqual(result["blocked_route_media_leak_count"], 0)
 
 
 class P16ReplacementManifestTests(unittest.TestCase):
