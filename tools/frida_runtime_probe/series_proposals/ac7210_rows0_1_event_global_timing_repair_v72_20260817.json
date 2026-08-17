@@ -1,0 +1,95 @@
+{
+  "schema": "magireco-ac7210-rows0-1-event-global-timing-repair-plan-v1",
+  "status": "mechanically_verified_existing_route_media_retained",
+  "family": "ac7210",
+  "dirinfo_rows": [
+    0,
+    1
+  ],
+  "ordered_routes": {
+    "0": [
+      "ac7210_001",
+      "ac7210_002",
+      "ac7210_003",
+      "ac7210_004"
+    ],
+    "1": [
+      "ac7210_001",
+      "ac7210_005",
+      "ac7210_003",
+      "ac7210_004"
+    ]
+  },
+  "repaired_events": [
+    "ac7210_004",
+    "ac7210_005"
+  ],
+  "timing_result": {
+    "ac7210_004": {
+      "3280": {
+        "start_frame": 65,
+        "start_ms": 2167
+      },
+      "3594": {
+        "start_frame": 65,
+        "start_ms": 2167
+      }
+    },
+    "ac7210_005": {
+      "3593": {
+        "start_frame": 15,
+        "start_ms": 500,
+        "graphical_end_frame_exclusive": 45,
+        "graphical_end_ms": 1500
+      }
+    }
+  },
+  "evidence_policy": "exact-hash IDA mechanism semantics plus same-process bounded parent scene motion keys",
+  "numeric_timing_changed": false,
+  "existing_route_media_reencode_required": false,
+  "owner_approved_zh_hashes": {
+    "row0": "8927CFDF7497B63B4FA47D7D9DB0C340FC837596547F3B9F4E8E15C764079088",
+    "row1": "990407DD95ABC18911782AFA9F2EC7AA3E2F17997BA9F716892D1AFFB1A06849"
+  },
+  "none_ja_status": "HUMAN_PLAYBACK_REQUIRED",
+  "zh_status": "OWNER_PLAYBACK_APPROVED_EXACT_HASH",
+  "publication_approved": false,
+  "source_media_modified": false,
+  "authority": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7210_rows0_1_event_global_timing_authority_v1_20260817\\AC7210_ROWS0_1_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+    "sha256": "E14AFFFB8910928EB50D0FA2B74850E724FB77723973F9B89F239CB720A6F605",
+    "size_bytes": 7865
+  },
+  "authority_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7210_rows0_1_event_global_timing_authority_v1_20260817\\SUMMARY.json",
+    "sha256": "8334872B24871684FD87C71E7A890D8551E4A8DEF592ABB3EE0BA1C25D8B88B3",
+    "size_bytes": 1390
+  },
+  "replacement_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_ac7210_rows0_1_event_global_20260817\\AC7210_ROWS0_1_REPLACEMENT_MANIFEST_SUMMARY.json",
+    "sha256": "C14EE40359509D6F551D5C18AE26567459F6C8A03927E145C1DF83E5809DC7AF",
+    "size_bytes": 1664
+  },
+  "replacement_verification": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_ac7210_rows0_1_event_global_20260817\\VERIFICATION.json",
+    "sha256": "49D9693058AF163B05ED52969CA2490DE57F534BCE1C36060EFE3801414B3D16",
+    "size_bytes": 810
+  },
+  "replacement_manifests": {
+    "ac7210_004": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_ac7210_rows0_1_event_global_20260817\\events\\ac7210_004.json",
+      "sha256": "1DF07CCF09AF35938755E1A4D3258D0BACEF7F31E0ECD477B71F3546FE64B51D",
+      "size_bytes": 19089
+    },
+    "ac7210_005": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_ac7210_rows0_1_event_global_20260817\\events\\ac7210_005.json",
+      "sha256": "F9B9DD8BCB9E9A963F2250F6EABA11C62D546569D5612CA27E5ABEBF7D97D602",
+      "size_bytes": 16387
+    }
+  },
+  "rollback": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_manifests_v72_ac7210_rows0_1_event_global_20260817\\ROLLBACK.ps1",
+    "sha256": "EE233C6314E8012AFC62728AA546AC323E82E99BC0D8DE3A1C704AAE7FB2297B",
+    "size_bytes": 624
+  }
+}

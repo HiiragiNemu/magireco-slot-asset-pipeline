@@ -75,6 +75,15 @@ from tools.frida_runtime_probe.build_p18_cu_success_replacement_review import (
     _format_cue as format_p18_review_cue,
     safe_review_path as p18_review_safe_review_path,
 )
+from tools.frida_runtime_probe.build_ac7210_rows0_1_timing_authority import (
+    extract_event_authority as extract_ac7210_event_authority,
+    round_frame_ms as ac7210_round_frame_ms,
+)
+from tools.frida_runtime_probe.build_ac7210_rows0_1_replacement_manifests import (
+    BLOCKER as AC7210_TIMING_BLOCKER,
+    ROLLBACK_SCRIPT as AC7210_ROLLBACK_SCRIPT,
+    repair_manifest as repair_ac7210_manifest,
+)
 from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     attach_speaker_evidence,
     is_exact_graphical_continuation,
@@ -87,6 +96,248 @@ def write_csv(path: Path, fields: list[str], rows: list[dict[str, object]]) -> N
         writer = csv.DictWriter(output, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+
+
+class AC7210Rows01TimingClosureTests(unittest.TestCase):
+    def _source(self, event: str, audio_path: Path) -> dict:
+        if event == "ac7210_004":
+            code = "0x7645363357706153"
+            z2d_audio = [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "3280",
+                    "z2d_name": "cap7210_hobaku_yac_004",
+                    "start_ms": 2167,
+                    "duration_ms": 846,
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                },
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "3594",
+                    "z2d_name": "cap7210_hobaku_tur_005",
+                    "start_ms": 2167,
+                    "duration_ms": 772,
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                },
+            ]
+            subtitles = [
+                {
+                    "voice_request_id": "3594",
+                    "voice_start_ms": 2167,
+                    "z2d_name": "cap7210_hobaku_tur_005",
+                    "start_ms": 2167,
+                    "end_ms": 2939,
+                },
+                {
+                    "voice_request_id": "3280",
+                    "voice_start_ms": 2167,
+                    "z2d_name": "cap7210_hobaku_yac_004",
+                    "start_ms": 2167,
+                    "end_ms": 3013,
+                },
+            ]
+        else:
+            code = "0x6d5a4f5657706153"
+            z2d_audio = [
+                {
+                    "source": "z2d_req_sound",
+                    "request_id": "3593",
+                    "z2d_name": "cap7210_hobaku_tur_002",
+                    "start_ms": 500,
+                    "duration_ms": 623,
+                    "path": str(audio_path),
+                    "event_global_start_resolved": False,
+                }
+            ]
+            subtitles = [
+                {
+                    "voice_request_id": "3593",
+                    "voice_start_ms": 560,
+                    "z2d_name": "cap7210_hobaku_tur_002",
+                    "start_ms": 500,
+                    "end_ms": 1500,
+                    "event_global_start_resolved": False,
+                }
+            ]
+        return {
+            "schema": "magireco-event-production-v3",
+            "event": event,
+            "event_code_hex": code,
+            "native_frame_rate": "30/1",
+            "audio": z2d_audio,
+            "subtitles": subtitles,
+            "quality_gates": {
+                "all_audio_exist": True,
+                "composition_resolved": True,
+                "event_global_z2d_timing_ready": False,
+                "audio_timeline_ready": False,
+                "errors": [AC7210_TIMING_BLOCKER],
+                "render_ready": False,
+                "ready": False,
+            },
+        }
+
+    def _override(self, event: str) -> dict:
+        if event == "ac7210_004":
+            code = "0x7645363357706153"
+            requests = ["3280", "3594"]
+            cues = [
+                {
+                    "request_id": request_id,
+                    "z2d_name": z2d_name,
+                    "event_global_start_frame": 65,
+                    "event_global_start_ms": 2167,
+                }
+                for request_id, z2d_name in (
+                    ("3280", "cap7210_hobaku_yac_004"),
+                    ("3594", "cap7210_hobaku_tur_005"),
+                )
+            ]
+        else:
+            code = "0x6d5a4f5657706153"
+            requests = ["3593"]
+            cues = [
+                {
+                    "request_id": "3593",
+                    "z2d_name": "cap7210_hobaku_tur_002",
+                    "event_global_start_frame": 15,
+                    "event_global_start_ms": 500,
+                    "event_global_end_frame_exclusive": 45,
+                    "event_global_end_ms": 1500,
+                }
+            ]
+        return {
+            "event": event,
+            "event_code_hex": code,
+            "frame_rate": "30/1",
+            "expected_z2d_request_ids": requests,
+            "_source_path": "bound-override.json",
+            "_source_sha256": "A" * 64,
+            "authority_path": "authority.json",
+            "source_bindings": [],
+            "cues": cues,
+        }
+
+    def _runtime_event(self, event: str) -> dict:
+        if event == "ac7210_004":
+            code = "0x7645363357706153"
+            nodes = [
+                ("cap7210_hobaku_yac_004.z2d", [65, 94, 65, 94, 65, 94, -1]),
+                ("cap7210_hobaku_tur_005.z2d", [65, 94, 65, 94, 65, 94, -1]),
+            ]
+        else:
+            code = "0x6d5a4f5657706153"
+            nodes = [
+                ("cap7210_hobaku_tur_002.z2d", [15, 44, 15, 44, 15, 44, -1])
+            ]
+        top = {
+            "name": "字幕",
+            "hash_low": 1,
+            "hash_high": 2,
+            "children": [
+                {
+                    "name": "2DLayer",
+                    "children": [
+                        {
+                            "name": name,
+                            "time_remap_pointer": None,
+                            "motions": [
+                                {
+                                    "is_z2d_motion": True,
+                                    "keys": [
+                                        {
+                                            "index": 0,
+                                            "floats": floats,
+                                            "flags": [0, 2, 0],
+                                        }
+                                    ],
+                                }
+                            ],
+                            "children": [],
+                        }
+                        for name, floats in nodes
+                    ],
+                }
+            ],
+        }
+        return {
+            "event_code": code,
+            "layers": [
+                {"hash_low": 1, "hash_high": 2, "speed": 1}
+            ],
+            "scenes": [
+                {
+                    "name": event,
+                    "cuts": [
+                        {
+                            "cut_name": event,
+                            "instance_offset_frames": 0,
+                            "cut_start_frame": 0,
+                            "cut_end_frame": 500,
+                            "nodes": [top],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def test_authority_extracts_exact_event_global_frames(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            event, override = extract_ac7210_event_authority(
+                "ac7210_005",
+                self._runtime_event("ac7210_005"),
+                self._source("ac7210_005", audio),
+            )
+        self.assertEqual(
+            event["caption_motion_evidence"][0]["event_global_start_frame"], 15
+        )
+        self.assertEqual(override["cues"][0]["event_global_end_ms"], 1500)
+        self.assertEqual(ac7210_round_frame_ms(65), 2167)
+
+    def test_repair_is_evidence_only_for_both_events(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            for event in ("ac7210_004", "ac7210_005"):
+                source = self._source(event, audio)
+                repaired, application = repair_ac7210_manifest(
+                    source, self._override(event)
+                )
+                self.assertTrue(application["applied"])
+                self.assertTrue(repaired["quality_gates"]["ready"])
+                self.assertTrue(
+                    repaired["quality_gates"]["event_global_z2d_timing_ready"]
+                )
+                self.assertNotIn(
+                    AC7210_TIMING_BLOCKER, repaired["quality_gates"]["errors"]
+                )
+                self.assertEqual(
+                    [row["start_ms"] for row in repaired["audio"]],
+                    [row["start_ms"] for row in source["audio"]],
+                )
+                self.assertEqual(
+                    [row["end_ms"] for row in repaired["subtitles"]],
+                    [row["end_ms"] for row in source["subtitles"]],
+                )
+
+    def test_repair_fails_if_runtime_override_would_change_numeric_time(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            audio = Path(tmp) / "voice.ogg"
+            audio.write_bytes(b"voice")
+            override = self._override("ac7210_005")
+            override["cues"][0]["event_global_start_ms"] = 533
+            with self.assertRaisesRegex(ValueError, "changed numeric timing"):
+                repair_ac7210_manifest(self._source("ac7210_005", audio), override)
+
+    def test_rollback_script_is_runnable_and_source_preserving(self) -> None:
+        self.assertFalse(
+            any(line.startswith("+") for line in AC7210_ROLLBACK_SCRIPT.splitlines())
+        )
+        self.assertIn("source manifests or media", AC7210_ROLLBACK_SCRIPT)
 
 
 class P16ReplacementManifestTests(unittest.TestCase):
