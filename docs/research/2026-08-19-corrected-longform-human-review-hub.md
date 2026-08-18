@@ -7,13 +7,15 @@ The corrected release has two visible queues:
 
 - `00_APPROVED_CURRENT`: exact owner-approved files whose later composition,
   quarantine, and sound-bus evidence has not withdrawn the product claim.
-- `01_TO_REVIEW`: currently limited to language-neutral material archives.
-  Unapproved single-event story/routes/effects remain index-only until a
-  family long-form composition is proven.
+- `01_TO_REVIEW`: audience long-form products that still require playback;
+  it is currently empty. Unapproved single-event story/routes/effects remain
+  index-only until a family long-form composition is proven.
+- `MATERIAL`: all approved and pending language-neutral material archives in
+  one flat lane. Approval state remains in `HUB_INDEX.csv`, not in folders.
 
 Audience queues remain language-first (`ZH`, `JP`, `NONE`) and then `story`,
-`routes`, or `gameplay_effect`. Silent material uses one flat `MATERIAL` lane
-and never receives a `__none` suffix.
+`routes`, or `gameplay_effect`. Silent material uses the single top-level
+`MATERIAL` lane and never receives a language or `__none` suffix.
 
 No source media are moved, deleted, transcoded, or physically copied. The
 release requires same-volume NTFS hardlinks and validates media parameters and
@@ -23,8 +25,9 @@ ac1103 strict-no-BGM claim remain index-only.
 
 Published checkpoint:
 
-- release: `D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\releases\longform_authority_corrected_v3_20260819`
+- release: `D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\releases\longform_authority_corrected_v4_material_unified_20260819`
 - single visible junction: `D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\CURRENT_REVIEW`
-- current exact owner-approved media: 27
-- material files awaiting playback: 62
+- current exact owner-approved media: 27, including 2 materials
+- audience long-form files in the approved tree: 25
+- unified material files: 64
 - active hardlinks: 89; index-only records: 318

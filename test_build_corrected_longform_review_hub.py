@@ -105,9 +105,39 @@ class CorrectedLongformReviewHubTests(unittest.TestCase):
         )
         result = self.run_build([row], [self.audit("I_MATERIAL")])
         release = Path(result["release_path"])
-        media = next((release / "01_TO_REVIEW/MATERIAL").glob("*.mp4"))
+        media = next((release / "MATERIAL").glob("*.mp4"))
         self.assertNotIn("__none", media.name)
         self.assertTrue(os.path.samefile(self.source, media))
+
+    def test_approved_and_pending_material_share_one_flat_lane(self):
+        approved_source = self.source
+        pending_source = self.root / "pending.mp4"
+        pending_source.write_bytes(b"pending")
+        approved = self.row(
+            "I_APPROVED_MATERIAL",
+            title="已通过素材",
+            content_type="material",
+            edition="none",
+            owner_approved="True",
+        )
+        pending = self.row(
+            "I_PENDING_MATERIAL",
+            title="待审素材",
+            content_type="component_archive",
+            edition="none",
+            source_absolute_path=str(pending_source),
+        )
+        result = self.run_build(
+            [approved, pending],
+            [self.audit("I_APPROVED_MATERIAL"), self.audit("I_PENDING_MATERIAL")],
+        )
+        release = Path(result["release_path"])
+        files = sorted((release / "MATERIAL").glob("*.mp4"))
+        self.assertEqual(len(files), 2)
+        self.assertTrue(any(os.path.samefile(approved_source, item) for item in files))
+        self.assertTrue(any(os.path.samefile(pending_source, item) for item in files))
+        self.assertFalse((release / "00_APPROVED_CURRENT/MATERIAL").exists())
+        self.assertFalse((release / "01_TO_REVIEW/MATERIAL").exists())
 
     def test_withdrawn_owner_approval_is_index_only(self):
         row = self.row("I_WITHDRAWN", owner_approved="True")

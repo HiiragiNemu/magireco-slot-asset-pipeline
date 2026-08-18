@@ -99,13 +99,13 @@ def classify(row: Mapping[str, str], audit: Mapping[str, str]) -> tuple[str, str
 
 
 def relative_media_path(row: Mapping[str, str], bucket: str, sequence: int) -> Path:
-    prefix = "A" if bucket == "APPROVED" else "Q"
     family = safe_name(row.get("family", "unknown"))
     title = safe_name(row.get("title", "") or family)
     edition = row.get("edition", "").casefold()
     root = APPROVED_DIR if bucket == "APPROVED" else REVIEW_DIR
     if material_item(row):
-        return Path(root, "MATERIAL", safe_name(f"{prefix}{sequence:04d}_{title}_{family}.mp4"))
+        return Path("MATERIAL", safe_name(f"M{sequence:04d}_{title}_{family}.mp4"))
+    prefix = "A" if bucket == "APPROVED" else "Q"
     language = LANGUAGE_LANES.get(edition)
     content = TYPE_LANES.get(row.get("content_type", ""))
     if not language or not content:
@@ -173,7 +173,7 @@ def build(
 
     planned: list[dict[str, Any]] = []
     index_only: list[dict[str, Any]] = []
-    sequence = {"APPROVED": 0, "TO_REVIEW": 0}
+    sequence = {"APPROVED": 0, "TO_REVIEW": 0, "MATERIAL": 0}
     seen_sources: dict[str, str] = {}
     ordered = sorted(
         rows,
@@ -199,7 +199,7 @@ def build(
                 "is_source_alias": False,
             }
         )
-        if bucket not in sequence:
+        if bucket not in {"APPROVED", "TO_REVIEW"}:
             index_only.append(record)
             continue
 
@@ -216,8 +216,9 @@ def build(
             index_only.append(record)
             continue
 
-        sequence[bucket] += 1
-        relative = relative_media_path(row, bucket, sequence[bucket])
+        counter = "MATERIAL" if material_item(row) else bucket
+        sequence[counter] += 1
+        relative = relative_media_path(row, bucket, sequence[counter])
         record["corrected_review_absolute_path"] = str(
             output_root / "releases" / release_id / relative
         )
@@ -235,6 +236,22 @@ def build(
         ),
         "to_review_files": sum(
             item["record"]["corrected_bucket"] == "TO_REVIEW" for item in planned
+        ),
+        "to_review_audience_files": sum(
+            item["record"]["corrected_bucket"] == "TO_REVIEW"
+            and not material_item(item["record"])
+            for item in planned
+        ),
+        "pending_material_files": sum(
+            item["record"]["corrected_bucket"] == "TO_REVIEW"
+            and material_item(item["record"])
+            for item in planned
+        ),
+        "material_files": sum(material_item(item["record"]) for item in planned),
+        "approved_audience_files": sum(
+            item["record"]["corrected_bucket"] == "APPROVED"
+            and not material_item(item["record"])
+            for item in planned
         ),
         "canonical_hardlinks": len(planned),
         "index_only_items": len(index_only),
@@ -259,7 +276,7 @@ def build(
         for lane in LANGUAGE_LANES.values():
             for content in TYPE_LANES.values():
                 (staging / status_root / lane / content).mkdir(parents=True, exist_ok=True)
-        (staging / status_root / "MATERIAL").mkdir(parents=True, exist_ok=True)
+    (staging / "MATERIAL").mkdir(parents=True, exist_ok=True)
 
     published: list[dict[str, Any]] = []
     for item in planned:
@@ -281,11 +298,12 @@ def build(
     write_json(staging / "VERIFICATION_RECORD.json", summary)
     (staging / "00_START_HERE.md").write_text(
         "# 纠正后的单一人工入口\n\n"
-        "- `00_APPROVED_CURRENT`：历史人工通过且当前证据仍有效。\n"
-        "- `01_TO_REVIEW`：当前仅保留未播放的语言无关素材。\n"
+        "- `00_APPROVED_CURRENT`：历史人工通过且当前证据仍有效的观众长片。\n"
+        "- `01_TO_REVIEW`：达到长片门槛但仍待播放的观众产品；当前为空。\n"
+        "- `MATERIAL`：全部64个素材统一平铺，审批状态只记录在索引。\n"
         "- 故事短事件和未闭合路线只保留索引，不进入人工播放目录。\n"
         "- 所有 MP4 都是 D: 同卷 hardlink；没有复制、移动、删除或转码源媒体。\n"
-        "- 素材统一在 MATERIAL，文件名没有 `__none`。\n",
+        "- MATERIAL 文件名没有语言后缀或 `__none`。\n",
         encoding="utf-8",
     )
     rollback = staging / "_rollback"
@@ -309,11 +327,16 @@ def build(
         "release_path": str(release),
         "approved_root": str(release / APPROVED_DIR),
         "to_review_root": str(release / REVIEW_DIR),
+        "material_root": str(release / "MATERIAL"),
         "start_here": str(release / "00_START_HERE.md"),
         "index": str(release / "HUB_INDEX.csv"),
         "counts": {
             "approved_current_files": summary["approved_current_files"],
             "to_review_files": summary["to_review_files"],
+            "to_review_audience_files": summary["to_review_audience_files"],
+            "pending_material_files": summary["pending_material_files"],
+            "material_files": summary["material_files"],
+            "approved_audience_files": summary["approved_audience_files"],
             "canonical_hardlinks": summary["canonical_hardlinks"],
         },
     }
@@ -323,7 +346,8 @@ def build(
     (output_root / "00_START_HERE.md").write_text(
         f"# 当前人工入口\n\n请打开：\n\n`{release}`\n\n"
         f"已通过：`{release / APPROVED_DIR}`\n\n"
-        f"待审查：`{release / REVIEW_DIR}`\n",
+        f"待审查：`{release / REVIEW_DIR}`\n\n"
+        f"全部素材：`{release / 'MATERIAL'}`\n",
         encoding="utf-8",
     )
     return {**summary, "release_path": str(release)}
