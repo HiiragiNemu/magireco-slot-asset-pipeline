@@ -201,7 +201,25 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
                     ),
                 }
                 for event in REQUIRED_EVENTS
-            ]
+            ],
+            "current_showcase": {
+                "occurrence_count": 13,
+                "included_events": list(REQUIRED_EVENTS[:9]),
+                "event_occurrence_counts": {
+                    event: (3 if event in {"ac0908_001", "ac0908_009"} else 1)
+                    for event in REQUIRED_EVENTS[:9]
+                },
+                "guaranteed_duplicate_occurrence_groups": [
+                    {
+                        "event": "ac0908_009",
+                        "frame_count": 139,
+                        "kind": "approved_v27_event",
+                        "include_exterior": None,
+                        "occurrence_count": 3,
+                        "surplus_occurrence_count": 2,
+                    }
+                ],
+            },
         }
         dgm = {
             event: [
@@ -310,6 +328,16 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
         self.assertAlmostEqual(win["strict_no_bgm_envelope_seconds_candidate"], 4.824)
         self.assertEqual(result["duration_audit"]["canonical_unique_visual_frames"], 3751)
         self.assertFalse(result["duration_audit"]["final_audience_duration_resolved"])
+        comparison = result["legacy_longform_code_comparison"]
+        self.assertEqual(4, comparison["repeated_event_container_reference_surplus_count"])
+        self.assertEqual(2, comparison["guaranteed_exact_duplicate_render_occurrence_surplus_count"])
+        self.assertEqual(9, comparison["represented_canonical_visible_scene_count"])
+        self.assertEqual(5, comparison["missing_canonical_visible_scene_count"])
+        self.assertEqual(
+            ["ac0908_001"],
+            comparison["same_container_different_trim_overlap_not_quantified"],
+        )
+        self.assertFalse(comparison["exhaustive_authoritative"])
 
 
 if __name__ == "__main__":

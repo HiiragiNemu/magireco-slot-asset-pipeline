@@ -375,6 +375,73 @@ def resolve(
     if exact_visual_frames != 3751:
         raise ValueError(f"ac0908 canonical visual frame sum changed: {exact_visual_frames}")
 
+    showcase = prior.get("current_showcase", {})
+    included_showcase_events = set(showcase.get("included_events", []))
+    showcase_occurrence_counts = {
+        str(event): int(count)
+        for event, count in showcase.get("event_occurrence_counts", {}).items()
+    }
+    if (
+        not included_showcase_events
+        or included_showcase_events != set(showcase_occurrence_counts)
+        or not included_showcase_events.issubset(REQUIRED_EVENTS)
+        or int(showcase.get("occurrence_count", -1))
+        != sum(showcase_occurrence_counts.values())
+    ):
+        raise ValueError("prior showcase occurrence evidence differs")
+    represented_showcase_scenes = [
+        row
+        for row in canonical
+        if included_showcase_events.intersection(row["source_events"])
+    ]
+    missing_showcase_scenes = [
+        row
+        for row in canonical
+        if not included_showcase_events.intersection(row["source_events"])
+    ]
+    guaranteed_duplicate_groups = list(
+        showcase.get("guaranteed_duplicate_occurrence_groups", [])
+    )
+    repeated_container_events = sorted(
+        event for event, count in showcase_occurrence_counts.items() if count > 1
+    )
+    exact_duplicate_events = {
+        str(row["event"]) for row in guaranteed_duplicate_groups
+    }
+    legacy_longform_code_comparison = {
+        "referenced_event_occurrence_count": sum(showcase_occurrence_counts.values()),
+        "unique_event_container_count": len(included_showcase_events),
+        "complete_event_container_count": len(REQUIRED_EVENTS),
+        "repeated_event_container_reference_surplus_count": sum(
+            count - 1 for count in showcase_occurrence_counts.values()
+        ),
+        "repeated_event_container_events": repeated_container_events,
+        "guaranteed_exact_duplicate_render_occurrence_surplus_count": sum(
+            int(row["surplus_occurrence_count"])
+            for row in guaranteed_duplicate_groups
+        ),
+        "guaranteed_exact_duplicate_render_occurrence_groups": guaranteed_duplicate_groups,
+        "same_container_different_trim_overlap_not_quantified": sorted(
+            set(repeated_container_events) - exact_duplicate_events
+        ),
+        "represented_canonical_visible_scene_count": len(represented_showcase_scenes),
+        "represented_canonical_scene_keys": [
+            row["scene_key_id"] for row in represented_showcase_scenes
+        ],
+        "missing_canonical_visible_scene_count": len(missing_showcase_scenes),
+        "missing_canonical_visible_scenes": [
+            {
+                "scene_key_id": row["scene_key_id"],
+                "canonical_cut_name": row["canonical_cut_name"],
+                "source_events": row["source_events"],
+                "frames": row["frames"],
+            }
+            for row in missing_showcase_scenes
+        ],
+        "exhaustive_authoritative": False,
+        "comparison_authority": "DirInfo/EventInfo plus pointer-free runtime Direction cut structures; no machine-vision identity claim",
+    }
+
     audio_by_event = {row["event"]: row for row in event_audio}
     canonical_envelopes: list[dict[str, Any]] = []
     for row in canonical:
@@ -516,6 +583,7 @@ def resolve(
             "complete_claim_withdrawn": True,
             "reason": "old showcase covers only ac0908_001..009 and repeats ac0908_009; runtime and exact Slot IDA prove four additional unique parallel-start shutters plus ac0908_016",
         },
+        "legacy_longform_code_comparison": legacy_longform_code_comparison,
         "production_blockers": [
             "ac0908_016 missing ac8040_premia_EF_add and ac8040_premia_EF_add_LP",
             "final event stop/tail policy is not yet proved even though scene and audio start at the same event-global origin",

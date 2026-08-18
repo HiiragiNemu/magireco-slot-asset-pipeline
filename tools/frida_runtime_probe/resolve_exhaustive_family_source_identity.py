@@ -90,7 +90,7 @@ def derive_routes(
 
 def validate_runtime(
     runtime: Mapping[str, Any],
-    lockframes: Mapping[str, Any],
+    lockframes: Mapping[str, Any] | None,
     family: str,
     required_events: tuple[str, ...],
 ) -> None:
@@ -103,14 +103,15 @@ def validate_runtime(
         or set(runtime.get("events", {})) != set(required_events)
     ):
         raise ValueError(f"bounded {family} runtime scene capture differs")
-    if (
-        lockframes.get("schema") != f"magireco-{family}-runtime-lockframe-v1"
-        or lockframes.get("host_frida_version") != "17.16.4"
-        or lockframes.get("protected_processes_unchanged") is not True
-        or lockframes.get("crash_tail_empty") is not True
-        or set(lockframes.get("events", {})) != set(required_events)
-    ):
-        raise ValueError(f"bounded {family} LockFrame capture differs")
+    if lockframes is not None:
+        if (
+            lockframes.get("schema") != f"magireco-{family}-runtime-lockframe-v1"
+            or lockframes.get("host_frida_version") != "17.16.4"
+            or lockframes.get("protected_processes_unchanged") is not True
+            or lockframes.get("crash_tail_empty") is not True
+            or set(lockframes.get("events", {})) != set(required_events)
+        ):
+            raise ValueError(f"bounded {family} LockFrame capture differs")
 
 
 def source_identity(row: Mapping[str, str]) -> str:
@@ -129,7 +130,7 @@ def resolve(
     native_width: int,
     native_height: int,
     runtime: Mapping[str, Any],
-    lockframes: Mapping[str, Any],
+    lockframes: Mapping[str, Any] | None,
     dirinfo_rows: list[dict[str, str]],
     source_rows: list[dict[str, str]],
     legacy_manifest: Mapping[str, Any],
@@ -184,15 +185,19 @@ def resolve(
                 "parallel_scene_frame_lengths": scene_lengths,
                 "container_frames": max(scene_lengths),
                 "container_seconds": max(scene_lengths) / 30,
-                "lock_frame": int(lockframes["events"][event]["lock_frame"]),
+                "lock_frame": (
+                    int(lockframes["events"][event]["lock_frame"])
+                    if lockframes is not None
+                    else None
+                ),
             }
         )
 
     family_catalog = [
         row for row in source_rows if row.get("event_name") in required_events
     ]
-    if {row["event_name"] for row in family_catalog} != set(required_events):
-        raise ValueError(f"source catalog does not cover every {family} event")
+    catalog_events = {row["event_name"] for row in family_catalog}
+    source_catalog_missing_events = sorted(set(required_events) - catalog_events)
 
     present: list[dict[str, Any]] = []
     missing: list[dict[str, Any]] = []
@@ -271,8 +276,28 @@ def resolve(
 
     complete_event_set = legacy_event_set == set(required_events)
     duplicate_free = len(legacy_native) == len(legacy_groups)
-    final_authoritative = complete_event_set and duplicate_free and not missing
+    final_authoritative = (
+        complete_event_set
+        and duplicate_free
+        and not missing
+        and not source_catalog_missing_events
+    )
     blockers: list[dict[str, Any]] = []
+    if lockframes is None:
+        blockers.append(
+            {
+                "kind": "runtime_lockframe_capture_missing",
+                "reason": "source-identity audit remains valid, but event replacement/tail scheduling is not closed",
+            }
+        )
+    if source_catalog_missing_events:
+        blockers.append(
+            {
+                "kind": "source_catalog_missing_events",
+                "events": source_catalog_missing_events,
+                "reason": "runtime structures remain auditable, but exact CRI source-asset enumeration is incomplete",
+            }
+        )
     if not complete_event_set:
         blockers.append(
             {
@@ -332,6 +357,13 @@ def resolve(
             "duplicate_cut_structure_surplus": len(cut_rows) - len(cut_groups),
             "cuts": cut_rows,
             "parallel_scene_duration_rule": "maximum_not_sum",
+        },
+        "source_catalog_coverage": {
+            "required_event_count": len(required_events),
+            "covered_event_count": len(catalog_events),
+            "missing_event_count": len(source_catalog_missing_events),
+            "missing_events": source_catalog_missing_events,
+            "complete": not source_catalog_missing_events,
         },
         "native_source_universe": {
             "occurrence_count": len(native),
@@ -397,7 +429,7 @@ def main() -> int:
     parser.add_argument("--native-width", type=int, required=True)
     parser.add_argument("--native-height", type=int, required=True)
     parser.add_argument("--runtime", type=Path, required=True)
-    parser.add_argument("--lockframes", type=Path, required=True)
+    parser.add_argument("--lockframes", type=Path)
     parser.add_argument("--dirinfo", type=Path, required=True)
     parser.add_argument("--source-catalog", type=Path, required=True)
     parser.add_argument("--legacy-manifest", type=Path, required=True)
@@ -412,7 +444,7 @@ def main() -> int:
         native_width=args.native_width,
         native_height=args.native_height,
         runtime=read_json(args.runtime),
-        lockframes=read_json(args.lockframes),
+        lockframes=read_json(args.lockframes) if args.lockframes else None,
         dirinfo_rows=read_csv(args.dirinfo),
         source_rows=read_csv(args.source_catalog),
         legacy_manifest=read_json(args.legacy_manifest),

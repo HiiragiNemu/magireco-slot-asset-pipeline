@@ -214,6 +214,85 @@ class ExhaustiveFamilySourceIdentityTests(unittest.TestCase):
         self.assertFalse(result["decision"]["legacy_longform_final_authority"])
         self.assertFalse(result["decision"]["new_render_allowed"])
 
+    def test_missing_lockframe_capture_is_a_render_blocker_not_an_audit_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp4"
+            source.write_bytes(b"source")
+            rows = [
+                {
+                    "event_name": event,
+                    "z2d_name": event,
+                    "dgm_name": event,
+                    "package": "main",
+                    "package_index": str(index),
+                    "official_name": event,
+                    "source_exists": "yes",
+                    "source_mp4": str(source),
+                    "width": "416",
+                    "height": "232",
+                }
+                for index, event in enumerate(EVENTS, 1)
+            ]
+            result = resolve(
+                family=FAMILY,
+                dirinfo_kind=99,
+                expected_route_count=2,
+                native_width=416,
+                native_height=232,
+                runtime=runtime(),
+                lockframes=None,
+                dirinfo_rows=routes(),
+                source_rows=rows,
+                legacy_manifest={
+                    "ordered_events": list(EVENTS),
+                    "media": {"duration_ms": 2000},
+                },
+                ida_event_av=ida_evidence(),
+            )
+        blocker_kinds = {row["kind"] for row in result["decision"]["blockers"]}
+        self.assertIn("runtime_lockframe_capture_missing", blocker_kinds)
+        self.assertFalse(result["decision"]["new_render_allowed"])
+
+    def test_partial_source_catalog_keeps_structure_audit_and_blocks_render(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp4"
+            source.write_bytes(b"source")
+            rows = [
+                {
+                    "event_name": EVENTS[0],
+                    "z2d_name": EVENTS[0],
+                    "dgm_name": EVENTS[0],
+                    "package": "main",
+                    "package_index": "1",
+                    "official_name": EVENTS[0],
+                    "source_exists": "yes",
+                    "source_mp4": str(source),
+                    "width": "416",
+                    "height": "232",
+                }
+            ]
+            result = resolve(
+                family=FAMILY,
+                dirinfo_kind=99,
+                expected_route_count=2,
+                native_width=416,
+                native_height=232,
+                runtime=runtime(),
+                lockframes=None,
+                dirinfo_rows=routes(),
+                source_rows=rows,
+                legacy_manifest={
+                    "ordered_events": list(EVENTS),
+                    "media": {"duration_ms": 2000},
+                },
+                ida_event_av=ida_evidence(),
+            )
+        self.assertEqual(1, result["source_catalog_coverage"]["covered_event_count"])
+        self.assertEqual([EVENTS[1]], result["source_catalog_coverage"]["missing_events"])
+        blocker_kinds = {row["kind"] for row in result["decision"]["blockers"]}
+        self.assertIn("source_catalog_missing_events", blocker_kinds)
+        self.assertFalse(result["decision"]["legacy_longform_final_authority"])
+
 
 if __name__ == "__main__":
     unittest.main()
