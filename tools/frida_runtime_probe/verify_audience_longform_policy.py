@@ -40,8 +40,18 @@ def classify_item(item: dict, withdrawals: dict[str, dict]) -> tuple[str, str]:
     item_id = str(item.get("inventory_item_id", ""))
     if item_id in withdrawals:
         return "WITHDRAW_FROM_LONGFORM_REVIEW", withdrawals[item_id]["reason"]
+    if item.get("content_type") in {"material", "component_archive"}:
+        return "PRESERVE_CURRENT_METADATA_PENDING_AUDIT", "material is outside the audience long-form reaudit"
     if item.get("resolution") == "512x288":
         return "DEFER_512X288", "record evidence; 416x232 production has priority"
+    if (
+        item.get("resolution") == "416x232"
+        and item.get("content_type") in {"story_route", "gameplay_effect", "clean_story"}
+    ):
+        return (
+            "WITHDRAW_PENDING_EXHAUSTIVE_FAMILY_AUDIT",
+            "416x232 audience product lacks a closed reverse-derived proof that every unique family variant is included exactly once",
+        )
     if (
         item.get("review_disposition") == "REVIEW_READY"
         and item.get("content_type") in {"story_route", "gameplay_effect", "clean_story"}
@@ -70,7 +80,7 @@ def route_memberships(rows: list[dict], event: str) -> list[dict]:
     return [row for row in rows if event in row["ordered_events"].split("|")]
 
 
-def compare_ac1102(old_manifest: Path, v77_root: Path) -> dict:
+def compare_ac1102(old_manifest: Path, v77_root: Path, ledger_rows: list[dict]) -> dict:
     old = read_json(old_manifest)
     manifests = sorted(v77_root.glob("ac1102_route*_full_no_bgm_editions_v1/manifests/family_editions_manifest.json"))
     if len(manifests) != 16:
@@ -91,14 +101,23 @@ def compare_ac1102(old_manifest: Path, v77_root: Path) -> dict:
             }
         )
     old_order = old["ordered_events"]
+    discovered = sorted(
+        {
+            event
+            for row in ledger_rows
+            for event in row["ordered_events"].split("|")
+            if event.startswith("ac1102_")
+        }
+    )
     return {
         "schema": "magireco-ac1102-longform-authority-comparison-v1",
         "legacy": {
             "path": str(old_manifest),
             "duration_ms": old["media"]["duration_ms"],
             "ordered_events": old_order,
-            "authority": "WITHDRAWN_AS_NATURAL_OR_AUTHORITATIVE_CHAPTER",
-            "reason": "contains mutually exclusive DirInfo nodes in one linear event list",
+            "authority": "OWNER_PLAYBACK_RECORD_RETAINED_BUT_NOT_EXHAUSTIVE",
+            "reason": "contains 11 unique event IDs but the DirInfo family universe exposes 15 candidates; mutual exclusion itself is allowed in an exhaustive edited compilation",
+            "missing_dirinfo_event_candidates": sorted(set(discovered) - set(old_order)),
         },
         "v77": {
             "root": str(v77_root),
@@ -106,16 +125,20 @@ def compare_ac1102(old_manifest: Path, v77_root: Path) -> dict:
             "unique_event_count": len(union),
             "unique_events": sorted(union),
             "same_unique_event_set_as_legacy": set(old_order) == union,
+            "missing_dirinfo_event_candidates": sorted(set(discovered) - union),
             "routes": routes,
             "authority": "ROUTE_ORDER_EVIDENCE_AND_LONGFORM_SOURCE_SEGMENTS_ONLY",
         },
         "longform_decision": {
             "render_now": False,
-            "required_product": "chaptered_ac1102_family_longform",
+            "required_product": "exhaustive_unique_ac1102_family_compilation",
             "deduplicate_shared_events": True,
-            "label_mutually_exclusive_outcomes": True,
-            "claim_native_single_session": False,
-            "remaining_dirinfo_rows_must_be_closed": True
+            "include_all_mutually_exclusive_outcomes": True,
+            "logical_chapter_order_required": True,
+            "native_single_session_is_a_gate": False,
+            "discovered_event_candidate_count": len(discovered),
+            "discovered_event_candidates": discovered,
+            "remaining_dirinfo_candidates_must_be_classified": True
         }
     }
 
@@ -162,7 +185,7 @@ def build_audit(args: argparse.Namespace) -> dict:
                 for row in memberships
             ]
         }
-    comparison = compare_ac1102(args.ac1102_legacy_manifest, args.ac1102_v77_root)
+    comparison = compare_ac1102(args.ac1102_legacy_manifest, args.ac1102_v77_root, ledger)
     summary = {
         "schema": "magireco-audience-longform-authority-audit-v1",
         "result": "PASS" if not missing else "FAIL",

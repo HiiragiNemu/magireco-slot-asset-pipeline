@@ -94,6 +94,8 @@ class CorrectedLongformReviewHubTests(unittest.TestCase):
         release = Path(result["release_path"])
         media = next((release / "00_APPROVED_CURRENT/ZH/story").glob("*.mp4"))
         self.assertTrue(os.path.samefile(self.source, media))
+        self.assertTrue(os.path.samefile(self.root / "hub/CURRENT_REVIEW", release))
+        self.assertEqual((release / "READY").read_text(encoding="ascii"), "PASS\n")
 
     def test_unapproved_short_story_is_index_only(self):
         result = self.run_build([self.row("I_SHORT")], [self.audit("I_SHORT")])
@@ -144,6 +146,13 @@ class CorrectedLongformReviewHubTests(unittest.TestCase):
         audit = self.audit("I_WITHDRAWN", "WITHDRAW_FROM_LONGFORM_REVIEW")
         result = self.run_build([row], [audit])
         self.assertEqual(result["approved_current_files"], 0)
+
+    def test_owner_approval_does_not_override_exhaustive_family_gate(self):
+        row = self.row("I_PARTIAL", owner_approved="True")
+        audit = self.audit("I_PARTIAL", "WITHDRAW_PENDING_EXHAUSTIVE_FAMILY_AUDIT")
+        result = self.run_build([row], [audit])
+        self.assertEqual(result["approved_current_files"], 0)
+        self.assertEqual(result["canonical_hardlinks"], 0)
 
     def test_sound_bus_withdrawal_is_index_only(self):
         row = self.row(

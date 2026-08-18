@@ -48,6 +48,55 @@ def write_csv(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
         writer.writerows(values)
 
 
+def create_directory_junction(link: Path, target: Path) -> None:
+    """Create a directory pointer without copying any review media."""
+    if os.name == "nt":
+        result = subprocess.run(
+            ["cmd", "/d", "/c", "mklink", "/J", str(link), str(target)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        if result.returncode != 0:
+            raise OSError(
+                f"failed to create CURRENT_REVIEW junction ({result.returncode}): "
+                f"{result.stdout}{result.stderr}"
+            )
+    else:
+        os.symlink(target, link, target_is_directory=True)
+    if not os.path.samefile(link, target):
+        raise ValueError(f"CURRENT_REVIEW does not resolve to release: {link}")
+
+
+def publish_current_review(output_root: Path, release: Path, rollback: Path) -> None:
+    """Swap the stable human entry to an immutable release and retain rollback."""
+    current_review = output_root / "CURRENT_REVIEW"
+    temporary = output_root / ".CURRENT_REVIEW.next"
+    previous = rollback / "CURRENT_REVIEW.before"
+    if temporary.exists():
+        raise FileExistsError(f"temporary CURRENT_REVIEW pointer already exists: {temporary}")
+    create_directory_junction(temporary, release)
+    moved_previous = False
+    try:
+        if current_review.exists():
+            is_junction = getattr(os.path, "isjunction", lambda _path: False)
+            if not (current_review.is_symlink() or is_junction(current_review)):
+                raise ValueError(f"CURRENT_REVIEW is not a reparse-point directory: {current_review}")
+            os.replace(current_review, previous)
+            moved_previous = True
+        os.replace(temporary, current_review)
+    except Exception:
+        if temporary.exists():
+            os.rmdir(temporary)
+        if moved_previous and not current_review.exists():
+            os.replace(previous, current_review)
+        raise
+    if not os.path.samefile(current_review, release):
+        raise ValueError("published CURRENT_REVIEW does not resolve to the new release")
+
+
 def as_bool(value: Any) -> bool:
     return str(value).strip().casefold() in {"1", "true", "yes"}
 
@@ -76,7 +125,10 @@ def classify(row: Mapping[str, str], audit: Mapping[str, str]) -> tuple[str, str
     )
 
     if approved:
-        if action == "WITHDRAW_FROM_LONGFORM_REVIEW":
+        if action in {
+            "WITHDRAW_FROM_LONGFORM_REVIEW",
+            "WITHDRAW_PENDING_EXHAUSTIVE_FAMILY_AUDIT",
+        }:
             return "WITHDRAWN", "long-form authority withdrawn after owner playback"
         if sound_bus_withdrawn:
             return "WITHDRAWN", "strict no-BGM claim withdrawn by sound-bus evidence"
@@ -309,17 +361,28 @@ def build(
     rollback = staging / "_rollback"
     rollback.mkdir()
     previous_current = output_root / "CURRENT.json"
+    current_review = output_root / "CURRENT_REVIEW"
+    previous_review_target = str(current_review.resolve()) if current_review.exists() else ""
     if previous_current.is_file():
         (rollback / "CURRENT.before.json").write_bytes(previous_current.read_bytes())
-    (rollback / "ROLLBACK.ps1").write_text(
+    release_rollback = release / "_rollback"
+    restore_review = ""
+    if previous_review_target:
+        restore_review = (
+            f"if (Test-Path -LiteralPath '{current_review}') {{ "
+            f"Remove-Item -LiteralPath '{current_review}' }}\n"
+            f"cmd /d /c mklink /J \"{current_review}\" \"{previous_review_target}\"\n"
+        )
+    rollback_text = (
         "$ErrorActionPreference='Stop'\n"
-        f"Copy-Item -LiteralPath '{rollback / 'CURRENT.before.json'}' "
+        f"Copy-Item -LiteralPath '{release_rollback / 'CURRENT.before.json'}' "
         f"-Destination '{previous_current}' -Force\n"
-        "Write-Output 'CURRENT restored; immutable releases were not deleted.'\n",
-        encoding="utf-8-sig",
+        + restore_review
+        + "Write-Output 'CURRENT restored; immutable releases were not deleted.'\n"
     )
-    (staging / "READY").write_text("PASS\n", encoding="ascii")
+    (rollback / "ROLLBACK.ps1").write_text(rollback_text, encoding="utf-8-sig")
     staging.rename(release)
+    publish_current_review(output_root, release, release_rollback)
 
     current = {
         "schema": "magireco-corrected-longform-review-hub-current-v1",
@@ -350,6 +413,7 @@ def build(
         f"全部素材：`{release / 'MATERIAL'}`\n",
         encoding="utf-8",
     )
+    (release / "READY").write_text("PASS\n", encoding="ascii")
     return {**summary, "release_path": str(release)}
 
 

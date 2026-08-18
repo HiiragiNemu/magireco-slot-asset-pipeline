@@ -18,18 +18,93 @@
   "product_contract": {
     "default_audience_product": "family_longform",
     "single_event_archive": "index_only_not_human_longform_review",
-    "separate_route_product": "do_not_produce_unless_exact_owner_playback_approval_explicitly_requests_it",
-    "multi_route_longform": "deduplicate_shared_events_and_present_mutually_exclusive_outcomes_as_explicit_chapters",
-    "natural_session_claim": "forbidden_for_edited_multi_route_compilations",
-    "incomplete_route_inventory": "fail_closed_not_authoritative_longform",
+    "separate_route_product": "source_archive_or_explicit_owner_requested_derivative_only_not_the_default_final_product",
+    "multi_route_longform": "one_family_product_must_include_every_reverse_proven_unique_playable_variant_exactly_once_even_when_variants_are_mutually_exclusive",
+    "completeness_authority": "dirinfo_eventinfo_ida_runtime_and_composition_evidence_must_close_the_discovered_variant_universe",
+    "deduplication": "shared_entries_outros_and_byte_or_semantic_equivalent_segments_appear_once_in_the_final_family_product",
+    "ordering": "preserve_a_comprehensible_story_or_mechanism_order_and_label_mutually_exclusive_outcomes_as_chapters",
+    "natural_session_claim": "not_required_for_an_exhaustive_edited_family_compilation_and_must_not_override_completeness",
+    "incomplete_route_inventory": "fail_closed_not_authoritative_longform_even_when_owner_playback_approved_for_timing_or_visual_quality",
+    "dynamic_runtime_role": "targeted_validation_of_static_predictions_not_manual_trigger_enumeration",
     "source_event_archives": "preserve_without_delete_move_or_reencode",
-    "silent_material": "one_language_neutral_material_archive_is_allowed"
+    "silent_material": "one_language_neutral_material_archive_is_allowed",
+    "material_scope": "excluded_from_the_416x232_story_and_route_completeness_reaudit"
   },
   "owner_approved_split_exceptions": [
     {
       "family": "ac0908",
       "scope": "six exact ZH option routes previously playback-approved by the owner",
       "does_not_authorize": "new none/JA splits or unrelated families"
+    }
+  ],
+  "known_family_coverage": [
+    {
+      "family": "ac0908",
+      "product": "ac0908 六种菜品入口补全参考合集",
+      "product_manifest": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v30_approved_416_routes_20260726\\ac0908\\manifest\\AC0908_APPROVED_PRODUCTION_MANIFEST.json",
+      "discovered_event_candidates": [
+        "ac0908_001",
+        "ac0908_002",
+        "ac0908_003",
+        "ac0908_004",
+        "ac0908_005",
+        "ac0908_006",
+        "ac0908_007",
+        "ac0908_008",
+        "ac0908_009",
+        "ac0908_010",
+        "ac0908_011",
+        "ac0908_012",
+        "ac0908_013",
+        "ac0908_014",
+        "ac0908_015",
+        "ac0908_016",
+        "ac0908_017"
+      ],
+      "included_unique_events": [
+        "ac0908_001",
+        "ac0908_002",
+        "ac0908_003",
+        "ac0908_004",
+        "ac0908_005",
+        "ac0908_006",
+        "ac0908_007",
+        "ac0908_008",
+        "ac0908_009"
+      ],
+      "missing_event_candidates": [
+        "ac0908_010",
+        "ac0908_011",
+        "ac0908_012",
+        "ac0908_013",
+        "ac0908_014",
+        "ac0908_015",
+        "ac0908_016",
+        "ac0908_017"
+      ],
+      "reverse_dispatch_evidence": {
+        "dirinfo_route_count": 92,
+        "event_info_container_count": 17,
+        "unique_event_code_count": 17,
+        "runtime_container_signature_count": 17,
+        "referenced_scene_node_count": 21,
+        "reused_shared_scene_nodes": [
+          "SHUTTER_HATTEN",
+          "SHUTTER_CZ",
+          "SHUTTER_WIN"
+        ]
+      },
+      "old_showcase_duplicate_evidence": {
+        "occurrence_count": 13,
+        "unique_event_count": 9,
+        "exact_repeated_occurrence": "ac0908_009",
+        "repeated_frame_count": 139,
+        "occurrence_count_for_repeated_event": 3,
+        "surplus_occurrence_count": 2
+      },
+      "final_unique_visible_segment_count": "UNRESOLVED_PENDING_DIRECTION_CUT_BLANK_LAYER_DECODE",
+      "current_authority": "OWNER_PLAYBACK_APPROVED_PARTIAL_REFERENCE_NOT_EXHAUSTIVE",
+      "reason": "native DirInfo has 92 routes and EventInfo has 17 distinct containers; the old 91.5-second product contains only 001-009, repeats the same 139-frame ac0908_009 occurrence three times, and omits 010-017. Shared shutter scenes prove that event count must not be treated as visible-segment count."
     }
   ],
   "withdraw_inventory_items_from_longform_review": [
