@@ -1,0 +1,83 @@
+{
+  "schema": "magireco-audience-longform-policy-v1",
+  "policy_id": "audience_longform_authority_reset_v79_20260819",
+  "effective_date": "2026-08-19",
+  "production_state": "PAUSED_FOR_COMPOSITION_AUTHORITY_REAUDIT",
+  "resolution_priority": [
+    {
+      "resolution": "416x232",
+      "priority": 100,
+      "action": "produce_and_close_first"
+    },
+    {
+      "resolution": "512x288",
+      "priority": 10,
+      "action": "record_evidence_then_defer_until_416x232_inventory_is_exhausted"
+    }
+  ],
+  "product_contract": {
+    "default_audience_product": "family_longform",
+    "single_event_archive": "index_only_not_human_longform_review",
+    "separate_route_product": "do_not_produce_unless_exact_owner_playback_approval_explicitly_requests_it",
+    "multi_route_longform": "deduplicate_shared_events_and_present_mutually_exclusive_outcomes_as_explicit_chapters",
+    "natural_session_claim": "forbidden_for_edited_multi_route_compilations",
+    "incomplete_route_inventory": "fail_closed_not_authoritative_longform",
+    "source_event_archives": "preserve_without_delete_move_or_reencode",
+    "silent_material": "one_language_neutral_material_archive_is_allowed"
+  },
+  "owner_approved_split_exceptions": [
+    {
+      "family": "ac0908",
+      "scope": "six exact ZH option routes previously playback-approved by the owner",
+      "does_not_authorize": "new none/JA splits or unrelated families"
+    }
+  ],
+  "withdraw_inventory_items_from_longform_review": [
+    {
+      "group": "ac1103_013_event_fragment",
+      "family": "ac1103_013",
+      "inventory_item_ids": [
+        "I_135D8527D379358417BD",
+        "I_951B0D81C03C8E85DB08",
+        "I_BDEF221627E127A10A1B"
+      ],
+      "reason": "18-second terminal event archive; DirInfo row 30 is ac1103_012 to ac1103_013 and the event is not a full ac1103 chapter"
+    },
+    {
+      "group": "ac7205_008_event_fragment",
+      "family": "ac7205_008",
+      "inventory_item_ids": [
+        "I_35E4EED8760E7A0EEF4A",
+        "I_7C05C1A110BDD10CEFAE",
+        "I_C7E6D5D3E0C257B32757"
+      ],
+      "reason": "6.167-second event archive; the event participates in 16 longer DirInfo routes"
+    },
+    {
+      "group": "ac7205_016_event_fragment",
+      "family": "ac7205_016",
+      "inventory_item_ids": [
+        "I_09F00269CEFC4C7CE185",
+        "I_CBC327F62A25BA8C4CD7",
+        "I_ED408FE93EA9F1F7C345"
+      ],
+      "reason": "9.567-second event archive; the event participates in 8 longer DirInfo routes"
+    },
+    {
+      "group": "ac7002_001_single_row_fragment",
+      "family": "ac7002_001",
+      "inventory_item_ids": [
+        "I_FACFDE98CC29EEA0BA53"
+      ],
+      "reason": "3.767-second independent DirInfo row; retain as a source segment and replace the audience product with an explicitly edited ac7002 family compilation"
+    },
+    {
+      "group": "ac1102_legacy_linear_chapter",
+      "family": "ac1102",
+      "inventory_item_ids": [
+        "I_4AD043C898A0F5A52378"
+      ],
+      "reason": "legacy 91.8-second product linearly concatenates mutually exclusive DirInfo nodes; stronger v77 route evidence supersedes its composition claim"
+    }
+  ]
+}
