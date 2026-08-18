@@ -50,7 +50,7 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
         second = structure_key(cut_structure(value))
         self.assertEqual(first, second)
 
-    def test_real_shape_resolves_aliases_and_blank_holds(self):
+    def test_real_shape_resolves_aliases_parallel_scenes_and_no_bgm(self):
         shutter = {
             "ac0908_010": ("ac8004_001", 498),
             "ac0908_011": ("ac8004_003", 498),
@@ -101,9 +101,105 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
             "crash_tail_empty": True,
             "events": events,
         }
+        audio = {}
+        for event in REQUIRED_EVENTS:
+            audio[event] = [
+                {
+                    "primary_animation": event,
+                    "parent_request_id": "1",
+                    "start_ms": "0",
+                    "leaf_request_id": "1",
+                    "leaf_sound_code": "2650",
+                    "leaf_code_name": "base SE",
+                    "duration_ms": "1000",
+                }
+            ]
+
+        def shutter_audio(
+            event: str,
+            result_request: int,
+            result_sound: int,
+            result_duration: int,
+            bgm_request: int,
+            bgm_sound: int,
+            bgm_start: int,
+            bgm_duration: int,
+        ) -> list[dict[str, str]]:
+            return [
+                {
+                    "primary_animation": event,
+                    "parent_request_id": "464",
+                    "start_ms": "0",
+                    "leaf_request_id": "438",
+                    "leaf_sound_code": "1035",
+                    "leaf_code_name": "shutter close",
+                    "duration_ms": "1463",
+                },
+                {
+                    "primary_animation": event,
+                    "parent_request_id": "464",
+                    "start_ms": "719",
+                    "leaf_request_id": "439",
+                    "leaf_sound_code": "1036",
+                    "leaf_code_name": "shutter open",
+                    "duration_ms": "2231",
+                },
+                {
+                    "primary_animation": event,
+                    "parent_request_id": "464",
+                    "start_ms": "710",
+                    "leaf_request_id": str(result_request),
+                    "leaf_sound_code": str(result_sound),
+                    "leaf_code_name": "result SE",
+                    "duration_ms": str(result_duration),
+                },
+                {
+                    "primary_animation": event,
+                    "parent_request_id": "464",
+                    "start_ms": str(bgm_start),
+                    "leaf_request_id": str(bgm_request),
+                    "leaf_sound_code": str(bgm_sound),
+                    "leaf_code_name": "result jingle",
+                    "duration_ms": str(bgm_duration),
+                },
+            ]
+
+        for event in ("ac0908_010", "ac0908_013"):
+            audio[event] = shutter_audio(event, 419, 1005, 2625, 226, 551, 1348, 6194)
+        for event in ("ac0908_011", "ac0908_014"):
+            audio[event] = shutter_audio(event, 422, 1008, 2742, 227, 552, 1468, 6905)
+        for event in ("ac0908_012", "ac0908_015"):
+            audio[event] = shutter_audio(event, 424, 1010, 4114, 228, 553, 1603, 6183)
+        audio["ac0908_016"] = [
+            {
+                "primary_animation": "ac0908_016",
+                "parent_request_id": "426",
+                "start_ms": "0",
+                "leaf_request_id": "426",
+                "leaf_sound_code": "1012",
+                "leaf_code_name": "premium SE",
+                "duration_ms": "3833",
+            }
+        ]
+        audio["ac0908_017"] = [
+            {
+                "primary_animation": "ac0908_017",
+                "parent_request_id": "465",
+                "start_ms": "0",
+                "leaf_request_id": "418",
+                "leaf_sound_code": "1004",
+                "leaf_code_name": "portent SE",
+                "duration_ms": "3584",
+            }
+        ]
         prior = {
             "event_containers": [
-                {"event": event, "static_audio_component_span_ms": "1000"}
+                {
+                    "event": event,
+                    "static_audio_component_span_ms": str(
+                        max(int(row["start_ms"]) + int(row["duration_ms"]) for row in audio[event])
+                    ),
+                }
                 for event in REQUIRED_EVENTS
             ]
         }
@@ -148,11 +244,70 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
                 "CGFDirectionPlaylist_SetTime",
             ],
         }
-        result = resolve(runtime, prior, dgm, ida)
+        ida_event_av = {
+            "schema": "magireco-ida-event-av-parallel-start-evidence-v1",
+            "status": "passed",
+            "binary": ida["binary"],
+            "semantic_assertions": {
+                "graphics_and_sound_receive_same_event_code": True,
+                "all_scene_names_are_set_at_time_zero": True,
+                "same_event_scene_scheduling": "parallel_shared_event_global_origin",
+                "scene_container_duration_rule": "maximum_scene_duration_not_sum",
+                "ac0908_control_commands_empty": True,
+                "machine_vision_used_as_authority": False,
+            },
+        }
+        sound_divide = {
+            "schema": "magireco-ac0908-sound-divide-values-v1",
+            "status": "passed",
+            "binary": ida["binary"],
+            "table": {"base_ea": "0x1445C54"},
+            "assertions": {
+                "all_ac0908_nonzero_duration_leaf_sound_ids_covered": True
+            },
+            "values": [
+                {"sound_id": sound_id, "volume_kind_value": kind}
+                for sound_id, kind in {
+                    551: 0,
+                    552: 0,
+                    553: 0,
+                    1004: 1,
+                    1005: 1,
+                    1008: 1,
+                    1010: 1,
+                    1012: 1,
+                    1035: 1,
+                    1036: 1,
+                    2650: 1,
+                }.items()
+            ],
+        }
+        result = resolve(
+            runtime, prior, dgm, ida, ida_event_av, audio, sound_divide
+        )
         self.assertEqual(result["counts"]["canonical_unique_visible_scene_count"], 14)
         self.assertEqual(result["counts"]["visible_scene_occurrence_count"], 17)
         self.assertEqual(result["counts"]["exact_duplicate_visible_surplus_count"], 3)
-        self.assertEqual(result["counts"]["blank_hold_occurrence_count"], 7)
+        self.assertEqual(result["counts"]["parallel_empty_scene_occurrence_count"], 7)
+        self.assertEqual(
+            next(
+                row
+                for row in result["event_containers"]
+                if row["event"] == "ac0908_010"
+            )["container_frames_parallel_max"],
+            498,
+        )
+        self.assertEqual(
+            result["counts"]["strict_no_bgm_excluded_bgm_component_occurrence_count"],
+            6,
+        )
+        win = next(
+            row
+            for row in result["canonical_strict_no_bgm_envelopes"]
+            if row["canonical_cut_name"] == "ac8004_004"
+        )
+        self.assertEqual(win["excluded_bgm_sound_ids"], [553])
+        self.assertAlmostEqual(win["strict_no_bgm_envelope_seconds_candidate"], 4.824)
         self.assertEqual(result["duration_audit"]["canonical_unique_visual_frames"], 3751)
         self.assertFalse(result["duration_audit"]["final_audience_duration_resolved"])
 

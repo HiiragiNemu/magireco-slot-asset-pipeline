@@ -98,11 +98,82 @@ def load_dgm_rows(path: Path) -> dict[str, list[dict[str, str]]]:
     return result
 
 
+def load_audio_component_rows(path: Path) -> dict[str, list[dict[str, str]]]:
+    result: dict[str, list[dict[str, str]]] = defaultdict(list)
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            event = row.get("primary_animation", "")
+            if event in REQUIRED_EVENTS:
+                result[event].append(row)
+    return result
+
+
+def validate_event_av_evidence(evidence: dict[str, Any]) -> None:
+    assertions = evidence.get("semantic_assertions", {})
+    if (
+        evidence.get("schema") != "magireco-ida-event-av-parallel-start-evidence-v1"
+        or evidence.get("status") != "passed"
+        or str(evidence.get("binary", {}).get("sha256", "")).casefold()
+        != "5a0ae3ce7f25b89a3b9a13d11bf36aaa1de04faceb612357fa04f42426f17ebf"
+        or assertions.get("graphics_and_sound_receive_same_event_code") is not True
+        or assertions.get("all_scene_names_are_set_at_time_zero") is not True
+        or assertions.get("same_event_scene_scheduling")
+        != "parallel_shared_event_global_origin"
+        or assertions.get("scene_container_duration_rule")
+        != "maximum_scene_duration_not_sum"
+        or assertions.get("ac0908_control_commands_empty") is not True
+        or assertions.get("machine_vision_used_as_authority") is not False
+    ):
+        raise ValueError("exact Slot IDA event A/V evidence differs")
+
+
+def load_sound_divide_values(evidence: dict[str, Any]) -> dict[int, int]:
+    if (
+        evidence.get("schema") != "magireco-ac0908-sound-divide-values-v1"
+        or evidence.get("status") != "passed"
+        or str(evidence.get("binary", {}).get("sha256", "")).casefold()
+        != "5a0ae3ce7f25b89a3b9a13d11bf36aaa1de04faceb612357fa04f42426f17ebf"
+        or evidence.get("table", {}).get("base_ea", "").casefold() != "0x1445c54"
+        or evidence.get("assertions", {}).get(
+            "all_ac0908_nonzero_duration_leaf_sound_ids_covered"
+        )
+        is not True
+    ):
+        raise ValueError("exact Slot SOUND_DIVIDE_TBL evidence differs")
+    result = {
+        int(row["sound_id"]): int(row["volume_kind_value"])
+        for row in evidence.get("values", [])
+    }
+    if {sound_id for sound_id, kind in result.items() if kind == 0} != {551, 552, 553}:
+        raise ValueError("ac0908 BGM-bus sound-id set changed")
+    return result
+
+
+def audio_component_signature(rows: list[dict[str, Any]]) -> str:
+    return structure_key(
+        [
+            {
+                "parent_request_id": row["parent_request_id"],
+                "start_ms": row["start_ms"],
+                "leaf_request_id": row["leaf_request_id"],
+                "leaf_sound_code": row["leaf_sound_code"],
+                "duration_ms": row["duration_ms"],
+                "volume_kind_value": row["volume_kind_value"],
+                "role": row["role"],
+            }
+            for row in rows
+        ]
+    )
+
+
 def resolve(
     runtime: dict[str, Any],
     prior: dict[str, Any],
     dgm_rows: dict[str, list[dict[str, str]]],
     ida_playlist: dict[str, Any],
+    ida_event_av: dict[str, Any],
+    audio_component_rows: dict[str, list[dict[str, str]]],
+    sound_divide_evidence: dict[str, Any],
 ) -> dict[str, Any]:
     if (
         ida_playlist.get("schema") != "magireco-ida-playlist-chain-evidence-v1"
@@ -120,6 +191,8 @@ def resolve(
     }
     if not required_labels.issubset(set(ida_playlist.get("labels", []))):
         raise ValueError("IDA playlist evidence lacks the required timing functions")
+    validate_event_av_evidence(ida_event_av)
+    sound_divide_values = load_sound_divide_values(sound_divide_evidence)
     if runtime.get("schema") != "magireco-ac0908-runtime-scene-motion-v1":
         raise ValueError("unexpected runtime scene-motion schema")
     if runtime.get("host_frida_version") != "17.16.4":
@@ -133,8 +206,9 @@ def resolve(
 
     audio_spans = load_audio_spans(prior)
     visible: list[dict[str, Any]] = []
-    blanks: list[dict[str, Any]] = []
+    parallel_empty_scenes: list[dict[str, Any]] = []
     containers: list[dict[str, Any]] = []
+    event_audio: list[dict[str, Any]] = []
     for event in REQUIRED_EVENTS:
         wrapper = runtime["events"][event]
         if wrapper.get("status") != "captured":
@@ -142,22 +216,25 @@ def resolve(
         value = wrapper["value"]
         if value.get("group_name") != "ac0908":
             raise ValueError(f"runtime event group differs: {event}")
-        container_frames = 0
-        prefix_blank_frames = 0
+        scene_frame_lengths: list[int] = []
         visible_keys: list[str] = []
+        event_visible: list[dict[str, Any]] = []
+        event_empty: list[dict[str, Any]] = []
         for scene in value.get("scenes", []):
             cuts = scene.get("cuts", [])
             if len(cuts) != 1:
                 raise ValueError(f"expected one cut in {event}/{scene.get('name')}")
             cut = cuts[0]
             frames = cut_frames(cut)
-            container_frames += frames
+            scene_frame_lengths.append(frames)
             row = {
                 "event": event,
                 "scene_name": scene["name"],
                 "cut_name": cut["cut_name"],
                 "frames": frames,
                 "seconds": frames / 30,
+                "scene_start_frame": 0,
+                "scheduling": "parallel_shared_event_global_origin",
                 "node_count": int(cut.get("node_count", len(cut.get("nodes", [])))),
                 "z2d_names": z2d_names(cut),
             }
@@ -168,23 +245,79 @@ def resolve(
                         "instance_offset_frames": cut["instance_offset_frames"],
                     }
                 )
-                blanks.append(row)
-                if not visible_keys:
-                    prefix_blank_frames += frames
+                parallel_empty_scenes.append(row)
+                event_empty.append(row)
                 continue
             key = structure_key(cut_structure(cut))
             row["structure_key"] = key
-            row["container_prefix_blank_frames"] = prefix_blank_frames
             visible.append(row)
+            event_visible.append(row)
             visible_keys.append(key)
+        parallel_empty_frames = sorted(row["frames"] for row in event_empty)
+        for row in event_visible:
+            row["parallel_empty_scene_frames"] = parallel_empty_frames
+        container_frames = max(scene_frame_lengths, default=0)
+
+        resolved_audio_rows: list[dict[str, Any]] = []
+        for source_row in audio_component_rows.get(event, []):
+            duration_ms = int(source_row["duration_ms"])
+            if duration_ms <= 0:
+                continue
+            sound_id = int(source_row["leaf_sound_code"])
+            if sound_id not in sound_divide_values:
+                raise ValueError(f"SOUND_DIVIDE_TBL lacks {event} sound {sound_id}")
+            kind = sound_divide_values[sound_id]
+            role = {0: "BGM", 1: "SE", 2: "VOICE"}.get(kind, "INVALID")
+            resolved_audio_rows.append(
+                {
+                    "parent_request_id": int(source_row["parent_request_id"]),
+                    "start_ms": int(source_row["start_ms"]),
+                    "leaf_request_id": int(source_row["leaf_request_id"]),
+                    "leaf_sound_code": sound_id,
+                    "leaf_code_name": source_row["leaf_code_name"],
+                    "duration_ms": duration_ms,
+                    "end_ms": int(source_row["start_ms"]) + duration_ms,
+                    "volume_kind_value": kind,
+                    "role": role,
+                    "strict_no_bgm_disposition": (
+                        "EXCLUDE_AS_BGM_BUS" if kind == 0 else "RETAIN_VERIFIED_SE_OR_VOICE"
+                    ),
+                }
+            )
+        if not resolved_audio_rows:
+            raise ValueError(f"official static audio components missing: {event}")
+        full_audio_span_ms = max(row["end_ms"] for row in resolved_audio_rows)
+        if full_audio_span_ms != audio_spans.get(event):
+            raise ValueError(
+                f"official audio span differs for {event}: "
+                f"{full_audio_span_ms} != {audio_spans.get(event)}"
+            )
+        retained_audio_rows = [row for row in resolved_audio_rows if row["role"] != "BGM"]
+        if any(row["role"] == "INVALID" for row in retained_audio_rows):
+            raise ValueError(f"invalid SOUND_DIVIDE role in {event}")
+        strict_no_bgm_span_ms = max(
+            (row["end_ms"] for row in retained_audio_rows), default=0
+        )
+        event_audio.append(
+            {
+                "event": event,
+                "event_global_start_ms": 0,
+                "full_component_span_ms": full_audio_span_ms,
+                "strict_no_bgm_component_span_ms": strict_no_bgm_span_ms,
+                "components": resolved_audio_rows,
+                "strict_no_bgm_signature": audio_component_signature(retained_audio_rows),
+                "full_component_signature": audio_component_signature(resolved_audio_rows),
+            }
+        )
         containers.append(
             {
                 "event": event,
                 "scene_count": len(value.get("scenes", [])),
-                "container_frames_including_blank": container_frames,
-                "container_seconds_including_blank": container_frames / 30,
-                "prefix_blank_frames": prefix_blank_frames,
+                "container_frames_parallel_max": container_frames,
+                "container_seconds_parallel_max": container_frames / 30,
+                "parallel_empty_scene_frames": parallel_empty_frames,
                 "static_audio_component_span_ms": audio_spans.get(event),
+                "strict_no_bgm_audio_span_ms": strict_no_bgm_span_ms,
                 "visible_structure_keys": visible_keys,
             }
         )
@@ -206,8 +339,12 @@ def resolve(
             "source_events": events,
             "occurrence_count": len(occurrences),
             "surplus_occurrence_count": len(occurrences) - 1,
-            "container_prefix_blank_frames": sorted(
-                {item["container_prefix_blank_frames"] for item in occurrences}
+            "parallel_empty_scene_frames": sorted(
+                {
+                    frames
+                    for item in occurrences
+                    for frames in item["parallel_empty_scene_frames"]
+                }
             ),
             "structure": json.loads(key),
         }
@@ -224,8 +361,11 @@ def resolve(
 
     if len(visible) != 17 or len(canonical) != 14:
         raise ValueError("ac0908 visible occurrence/canonical counts changed")
-    if len(blanks) != 7 or {row["frames"] for row in blanks} != {100}:
-        raise ValueError("ac0908 blank-prefix state changed")
+    if (
+        len(parallel_empty_scenes) != 7
+        or {row["frames"] for row in parallel_empty_scenes} != {100}
+    ):
+        raise ValueError("ac0908 parallel empty-scene state changed")
     observed_aliases = {
         row["canonical_cut_name"]: tuple(row["source_events"]) for row in aliases
     }
@@ -234,6 +374,49 @@ def resolve(
     exact_visual_frames = sum(row["frames"] for row in canonical)
     if exact_visual_frames != 3751:
         raise ValueError(f"ac0908 canonical visual frame sum changed: {exact_visual_frames}")
+
+    audio_by_event = {row["event"]: row for row in event_audio}
+    canonical_envelopes: list[dict[str, Any]] = []
+    for row in canonical:
+        events = row["source_events"]
+        no_bgm_signatures = {
+            audio_by_event[event]["strict_no_bgm_signature"] for event in events
+        }
+        full_signatures = {
+            audio_by_event[event]["full_component_signature"] for event in events
+        }
+        if len(no_bgm_signatures) != 1 or len(full_signatures) != 1:
+            raise ValueError(
+                f"visual aliases do not share exact audio components: {events}"
+            )
+        representative_audio = audio_by_event[events[0]]
+        visual_ms = row["frames"] * 1000 / 30
+        strict_audio_ms = representative_audio["strict_no_bgm_component_span_ms"]
+        canonical_envelopes.append(
+            {
+                "scene_key_id": row["scene_key_id"],
+                "canonical_cut_name": row["canonical_cut_name"],
+                "source_events": events,
+                "visual_frames": row["frames"],
+                "visual_seconds": row["frames"] / 30,
+                "strict_no_bgm_audio_span_ms": strict_audio_ms,
+                "strict_no_bgm_envelope_seconds_candidate": max(
+                    visual_ms, strict_audio_ms
+                )
+                / 1000,
+                "excluded_bgm_sound_ids": sorted(
+                    {
+                        component["leaf_sound_code"]
+                        for component in representative_audio["components"]
+                        if component["role"] == "BGM"
+                    }
+                ),
+            }
+        )
+    strict_no_bgm_candidate_seconds = sum(
+        row["strict_no_bgm_envelope_seconds_candidate"]
+        for row in canonical_envelopes
+    )
 
     dgm_coverage: list[dict[str, Any]] = []
     for event in (*REQUIRED_EVENTS[:9], "ac0908_016"):
@@ -283,49 +466,59 @@ def resolve(
         raise ValueError("ac0908_016 exact parent/missing-layer state changed")
 
     return {
-        "schema": "magireco-ac0908-runtime-unique-scene-authority-v1",
-        "result": "RUNTIME_UNIQUE_SCENE_UNIVERSE_RESOLVED_PRODUCTION_FAIL_CLOSED",
+        "schema": "magireco-ac0908-runtime-unique-scene-authority-v2",
+        "result": "RUNTIME_UNIQUE_SCENE_AND_EVENT_AV_ORIGIN_RESOLVED_PRODUCTION_FAIL_CLOSED",
         "production_paused": True,
         "authority": {
             "identity": "EventInfo exact event codes",
-            "timing": "runtime Direction scene/cut structures interpreted by IDA SetScene/AddBlank/AddCut/AdvanceTime/SetTime",
+            "timing": "runtime Direction scene/cut structures plus exact Slot IDA: every scene name is SetScene at 0.0 and graphics/sound receive the same event code",
+            "same_event_scene_scheduling": "parallel_shared_event_global_origin",
+            "strict_no_bgm": "SOUND_DIVIDE_TBL exact values; exclude volume kind 0 BGM and retain verified kind 1 SE / kind 2 VOICE",
             "deduplication": "direct equality of pointer-free runtime cut/node/motion/key structures",
             "machine_vision_used_as_authority": False,
             "exact_slot_binary_sha256": ida_playlist["binary"]["sha256"],
         },
         "counts": {
             "event_container_count": len(REQUIRED_EVENTS),
-            "scene_instance_count": len(visible) + len(blanks),
+            "scene_instance_count": len(visible) + len(parallel_empty_scenes),
             "visible_scene_occurrence_count": len(visible),
             "canonical_unique_visible_scene_count": len(canonical),
             "exact_duplicate_visible_surplus_count": sum(
                 row["surplus_occurrence_count"] for row in aliases
             ),
-            "blank_hold_occurrence_count": len(blanks),
-            "blank_hold_unique_profile_count": len(
-                {row["blank_profile"] for row in blanks}
+            "parallel_empty_scene_occurrence_count": len(parallel_empty_scenes),
+            "parallel_empty_scene_unique_profile_count": len(
+                {row["blank_profile"] for row in parallel_empty_scenes}
+            ),
+            "strict_no_bgm_excluded_bgm_component_occurrence_count": sum(
+                component["role"] == "BGM"
+                for event in event_audio
+                for component in event["components"]
             ),
         },
         "duration_audit": {
             "canonical_unique_visual_frames": exact_visual_frames,
             "canonical_unique_visual_seconds_exact": f"{exact_visual_frames}/30",
             "canonical_unique_visual_seconds_decimal": exact_visual_frames / 30,
+            "strict_no_bgm_exhaustive_envelope_seconds_candidate": strict_no_bgm_candidate_seconds,
             "final_audience_duration_resolved": False,
-            "reason": "container audio/tail boundaries still need exact scene-relative binding; blank holds are not unique visible content",
+            "reason": "scene and event-audio origins are exact, but final stop/tail policy is not yet proved and ac0908_016 remains layer-incomplete",
         },
         "canonical_visible_scenes": canonical,
+        "canonical_strict_no_bgm_envelopes": canonical_envelopes,
         "exact_alias_groups": aliases,
-        "blank_holds": blanks,
+        "parallel_empty_scenes": parallel_empty_scenes,
         "event_containers": containers,
+        "event_audio": event_audio,
         "dgm_coverage": dgm_coverage,
         "old_showcase_decision": {
             "playback_approval_retained": True,
             "complete_claim_withdrawn": True,
-            "reason": "old showcase covers only ac0908_001..009 and repeats ac0908_009; runtime proves four additional unique shutters plus ac0908_016",
+            "reason": "old showcase covers only ac0908_001..009 and repeats ac0908_009; runtime and exact Slot IDA prove four additional unique parallel-start shutters plus ac0908_016",
         },
         "production_blockers": [
             "ac0908_016 missing ac8040_premia_EF_add and ac8040_premia_EF_add_LP",
-            "container audio/tail timing for newly admitted shutter scenes is not yet bound to the scene-relative exhaustive timeline",
+            "final event stop/tail policy is not yet proved even though scene and audio start at the same event-global origin",
         ],
     }
 
@@ -353,12 +546,18 @@ def main() -> int:
     parser.add_argument("--prior-audit", required=True)
     parser.add_argument("--dgm-bindings", required=True)
     parser.add_argument("--ida-playlist-evidence", required=True)
+    parser.add_argument("--ida-event-av-evidence", required=True)
+    parser.add_argument("--audio-components", required=True)
+    parser.add_argument("--sound-divide-evidence", required=True)
     parser.add_argument("--out-dir", required=True)
     args = parser.parse_args()
     runtime_path = Path(args.runtime).resolve()
     prior_path = Path(args.prior_audit).resolve()
     dgm_path = Path(args.dgm_bindings).resolve()
     ida_path = Path(args.ida_playlist_evidence).resolve()
+    ida_event_av_path = Path(args.ida_event_av_evidence).resolve()
+    audio_components_path = Path(args.audio_components).resolve()
+    sound_divide_path = Path(args.sound_divide_evidence).resolve()
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     authority = resolve(
@@ -366,12 +565,18 @@ def main() -> int:
         read_json(prior_path),
         load_dgm_rows(dgm_path),
         read_json(ida_path),
+        read_json(ida_event_av_path),
+        load_audio_component_rows(audio_components_path),
+        read_json(sound_divide_path),
     )
     authority["source_paths"] = {
         "runtime_scene_motion": str(runtime_path),
         "prior_reverse_audit": str(prior_path),
         "dgm_media_bindings": str(dgm_path),
         "ida_playlist_evidence": str(ida_path),
+        "ida_event_av_parallel_start_evidence": str(ida_event_av_path),
+        "official_event_audio_components": str(audio_components_path),
+        "sound_divide_evidence": str(sound_divide_path),
     }
     output = out_dir / "AC0908_RUNTIME_UNIQUE_SCENE_AUTHORITY.json"
     output.write_text(
@@ -388,7 +593,7 @@ def main() -> int:
             "source_events",
             "occurrence_count",
             "surplus_occurrence_count",
-            "container_prefix_blank_frames",
+            "parallel_empty_scene_frames",
             "z2d_names",
         ],
     )
@@ -400,12 +605,15 @@ def main() -> int:
     (out_dir / "README.md").write_text(
         "# ac0908 code-level exhaustive scene audit\n\n"
         "The runtime capture resolves 17 EventInfo containers into 24 scene instances. "
-        "Seven 100-frame instances contain zero Direction nodes and are blank holds, not "
-        "unique visible content. The other 17 visible occurrences reduce by direct equality "
+        "Exact Slot IDA proves every scene name in one event animation is SetScene at time "
+        "0.0, so the seven 100-frame zero-node scenes run in parallel with their shutter "
+        "scenes; they are not sequential prefixes. The other 17 visible occurrences reduce by direct equality "
         "of pointer-free runtime structures to 14 unique visible scenes. HATTEN, CZ, and WIN "
         "each have one exact alias occurrence. The exact unique visual-cut minimum is 3751 "
-        "frames (3751/30 seconds); this is not the final audience duration because new shutter "
-        "audio/tail placement remains unresolved. ac0908_016 is parent-limited to 180 frames, "
+        "frames (3751/30 seconds). The same event request path starts graphics and sound with "
+        "the same event code, and SOUND_DIVIDE_TBL excludes 551/552/553 as BGM. This still is "
+        "not the final audience duration because event stop/tail policy remains unresolved. "
+        "ac0908_016 is parent-limited to 180 frames, "
         "while two required effect layers remain missing. The old 001-009 showcase remains a "
         "playback-approved historical file but is not exhaustive.\n",
         encoding="utf-8",
