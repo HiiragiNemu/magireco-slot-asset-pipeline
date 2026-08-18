@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-corrected-longform-review-hub-plan-v1",
+  "release_id": "longform_authority_corrected_v3_20260819",
+  "source_index": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_hub_v2_flat\\releases\\authoritative_inventory_v1_plus_v69_flat_language_first_20260817\\review_index.csv",
+  "reassessment": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\audience_longform_authority_audit_v79_20260819\\REVIEW_HUB_REASSESSMENT.csv",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_hub_v2_flat",
+  "published_release": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_hub_v2_flat\\releases\\longform_authority_corrected_v3_20260819",
+  "current_junction": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_hub_v2_flat\\CURRENT_REVIEW",
+  "layout": {
+    "approved": "00_APPROVED_CURRENT/{ZH|JP|NONE}/{story|routes|gameplay_effect}",
+    "pending_material": "01_TO_REVIEW/MATERIAL",
+    "material_language_suffix": false,
+    "unapproved_single_event_audience_media": "index_only"
+  },
+  "expected_counts": {
+    "inventory_items": 407,
+    "approved_current_files": 27,
+    "to_review_files": 62,
+    "canonical_hardlinks": 89,
+    "index_only_items": 318
+  },
+  "storage_contract": {
+    "same_volume_hardlink_only": true,
+    "physical_copy": false,
+    "move_source": false,
+    "delete_source": false,
+    "transcode_source": false
+  }
+}
