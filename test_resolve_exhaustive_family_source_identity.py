@@ -293,6 +293,218 @@ class ExhaustiveFamilySourceIdentityTests(unittest.TestCase):
         self.assertIn("source_catalog_missing_events", blocker_kinds)
         self.assertFalse(result["decision"]["legacy_longform_final_authority"])
 
+    def test_repeated_legacy_event_expands_source_occurrences(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            rows = []
+            for index, event in enumerate(EVENTS, 1):
+                source = root / f"{event}.mp4"
+                source.write_bytes(event.encode("ascii"))
+                rows.append(
+                    {
+                        "event_name": event,
+                        "z2d_name": event,
+                        "dgm_name": event,
+                        "package": "main",
+                        "package_index": str(index),
+                        "official_name": event,
+                        "source_exists": "yes",
+                        "source_mp4": str(source),
+                        "width": "416",
+                        "height": "232",
+                        "event_start_ms": "0",
+                        "event_end_ms": "1000",
+                    }
+                )
+            payload = runtime()
+            for event in EVENTS:
+                payload["events"][event]["scenes"][0]["cuts"][0]["nodes"][0][
+                    "motions"
+                ][0]["keys"] = [
+                    {"index": 0, "floats": [0, 29], "flags": [0, 1, 1]}
+                ]
+            result = resolve(
+                family=FAMILY,
+                dirinfo_kind=99,
+                expected_route_count=2,
+                native_width=416,
+                native_height=232,
+                runtime=payload,
+                lockframes=lockframes(),
+                dirinfo_rows=routes(),
+                source_rows=rows,
+                legacy_manifest={
+                    "ordered_events": [EVENTS[0], EVENTS[0], EVENTS[1]],
+                    "media": {"duration_ms": 3000},
+                    "editorial_order_bound": True,
+                },
+                ida_event_av=ida_evidence(),
+            )
+        self.assertEqual(
+            1, result["legacy_longform"]["duplicate_surplus_occurrence_count"]
+        )
+        self.assertFalse(result["legacy_longform"]["duplicate_free"])
+        blocker_kinds = {row["kind"] for row in result["decision"]["blockers"]}
+        self.assertIn("legacy_repeats_exact_cri_source_assets", blocker_kinds)
+
+    def test_fragment_collection_never_claims_single_longform_authority(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            rows = []
+            for index, event in enumerate(EVENTS, 1):
+                source = root / f"{event}.mp4"
+                source.write_bytes(event.encode("ascii"))
+                rows.append(
+                    {
+                        "event_name": event,
+                        "z2d_name": event,
+                        "dgm_name": event,
+                        "package": "main",
+                        "package_index": str(index),
+                        "official_name": event,
+                        "source_exists": "yes",
+                        "source_mp4": str(source),
+                        "width": "416",
+                        "height": "232",
+                        "event_start_ms": "0",
+                        "event_end_ms": "1000",
+                    }
+                )
+            payload = runtime()
+            for event in EVENTS:
+                payload["events"][event]["scenes"][0]["cuts"][0]["nodes"][0][
+                    "motions"
+                ][0]["keys"] = [
+                    {"index": 0, "floats": [0, 29], "flags": [0, 1, 1]}
+                ]
+            result = resolve(
+                family=FAMILY,
+                dirinfo_kind=99,
+                expected_route_count=2,
+                native_width=416,
+                native_height=232,
+                runtime=payload,
+                lockframes=lockframes(),
+                dirinfo_rows=routes(),
+                source_rows=rows,
+                legacy_manifest={
+                    "product_mode": "fragment_collection",
+                    "ordered_events": list(EVENTS),
+                    "media": {"duration_ms": 2000},
+                    "editorial_order_bound": True,
+                },
+                ida_event_av=ida_evidence(),
+            )
+        self.assertTrue(result["decision"]["legacy_source_inventory_authoritative"])
+        self.assertFalse(result["legacy_longform"]["single_longform_exists"])
+        self.assertFalse(result["decision"]["legacy_longform_final_authority"])
+        blocker_kinds = {row["kind"] for row in result["decision"]["blockers"]}
+        self.assertIn("legacy_is_fragment_collection_not_longform", blocker_kinds)
+
+    def test_runtime_motion_duration_and_parent_cut_are_checked_separately(self):
+        family = "ac7777"
+        event = "ac7777_001"
+        payload = {
+            "schema": "magireco-ac7777-runtime-scene-motion-v1",
+            "host_frida_version": "17.16.4",
+            "protected_processes_unchanged": True,
+            "crash_tail_empty": True,
+            "requested_events": {event: "0x1"},
+            "events": {
+                event: {
+                    "group_name": family,
+                    "scenes": [
+                        {
+                            "name": event,
+                            "cuts": [
+                                {
+                                    "cut_name": event,
+                                    "instance_offset_frames": 0,
+                                    "cut_start_frame": 0,
+                                    "cut_end_frame": 29,
+                                    "nodes": [
+                                        {
+                                            "type": 20,
+                                            "name": event + ".z2d",
+                                            "motions": [
+                                                {
+                                                    "is_z2d_motion": True,
+                                                    "keys": [
+                                                        {
+                                                            "index": 0,
+                                                            "floats": [0, 30],
+                                                            "flags": [0, 1, 1],
+                                                        }
+                                                    ],
+                                                }
+                                            ],
+                                            "children": [],
+                                        }
+                                    ],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            },
+        }
+        lock = {
+            "schema": "magireco-ac7777-runtime-lockframe-v1",
+            "host_frida_version": "17.16.4",
+            "protected_processes_unchanged": True,
+            "crash_tail_empty": True,
+            "events": {event: {"lock_frame": 0}},
+        }
+        route_rows = [
+            {
+                "kind": "77",
+                "row_index": "0",
+                "selector_raw": "0",
+                "scene_name": event,
+                "resolved_source_count": "1",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.mp4"
+            source.write_bytes(b"source")
+            result = resolve(
+                family=family,
+                dirinfo_kind=77,
+                expected_route_count=1,
+                native_width=416,
+                native_height=232,
+                runtime=payload,
+                lockframes=lock,
+                dirinfo_rows=route_rows,
+                source_rows=[
+                    {
+                        "event_name": event,
+                        "z2d_name": event,
+                        "dgm_name": event,
+                        "package": "main",
+                        "package_index": "1",
+                        "official_name": event,
+                        "source_exists": "yes",
+                        "source_mp4": str(source),
+                        "width": "416",
+                        "height": "232",
+                        "event_start_ms": "0",
+                        "event_end_ms": "1033.333333",
+                    }
+                ],
+                legacy_manifest={
+                    "ordered_events": [event],
+                    "media": {"duration_ms": 1033},
+                },
+                ida_event_av=ida_evidence(),
+            )
+        binding = result["runtime_motion_source_duration_binding"]["bindings"][0]
+        self.assertEqual("source_exact_cut_shortfall", binding["status"])
+        self.assertEqual(-1, binding["cut_minus_motion_frames"])
+        self.assertFalse(result["decision"]["legacy_longform_final_authority"])
+        blocker_kinds = {row["kind"] for row in result["decision"]["blockers"]}
+        self.assertIn("runtime_cut_ends_before_source_motion", blocker_kinds)
+
 
 if __name__ == "__main__":
     unittest.main()

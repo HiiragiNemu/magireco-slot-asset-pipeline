@@ -95,9 +95,16 @@ def deep_authority(payload: Mapping[str, Any], source_path: Path) -> dict[str, A
     if schema == "magireco-exhaustive-family-source-identity-audit-v1":
         family = str(payload["family"])
         old = payload["legacy_longform"]
+        final_authority = bool(
+            payload.get("decision", {}).get("legacy_longform_final_authority")
+        )
         return {
             "family_root": family,
-            "audit_state": "AUDITED_BLOCKED",
+            "audit_state": (
+                "AUDITED_AUTHORITATIVE_EXISTING"
+                if final_authority
+                else "AUDITED_BLOCKED"
+            ),
             "authority_level": "DIRINFO_RUNTIME_PLUS_EXACT_CRI_SOURCE_IDENTITY",
             "complete_event_container_count": int(payload["route_universe"]["unique_event_count"]),
             "canonical_unique_unit_kind": "native_cri_source_identity",
@@ -110,10 +117,14 @@ def deep_authority(payload: Mapping[str, Any], source_path: Path) -> dict[str, A
             "old_product_exact_duplicate_surplus_count": int(
                 old["duplicate_surplus_occurrence_count"]
             ),
-            "old_product_authoritative": False,
+            "old_product_authoritative": final_authority,
             "render_allowed": False,
             "blockers": compact_blockers(payload["decision"]["blockers"]),
-            "next_exact_action": "resolve missing component layers and bind one duplicate-free event-global editorial timeline",
+            "next_exact_action": (
+                "retain the existing exact longform without rerender; human playback remains a separate gate"
+                if final_authority
+                else "resolve the reported runtime/source/timeline blockers without expanding the production scope"
+            ),
             "authority_path": str(source_path.resolve()),
         }
     raise ValueError(f"unsupported deep authority schema: {schema}")
@@ -206,6 +217,7 @@ def build_queue(
 
     lane_order = {
         "AUDITED_BLOCKED": 5,
+        "AUDITED_AUTHORITATIVE_EXISTING": 6,
         "PENDING_CODE_AUDIT": 0,
     }
     queue.sort(
@@ -227,9 +239,15 @@ def build_queue(
             row["inventory_edition_item_count"] for row in queue
         ),
         "deep_audited_family_count": len(deep),
-        "pending_code_audit_family_count": len(queue) - len(deep),
-        "certified_authoritative_longform_count": 0,
-        "render_allowed_family_count": 0,
+        "pending_code_audit_family_count": sum(
+            row["audit_state"] == "PENDING_CODE_AUDIT" for row in queue
+        ),
+        "certified_authoritative_longform_count": sum(
+            bool(row["old_product_authoritative"]) for row in queue
+        ),
+        "render_allowed_family_count": sum(
+            bool(row["render_allowed"]) for row in queue
+        ),
         "materials_in_scope": False,
         "larger_resolution_in_scope": False,
         "edition_counted_as_content_group": False,

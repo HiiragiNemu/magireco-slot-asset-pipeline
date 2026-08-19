@@ -93,6 +93,34 @@ class Native416LongformAuditQueueTests(unittest.TestCase):
                 1,
             )
 
+    def test_existing_exact_longform_can_be_certified_without_enabling_render(self):
+        authority = {
+            "schema": "magireco-exhaustive-family-source-identity-audit-v1",
+            "family": "ac4002",
+            "route_universe": {"unique_event_count": 1},
+            "native_source_universe": {"unique_source_identity_count": 1},
+            "legacy_longform": {
+                "missing_required_unique_source_identity_count": 0,
+                "duplicate_surplus_occurrence_count": 0,
+            },
+            "decision": {
+                "legacy_longform_final_authority": True,
+                "blockers": [],
+            },
+        }
+        queue, summary = build_queue(
+            [base("ac4002")], [(authority, Path("ac4002.json"))], 1
+        )
+        self.assertEqual(1, summary["deep_audited_family_count"])
+        self.assertEqual(0, summary["pending_code_audit_family_count"])
+        self.assertEqual(1, summary["certified_authoritative_longform_count"])
+        self.assertEqual(0, summary["render_allowed_family_count"])
+        self.assertEqual(
+            "AUDITED_AUTHORITATIVE_EXISTING", queue[0]["audit_state"]
+        )
+        self.assertTrue(queue[0]["old_product_authoritative"])
+        self.assertFalse(queue[0]["render_allowed"])
+
 
 if __name__ == "__main__":
     unittest.main()
