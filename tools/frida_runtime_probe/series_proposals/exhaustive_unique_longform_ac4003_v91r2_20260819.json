@@ -1,0 +1,69 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac4003_parent_cut_exact_v91r2_20260819",
+  "family": "ac4003",
+  "title": "游乐园追逐动画",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "parent_cut_boundary_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac4003_parent_cut_boundary_authority_v1_20260819\\AC4003_PARENT_CUT_BOUNDARY_AUTHORITY.json",
+      "sha256": "1963C2BA36DD57E9871E8636249737A77CD799D94652667389E6139165F97C86"
+    },
+    {
+      "role": "runtime_source_identity_audit",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p1_native416_scene_motion_v86_20260819\\adapters\\ac4003\\exhaustive_source_identity_audit_v1_20260819\\EXHAUSTIVE_FAMILY_SOURCE_IDENTITY_AUDIT.json",
+      "sha256": "3F8BF32B478744AD52122D7E5A410F0C691B9096C1791C96D7872B5D88A2EFCD"
+    },
+    {
+      "role": "all_18_family_authority_queue",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\native416_longform_code_audit_queue_v89_20260819\\NATIVE416_LONGFORM_CODE_AUDIT_QUEUE.csv",
+      "sha256": "4675F3E70DFA0F7B2D234F176149D798C51892C960EC2B8CFAC1AC113C43D3D5"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac4003_游乐园追逐动画_父级边界精确版v2_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac4003_001",
+          "source_identities": [
+            "main:3840",
+            "main:3841",
+            "main:3842",
+            "main:3843",
+            "main:3844"
+          ],
+          "chapter_title": "游乐园追逐动画",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4003_001_full_no_bgm_editions_v1\\video\\ac4003_001_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "969C9D936EA4303CAE35034BBE383EB2464C545BADAAC6928D6408037451665C",
+          "input_video_frames": 1301,
+          "video_frames": 1300
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 1,
+  "expected_unique_source_count": 5,
+  "expected_total_video_frames": 1300,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

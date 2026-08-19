@@ -1,0 +1,539 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7118_exhaustive_material_v93_20260819",
+  "family": "ac7118",
+  "title": "全角色资料动画穷尽合集",
+  "content_type": "material",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "silent",
+  "authority": [
+    {
+      "role": "silent_audio_and_exact_source_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7118_silent_audio_and_exact_source_authority_v1_20260819\\AC7118_SILENT_AUDIO_AND_EXACT_SOURCE_AUTHORITY.json",
+      "sha256": "E7058AC8413B1169A2412F997592FBD0F6729A7427EEEDA70A75C219B319FA7F"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "material",
+      "output_filename": "ac7118_全角色资料动画穷尽合集.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7118_001",
+          "source_identities": [
+            "patch:1360"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_iro_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1360.mp4",
+          "sha256": "738DB3B86BFB632A1B70C6A87FC54773762656F582C5DE8ABE1F150E534F77A4",
+          "video_frames": 100
+        },
+        {
+          "order": 1,
+          "event": "ac7118_001",
+          "source_identities": [
+            "patch:1361"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_iro_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1361.mp4",
+          "sha256": "82831D8E30BC52AA08A83D656C15440EE29513AA9AE5991D8292477A70D1DD11",
+          "video_frames": 600
+        },
+        {
+          "order": 2,
+          "event": "ac7118_002",
+          "source_identities": [
+            "patch:1394"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_yac_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1394.mp4",
+          "sha256": "39CB5031FA2E48BE23AC945DBDD276B68FC05E874531E0FDE1993262790537A7",
+          "video_frames": 100
+        },
+        {
+          "order": 3,
+          "event": "ac7118_002",
+          "source_identities": [
+            "patch:1395"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_yac_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1395.mp4",
+          "sha256": "E23DF0ABD4260832F2E88BC529D0933DBE023A0EC5909167D135BE5312E458F8",
+          "video_frames": 600
+        },
+        {
+          "order": 4,
+          "event": "ac7118_003",
+          "source_identities": [
+            "patch:1390"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_tur_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1390.mp4",
+          "sha256": "54E9F8499E24A33AD058723329BFFB3D1E1CD9BFD324231D409428315BBEABFD",
+          "video_frames": 100
+        },
+        {
+          "order": 5,
+          "event": "ac7118_003",
+          "source_identities": [
+            "patch:1391"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_tur_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1391.mp4",
+          "sha256": "1B6A94699F2CB776D5EA40B59292D48FAF59BF2A0A8BB46C394CD63EFF74D10D",
+          "video_frames": 600
+        },
+        {
+          "order": 6,
+          "event": "ac7118_004",
+          "source_identities": [
+            "patch:1382"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_san_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1382.mp4",
+          "sha256": "FD9DA668269099AD77C1663C3F0B5613CDED13AB475E5B520DAD0D94BFA6A3F9",
+          "video_frames": 100
+        },
+        {
+          "order": 7,
+          "event": "ac7118_004",
+          "source_identities": [
+            "patch:1383"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_san_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1383.mp4",
+          "sha256": "86AEBD6B8FE37CD3AC8B242B86DFE31F8CD97F4DEDCB7D2B97492329915ED274",
+          "video_frames": 600
+        },
+        {
+          "order": 8,
+          "event": "ac7118_005",
+          "source_identities": [
+            "patch:1356"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_fer_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1356.mp4",
+          "sha256": "90A76D8FB2277482253B909C337273B98DCCE68460D5DA30EDF80AC90FB88BA4",
+          "video_frames": 100
+        },
+        {
+          "order": 9,
+          "event": "ac7118_005",
+          "source_identities": [
+            "patch:1357"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_fer_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1357.mp4",
+          "sha256": "2055729DAA9B8CD574DEF4AA5685576663AA22F1DA9407A52A05BE5BACEA7782",
+          "video_frames": 600
+        },
+        {
+          "order": 10,
+          "event": "ac7118_006",
+          "source_identities": [
+            "patch:1386"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_sqb_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1386.mp4",
+          "sha256": "F98395643C7462DE6198ACDC814647D8700B236C23D5237A2E1CBF6B32CC2D06",
+          "video_frames": 100
+        },
+        {
+          "order": 11,
+          "event": "ac7118_006",
+          "source_identities": [
+            "patch:1387"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_sqb_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1387.mp4",
+          "sha256": "05E14D6E239994C195F272606035B29CACA76929A3BBDDB6830CAFF86D47C8DB",
+          "video_frames": 600
+        },
+        {
+          "order": 12,
+          "event": "ac7118_007",
+          "source_identities": [
+            "patch:1380"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ren_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1380.mp4",
+          "sha256": "D3891144CB134B281F7E629554F48C054ECAE1E625B5144E2CC47BD09717FF73",
+          "video_frames": 100
+        },
+        {
+          "order": 13,
+          "event": "ac7118_007",
+          "source_identities": [
+            "patch:1381"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ren_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1381.mp4",
+          "sha256": "6B3123B4AB69AE82B98C08D4E6E8D8F43C6E9E5B425E8D248757595D9D5494A2",
+          "video_frames": 600
+        },
+        {
+          "order": 14,
+          "event": "ac7118_008",
+          "source_identities": [
+            "patch:1376"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mom_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1376.mp4",
+          "sha256": "07EC3D4999E124E4309D3C0D33E022CF0E42B502C54E513CDF2826F3D4C48697",
+          "video_frames": 100
+        },
+        {
+          "order": 15,
+          "event": "ac7118_008",
+          "source_identities": [
+            "patch:1377"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mom_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1377.mp4",
+          "sha256": "B49F7A6636F66E1A4B95C99706FF93BA633077705DB67FE8CA7AA8073FB8B592",
+          "video_frames": 600
+        },
+        {
+          "order": 16,
+          "event": "ac7118_009",
+          "source_identities": [
+            "patch:1362"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kae_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1362.mp4",
+          "sha256": "917B2EF1E07A6BD18BE0DD5B3F3E4BD8E8BABBF2BAB124BFF81EFE383D425715",
+          "video_frames": 100
+        },
+        {
+          "order": 17,
+          "event": "ac7118_009",
+          "source_identities": [
+            "patch:1363"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kae_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1363.mp4",
+          "sha256": "5C70658A1522878335C42194ED87CBF6C3DEAD770D5B3433145EA4CCBC8F09FC",
+          "video_frames": 600
+        },
+        {
+          "order": 18,
+          "event": "ac7118_010",
+          "source_identities": [
+            "patch:1364"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kur_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1364.mp4",
+          "sha256": "14F401C577D4763ACBC438B85F72EA3F0D1255550CEFC370D5E222F1CB7EA52A",
+          "video_frames": 100
+        },
+        {
+          "order": 19,
+          "event": "ac7118_010",
+          "source_identities": [
+            "patch:1365"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kur_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1365.mp4",
+          "sha256": "D1912AD45D21BEB0923AAFF3A57F019F6E443D9FFC48465A4F5545849391364A",
+          "video_frames": 600
+        },
+        {
+          "order": 20,
+          "event": "ac7118_011",
+          "source_identities": [
+            "patch:1368"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mad_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1368.mp4",
+          "sha256": "7235EF483A6E50F835F9D93172FC2CA18470C8490A9AE745056FFA51153B410C",
+          "video_frames": 100
+        },
+        {
+          "order": 21,
+          "event": "ac7118_011",
+          "source_identities": [
+            "patch:1369"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mad_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1369.mp4",
+          "sha256": "64246CC77E154E4A8A5DC25E661F2BF4D335997463002794429AC8888E01A653",
+          "video_frames": 600
+        },
+        {
+          "order": 22,
+          "event": "ac7118_012",
+          "source_identities": [
+            "patch:1384"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_say_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1384.mp4",
+          "sha256": "C9AB6BCC90709A8E901C37D1C783E3F133DDC55378922C40DEB50DD7DD1F9A05",
+          "video_frames": 100
+        },
+        {
+          "order": 23,
+          "event": "ac7118_012",
+          "source_identities": [
+            "patch:1385"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_say_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1385.mp4",
+          "sha256": "B5105DB46F6E066A30B88E314EB6D14875AA6BDB54E82433BF6451882B66563C",
+          "video_frames": 600
+        },
+        {
+          "order": 24,
+          "event": "ac7118_013",
+          "source_identities": [
+            "patch:1370"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mam_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1370.mp4",
+          "sha256": "55FC423A9A0419D5EC3403008054CA95B9C60968E1FC3F438F96BFE5F0857094",
+          "video_frames": 100
+        },
+        {
+          "order": 25,
+          "event": "ac7118_013",
+          "source_identities": [
+            "patch:1371"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mam_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1371.mp4",
+          "sha256": "D0768665D011D688EF7B3EF8A405554130EF910FA18655BB495843A6DC7AECAD",
+          "video_frames": 600
+        },
+        {
+          "order": 26,
+          "event": "ac7118_014",
+          "source_identities": [
+            "patch:1366"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kyo_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1366.mp4",
+          "sha256": "0CD5DE41BDA9230EE6A6BDA2053E9ED547439C5340D0DAA95CE3E8794A668AD6",
+          "video_frames": 100
+        },
+        {
+          "order": 27,
+          "event": "ac7118_014",
+          "source_identities": [
+            "patch:1367"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_kyo_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1367.mp4",
+          "sha256": "EA5B805E62572971E31E3ABE2181DC72BD73E78794EC82FBF265E9015DBFED93",
+          "video_frames": 600
+        },
+        {
+          "order": 28,
+          "event": "ac7118_015",
+          "source_identities": [
+            "patch:1358"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_hom_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1358.mp4",
+          "sha256": "AA336E74EA54683FD073878B62A733567A05B61F7AF7052814B85B27B187A21C",
+          "video_frames": 100
+        },
+        {
+          "order": 29,
+          "event": "ac7118_015",
+          "source_identities": [
+            "patch:1359"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_hom_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1359.mp4",
+          "sha256": "D421F59A0F6E8E3B0D335A8999FE1703741138D403796F980175DBD8CCADCDA3",
+          "video_frames": 600
+        },
+        {
+          "order": 30,
+          "event": "ac7118_016",
+          "source_identities": [
+            "patch:1374"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mit_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1374.mp4",
+          "sha256": "2F3C079AA524F2C09A1A7E6348B2D953B857741876B95EC7704F60249B60AD98",
+          "video_frames": 100
+        },
+        {
+          "order": 31,
+          "event": "ac7118_016",
+          "source_identities": [
+            "patch:1375"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mit_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1375.mp4",
+          "sha256": "95AD2F0D58CD61B0A464C48073481B11AD9E2C42130CDFB801172259305687C5",
+          "video_frames": 600
+        },
+        {
+          "order": 32,
+          "event": "ac7118_017",
+          "source_identities": [
+            "patch:1392"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ui_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1392.mp4",
+          "sha256": "993679DE3E79E1E250FBEC09EB2F2176E355615B6C4A70E810DBE86C99E92C51",
+          "video_frames": 100
+        },
+        {
+          "order": 33,
+          "event": "ac7118_017",
+          "source_identities": [
+            "patch:1393"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ui_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1393.mp4",
+          "sha256": "F42A8718B27DD2E58EE6D5F94DDA9915015F529137933286C3836C296DFCF9C2",
+          "video_frames": 600
+        },
+        {
+          "order": 34,
+          "event": "ac7118_018",
+          "source_identities": [
+            "patch:1388"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_tou_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1388.mp4",
+          "sha256": "0831327106887113C3EFF4B59DEDE428A7A8D040F7117EAE52AF7C2222B097F1",
+          "video_frames": 100
+        },
+        {
+          "order": 35,
+          "event": "ac7118_018",
+          "source_identities": [
+            "patch:1389"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_tou_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1389.mp4",
+          "sha256": "D1167AFBCE9A3C4927AD7EE13B742ADBD535F491E75FDD404BF36A70CA588474",
+          "video_frames": 600
+        },
+        {
+          "order": 36,
+          "event": "ac7118_019",
+          "source_identities": [
+            "patch:1378"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_nem_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1378.mp4",
+          "sha256": "E1C0CFE0B16C38BC456EEF6439DFBBA2915FD21B009BC69952FDB4BE9686D6F6",
+          "video_frames": 100
+        },
+        {
+          "order": 37,
+          "event": "ac7118_019",
+          "source_identities": [
+            "patch:1379"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_nem_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1379.mp4",
+          "sha256": "C20B73A777C1FDBFBD6093919A9336504E7EAE1458EC54E5E90DFF25EB72D6DF",
+          "video_frames": 600
+        },
+        {
+          "order": 38,
+          "event": "ac7118_020",
+          "source_identities": [
+            "patch:1348"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ama_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1348.mp4",
+          "sha256": "907E3FF34F02709E70771CA7717D964F0A47985ABE6D66D8462241A1089AC20E",
+          "video_frames": 100
+        },
+        {
+          "order": 39,
+          "event": "ac7118_020",
+          "source_identities": [
+            "patch:1349"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ama_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1349.mp4",
+          "sha256": "3F0367D50D8A747A63D450D94AA961A0A78EED8683066CAF06F0E80E53A10A3A",
+          "video_frames": 600
+        },
+        {
+          "order": 40,
+          "event": "ac7118_021",
+          "source_identities": [
+            "patch:1372"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mif_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1372.mp4",
+          "sha256": "8CDBA24117C1DE2D9456BE0DB877C3CDA77054AC43B17876F884E8595AE3F6A3",
+          "video_frames": 100
+        },
+        {
+          "order": 41,
+          "event": "ac7118_021",
+          "source_identities": [
+            "patch:1373"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_mif_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1373.mp4",
+          "sha256": "E422612D183908DA5E18DF0CA05FDDB6B88E340566C15E3E3783A9C73EAF2135",
+          "video_frames": 600
+        },
+        {
+          "order": 42,
+          "event": "ac7118_022",
+          "source_identities": [
+            "patch:1350"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ari_IN",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1350.mp4",
+          "sha256": "9A213C2A48CEF608AB35D9BBC4D8939C4C59FA37E3C32874F517680A65DB755D",
+          "video_frames": 100
+        },
+        {
+          "order": 43,
+          "event": "ac7118_022",
+          "source_identities": [
+            "patch:1351"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_ari_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1351.mp4",
+          "sha256": "26E322DBC669E54992C9AECB7B8BC0308B7DD5995AE307450B53AFB0DB200532",
+          "video_frames": 600
+        },
+        {
+          "order": 44,
+          "event": "ac7118_023",
+          "source_identities": [
+            "patch:1353"
+          ],
+          "chapter_title": "ac7118_at_ch_profile_end_LP",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1353.mp4",
+          "sha256": "BE0A1706D06E7225F02447A367C2E02461866E7F1224BF927EF7CB025EB3F396",
+          "video_frames": 30
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 45,
+  "expected_unique_source_count": 45,
+  "expected_total_video_frames": 15430,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

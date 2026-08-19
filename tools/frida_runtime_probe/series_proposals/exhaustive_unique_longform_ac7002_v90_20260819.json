@@ -1,0 +1,109 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7002_exhaustive_unique_longform_v90_20260819",
+  "family": "ac7002",
+  "title": "夜空魔女战斗全视频合集",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "runtime_source_identity_audit",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_p1_native416_scene_motion_v86_20260819\\adapters\\ac7002\\exhaustive_source_identity_audit_v1_20260819\\EXHAUSTIVE_FAMILY_SOURCE_IDENTITY_AUDIT.json",
+      "sha256": "E2383CC541271A6999A18E0A7E3DAAFAC1416F5E71C4C5C1567FAFFF3A2DCC5C"
+    },
+    {
+      "role": "all_18_family_authority_queue",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\native416_longform_code_audit_queue_v89_20260819\\NATIVE416_LONGFORM_CODE_AUDIT_QUEUE.csv",
+      "sha256": "4675F3E70DFA0F7B2D234F176149D798C51892C960EC2B8CFAC1AC113C43D3D5"
+    },
+    {
+      "role": "native_416_mother_ledger",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\audience_exhaustive_family_audit_v80_20260819\\NATIVE_FAMILY_UNIQUENESS_LEDGER.csv",
+      "sha256": "2600BFBEB273EC38A483E192EA2EF921D3673FD74076E9142542DC4570819217"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac7002_夜空魔女战斗全视频合集_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7002_001",
+          "source_identities": [
+            "patch:1174"
+          ],
+          "chapter_title": "夜空魔女登场",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_001_full_no_bgm_editions_v1\\video\\ac7002_001_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "99F90EC19784412D20385896E517BCEA86DE563604687EE6C4A6F890DDC2D33A",
+          "video_frames": 113
+        },
+        {
+          "order": 1,
+          "event": "ac7002_002",
+          "source_identities": [
+            "patch:1178"
+          ],
+          "chapter_title": "魔法少女迎战",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_002_full_no_bgm_editions_v1\\video\\ac7002_002_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "9BB8F3BCE57CACF64BBE2208DABA7CB08D81ABCE63C1AB1BCE20FF4908EF5F28",
+          "video_frames": 60
+        },
+        {
+          "order": 2,
+          "event": "ac7002_003",
+          "source_identities": [
+            "patch:1175"
+          ],
+          "chapter_title": "白色斗篷魔法少女飞行战斗",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_003_full_no_bgm_editions_v1\\video\\ac7002_003_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "2ED3EDEBE99034C7249D5E2889F8F4AB26847783E4A780F84905502F6AB4300A",
+          "video_frames": 886
+        },
+        {
+          "order": 3,
+          "event": "ac7002_004",
+          "source_identities": [
+            "patch:1176",
+            "patch:1177"
+          ],
+          "chapter_title": "魔女追逐战",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_004_full_no_bgm_editions_v1\\video\\ac7002_004_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "33C30B86B6F12DB8E949957CE77D397303858147EA641060720C6A4A5A5B3553",
+          "video_frames": 840
+        },
+        {
+          "order": 4,
+          "event": "ac7002_005",
+          "source_identities": [
+            "patch:1179"
+          ],
+          "chapter_title": "红夜魔女决战",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac7002_005_full_no_bgm_editions_v1\\video\\ac7002_005_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "67A854E648AA8D792E1692F4ABF5878F3EA99BB6DDB9BEF8E2BAA8ACAB2F8EAE",
+          "video_frames": 720
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 5,
+  "expected_unique_source_count": 6,
+  "expected_total_video_frames": 2619,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

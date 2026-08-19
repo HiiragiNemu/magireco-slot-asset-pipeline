@@ -1,0 +1,121 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac8005_exhaustive_unique_longform_v92_20260819",
+  "family": "ac8005",
+  "title": "Magius 玩法提示全视频合集",
+  "content_type": "gameplay_effect",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "empty_cut_and_unique_source_code_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac8005_empty_cut_code_authority_v1_20260819\\AC8005_EMPTY_CUT_CODE_AUTHORITY.json",
+      "sha256": "A1FC294855CD32979FEE9CEE4F1901560182E2702E06E2D4EA9F994924E79B64"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac8005_Magius玩法提示全视频合集_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac8005_001",
+          "source_identities": [
+            "patch:1772"
+          ],
+          "chapter_title": "发展预告",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1772.mp4",
+          "sha256": "39B0EBBB1F3C3A822E3B993FDCC2C43A4D52CB4A087FFEBA343E1B0722B82907",
+          "video_frames": 480
+        },
+        {
+          "order": 1,
+          "event": "ac8005_002",
+          "source_identities": [
+            "patch:1770"
+          ],
+          "chapter_title": "前兆",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1770.mp4",
+          "sha256": "636F3DAAD1CC94E4C635809268CAC7D721684ADD0A7302D1EC70481BA4A05E91",
+          "video_frames": 480
+        },
+        {
+          "order": 2,
+          "event": "ac8005_003",
+          "source_identities": [
+            "patch:1773"
+          ],
+          "chapter_title": "魔女挑战",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1773.mp4",
+          "sha256": "D00542D9B18ECC5720E961471A52380E52E8DBEC3E677AEE529CB73B49D6C25A",
+          "video_frames": 480
+        },
+        {
+          "order": 3,
+          "event": "ac8005_004",
+          "source_identities": [
+            "patch:1768"
+          ],
+          "chapter_title": "胜利提示",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1768.mp4",
+          "sha256": "B5265790A49F241097F35AC6559FE172A32C90F8E76D5B31FBA08CEF1DD62EB8",
+          "video_frames": 60
+        },
+        {
+          "order": 4,
+          "event": "ac8005_005",
+          "source_identities": [
+            "patch:1771"
+          ],
+          "chapter_title": "高期待",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1771.mp4",
+          "sha256": "2A47BC2F4CCE9EB48F9067A74D507D46A940460F52975CA39F4D89243EFBA559",
+          "video_frames": 480
+        },
+        {
+          "order": 5,
+          "event": "ac8005_012",
+          "source_identities": [
+            "patch:1762"
+          ],
+          "chapter_title": "胜利背景进入",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1762.mp4",
+          "sha256": "297EDEE915D3DE0C41EAD5F9C48B8BDFF6F5F78F7F32AE29FF3FEF42D4666058",
+          "video_frames": 134
+        },
+        {
+          "order": 6,
+          "event": "ac8005_014",
+          "source_identities": [
+            "patch:1769"
+          ],
+          "chapter_title": "机会提示",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\videos_hflip\\Unclassified_Slices\\patch_video_1769.mp4",
+          "sha256": "1893719CCB6C37F0F829EDDF5F0537FA955881C5C9A6E886DFEF7574A42D4FEE",
+          "video_frames": 480
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 7,
+  "expected_unique_source_count": 7,
+  "expected_total_video_frames": 2594,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "magireco-exhaustive-longform-supersession-v1",
+  "active": {
+    "ac7002": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v90r1_exhaustive_unique_longform_20260819\\ac7002\\video\\ac7002_夜空魔女战斗全视频合集_严格无BGM__none.mp4",
+      "sha256": "2968FD144DF80B4FA45279C5DAB5B06CC1D13458A589070081079155659CC11D"
+    },
+    "ac4003": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r4_ac4003_parent_cut_exact_20260819\\ac4003\\video\\ac4003_游乐园追逐动画_父级边界精确版v4_严格无BGM__none.mp4",
+      "sha256": "3FB31DB1A06D3FF3C44889164E900B63DBACF3C84075C18D31F26A557243F326"
+    }
+  },
+  "superseded": [
+    {
+      "release": "v90 ac7002",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v90_exhaustive_unique_longform_20260819\\ac7002",
+      "reason": "global AAC priming shift made video start 0.021029 and format 21.333ms too long"
+    },
+    {
+      "release": "v91r1 ac4003",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r1_ac4003_parent_cut_exact_20260819\\ac4003",
+      "reason": "audio packet overhang after concat stream copy"
+    },
+    {
+      "release": "v91r2 ac4003",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r2_ac4003_parent_cut_exact_20260819\\ac4003",
+      "reason": "concat remux reintroduced 21.333ms AAC overhang"
+    },
+    {
+      "release": "v91r3 ac4003",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r3_ac4003_parent_cut_exact_20260819\\ac4003",
+      "reason": "media exact but superseded by v91r4 with final reproducible exact-timeline QA"
+    }
+  ],
+  "source_media_deleted": false,
+  "superseded_media_upload_allowed": false
+}
