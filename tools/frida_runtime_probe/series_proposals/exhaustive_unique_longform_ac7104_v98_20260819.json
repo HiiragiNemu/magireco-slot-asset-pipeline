@@ -1,0 +1,191 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7104_exhaustive_unique_longform_v98_20260819",
+  "family": "ac7104",
+  "title": "菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "event_global_timing_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_event_global_timing_authority_v1_20260817\\AC7101_AC7107_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "409DC2D498A001C1D9267F3A3723D4152BF1BB4B39AFE355B4D891300E829900"
+    },
+    {
+      "role": "exact_decoded_source_uniqueness",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_exact_decoded_uniqueness_v96_20260819\\EXACT_DECODED_UNIQUENESS.json",
+      "sha256": "1FF77E17D7F33EB887639205150C4F04D60306038B6B27EFEF2421742C72BFFE"
+    },
+    {
+      "role": "result_chapter_inputs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\RESULT_CHAPTER_INPUTS.json",
+      "sha256": "04F07394FAA97B52EEAB2349D7626788822618EAA4691F520DDADC815C3DF2CA"
+    },
+    {
+      "role": "selector003_runtime_attempt_record",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac7101_ac7107_selector003_scene_motion_v95_20260819\\FAILED_CAPTURE.json",
+      "sha256": "A1B8B87CBCFD46B8AD60C0A1E046C017A55DEBC6349DF0105F66BAAA69CBBFFE"
+    },
+    {
+      "role": "audience_event_source_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "role": "dirinfo_event_routes",
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7104_001",
+          "source_identities": [
+            "patch:1234",
+            "patch:1233",
+            "patch:1232"
+          ],
+          "chapter_title": "菲利希亚品尝幸运水",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_001_event_archive_full_no_bgm_editions_v1\\video\\ac7104_001_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "E8989042233E849683C210B156857FB93D5F850822B4F11ABFDBD0FEB55CB1B7",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7104_002",
+          "source_identities": [
+            "patch:1237",
+            "patch:1236",
+            "patch:1235"
+          ],
+          "chapter_title": "杏子与Magius谈悲叹之种",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_002_event_archive_full_no_bgm_editions_v1\\video\\ac7104_002_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "9AA14A8A579E9E232995FCD3C89AECF624B71BD593D576B26A11DE82AB1A93D3",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7104_003",
+          "source_identities": [
+            "patch:1238"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7104_003__result_chapter_silent_aac.mp4",
+          "sha256": "04A252D0AFF2AE87EBB2249254545949C7CE7AF0354BE6ACC5DDB32E3B380526",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "ja",
+      "output_filename": "ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__ja.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7104_001",
+          "source_identities": [
+            "patch:1234",
+            "patch:1233",
+            "patch:1232"
+          ],
+          "chapter_title": "菲利希亚品尝幸运水",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_001_event_archive_full_no_bgm_editions_v1\\video\\ac7104_001_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "0394F41A2CAE3EFFF910138B484227C5F3318FB8892BB66F7375E68C1FAFD8D2",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7104_002",
+          "source_identities": [
+            "patch:1237",
+            "patch:1236",
+            "patch:1235"
+          ],
+          "chapter_title": "杏子与Magius谈悲叹之种",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_002_event_archive_full_no_bgm_editions_v1\\video\\ac7104_002_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "84C9FDB08D522E1516491CEC91E8602FC96813CEC17F9CC800A3A77DDD9CC8A5",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7104_003",
+          "source_identities": [
+            "patch:1238"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7104_003__result_chapter_silent_aac.mp4",
+          "sha256": "04A252D0AFF2AE87EBB2249254545949C7CE7AF0354BE6ACC5DDB32E3B380526",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "zh",
+      "output_filename": "ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__zh.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7104_001",
+          "source_identities": [
+            "patch:1234",
+            "patch:1233",
+            "patch:1232"
+          ],
+          "chapter_title": "菲利希亚品尝幸运水",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_001_event_archive_full_no_bgm_editions_v1\\video\\ac7104_001_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "E82544F411C61C96D15B93FD65852435C66BDD81EBF065A05954323BD3F8702F",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7104_002",
+          "source_identities": [
+            "patch:1237",
+            "patch:1236",
+            "patch:1235"
+          ],
+          "chapter_title": "杏子与Magius谈悲叹之种",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7104_002_event_archive_full_no_bgm_editions_v1\\video\\ac7104_002_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "A04835CB7E53BF1932CB86016C26369C2059C503CB78B78A2CFEBEA06CEE24B3",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7104_003",
+          "source_identities": [
+            "patch:1238"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7104_003__result_chapter_silent_aac.mp4",
+          "sha256": "04A252D0AFF2AE87EBB2249254545949C7CE7AF0354BE6ACC5DDB32E3B380526",
+          "video_frames": 30
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 3,
+  "expected_unique_source_count": 7,
+  "expected_total_video_frames": 5130,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

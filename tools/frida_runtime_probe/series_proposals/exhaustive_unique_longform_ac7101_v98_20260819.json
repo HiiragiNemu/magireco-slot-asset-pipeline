@@ -1,0 +1,196 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7101_exhaustive_unique_longform_v98_20260819",
+  "family": "ac7101",
+  "title": "彩羽追寻愿望与忧全视频合集",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "event_global_timing_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_event_global_timing_authority_v1_20260817\\AC7101_AC7107_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "409DC2D498A001C1D9267F3A3723D4152BF1BB4B39AFE355B4D891300E829900"
+    },
+    {
+      "role": "exact_decoded_source_uniqueness",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_exact_decoded_uniqueness_v96_20260819\\EXACT_DECODED_UNIQUENESS.json",
+      "sha256": "1FF77E17D7F33EB887639205150C4F04D60306038B6B27EFEF2421742C72BFFE"
+    },
+    {
+      "role": "full_av_subtitle_overlap_audit",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7102_full_av_overlap_audit_v97_20260819\\FULL_AV_SUBTITLE_OVERLAP_AUDIT.json",
+      "sha256": "4423FD0821444C4EDF046233B2124A93E04B8195D8E0DEC86B78CC9052FE932B"
+    },
+    {
+      "role": "result_chapter_inputs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\RESULT_CHAPTER_INPUTS.json",
+      "sha256": "04F07394FAA97B52EEAB2349D7626788822618EAA4691F520DDADC815C3DF2CA"
+    },
+    {
+      "role": "selector003_runtime_attempt_record",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac7101_ac7107_selector003_scene_motion_v95_20260819\\FAILED_CAPTURE.json",
+      "sha256": "A1B8B87CBCFD46B8AD60C0A1E046C017A55DEBC6349DF0105F66BAAA69CBBFFE"
+    },
+    {
+      "role": "audience_event_source_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "role": "dirinfo_event_routes",
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7101_001",
+          "source_identities": [
+            "patch:1213",
+            "patch:1212",
+            "patch:1211"
+          ],
+          "chapter_title": "彩羽追问自己的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_001_event_archive_full_no_bgm_editions_v1\\video\\ac7101_001_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "EC93BA4A02A75888F097BF4B5070689744A74F3519BEDD46CB26B026895338D4",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7101_002",
+          "source_identities": [
+            "patch:1216",
+            "patch:1215",
+            "patch:1214"
+          ],
+          "chapter_title": "彩羽想起为忧许下的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_002_event_archive_full_no_bgm_editions_v1\\video\\ac7101_002_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "1F610CADA47DD5B1B3AD4896F752E7D8588216665089F427BE69514D2074F3CE",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7101_003",
+          "source_identities": [
+            "patch:1217"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7101_003__result_chapter_silent_aac.mp4",
+          "sha256": "D3350C6FD0D325EE70B92D3B85774AB7B465B9BB43447036AF46AF6A68D8AE72",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "ja",
+      "output_filename": "ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__ja.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7101_001",
+          "source_identities": [
+            "patch:1213",
+            "patch:1212",
+            "patch:1211"
+          ],
+          "chapter_title": "彩羽追问自己的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_001_event_archive_full_no_bgm_editions_v1\\video\\ac7101_001_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "2CCEBC420A37B8133962A0CE79502A63D6C6D7AA150FB7ADD2C19118F400ACD8",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7101_002",
+          "source_identities": [
+            "patch:1216",
+            "patch:1215",
+            "patch:1214"
+          ],
+          "chapter_title": "彩羽想起为忧许下的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_002_event_archive_full_no_bgm_editions_v1\\video\\ac7101_002_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "A6D93866A1ED9295A17DB3B34A32C46C3CC1EE8D699E0E8DA85423B4D5A4D1C5",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7101_003",
+          "source_identities": [
+            "patch:1217"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7101_003__result_chapter_silent_aac.mp4",
+          "sha256": "D3350C6FD0D325EE70B92D3B85774AB7B465B9BB43447036AF46AF6A68D8AE72",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "zh",
+      "output_filename": "ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__zh.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7101_001",
+          "source_identities": [
+            "patch:1213",
+            "patch:1212",
+            "patch:1211"
+          ],
+          "chapter_title": "彩羽追问自己的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_001_event_archive_full_no_bgm_editions_v1\\video\\ac7101_001_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "4DCA1BA7E0ABD4177B4947007CF07136A30CDBE0D03EAA77CF7F3B694EFCAA10",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7101_002",
+          "source_identities": [
+            "patch:1216",
+            "patch:1215",
+            "patch:1214"
+          ],
+          "chapter_title": "彩羽想起为忧许下的愿望",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7101_002_event_archive_full_no_bgm_editions_v1\\video\\ac7101_002_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "0E210F3612D41D6EB5250226AB831A3E63FC3AB847B12A275420E4116570F58E",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7101_003",
+          "source_identities": [
+            "patch:1217"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7101_003__result_chapter_silent_aac.mp4",
+          "sha256": "D3350C6FD0D325EE70B92D3B85774AB7B465B9BB43447036AF46AF6A68D8AE72",
+          "video_frames": 30
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 3,
+  "expected_unique_source_count": 7,
+  "expected_total_video_frames": 5130,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

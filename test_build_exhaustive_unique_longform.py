@@ -6,6 +6,7 @@ from tools.frida_runtime_probe.build_exhaustive_unique_longform import (
     decoded_pcm_is_zero,
     ffconcat_quote,
     output_materialization_strategy,
+    video_copy_needs_exact_cfr_normalization,
     validate_plan_structure,
     validate_probe,
 )
@@ -163,6 +164,30 @@ class ExhaustiveLongformPlanTests(unittest.TestCase):
             ]),
             "split_video_copy_audio_once_bounded",
         )
+
+    def test_complete_copy_one_frame_short_requires_exact_cfr_normalization(self):
+        probe = {"streams": [{
+            "codec_type": "video", "codec_name": "h264",
+            "r_frame_rate": "30/1", "nb_read_frames": "5130",
+            "start_time": "0.000000", "duration": "170.966667",
+        }]}
+        self.assertTrue(video_copy_needs_exact_cfr_normalization(probe, 5130))
+
+    def test_exact_copy_does_not_require_exact_cfr_normalization(self):
+        probe = {"streams": [{
+            "codec_type": "video", "codec_name": "h264",
+            "r_frame_rate": "30/1", "nb_read_frames": "5130",
+            "start_time": "0.000000", "duration": "171.000000",
+        }]}
+        self.assertFalse(video_copy_needs_exact_cfr_normalization(probe, 5130))
+
+    def test_incomplete_copy_is_not_silently_normalized(self):
+        probe = {"streams": [{
+            "codec_type": "video", "codec_name": "h264",
+            "r_frame_rate": "30/1", "nb_read_frames": "5129",
+            "start_time": "0.000000", "duration": "170.966667",
+        }]}
+        self.assertFalse(video_copy_needs_exact_cfr_normalization(probe, 5130))
 
     def test_silent_single_chapter_requires_synthetic_audio(self):
         self.assertEqual(

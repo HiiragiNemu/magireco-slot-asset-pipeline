@@ -1,0 +1,191 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7106_exhaustive_unique_longform_v98_20260819",
+  "family": "ac7106",
+  "title": "灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "event_global_timing_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_event_global_timing_authority_v1_20260817\\AC7101_AC7107_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "409DC2D498A001C1D9267F3A3723D4152BF1BB4B39AFE355B4D891300E829900"
+    },
+    {
+      "role": "exact_decoded_source_uniqueness",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_exact_decoded_uniqueness_v96_20260819\\EXACT_DECODED_UNIQUENESS.json",
+      "sha256": "1FF77E17D7F33EB887639205150C4F04D60306038B6B27EFEF2421742C72BFFE"
+    },
+    {
+      "role": "result_chapter_inputs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\RESULT_CHAPTER_INPUTS.json",
+      "sha256": "04F07394FAA97B52EEAB2349D7626788822618EAA4691F520DDADC815C3DF2CA"
+    },
+    {
+      "role": "selector003_runtime_attempt_record",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac7101_ac7107_selector003_scene_motion_v95_20260819\\FAILED_CAPTURE.json",
+      "sha256": "A1B8B87CBCFD46B8AD60C0A1E046C017A55DEBC6349DF0105F66BAAA69CBBFFE"
+    },
+    {
+      "role": "audience_event_source_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "role": "dirinfo_event_routes",
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7106_001",
+          "source_identities": [
+            "patch:1248",
+            "patch:1247",
+            "patch:1246"
+          ],
+          "chapter_title": "灯花与彩羽重新相识",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_001_event_archive_full_no_bgm_editions_v1\\video\\ac7106_001_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "22E764DB903B3C453B8FBA46AA3098D00A113F7512B7BFA1F801407D389A597B",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7106_002",
+          "source_identities": [
+            "patch:1251",
+            "patch:1250",
+            "patch:1249"
+          ],
+          "chapter_title": "麻美揭露魔法少女的结局",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_002_event_archive_full_no_bgm_editions_v1\\video\\ac7106_002_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "C34398AED3FF6390DA5A15AAE0437E41C31454CE9848FFD2B166817A3486C74B",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7106_003",
+          "source_identities": [
+            "patch:1252"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7106_003__result_chapter_silent_aac.mp4",
+          "sha256": "30BB786EC57120BC60A6F24DEA62FC4CB58558846854F9F8BFA66A7C3DDE9F13",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "ja",
+      "output_filename": "ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__ja.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7106_001",
+          "source_identities": [
+            "patch:1248",
+            "patch:1247",
+            "patch:1246"
+          ],
+          "chapter_title": "灯花与彩羽重新相识",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_001_event_archive_full_no_bgm_editions_v1\\video\\ac7106_001_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "F759A7F665576A36BBE16260EDEE0C271BA530474BDBABB1E8A29AF44E28687C",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7106_002",
+          "source_identities": [
+            "patch:1251",
+            "patch:1250",
+            "patch:1249"
+          ],
+          "chapter_title": "麻美揭露魔法少女的结局",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_002_event_archive_full_no_bgm_editions_v1\\video\\ac7106_002_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "A27496B28CD01165631660CE77A017F5E38D23621199A16590A1D2DC2470D600",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7106_003",
+          "source_identities": [
+            "patch:1252"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7106_003__result_chapter_silent_aac.mp4",
+          "sha256": "30BB786EC57120BC60A6F24DEA62FC4CB58558846854F9F8BFA66A7C3DDE9F13",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "zh",
+      "output_filename": "ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__zh.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7106_001",
+          "source_identities": [
+            "patch:1248",
+            "patch:1247",
+            "patch:1246"
+          ],
+          "chapter_title": "灯花与彩羽重新相识",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_001_event_archive_full_no_bgm_editions_v1\\video\\ac7106_001_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "7F788CBF0CAE92115CE37AE0AF9F7E1FDA11FACBA301F50746AC3FBD21C1FA4A",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7106_002",
+          "source_identities": [
+            "patch:1251",
+            "patch:1250",
+            "patch:1249"
+          ],
+          "chapter_title": "麻美揭露魔法少女的结局",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7106_002_event_archive_full_no_bgm_editions_v1\\video\\ac7106_002_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "959F57A6D3ED7EE39076472C571AF08D3EF0D8ACBE45E8BEB69EBCEA67A5E2D1",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7106_003",
+          "source_identities": [
+            "patch:1252"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7106_003__result_chapter_silent_aac.mp4",
+          "sha256": "30BB786EC57120BC60A6F24DEA62FC4CB58558846854F9F8BFA66A7C3DDE9F13",
+          "video_frames": 30
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 3,
+  "expected_unique_source_count": 7,
+  "expected_total_video_frames": 5130,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

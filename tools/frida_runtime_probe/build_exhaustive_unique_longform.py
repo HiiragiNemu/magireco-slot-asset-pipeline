@@ -426,6 +426,36 @@ def output_materialization_strategy(
     return "split_video_copy_audio_once_bounded"
 
 
+def video_copy_needs_exact_cfr_normalization(
+    probe: Mapping[str, Any], expected_frames: int
+) -> bool:
+    """Return true only for an otherwise complete copy with an inexact MP4 clock.
+
+    The concat demuxer can preserve all H.264 access units yet write a stream
+    duration that ends one frame early at a chapter boundary.  That is not an
+    acceptable final timeline.  Missing/extra frames remain a hard failure;
+    only a complete 30 fps frame sequence may be normalized.
+    """
+    videos = [
+        stream for stream in probe.get("streams", [])
+        if stream.get("codec_type") == "video"
+    ]
+    if len(videos) != 1:
+        return False
+    video = videos[0]
+    if (
+        video.get("codec_name") != "h264"
+        or video.get("r_frame_rate") != "30/1"
+        or int(video.get("nb_read_frames", -1)) != expected_frames
+    ):
+        return False
+    expected_duration = expected_frames / 30
+    tolerance = 1 / 3000
+    start = float(video.get("start_time", "nan"))
+    duration = float(video.get("duration", "nan"))
+    return abs(start) > tolerance or abs(duration - expected_duration) > tolerance
+
+
 def run_command(command: list[str]) -> dict[str, Any]:
     completed = subprocess.run(
         command, capture_output=True, text=True, encoding="utf-8"
@@ -637,6 +667,8 @@ def build(
             paths = effective_paths[edition_name]
             audio_assembly = str(edition["audio_assembly"])
             strategy = output_materialization_strategy(paths, audio_assembly)
+            video_normalization_applied = False
+            video_copy_probe_before_normalization: dict[str, Any] | None = None
             if strategy == "exact_single_chapter_copy":
                 shutil.copy2(paths[0], output)
                 command_records.append({
@@ -674,6 +706,32 @@ def build(
                         "-c:v", "copy", "-movflags", "+faststart", str(video_only),
                     ]
                     command_records.append(run_command(video_command))
+                video_copy_probe_before_normalization = run_probe(
+                    ffprobe, video_only
+                )
+                if video_copy_needs_exact_cfr_normalization(
+                    video_copy_probe_before_normalization,
+                    plan["expected_total_video_frames"],
+                ):
+                    normalized_video = (
+                        assembly_dir / f"{edition_name}.video.normalized.mp4"
+                    )
+                    frame_count = plan["expected_total_video_frames"]
+                    normalize_command = [
+                        ffmpeg, "-v", "error", "-i", str(video_only),
+                        "-map", "0:v:0", "-vf",
+                        f"fps=30,trim=end_frame={frame_count},"
+                        "setpts=N/(30*TB)",
+                        "-frames:v", str(frame_count), "-an", "-c:v",
+                        "libx264", "-preset", "medium", "-crf", "18",
+                        "-pix_fmt", "yuv420p", "-r", "30",
+                        "-video_track_timescale", "15360", "-movflags",
+                        "+faststart", str(normalized_video),
+                    ]
+                    command_records.append(run_command(normalize_command))
+                    video_only = normalized_video
+                    video_normalization_applied = True
+                    strategy += "_exact_cfr_normalized"
                 duration = plan["expected_total_video_frames"] / 30
                 if audio_assembly == "synthesize_silence":
                     audio_command = [
@@ -713,6 +771,10 @@ def build(
                 "sha256": file_sha256(output),
                 "assembly_method": strategy,
                 "audio_assembly": audio_assembly,
+                "video_normalization_applied": video_normalization_applied,
+                "video_copy_probe_before_normalization": (
+                    video_copy_probe_before_normalization
+                ),
                 "media_qa": qa,
             })
         reverify_inputs(authorities, source_editions)

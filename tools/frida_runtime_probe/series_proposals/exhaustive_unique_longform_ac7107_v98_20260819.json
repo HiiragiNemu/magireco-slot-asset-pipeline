@@ -1,0 +1,191 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac7107_exhaustive_unique_longform_v98_20260819",
+  "family": "ac7107",
+  "title": "八千代追问Magius据点与黑江得知彩羽去向全视频合集",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "event_global_timing_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_event_global_timing_authority_v1_20260817\\AC7101_AC7107_EVENT_GLOBAL_TIMING_AUTHORITY.json",
+      "sha256": "409DC2D498A001C1D9267F3A3723D4152BF1BB4B39AFE355B4D891300E829900"
+    },
+    {
+      "role": "exact_decoded_source_uniqueness",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_exact_decoded_uniqueness_v96_20260819\\EXACT_DECODED_UNIQUENESS.json",
+      "sha256": "1FF77E17D7F33EB887639205150C4F04D60306038B6B27EFEF2421742C72BFFE"
+    },
+    {
+      "role": "result_chapter_inputs",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\RESULT_CHAPTER_INPUTS.json",
+      "sha256": "04F07394FAA97B52EEAB2349D7626788822618EAA4691F520DDADC815C3DF2CA"
+    },
+    {
+      "role": "selector003_runtime_attempt_record",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac7101_ac7107_selector003_scene_motion_v95_20260819\\FAILED_CAPTURE.json",
+      "sha256": "A1B8B87CBCFD46B8AD60C0A1E046C017A55DEBC6349DF0105F66BAAA69CBBFFE"
+    },
+    {
+      "role": "audience_event_source_catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "role": "dirinfo_event_routes",
+      "path": "D:\\magia\\MyProducts\\casino\\runtime_recovery_20260703\\dirinfo_event_table_decode_v3_20260703\\dirinfo_event_routes.csv",
+      "sha256": "44202FCB8186D9577C33A4A20C492CFC84BFDD94DEC4EE76EB22DF8F4444DC01"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__none.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7107_001",
+          "source_identities": [
+            "patch:1255",
+            "patch:1254",
+            "patch:1253"
+          ],
+          "chapter_title": "八千代追问Magius据点",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_001_event_archive_full_no_bgm_editions_v1\\video\\ac7107_001_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "C34EC8E82500F683BA8595AFF21095AC1EE65713DF57E87CB8E7A450A2C21C28",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7107_002",
+          "source_identities": [
+            "patch:1258",
+            "patch:1257",
+            "patch:1256"
+          ],
+          "chapter_title": "黑江得知彩羽的去向",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_002_event_archive_full_no_bgm_editions_v1\\video\\ac7107_002_event_archive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "1443958252E3EF9A505E19A7BDFA85AAD9B502698D29F73D8BF154347BDAA34A",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7107_003",
+          "source_identities": [
+            "patch:1259"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7107_003__result_chapter_silent_aac.mp4",
+          "sha256": "26A4E61427EF9D36E6EEE7235CCC121DF25D9794A45D5514A5BA86F60C9370CF",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "ja",
+      "output_filename": "ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__ja.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7107_001",
+          "source_identities": [
+            "patch:1255",
+            "patch:1254",
+            "patch:1253"
+          ],
+          "chapter_title": "八千代追问Magius据点",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_001_event_archive_full_no_bgm_editions_v1\\video\\ac7107_001_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "31D39E8A2FB5230A680A87CFB19CD00608BF4202A843F31F3BEB0785EB7217F3",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7107_002",
+          "source_identities": [
+            "patch:1258",
+            "patch:1257",
+            "patch:1256"
+          ],
+          "chapter_title": "黑江得知彩羽的去向",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_002_event_archive_full_no_bgm_editions_v1\\video\\ac7107_002_event_archive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "EFF50D0EC29ABC05368AE2548A0DDB750F2ECF3319D93CEDA19B9E2D5376C055",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7107_003",
+          "source_identities": [
+            "patch:1259"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7107_003__result_chapter_silent_aac.mp4",
+          "sha256": "26A4E61427EF9D36E6EEE7235CCC121DF25D9794A45D5514A5BA86F60C9370CF",
+          "video_frames": 30
+        }
+      ]
+    },
+    {
+      "edition": "zh",
+      "output_filename": "ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__zh.mp4",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac7107_001",
+          "source_identities": [
+            "patch:1255",
+            "patch:1254",
+            "patch:1253"
+          ],
+          "chapter_title": "八千代追问Magius据点",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_001_event_archive_full_no_bgm_editions_v1\\video\\ac7107_001_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "BD857BC4F47E7093410C3FB2DDE38E65F86D6F9F7F2FBC0638A74CBA8760CA8C",
+          "video_frames": 2550
+        },
+        {
+          "order": 1,
+          "event": "ac7107_002",
+          "source_identities": [
+            "patch:1258",
+            "patch:1257",
+            "patch:1256"
+          ],
+          "chapter_title": "黑江得知彩羽的去向",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v76r3_ac7101_ac7107_event_global_archives_20260817\\ac7107_002_event_archive_full_no_bgm_editions_v1\\video\\ac7107_002_event_archive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "A386FCFDAB9F2B32B0E0F8EA863369169D09E8618E50D427C678358BE94B485A",
+          "video_frames": 2550
+        },
+        {
+          "order": 2,
+          "event": "ac7107_003",
+          "source_identities": [
+            "patch:1259"
+          ],
+          "chapter_title": "结果画面",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac7101_ac7107_result_chapter_inputs_v97_20260819\\video\\ac7107_003__result_chapter_silent_aac.mp4",
+          "sha256": "26A4E61427EF9D36E6EEE7235CCC121DF25D9794A45D5514A5BA86F60C9370CF",
+          "video_frames": 30
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 3,
+  "expected_unique_source_count": 7,
+  "expected_total_video_frames": 5130,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}
