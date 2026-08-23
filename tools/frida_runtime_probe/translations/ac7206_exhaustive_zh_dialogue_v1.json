@@ -1,0 +1,28 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac7206_exhaustive_runtime_bound_dialogue",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {
+      "ja": "グッジョブ、灯花、ねむ",
+      "zh": "干得漂亮，灯花、音梦。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "それこそが本物のアート",
+      "zh": "那才是真正的艺术。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "あなた達とその翼共",
+      "zh": "你们和那些羽翼……",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "アリナが代わりにマスタリングしてあげる",
+      "zh": "就由阿莉娜替你们\n完成最后的雕琢。",
+      "status": "machine_draft_pending_owner"
+    }
+  ],
+  "approval_boundary": "previous P24 approval covers only the reused text; the new exhaustive longform and event 001 translation still require playback review"
+}

@@ -14,6 +14,10 @@ SPEC.loader.exec_module(MODULE)
 
 
 class Native416ReviewCheckpointTests(unittest.TestCase):
+    def test_current_checkpoint_cardinality(self):
+        self.assertEqual(MODULE.EXPECTED_CONTENT_GROUP_COUNT, 19)
+        self.assertEqual(MODULE.EXPECTED_EDITION_FILE_COUNT, 45)
+
     def test_safe_title(self):
         self.assertEqual(MODULE.safe_title('a:b/c* d'), "a_b_c_ d")
 
@@ -218,6 +222,48 @@ class Native416ReviewCheckpointTests(unittest.TestCase):
         self.assertEqual({row["group_number"] for row in rows}, {18})
         self.assertEqual(sum(row["primary"] for row in rows), 1)
         self.assertTrue(all(row["expected_frames"] == 2851 for row in rows))
+
+    def test_ac7206_verification_becomes_one_complete_story_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            media = [
+                {
+                    "edition": edition,
+                    "path": str(root / f"sample__{edition}.mp4"),
+                    "sha256": edition.upper().ljust(64, "E")[:64],
+                    "frame_count": 1620,
+                }
+                for edition in ("none", "ja", "zh")
+            ]
+            verification = root / "verification.json"
+            verification.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-ac7206-exhaustive-production-verification-v1",
+                        "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+                        "content_group_count": 1,
+                        "edition_file_count": 3,
+                        "ordered_complete_event_presentations": 14,
+                        "exact_duplicate_complete_presentation_count": 0,
+                        "distinct_visual_projection_count": 8,
+                        "intentional_visual_reuse_pair_count": 6,
+                        "dirinfo_route_coverage": "40/40",
+                        "unique_route_event_sequences": 20,
+                        "gameplay_015_story_leak_count": 0,
+                        "gameplay_015_status": "SEPARATE_BLOCKED_GAMEPLAY_COMPOSITION",
+                        "native_416x232_only": True,
+                        "strict_no_bgm": True,
+                        "blocked_p16_p17_p18_leak_count": 0,
+                        "media": media,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            rows = MODULE.rows_from_ac7206_verification(verification, 19)
+        self.assertEqual({row["edition"] for row in rows}, {"none", "ja", "zh"})
+        self.assertEqual({row["group_number"] for row in rows}, {19})
+        self.assertEqual(sum(row["primary"] for row in rows), 1)
+        self.assertTrue(all(row["expected_frames"] == 1620 for row in rows))
 
 
 if __name__ == "__main__":
