@@ -1,0 +1,230 @@
+{
+  "schema": "magireco-ac1103-exhaustive-authoritative-longform-checkpoint-v1",
+  "checkpoint_id": "ac1103_exhaustive_authoritative_longform_v151_20260824",
+  "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+  "review_group_id": "ac1103_exhaustive_native416_v121r1",
+  "review_group_count": 1,
+  "edition_file_count": 3,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "audio_profile": "strict_no_bgm",
+  "product_scope": "exhaustive_duplicate_free_event_presentation_editorial_longform",
+  "natural_single_session_claimed": false,
+  "mutually_exclusive_outcomes_combined": true,
+  "dirinfo_route_count": 31,
+  "dirinfo_route_coverage": "31/31",
+  "complete_event_presentation_count": 13,
+  "unique_complete_presentation_count": 13,
+  "exact_duplicate_complete_presentation_count": 0,
+  "raw_visual_source_occurrence_count": 53,
+  "raw_visual_unique_identity_count": 35,
+  "raw_visual_alias_surplus_count": 18,
+  "presentation_frames": 3114,
+  "duration_seconds": 103.8,
+  "retained_no_bgm_audio_occurrences": 57,
+  "subtitle_occurrences": 33,
+  "excluded_bgm_request_ids": [
+    "229"
+  ],
+  "excluded_bgm_occurrences": 2,
+  "child_local_only_timing_occurrences": 0,
+  "legacy_ac1103_013_18s_disposition": "CHAPTER_EVIDENCE_ONLY_NOT_STANDALONE_FINAL_PRODUCT",
+  "ordered_events": [
+    "ac1103_001",
+    "ac1103_008",
+    "ac1103_009",
+    "ac1103_010",
+    "ac1103_011",
+    "ac1103_002",
+    "ac1103_007",
+    "ac1103_003",
+    "ac1103_004",
+    "ac1103_005",
+    "ac1103_006",
+    "ac1103_012",
+    "ac1103_013"
+  ],
+  "bindings": {
+    "event_global_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1103_event_global_route_inputs_v1_20260818\\AC1103_EVENT_GLOBAL_ROUTE_AUTHORITY.json",
+      "sha256": "A06428743273A3D8E6B8ED9DAAB075DE657EE06B0F159894532B4C6C6917547E",
+      "size_bytes": 36328
+    },
+    "route_input_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1103_event_global_route_inputs_v1_20260818\\VERIFICATION.json",
+      "sha256": "7DFD85631BCFA4507E358C46871BB9637E23DC4FD00CB792CCC66BC78686AD13",
+      "size_bytes": 428
+    },
+    "route_input_summary": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1103_event_global_route_inputs_v1_20260818\\SUMMARY.json",
+      "sha256": "41A5FA4E2FEE1E924E20A69A166E17FFFBE6988DA74C71AB2ECF29E18CCEB91D",
+      "size_bytes": 30192
+    },
+    "editorial_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1103_exhaustive_longform_inputs_v121r1_20260823\\AC1103_EXHAUSTIVE_EDITORIAL_AUTHORITY.json",
+      "sha256": "073B7BB97A710536F0A101516801A477015019A87FAD081C251428C794452B90",
+      "size_bytes": 5386
+    },
+    "input_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1103_exhaustive_longform_inputs_v121r1_20260823\\VERIFICATION_RECORD.json",
+      "sha256": "EA04FB099DAD3874A94A78E7C3DA5261628437F13C10FB5972B7F360F85DD94C",
+      "size_bytes": 1251
+    },
+    "production_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\PRODUCTION_VERIFICATION.json",
+      "sha256": "BE750EF28E03159667265C8C32BD3825B682A862381EC19FD303BFE031EA40C8",
+      "size_bytes": 2479
+    },
+    "family_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+      "sha256": "BAB0C2A9FD82D5C653C8C34D0A7A1A1D3CE65B6B0758F7ABE2889D14E5CB25A4",
+      "size_bytes": 76207
+    },
+    "automated_qa": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\qa\\automated_qa.json",
+      "sha256": "7B2E91FC5D653358EA140762F7F2E7100563BB4AFAA1F6212714DC2DCA26983F",
+      "size_bytes": 5629367
+    },
+    "human_review_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms_v1_20260824\\HUMAN_REVIEW_INDEX.csv",
+      "sha256": "2ACA91C0705FEC86CADEFBDD0A6388A1907497A6CF85DF9279F9232A459A8284",
+      "size_bytes": 4939
+    },
+    "human_review_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms_v1_20260824\\VERIFICATION_RECORD.json",
+      "sha256": "74FF09748149E07407613D2020B823406DEDE7AEA65BC67ABA728101B69E1A64",
+      "size_bytes": 8756
+    },
+    "event_global_builder": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\build_ac1103_event_global_route_inputs.py",
+      "sha256": "8097305C8D0F11844CF2AD45E403461C780A81E60120B7CF0E32565C34A916BC",
+      "size_bytes": 45305
+    },
+    "longform_builder": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\build_ac1103_exhaustive_authoritative_longform.py",
+      "sha256": "C066F58D6DC6AFFB25100CDA63BF3C85155CF451B846A02260ADA5E4FA1B1DBC",
+      "size_bytes": 33235
+    },
+    "timing_overrides": [
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_001_parent_scene_motion_key_v1.json",
+        "sha256": "7F480F4EA572449A39D441B9E29965CD8A6E844C7A8C9648C0BC7B8143CE4E64",
+        "size_bytes": 4411
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_002_parent_scene_motion_key_v1.json",
+        "sha256": "B1EC6AF7D037007D3322ED1D55D0DB90DEDB2CC2256B3A0CDFDED3DBCBD4C97E",
+        "size_bytes": 3755
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_003_parent_scene_motion_key_v1.json",
+        "sha256": "62821FBCBDE22CE5D129E448409F3F9ABC22ECF67DFEC47D9404872D26625299",
+        "size_bytes": 4055
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_004_parent_scene_motion_key_v1.json",
+        "sha256": "C30FAF949FD35A3FDBAEF3D2BB2986641301F1BA5ECFBF5BAB0436A1E16EB5EB",
+        "size_bytes": 4055
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_005_parent_scene_motion_key_v1.json",
+        "sha256": "C273BC403E001EF0ADF5225DB8421D0123FD7A1DB1645622DC7918E62DAA072C",
+        "size_bytes": 4055
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_006_parent_scene_motion_key_v1.json",
+        "sha256": "304A2B3DC33F5EB82D8FC27D80624997F7B31F9E61547631147BAA63DD4A001C",
+        "size_bytes": 4060
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_007_parent_scene_motion_key_v1.json",
+        "sha256": "282BD00D54A0FD7952AF2B964FF967684AB9D52365E7A77E07A928444ECAF834",
+        "size_bytes": 4056
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_008_parent_scene_motion_key_v1.json",
+        "sha256": "817F826F312274628A2212630A3DAC58C088ABA5ABC243EB776EC42A62D7FC45",
+        "size_bytes": 4411
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_009_parent_scene_motion_key_v1.json",
+        "sha256": "A58DAF0E6556DAC6C47024C214C6DC4783FA9E2CC5902EDE6722D70BEE3F92D2",
+        "size_bytes": 4411
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_010_parent_scene_motion_key_v1.json",
+        "sha256": "DC8B937BCF1FC92C3DE913F9F6BD5D06E3FFCBC770A53C4DC8A7DF8BD89950D1",
+        "size_bytes": 4411
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_011_parent_scene_motion_key_v1.json",
+        "sha256": "7F677E77C9BEA62AC7F2DDD4B9FBF7EC4F059EC90F7826061AEBEECD33460909",
+        "size_bytes": 3754
+      },
+      {
+        "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\z2d_event_timing_overrides\\ac1103_012_parent_scene_motion_key_v1.json",
+        "sha256": "8D06DA19A5BEFF571B9081644CF214C9720447904A5F2E7B29F9D2FDBB02C4FE",
+        "size_bytes": 3756
+      }
+    ]
+  },
+  "production_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823",
+  "human_review_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms_v1_20260824",
+  "human_review_relative_group": "{NONE|JP|ZH}/story/外送修行_全路线全结果完整合集_ac1103__{edition}.mp4",
+  "media": [
+    {
+      "edition": "none",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__none.mp4",
+      "sha256": "A1DAD12B9D18D109A071286EED24B246C01133DB69C90B67BB9C9977A5249D78",
+      "duration_seconds": 103.8,
+      "frame_count": 3114,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "ja",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+      "sha256": "E372C2CBB28E4B59434A866D16AF179920FCDEE27820B5FE69B3B830C7C916E1",
+      "duration_seconds": 103.8,
+      "frame_count": 3114,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "zh",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+      "sha256": "8477DC6B4CBDCB89FCD0E9FED765AD3A6EBF0A9F37907A6B408D4A2E1EDA7DBA",
+      "duration_seconds": 103.8,
+      "frame_count": 3114,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    }
+  ],
+  "fail_closed": {
+    "p16_p17_p18_leak_count": 0,
+    "child_local_only_timing_accepted": false,
+    "with_bgm_accepted": false
+  },
+  "human_playback_required": true,
+  "publication_approved": false,
+  "bilibili_uploaded": false,
+  "source_media_policy": "read_only_preserve_no_move_no_delete_no_overwrite"
+}
