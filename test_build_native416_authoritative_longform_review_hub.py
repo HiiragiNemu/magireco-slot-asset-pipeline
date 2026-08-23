@@ -104,6 +104,95 @@ class Native416ReviewHubTests(unittest.TestCase):
             self.assertFalse(Path(plan["hub_root"]).exists())
 
     @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe())
+    def test_exhaustive_longform_verification_binds_plan_and_outputs(self, _probe):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            product = root / "ac7101"
+            video = product / "video"
+            manifests = product / "manifests"
+            video.mkdir(parents=True)
+            manifests.mkdir()
+            production_plan = root / "production_plan.json"
+            production_plan.write_text("{}\n", encoding="utf-8")
+            media = []
+            outputs = []
+            for edition in hub.EDITIONS:
+                source = video / f"ac7101__{edition}.mp4"
+                source.write_bytes((edition * 20).encode("ascii"))
+                row = {
+                    "edition": edition,
+                    "path": str(source),
+                    "sha256": hub.file_sha256(source),
+                    **media_probe(),
+                }
+                media.append(row)
+                outputs.append(
+                    {
+                        "edition": edition,
+                        "relative_path": f"video/{source.name}",
+                        "sha256": row["sha256"],
+                        "media_qa": {
+                            "probe": {
+                                "streams": [
+                                    {
+                                        "codec_type": "video",
+                                        "nb_read_frames": "300",
+                                        "width": 416,
+                                        "height": 232,
+                                        "r_frame_rate": "30/1",
+                                        "codec_name": "h264",
+                                    },
+                                    {
+                                        "codec_type": "audio",
+                                        "codec_name": "aac",
+                                        "sample_rate": "48000",
+                                        "channels": 2,
+                                    },
+                                ]
+                            }
+                        },
+                    }
+                )
+            evidence = manifests / "VERIFICATION_RECORD.json"
+            evidence.write_text(
+                json.dumps(
+                    {
+                        "result": "PASS_HUMAN_PLAYBACK_REQUIRED",
+                        "plan_path": str(production_plan),
+                        "plan_file_sha256": hub.file_sha256(production_plan),
+                        "outputs": outputs,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            plan = {
+                "schema": hub.SCHEMA,
+                "release_id": "authority_test_v2",
+                "hub_root": str(root / "hub"),
+                "expected_previous_current_target": str(root / "previous"),
+                "expected_group_count": 1,
+                "expected_edition_file_count": 3,
+                "groups": [
+                    {
+                        "review_group_id": "ac7101_exhaustive",
+                        "family": "ac7101",
+                        "title": "测试完整合集_ac7101",
+                        "content_type": "story",
+                        "event_container_count": 3,
+                        "unique_complete_presentation_count": 3,
+                        "evidence": {
+                            "kind": "exhaustive_unique_longform_verification",
+                            "path": str(evidence),
+                            "sha256": hub.file_sha256(evidence),
+                        },
+                        "media": media,
+                    }
+                ],
+            }
+            validated = hub.validate_plan(plan)
+            self.assertEqual(validated[0]["family"], "ac7101")
+
+    @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe())
     def test_build_publishes_three_hardlinks_and_metadata(self, _probe):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

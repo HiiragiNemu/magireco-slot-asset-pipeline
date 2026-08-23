@@ -206,6 +206,26 @@ def normalized_source(path: str) -> str:
     return os.path.normcase(os.path.abspath(path))
 
 
+def quarantine_searchable_identity(item: Mapping[str, Any]) -> str:
+    """Return identity-bearing fields without unrelated absolute-path ancestors.
+
+    Family/item/title are authoritative.  The media filename and its immediate
+    directory catch a mislabeled path, while excluding random temporary or
+    workspace ancestor names that can coincidentally contain ``p16``–``p18``.
+    """
+
+    source = Path(str(item.get("source_path", "")))
+    return " ".join(
+        [
+            str(item.get("inventory_item_id", "")),
+            str(item.get("family", "")),
+            str(item.get("title_zh", "")),
+            source.name,
+            source.parent.name,
+        ]
+    ).casefold()
+
+
 def normalized_route_identity(value: Any) -> str:
     """Normalize the known numeric and ``dirinfo-row-NNN`` route spellings."""
 
@@ -808,9 +828,7 @@ def validate_inputs(plan: Mapping[str, Any]) -> dict[str, Any]:
             raise ValueError(f"alias entered canonical mapping: {item_id}")
         if item.get("audio_profile") not in {"no_bgm", "silent"}:
             raise ValueError(f"unclosed audio profile entered hub: {item_id}")
-        searchable = " ".join(
-            [item_id, str(item.get("family", "")), str(item.get("title_zh", "")), str(item.get("source_path", ""))]
-        ).casefold()
+        searchable = quarantine_searchable_identity(item)
         if any(token in searchable for token in QUARANTINE_TOKENS):
             raise ValueError(f"quarantined product entered hub: {item_id}")
         if sha != str(item.get("sha256", "")).upper():

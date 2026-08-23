@@ -195,6 +195,77 @@ def _validate_evidence(
                 raise ReviewHubError(f"ac0908 evidence output differs: {expected['edition']}")
         if int(payload.get("frames", -1)) != int(media[0]["frame_count"]):
             raise ReviewHubError("ac0908 evidence frame count differs")
+    elif kind == "exhaustive_unique_longform_verification":
+        if payload.get("result") != "PASS_HUMAN_PLAYBACK_REQUIRED":
+            raise ReviewHubError(f"longform evidence status is not review-ready: {path}")
+        production_plan = Path(str(payload.get("plan_path", "")))
+        production_plan_digest = str(payload.get("plan_file_sha256", "")).upper()
+        if (
+            not production_plan.is_file()
+            or len(production_plan_digest) != 64
+            or file_sha256(production_plan) != production_plan_digest
+        ):
+            raise ReviewHubError(f"longform production plan binding differs: {path}")
+        by_edition = {
+            str(row.get("edition")): row for row in payload.get("outputs", [])
+        }
+        product_root = path.parent.parent
+        for expected in media:
+            row = by_edition.get(str(expected["edition"]))
+            if row is None:
+                raise ReviewHubError(
+                    f"longform evidence lacks edition: {expected['edition']}"
+                )
+            evidence_output = product_root / Path(str(row.get("relative_path", "")))
+            if _resolved_norm(evidence_output) != _resolved_norm(
+                Path(str(expected["path"]))
+            ):
+                raise ReviewHubError(
+                    f"longform evidence output differs: {expected['edition']}"
+                )
+            if str(row.get("sha256", "")).upper() != str(
+                expected.get("sha256", "")
+            ).upper():
+                raise ReviewHubError(
+                    f"longform evidence digest differs: {expected['edition']}"
+                )
+            streams = row.get("media_qa", {}).get("probe", {}).get("streams", [])
+            video = next(
+                (stream for stream in streams if stream.get("codec_type") == "video"),
+                None,
+            )
+            audio = next(
+                (stream for stream in streams if stream.get("codec_type") == "audio"),
+                None,
+            )
+            if video is None or audio is None:
+                raise ReviewHubError(
+                    f"longform evidence stream contract differs: {expected['edition']}"
+                )
+            evidence_contract = (
+                int(video["nb_read_frames"]),
+                int(video["width"]),
+                int(video["height"]),
+                str(video["r_frame_rate"]),
+                str(video["codec_name"]),
+                str(audio["codec_name"]),
+                int(audio["sample_rate"]),
+                int(audio["channels"]),
+            )
+            expected_contract = (
+                int(expected["frame_count"]),
+                int(expected["width"]),
+                int(expected["height"]),
+                str(expected["frame_rate"]),
+                str(expected["video_codec"]),
+                str(expected["audio_codec"]),
+                int(expected["audio_sample_rate"]),
+                int(expected["audio_channels"]),
+            )
+            if evidence_contract != expected_contract:
+                raise ReviewHubError(
+                    f"longform evidence media contract differs: {expected['edition']}"
+                )
     else:
         raise ReviewHubError(f"unsupported evidence kind: {kind}")
     return {"path": str(path.resolve()), "sha256": actual_digest, "kind": kind}

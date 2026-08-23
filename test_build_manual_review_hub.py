@@ -11,6 +11,7 @@ from tools.frida_runtime_probe.build_manual_review_hub import (
     build,
     file_sha256,
     probe_media,
+    quarantine_searchable_identity,
 )
 
 
@@ -26,6 +27,21 @@ class ManualReviewHubBuilderTests(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def test_quarantine_identity_ignores_unrelated_absolute_path_ancestors(self):
+        item = {
+            "inventory_item_id": "I_READY",
+            "family": "ac7002",
+            "title_zh": "夜空魔女全视频合集",
+            "source_path": str(
+                Path("C:/unrelated-p18-workspace/source/ac7002_ready.mp4")
+            ),
+        }
+        self.assertNotIn("p18", quarantine_searchable_identity(item))
+        item["source_path"] = str(Path("C:/workspace/source/ac6004_p17.mp4"))
+        searchable = quarantine_searchable_identity(item)
+        self.assertIn("ac6004", searchable)
+        self.assertIn("p17", searchable)
 
     @staticmethod
     def fake_probe(path: Path, _ffprobe: str):
