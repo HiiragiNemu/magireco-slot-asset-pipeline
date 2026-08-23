@@ -1,0 +1,29 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac1101_exhaustive_runtime_bound_dialogue",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {"ja": "さなの", "zh": "莎奈的……", "status": "machine_draft_pending_owner"},
+    {"ja": "ねこ鍋チャレンジ", "zh": "猫锅挑战！", "status": "machine_draft_pending_owner"},
+    {"ja": "今日こそ成功させます！", "zh": "今天一定要成功！", "status": "machine_draft_pending_owner"},
+    {"ja": "猫ちゃ～ん\nこっちですよ～", "zh": "小猫咪～\n这边哦～", "status": "machine_draft_pending_owner"},
+    {"ja": "うーん…", "zh": "嗯……", "status": "machine_draft_pending_owner"},
+    {"ja": "まだ諦めません！", "zh": "我还不会放弃！", "status": "machine_draft_pending_owner"},
+    {"ja": "うん！\nそのまま…", "zh": "嗯！\n就这样……", "status": "machine_draft_pending_owner"},
+    {"ja": "入って～～っ！", "zh": "进去吧——！", "status": "machine_draft_pending_owner"},
+    {"ja": "あっ\n待ってください！", "zh": "啊！\n请等一下！", "status": "machine_draft_pending_owner"},
+    {"ja": "猫ちゃん…", "zh": "小猫咪……", "status": "machine_draft_pending_owner"},
+    {"ja": "できました！", "zh": "成功了！", "status": "machine_draft_pending_owner"},
+    {"ja": "ほら\nこっちおいで～", "zh": "来～\n到这边来～", "status": "machine_draft_pending_owner"},
+    {"ja": "もう一度やってみます！", "zh": "我再试一次！", "status": "machine_draft_pending_owner"},
+    {"ja": "そうだ！", "zh": "对了！", "status": "machine_draft_pending_owner"},
+    {"ja": "私も猫になれば", "zh": "如果我也变成猫的话……", "status": "machine_draft_pending_owner"},
+    {"ja": "猫ちゃんの気持ちがもっと分かるかもしれません！", "zh": "说不定就能更懂小猫咪的心情了！", "status": "machine_draft_pending_owner"},
+    {"ja": "さなちゃん！？", "zh": "莎奈！？", "status": "machine_draft_pending_owner"},
+    {"ja": "猫ちゃんの気持ち\n猫ちゃんの気持ち…", "zh": "小猫咪的心情\n小猫咪的心情……", "status": "machine_draft_pending_owner"},
+    {"ja": "猫ちゃんの…\n気持…\nち…", "zh": "小猫咪的……\n心……\n情……", "status": "machine_draft_pending_owner"},
+    {"ja": "スヤァ", "zh": "呼……", "status": "machine_draft_pending_owner"},
+    {"ja": "スヤスヤ", "zh": "呼呼……", "status": "machine_draft_pending_owner"},
+    {"ja": "これもねこ鍋…\nなのかな？", "zh": "这也算是猫锅……\n吗？", "status": "machine_draft_pending_owner"}
+  ]
+}

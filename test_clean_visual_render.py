@@ -25,6 +25,27 @@ def run(command: list[str]) -> None:
 
 
 class CleanVisualPlanValidationTests(unittest.TestCase):
+    def test_authored_overlay_duration_may_trim_a_longer_official_source(self) -> None:
+        probe = {"format": {"duration": "5.000000"}}
+        row = {"start_ms": 1000, "duration_ms": 2000}
+        self.assertEqual(
+            render_event_manifest.resolve_non_loop_overlay_duration_ms(
+                row, probe, 6000
+            ),
+            2000,
+        )
+
+    def test_authored_overlay_duration_cannot_extend_source_or_event(self) -> None:
+        probe = {"format": {"duration": "2.000000"}}
+        with self.assertRaisesRegex(RuntimeError, "exceeds the official source"):
+            render_event_manifest.resolve_non_loop_overlay_duration_ms(
+                {"start_ms": 0, "duration_ms": 2100}, probe, 3000
+            )
+        with self.assertRaisesRegex(RuntimeError, "exceeds the event"):
+            render_event_manifest.resolve_non_loop_overlay_duration_ms(
+                {"start_ms": 1500, "duration_ms": 1600}, probe, 3000
+            )
+
     def test_mp4_duration_metadata_allows_only_one_ms_cfr_rounding(self) -> None:
         self.assertTrue(
             render_event_manifest.duration_metadata_matches_cfr_grid(14566, 14567)

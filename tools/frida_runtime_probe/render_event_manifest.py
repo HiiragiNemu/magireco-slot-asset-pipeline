@@ -126,6 +126,40 @@ def duration_metadata_matches_cfr_grid(actual_ms: int, expected_ms: int) -> bool
     return abs(actual_ms - expected_ms) <= 1
 
 
+def resolve_non_loop_overlay_duration_ms(
+    row: dict,
+    clip_probe: dict,
+    render_duration_ms: int,
+) -> int:
+    """Resolve an optional authored overlay interval without extending media.
+
+    Older plans omit ``duration_ms`` and retain the full source duration.  New
+    exact MovieLayer plans may bind a shorter authored prefix of a longer
+    official source; the explicit interval must remain positive, inside the
+    source (allowing one CFR-frame of metadata rounding), and inside the event.
+    """
+
+    source_duration_ms = round(float(clip_probe["format"]["duration"]) * 1000)
+    raw_duration = row.get("duration_ms")
+    if raw_duration is None:
+        duration_ms = source_duration_ms
+    else:
+        try:
+            duration_ms = int(raw_duration)
+        except (TypeError, ValueError) as error:
+            raise RuntimeError("overlay duration_ms is not an integer") from error
+        if str(raw_duration).strip() != str(duration_ms):
+            raise RuntimeError("overlay duration_ms is not an exact integer")
+    start_ms = int(row.get("start_ms", 0))
+    if duration_ms <= 0:
+        raise RuntimeError("overlay duration_ms must be positive")
+    if duration_ms > source_duration_ms + 34:
+        raise RuntimeError("overlay duration_ms exceeds the official source")
+    if start_ms < 0 or start_ms + duration_ms > render_duration_ms + 34:
+        raise RuntimeError("overlay authored interval exceeds the event")
+    return duration_ms
+
+
 def audited_video_frame_count(path: Path, ffprobe: str) -> int:
     payload = production_probe(path, ffprobe)
     streams = [
@@ -960,7 +994,10 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
         for overlay_index, row in enumerate(overlays):
             start_ms = int(row["start_ms"])
             clip_path, clip_probe = clip_by_name[row["dgm_name"]]
-            duration_sec = float(clip_probe["format"]["duration"])
+            duration_ms = resolve_non_loop_overlay_duration_ms(
+                row, clip_probe, render_duration_ms
+            )
+            duration_sec = duration_ms / 1000
             blend_mode = str(row.get("blend_mode", "screen"))
             video_inputs.extend(["-i", str(clip_path)])
             overlay_label = f"overlay{overlay_index}"
@@ -973,7 +1010,7 @@ def _main(args: argparse.Namespace, transaction_cleanup: list[Path]) -> int:
                 f"[{current_label}]format={base_pixel_format}[{background_label}]"
             )
             video_filters.append(
-                f"[{input_index}:v:0]"
+                f"[{input_index}:v:0]trim=duration={duration_sec:.6f},"
                 + (
                     f"scale={width}:{height}:flags=lanczos,"
                     if row.get("scale_to_native")

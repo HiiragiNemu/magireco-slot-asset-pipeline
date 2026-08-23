@@ -182,6 +182,43 @@ class Native416ReviewCheckpointTests(unittest.TestCase):
         self.assertEqual(sum(row["primary"] for row in rows), 1)
         self.assertTrue(all(row["expected_frames"] == 4221 for row in rows))
 
+    def test_ac1101_verification_becomes_one_complete_longform_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            media = [
+                {
+                    "edition": edition,
+                    "path": str(root / f"sample__{edition}.mp4"),
+                    "sha256": edition.upper().ljust(64, "D")[:64],
+                    "frame_count": 2851,
+                }
+                for edition in ("none", "ja", "zh")
+            ]
+            verification = root / "verification.json"
+            verification.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-ac1101-exhaustive-production-verification-v1",
+                        "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+                        "content_group_count": 1,
+                        "edition_file_count": 3,
+                        "ordered_complete_event_presentations": 13,
+                        "exact_duplicate_complete_presentation_count": 0,
+                        "dirinfo_route_coverage": "31/31",
+                        "native_416x232_only": True,
+                        "strict_no_bgm": True,
+                        "blocked_p16_p17_p18_leak_count": 0,
+                        "media": media,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            rows = MODULE.rows_from_ac1101_verification(verification, 18)
+        self.assertEqual({row["edition"] for row in rows}, {"none", "ja", "zh"})
+        self.assertEqual({row["group_number"] for row in rows}, {18})
+        self.assertEqual(sum(row["primary"] for row in rows), 1)
+        self.assertTrue(all(row["expected_frames"] == 2851 for row in rows))
+
 
 if __name__ == "__main__":
     unittest.main()

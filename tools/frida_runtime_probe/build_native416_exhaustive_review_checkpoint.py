@@ -51,17 +51,24 @@ DEFAULT_AC1104_VERIFICATION = (
     / "no_bgm_editions_v126_ac1104_exhaustive_authoritative_20260824"
     / "PRODUCTION_VERIFICATION.json"
 )
+DEFAULT_AC1101_VERIFICATION = (
+    RESEARCH_ROOT
+    / "no_bgm_editions_v132_ac1101_exhaustive_authoritative_20260824"
+    / "PRODUCTION_VERIFICATION.json"
+)
 DEFAULT_OUTPUT = (
     RESEARCH_ROOT
     / "manual_review_hub_v2_flat"
     / "releases"
-    / "native416_exhaustive_new_standard_v126_20260824"
+    / "native416_exhaustive_new_standard_v132_20260824"
 )
 EXPECTED_V94_FAMILIES = {
     "ac4002", "ac4003", "ac4004", "ac7002", "ac7118", "ac8005"
 }
 EXPECTED_V99_FAMILIES = {f"ac710{i}" for i in range(1, 8)}
 BLOCKED_TOKENS = ("ac6003", "ac6004", "ac6005", "P16", "P17", "P18")
+EXPECTED_CONTENT_GROUP_COUNT = 18
+EXPECTED_EDITION_FILE_COUNT = 42
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -314,6 +321,57 @@ def rows_from_ac1104_verification(
     )
 
 
+def rows_from_ac1101_verification(
+    path: Path, group_number: int
+) -> list[dict[str, Any]]:
+    verification = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        verification.get("schema")
+        != "magireco-ac1101-exhaustive-production-verification-v1"
+        or verification.get("status")
+        != "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED"
+        or verification.get("content_group_count") != 1
+        or verification.get("edition_file_count") != 3
+        or verification.get("ordered_complete_event_presentations") != 13
+        or verification.get("exact_duplicate_complete_presentation_count") != 0
+        or verification.get("dirinfo_route_coverage") != "31/31"
+        or verification.get("native_416x232_only") is not True
+        or verification.get("strict_no_bgm") is not True
+        or verification.get("blocked_p16_p17_p18_leak_count") != 0
+    ):
+        raise ValueError("ac1101 exhaustive production verification differs")
+    media = verification.get("media", [])
+    if len(media) != 3 or {row.get("edition") for row in media} != {
+        "none",
+        "ja",
+        "zh",
+    }:
+        raise ValueError("ac1101 exhaustive edition matrix differs")
+    authority = (
+        RESEARCH_ROOT
+        / "ac1101_exhaustive_longform_inputs_v131_20260824"
+        / "AC1101_EXHAUSTIVE_EDITORIAL_AUTHORITY.json"
+    )
+    return sorted(
+        [
+            {
+                "group_number": group_number,
+                "family": "ac1101",
+                "content_type": "story",
+                "title": "沙奈猫锅挑战 全入口·全选项·全结局完整合集",
+                "edition": row["edition"],
+                "source": Path(row["path"]),
+                "expected_frames": int(row["frame_count"]),
+                "existing_digest": str(row["sha256"]),
+                "authority_path": str(authority.resolve()),
+                "primary": row["edition"] == "zh",
+            }
+            for row in media
+        ],
+        key=lambda row: row["edition"],
+    )
+
+
 def collect(
     v94_path: Path,
     v99_path: Path,
@@ -321,6 +379,7 @@ def collect(
     ac1102_verification: Path,
     ac1103_verification: Path,
     ac1104_verification: Path,
+    ac1101_verification: Path,
 ) -> list[dict[str, Any]]:
     v94, v99 = read_csv(v94_path), read_csv(v99_path)
     if len(v94) != 6 or {row["family"] for row in v94} != EXPECTED_V94_FAMILIES:
@@ -376,6 +435,8 @@ def collect(
     result.extend(rows_from_ac1102_verification(ac1102_verification, 15))
     result.extend(rows_from_ac1103_verification(ac1103_verification, 16))
     result.extend(rows_from_ac1104_verification(ac1104_verification, 17))
+    # Keep prior immutable review group numbers stable; append ac1101 as G018.
+    result.extend(rows_from_ac1101_verification(ac1101_verification, 18))
     text = "\n".join(str(row["source"]) for row in result)
     if any(token.casefold() in text.casefold() for token in BLOCKED_TOKENS):
         raise ValueError("blocked family leaked into review checkpoint")
@@ -416,6 +477,11 @@ def main() -> int:
         type=Path,
         default=DEFAULT_AC1104_VERIFICATION,
     )
+    parser.add_argument(
+        "--ac1101-verification",
+        type=Path,
+        default=DEFAULT_AC1101_VERIFICATION,
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
     output = args.output.resolve()
@@ -432,6 +498,7 @@ def main() -> int:
             args.ac1102_verification.resolve(),
             args.ac1103_verification.resolve(),
             args.ac1104_verification.resolve(),
+            args.ac1101_verification.resolve(),
         )
         index: list[dict[str, Any]] = []
         primary_count: defaultdict[str, int] = defaultdict(int)
@@ -477,7 +544,9 @@ def main() -> int:
                 }
             )
         families = sorted({row["review_group_id"] for row in index})
-        if len(families) != 17 or any(primary_count[family] != 1 for family in families):
+        if len(families) != EXPECTED_CONTENT_GROUP_COUNT or any(
+            primary_count[family] != 1 for family in families
+        ):
             raise ValueError("primary review mapping differs")
         crossing = {value: sorted(names) for value, names in digest_families.items() if len(names) > 1}
         if crossing:
@@ -491,10 +560,10 @@ def main() -> int:
         primary = [row for row in index if row["primary_review_file"]]
         (staging / "00_START_HERE.md").write_text(
             "# 原生 416×232 新标准人工验收入口\n\n"
-            "- 共 **17 组内容**；NONE/JP/ZH 伴随版不重复计组。\n"
+            f"- 共 **{EXPECTED_CONTENT_GROUP_COUNT} 组内容**；NONE/JP/ZH 伴随版不重复计组。\n"
             "- 优先播放每组的主验收文件：有中文版时位于 `ZH\\story`；"
             "无语言版位于 `NONE`；纯素材位于 `MATERIAL`。\n"
-            "- 39 个媒体入口全部是同盘 NTFS 硬链接，未新增物理媒体副本。\n"
+            f"- {EXPECTED_EDITION_FILE_COUNT} 个媒体入口全部是同盘 NTFS 硬链接，未新增物理媒体副本。\n"
             "- 全部仍待人工播放，当前不是投稿目录。\n"
             "- 短事件均已嵌入 family 长片，没有独立短片产品。\n\n"
             "## 主验收顺序\n\n"
@@ -511,10 +580,10 @@ def main() -> int:
                 "schema": "magireco-native416-exhaustive-review-checkpoint-v1",
                 "created_utc": datetime.now(timezone.utc).isoformat(),
                 "status": "PASS_HUMAN_PLAYBACK_REQUIRED",
-                "content_group_count": 17,
-                "primary_review_file_count": 17,
-                "edition_file_count": 39,
-                "hardlink_samefile_count": 39,
+                "content_group_count": EXPECTED_CONTENT_GROUP_COUNT,
+                "primary_review_file_count": EXPECTED_CONTENT_GROUP_COUNT,
+                "edition_file_count": EXPECTED_EDITION_FILE_COUNT,
+                "hardlink_samefile_count": EXPECTED_EDITION_FILE_COUNT,
                 "physical_duplicate_count": 0,
                 "cross_group_exact_digest_duplicate_count": 0,
                 "native_416x232_only": True,
@@ -527,6 +596,7 @@ def main() -> int:
                     str(args.ac1102_verification.resolve()),
                     str(args.ac1103_verification.resolve()),
                     str(args.ac1104_verification.resolve()),
+                    str(args.ac1101_verification.resolve()),
                 ],
                 "source_media_modified": False,
                 "bilibili_uploaded": False,
@@ -538,7 +608,12 @@ def main() -> int:
             shutil.rmtree(staging)
         raise
     print(f"PASS {output}")
-    print("content_groups=17 primary_files=17 edition_files=39 hardlinks=39")
+    print(
+        f"content_groups={EXPECTED_CONTENT_GROUP_COUNT} "
+        f"primary_files={EXPECTED_CONTENT_GROUP_COUNT} "
+        f"edition_files={EXPECTED_EDITION_FILE_COUNT} "
+        f"hardlinks={EXPECTED_EDITION_FILE_COUNT}"
+    )
     return 0
 
 
