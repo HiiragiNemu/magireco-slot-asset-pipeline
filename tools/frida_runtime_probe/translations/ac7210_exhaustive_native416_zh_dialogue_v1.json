@@ -1,0 +1,51 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac7210_exhaustive_native416_runtime_bound_dialogue",
+  "status": "existing_owner_reviewed_text_reused_for_new_longform",
+  "translations": [
+    {
+      "request_id": 3279,
+      "ja": "私達で足止めするわよ！",
+      "zh": "我们来拖住它！",
+      "speaker_ja": "七海やちよ",
+      "speaker_zh": "七海八千代",
+      "render_ja": "七海やちよ：私達で足止めするわよ！",
+      "render_zh": "七海八千代：我们来拖住它！",
+      "subtitle_end_policy": "official_voice_duration",
+      "status": "reused_from_owner_reviewed_ac7210_route_text"
+    },
+    {
+      "request_id": 3280,
+      "ja": "きゃぁぁっ",
+      "zh": "呀啊啊！",
+      "speaker_ja": "七海やちよ",
+      "speaker_zh": "七海八千代",
+      "render_ja": "七海やちよ：きゃぁぁっ",
+      "render_zh": "七海八千代：呀啊啊！",
+      "subtitle_end_policy": "official_voice_duration",
+      "status": "reused_from_owner_reviewed_ac7210_route_text"
+    },
+    {
+      "request_id": 3594,
+      "ja": "きゃぁぁっ",
+      "zh": "呀啊啊！",
+      "speaker_ja": "由比鶴乃",
+      "speaker_zh": "由比鹤乃",
+      "render_ja": "由比鶴乃：きゃぁぁっ",
+      "render_zh": "由比鹤乃：呀啊啊！",
+      "subtitle_end_policy": "official_voice_duration",
+      "status": "reused_from_owner_reviewed_ac7210_route_text"
+    },
+    {
+      "request_id": 3593,
+      "ja": "今だよ！",
+      "zh": "就是现在！",
+      "speaker_ja": "由比鶴乃",
+      "speaker_zh": "由比鹤乃",
+      "render_ja": "今だよ！",
+      "render_zh": "就是现在！",
+      "subtitle_end_policy": "graphical_parent_motion_end",
+      "status": "reused_from_owner_reviewed_ac7210_route_text"
+    }
+  ]
+}

@@ -61,6 +61,11 @@ DEFAULT_AC7206_VERIFICATION = (
     / "no_bgm_editions_v137r1_ac7206_exhaustive_authoritative_20260824"
     / "PRODUCTION_VERIFICATION.json"
 )
+DEFAULT_AC7210_VERIFICATION = (
+    RESEARCH_ROOT
+    / "no_bgm_editions_v143r1_ac7210_exhaustive_native416_authoritative_20260824"
+    / "PRODUCTION_VERIFICATION.json"
+)
 DEFAULT_OUTPUT = (
     RESEARCH_ROOT
     / "manual_review_hub_v2_flat"
@@ -72,8 +77,8 @@ EXPECTED_V94_FAMILIES = {
 }
 EXPECTED_V99_FAMILIES = {f"ac710{i}" for i in range(1, 8)}
 BLOCKED_TOKENS = ("ac6003", "ac6004", "ac6005", "P16", "P17", "P18")
-EXPECTED_CONTENT_GROUP_COUNT = 19
-EXPECTED_EDITION_FILE_COUNT = 45
+EXPECTED_CONTENT_GROUP_COUNT = 20
+EXPECTED_EDITION_FILE_COUNT = 48
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -432,6 +437,66 @@ def rows_from_ac7206_verification(
         ],
         key=lambda row: row["edition"],
     )
+
+
+def rows_from_ac7210_verification(
+    path: Path, group_number: int
+) -> list[dict[str, Any]]:
+    verification = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        verification.get("schema")
+        != "magireco-ac7210-exhaustive-native416-production-verification-v1"
+        or verification.get("status")
+        != "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED"
+        or verification.get("content_group_count") != 1
+        or verification.get("edition_file_count") != 3
+        or verification.get("ordered_complete_event_presentations") != 5
+        or verification.get("authored_story_source_occurrences") != 14
+        or verification.get("canonical_unique_story_sources") != 13
+        or verification.get("byte_identical_alias_omitted_count") != 1
+        or verification.get("exact_duplicate_complete_presentation_count") != 0
+        or verification.get("dirinfo_route_coverage") != "5/5"
+        or verification.get("deferred_512_component_events")
+        != ["ac7210_006", "ac7210_007", "ac7210_008"]
+        or verification.get("deferred_512_story_leak_count") != 0
+        or verification.get("presentation_overlay_story_leak_count") != 0
+        or verification.get("native_416x232_only") is not True
+        or verification.get("strict_no_bgm") is not True
+        or verification.get("blocked_p16_p17_p18_leak_count") != 0
+    ):
+        raise ValueError("ac7210 exhaustive native416 production verification differs")
+    media = verification.get("media", [])
+    if len(media) != 3 or {row.get("edition") for row in media} != {
+        "none",
+        "ja",
+        "zh",
+    }:
+        raise ValueError("ac7210 exhaustive native416 edition matrix differs")
+    authority = (
+        RESEARCH_ROOT
+        / "ac7210_exhaustive_native416_longform_inputs_v142r1_20260824"
+        / "AC7210_EXHAUSTIVE_NATIVE416_EDITORIAL_AUTHORITY.json"
+    )
+    return sorted(
+        [
+            {
+                "group_number": group_number,
+                "family": "ac7210",
+                "content_type": "story",
+                "title": "八千代与鹤乃火箭突击 全分支·全结果完整合集",
+                "edition": row["edition"],
+                "source": Path(row["path"]),
+                "expected_frames": int(row["frame_count"]),
+                "existing_digest": str(row["sha256"]),
+                "authority_path": str(authority.resolve()),
+                "primary": row["edition"] == "zh",
+            }
+            for row in media
+        ],
+        key=lambda row: row["edition"],
+    )
+
+
 def collect(
     v94_path: Path,
     v99_path: Path,
@@ -441,6 +506,7 @@ def collect(
     ac1104_verification: Path,
     ac1101_verification: Path,
     ac7206_verification: Path,
+    ac7210_verification: Path,
 ) -> list[dict[str, Any]]:
     v94, v99 = read_csv(v94_path), read_csv(v99_path)
     if len(v94) != 6 or {row["family"] for row in v94} != EXPECTED_V94_FAMILIES:
@@ -500,6 +566,7 @@ def collect(
     result.extend(rows_from_ac1101_verification(ac1101_verification, 18))
     # Preserve all existing group numbers and append the new exhaustive product.
     result.extend(rows_from_ac7206_verification(ac7206_verification, 19))
+    result.extend(rows_from_ac7210_verification(ac7210_verification, 20))
     text = "\n".join(str(row["source"]) for row in result)
     if any(token.casefold() in text.casefold() for token in BLOCKED_TOKENS):
         raise ValueError("blocked family leaked into review checkpoint")
@@ -550,6 +617,11 @@ def main() -> int:
         type=Path,
         default=DEFAULT_AC7206_VERIFICATION,
     )
+    parser.add_argument(
+        "--ac7210-verification",
+        type=Path,
+        default=DEFAULT_AC7210_VERIFICATION,
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
     output = args.output.resolve()
@@ -568,6 +640,7 @@ def main() -> int:
             args.ac1104_verification.resolve(),
             args.ac1101_verification.resolve(),
             args.ac7206_verification.resolve(),
+            args.ac7210_verification.resolve(),
         )
         index: list[dict[str, Any]] = []
         primary_count: defaultdict[str, int] = defaultdict(int)
@@ -667,6 +740,7 @@ def main() -> int:
                     str(args.ac1104_verification.resolve()),
                     str(args.ac1101_verification.resolve()),
                     str(args.ac7206_verification.resolve()),
+                    str(args.ac7210_verification.resolve()),
                 ],
                 "source_media_modified": False,
                 "bilibili_uploaded": False,

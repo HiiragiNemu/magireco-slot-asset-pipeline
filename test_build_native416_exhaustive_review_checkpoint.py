@@ -15,8 +15,8 @@ SPEC.loader.exec_module(MODULE)
 
 class Native416ReviewCheckpointTests(unittest.TestCase):
     def test_current_checkpoint_cardinality(self):
-        self.assertEqual(MODULE.EXPECTED_CONTENT_GROUP_COUNT, 19)
-        self.assertEqual(MODULE.EXPECTED_EDITION_FILE_COUNT, 45)
+        self.assertEqual(MODULE.EXPECTED_CONTENT_GROUP_COUNT, 20)
+        self.assertEqual(MODULE.EXPECTED_EDITION_FILE_COUNT, 48)
 
     def test_safe_title(self):
         self.assertEqual(MODULE.safe_title('a:b/c* d'), "a_b_c_ d")
@@ -264,6 +264,53 @@ class Native416ReviewCheckpointTests(unittest.TestCase):
         self.assertEqual({row["group_number"] for row in rows}, {19})
         self.assertEqual(sum(row["primary"] for row in rows), 1)
         self.assertTrue(all(row["expected_frames"] == 1620 for row in rows))
+
+    def test_ac7210_verification_becomes_one_duplicate_free_story_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            media = [
+                {
+                    "edition": edition,
+                    "path": str(root / f"sample__{edition}.mp4"),
+                    "sha256": edition.upper().ljust(64, "F")[:64],
+                    "frame_count": 1354,
+                }
+                for edition in ("none", "ja", "zh")
+            ]
+            verification = root / "verification.json"
+            verification.write_text(
+                json.dumps(
+                    {
+                        "schema": "magireco-ac7210-exhaustive-native416-production-verification-v1",
+                        "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+                        "content_group_count": 1,
+                        "edition_file_count": 3,
+                        "ordered_complete_event_presentations": 5,
+                        "authored_story_source_occurrences": 14,
+                        "canonical_unique_story_sources": 13,
+                        "byte_identical_alias_omitted_count": 1,
+                        "exact_duplicate_complete_presentation_count": 0,
+                        "dirinfo_route_coverage": "5/5",
+                        "deferred_512_component_events": [
+                            "ac7210_006",
+                            "ac7210_007",
+                            "ac7210_008",
+                        ],
+                        "deferred_512_story_leak_count": 0,
+                        "presentation_overlay_story_leak_count": 0,
+                        "native_416x232_only": True,
+                        "strict_no_bgm": True,
+                        "blocked_p16_p17_p18_leak_count": 0,
+                        "media": media,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            rows = MODULE.rows_from_ac7210_verification(verification, 20)
+        self.assertEqual({row["edition"] for row in rows}, {"none", "ja", "zh"})
+        self.assertEqual({row["group_number"] for row in rows}, {20})
+        self.assertEqual(sum(row["primary"] for row in rows), 1)
+        self.assertTrue(all(row["expected_frames"] == 1354 for row in rows))
 
 
 if __name__ == "__main__":
