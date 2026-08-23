@@ -1,0 +1,203 @@
+{
+  "schema": "magireco-ac1102-exhaustive-authoritative-longform-checkpoint-v1",
+  "checkpoint_id": "ac1102_exhaustive_authoritative_longform_v152_20260824",
+  "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+  "review_group_id": "ac1102_exhaustive_native416_v120",
+  "review_group_count": 1,
+  "edition_file_count": 3,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "audio_profile": "strict_no_bgm",
+  "product_scope": "exhaustive_duplicate_free_event_presentation_editorial_longform",
+  "natural_single_session_claimed": false,
+  "mutually_exclusive_outcomes_combined": true,
+  "dirinfo_route_count": 31,
+  "dirinfo_route_coverage": "31/31",
+  "complete_event_presentation_count": 15,
+  "unique_complete_presentation_count": 15,
+  "exact_duplicate_complete_presentation_count": 0,
+  "raw_native_source_occurrence_count": 53,
+  "raw_native_unique_identity_count": 36,
+  "raw_native_alias_surplus_count": 17,
+  "component_unique_identity_count": 2,
+  "presentation_frames": 4091,
+  "duration_seconds": 136.366667,
+  "retained_no_bgm_audio_occurrences": 15,
+  "subtitle_occurrences": 3,
+  "excluded_bgm_occurrences": 2,
+  "child_local_only_timing_occurrences": 0,
+  "movie_layer_authority": {
+    "compiled_filename_entries": 7801,
+    "authored_movie_layers": 22,
+    "loadable_movie_layers": 18,
+    "unreachable_add_movie_layers": 4,
+    "unreachable_layers_have_same_interval_loadable_twins": true,
+    "machine_vision_used_as_authority": false
+  },
+  "sound_bus_authority": {
+    "SOUND_DIVIDE_TBL": "0x1445c54",
+    "retained_audio_occurrences": 15,
+    "excluded_bgm_request_id": 229,
+    "excluded_bgm_sound_id": 554,
+    "excluded_bgm_occurrences": 2
+  },
+  "ordered_events": [
+    "ac1102_001",
+    "ac1102_009",
+    "ac1102_010",
+    "ac1102_011",
+    "ac1102_002",
+    "ac1102_003",
+    "ac1102_004",
+    "ac1102_005",
+    "ac1102_008",
+    "ac1102_006",
+    "ac1102_007",
+    "ac1102_012",
+    "ac1102_013",
+    "ac1102_014",
+    "ac1102_015"
+  ],
+  "legacy_disposition": {
+    "legacy_91_8s_longform_authoritative": false,
+    "v77_route_fragments_are_final_products": false,
+    "original_event_archives_preserved": true
+  },
+  "bindings": {
+    "unique_segment_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac1102_missing_scene_motion_v83_20260819\\exhaustive_unique_segment_authority_v1\\AC1102_EXHAUSTIVE_UNIQUE_SEGMENT_AUTHORITY.json",
+      "sha256": "F27135E8321C60165860E29B6A210B7B1E463071256744BE5E88F4080474D953",
+      "size_bytes": 65121
+    },
+    "movie_layer_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1102_movielayer_reachability_authority_v118_20260823\\AC1102_MOVIELAYER_REACHABILITY_AUTHORITY.json",
+      "sha256": "5366BE8DCBC0D018A32F1DCFF0086083F3CC13A349506EE141E5CCB8008C51C5",
+      "size_bytes": 33657
+    },
+    "event_audio_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1102_event_audio_authority_v119r1_20260823\\AC1102_EVENT_AUDIO_AUTHORITY.json",
+      "sha256": "FBA97ABD0AF5D9E53CF342009772C23559227EA8DE33456FCA633294331EE02E",
+      "size_bytes": 16162
+    },
+    "bounded_source_hash_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac1102_missing_scene_motion_v83_20260819\\AC1102_BOUNDED_SOURCE_HASH_AUTHORITY.json",
+      "sha256": "58CAD8AACB4DA68EAEF24719957388EBABA29CBBA82666AB52A7618EF3F91557",
+      "size_bytes": 10870
+    },
+    "editorial_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1102_exhaustive_longform_inputs_v120_20260823\\AC1102_EXHAUSTIVE_EDITORIAL_AUTHORITY.json",
+      "sha256": "EFA41DF7BFB8BA3E1AC808C0230E909D94B277DDF07C894CB1FE91B349C324CC",
+      "size_bytes": 11105
+    },
+    "input_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac1102_exhaustive_longform_inputs_v120_20260823\\VERIFICATION_RECORD.json",
+      "sha256": "427F28D6945623918893C5B84F46D72B85E295E180925077DA0F5A396615AC86",
+      "size_bytes": 1155
+    },
+    "production_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\PRODUCTION_VERIFICATION.json",
+      "sha256": "0498D542A268E8955A072209B7DEC026336C544F25E86493DB38426164F47143",
+      "size_bytes": 2419
+    },
+    "family_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+      "sha256": "AE31C35235FD20DB000167CD471EE8B3E3C9126A1357BE124477055B1FE05232",
+      "size_bytes": 78322
+    },
+    "automated_qa": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\qa\\automated_qa.json",
+      "sha256": "2CB5810E508ECDFDD4F557F3FCE52F44615B8B3071A6F183B22211E2427F1D84",
+      "size_bytes": 7395849
+    },
+    "human_review_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v2_ac7205_ac1103_ac1102_20260824\\HUMAN_REVIEW_INDEX.csv",
+      "sha256": "B1FC397A4185F203F59B9438BDF7BA08EE31DFEA8AB16B32EF06B4F5F396D9E2",
+      "size_bytes": 7422
+    },
+    "human_review_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v2_ac7205_ac1103_ac1102_20260824\\VERIFICATION_RECORD.json",
+      "sha256": "A29C83B1122BC86A9D7DA2DD7563B71CEAC16C257620FC7619ED5A52189B2186",
+      "size_bytes": 12789
+    },
+    "unique_resolver": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\resolve_ac1102_exhaustive_unique_segments.py",
+      "sha256": "3FF1C847DDC33AA5D736C9736E58DD8C3761B8B04870714EEE4A3A75869BEDB0",
+      "size_bytes": 20759
+    },
+    "movie_layer_resolver": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\resolve_ac1102_movie_layer_reachability.py",
+      "sha256": "B7CC540928ABE45863F72EDDA437A9A1312E8F96516319D30D95BBF4D8D70684",
+      "size_bytes": 17610
+    },
+    "audio_resolver": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\resolve_ac1102_event_audio_authority.py",
+      "sha256": "BBC83C6E78823226DD872B92D34D2118EA8E8CC2297A87EA53920983D3616379",
+      "size_bytes": 18464
+    },
+    "longform_builder": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\build_ac1102_exhaustive_authoritative_longform.py",
+      "sha256": "5ABF83EAE70EA24B2C7AB2392CEB9E6B6D1D7645A99EE745259C34122523877A",
+      "size_bytes": 44908
+    }
+  },
+  "production_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823",
+  "human_review_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v2_ac7205_ac1103_ac1102_20260824",
+  "human_review_current": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\CURRENT_REVIEW",
+  "human_review_relative_group": "{NONE|JP|ZH}/story/菲莉希亚牧场_全入口全选项全结局完整合集_ac1102__{edition}.mp4",
+  "media": [
+    {
+      "edition": "none",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__none.mp4",
+      "sha256": "48B63933E639B21148C0DFB8E86A37AFF8C416319D5650F35920C9C824A34C4C",
+      "duration_seconds": 136.366016,
+      "frame_count": 4091,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "ja",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+      "sha256": "B02B9E8E6E968D1E7DBE2030E3DCBAE43A4F7C2AADC048819DEBEE58AE3B3019",
+      "duration_seconds": 136.366667,
+      "frame_count": 4091,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "zh",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+      "sha256": "0D0DE118E7EC29940B277383B6CB5547A5922ED85D1B6702D084F1B6B004E1B7",
+      "duration_seconds": 136.366667,
+      "frame_count": 4091,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    }
+  ],
+  "fail_closed": {
+    "p16_p17_p18_leak_count": 0,
+    "child_local_only_timing_accepted": false,
+    "with_bgm_accepted": false
+  },
+  "human_playback_required": true,
+  "publication_approved": false,
+  "bilibili_uploaded": false,
+  "source_media_policy": "read_only_preserve_no_move_no_delete_no_overwrite"
+}
