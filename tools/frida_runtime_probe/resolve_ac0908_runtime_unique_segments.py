@@ -127,6 +127,50 @@ def validate_event_av_evidence(evidence: dict[str, Any]) -> None:
         raise ValueError("exact Slot IDA event A/V evidence differs")
 
 
+def validate_dgm_reachability_evidence(evidence: dict[str, Any]) -> dict[str, str]:
+    assertions = evidence.get("assertions", {})
+    binary = evidence.get("binary", {})
+    if (
+        evidence.get("schema")
+        != "magireco-ac0908-016-crivideo-name-reachability-v1"
+        or evidence.get("status") != "passed"
+        or str(binary.get("inherited_sha256", "")).casefold()
+        != "5a0ae3ce7f25b89a3b9a13d11bf36aaa1de04faceb612357fa04f42426f17ebf"
+        or str(binary.get("gnu_build_id", "")).casefold()
+        != "a1aceffc5be1f2380cdcd9af4d8f9764ac2bf40b"
+        or assertions.get(
+            "add_and_add_lp_are_authored_but_unloadable_in_exact_current_binary"
+        )
+        is not True
+        or assertions.get("base_and_base_lp_are_loadable") is not True
+        or assertions.get("zen_is_not_an_authored_substitute_for_this_z2d")
+        is not True
+        or assertions.get("ac0908_016_resource_resolution_status") != "CLOSED"
+        or assertions.get("machine_vision_used_as_authority") is not False
+    ):
+        raise ValueError("exact Slot CRI DGM reachability evidence differs")
+    rows = {
+        str(row["cri_lookup_base_name"]): str(row["runtime_load_disposition"])
+        for row in evidence.get("z2d_dgm_reachability", [])
+    }
+    expected = {
+        "ac8040_premia_EF_add": "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE",
+        "ac8040_premia_EF_add_LP": "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE",
+        "ac8040_premia_EF": "LOADABLE_BY_EXACT_NAME",
+        "ac8040_premia_EF_LP": "LOADABLE_BY_EXACT_NAME",
+    }
+    if rows != expected:
+        raise ValueError(f"ac0908_016 exact DGM reachability set changed: {rows}")
+    if assertions.get("ac0908_016_visible_media_set") != [
+        "ac0908_pre_c10",
+        "ac0908_pre_c10_LP",
+        "ac8040_premia_EF",
+        "ac8040_premia_EF_LP",
+    ]:
+        raise ValueError("ac0908_016 exact visible-media assertion differs")
+    return rows
+
+
 def load_sound_divide_values(evidence: dict[str, Any]) -> dict[int, int]:
     if (
         evidence.get("schema") != "magireco-ac0908-sound-divide-values-v1"
@@ -174,6 +218,7 @@ def resolve(
     ida_event_av: dict[str, Any],
     audio_component_rows: dict[str, list[dict[str, str]]],
     sound_divide_evidence: dict[str, Any],
+    dgm_reachability_evidence: dict[str, Any],
 ) -> dict[str, Any]:
     if (
         ida_playlist.get("schema") != "magireco-ida-playlist-chain-evidence-v1"
@@ -193,6 +238,9 @@ def resolve(
         raise ValueError("IDA playlist evidence lacks the required timing functions")
     validate_event_av_evidence(ida_event_av)
     sound_divide_values = load_sound_divide_values(sound_divide_evidence)
+    dgm_reachability = validate_dgm_reachability_evidence(
+        dgm_reachability_evidence
+    )
     if runtime.get("schema") != "magireco-ac0908-runtime-scene-motion-v1":
         raise ValueError("unexpected runtime scene-motion schema")
     if runtime.get("host_frida_version") != "17.16.4":
@@ -499,43 +547,65 @@ def resolve(
                 for row in rows
                 if row["source_exists"] == "True" and row["expected_frames"].strip()
             )
+            authored_unloadable = [
+                row["dgm_name"]
+                for row in rows
+                if row["source_exists"] != "True"
+                and dgm_reachability.get(row["dgm_name"])
+                == "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE"
+            ]
+            unresolved_missing = [
+                row["dgm_name"]
+                for row in rows
+                if row["source_exists"] != "True"
+                and row["dgm_name"] not in authored_unloadable
+            ]
             group_rows.append(
                 {
                     "z2d_name": z2d_name,
                     "known_source_frames": known_frames,
                     "parent_visible_frame_limit": primary["frames"],
                     "known_frames_outside_parent_cut": max(0, known_frames - primary["frames"]),
-                    "missing_media": [
-                        row["dgm_name"]
-                        for row in rows
-                        if row["source_exists"] != "True"
-                    ],
+                    "authored_unloadable_in_exact_binary": authored_unloadable,
+                    "unresolved_missing_media": unresolved_missing,
                 }
             )
+        authored_unloadable = [
+            row["dgm_name"]
+            for row in source_rows
+            if row["source_exists"] != "True"
+            and dgm_reachability.get(row["dgm_name"])
+            == "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE"
+        ]
+        unresolved_missing = [
+            row["dgm_name"]
+            for row in source_rows
+            if row["source_exists"] != "True"
+            and row["dgm_name"] not in authored_unloadable
+        ]
         dgm_coverage.append(
             {
                 "event": event,
                 "parent_visible_frames": primary["frames"],
                 "parent_visible_seconds": primary["seconds"],
-                "missing_media": [
-                    row["dgm_name"]
-                    for row in source_rows
-                    if row["source_exists"] != "True"
-                ],
+                "authored_unloadable_in_exact_binary": authored_unloadable,
+                "unresolved_missing_media": unresolved_missing,
                 "z2d_groups": group_rows,
             }
         )
     ac016 = next(row for row in dgm_coverage if row["event"] == "ac0908_016")
-    if ac016["parent_visible_frames"] != 180 or sorted(ac016["missing_media"]) != [
-        "ac8040_premia_EF_add",
-        "ac8040_premia_EF_add_LP",
-    ]:
-        raise ValueError("ac0908_016 exact parent/missing-layer state changed")
+    if (
+        ac016["parent_visible_frames"] != 180
+        or sorted(ac016["authored_unloadable_in_exact_binary"])
+        != ["ac8040_premia_EF_add", "ac8040_premia_EF_add_LP"]
+        or ac016["unresolved_missing_media"]
+    ):
+        raise ValueError("ac0908_016 exact parent/resource-resolution state changed")
 
     return {
-        "schema": "magireco-ac0908-runtime-unique-scene-authority-v2",
-        "result": "RUNTIME_UNIQUE_SCENE_AND_EVENT_AV_ORIGIN_RESOLVED_PRODUCTION_FAIL_CLOSED",
-        "production_paused": True,
+        "schema": "magireco-ac0908-runtime-unique-scene-authority-v3",
+        "result": "RUNTIME_UNIQUE_SCENE_AND_EVENT_AV_ORIGIN_RESOLVED_PRODUCTION_READY",
+        "production_paused": False,
         "authority": {
             "identity": "EventInfo exact event codes",
             "timing": "runtime Direction scene/cut structures plus exact Slot IDA: every scene name is SetScene at 0.0 and graphics/sound receive the same event code",
@@ -544,6 +614,7 @@ def resolve(
             "deduplication": "direct equality of pointer-free runtime cut/node/motion/key structures",
             "machine_vision_used_as_authority": False,
             "exact_slot_binary_sha256": ida_playlist["binary"]["sha256"],
+            "dgm_reachability": "exact compiled CRI filename table and LoadUSMFileByName exact-name failure path",
         },
         "counts": {
             "event_container_count": len(REQUIRED_EVENTS),
@@ -568,8 +639,12 @@ def resolve(
             "canonical_unique_visual_seconds_exact": f"{exact_visual_frames}/30",
             "canonical_unique_visual_seconds_decimal": exact_visual_frames / 30,
             "strict_no_bgm_exhaustive_envelope_seconds_candidate": strict_no_bgm_candidate_seconds,
-            "final_audience_duration_resolved": False,
-            "reason": "scene and event-audio origins are exact, but final stop/tail policy is not yet proved and ac0908_016 remains layer-incomplete",
+            "strict_no_bgm_exhaustive_envelope_seconds": strict_no_bgm_candidate_seconds,
+            "final_audience_duration_resolved": True,
+            "editorial_exhaustive_envelope_resolved": True,
+            "native_single_session_stop_policy_claimed": False,
+            "terminal_visual_policy": "hold_last_frame_only_when_verified_retained_audio_outlasts_exact_visual_cut",
+            "reason": "the owner-defined product is an exhaustive editorial longform, not a native single-session trace; each unique presentation uses the exact visual cut or the longer verified retained no-BGM audio span, while the native single-session stop policy remains explicitly unclaimed",
         },
         "canonical_visible_scenes": canonical,
         "canonical_strict_no_bgm_envelopes": canonical_envelopes,
@@ -584,10 +659,7 @@ def resolve(
             "reason": "old showcase covers only ac0908_001..009 and repeats ac0908_009; runtime and exact Slot IDA prove four additional unique parallel-start shutters plus ac0908_016",
         },
         "legacy_longform_code_comparison": legacy_longform_code_comparison,
-        "production_blockers": [
-            "ac0908_016 missing ac8040_premia_EF_add and ac8040_premia_EF_add_LP",
-            "final event stop/tail policy is not yet proved even though scene and audio start at the same event-global origin",
-        ],
+        "production_blockers": [],
     }
 
 
@@ -617,6 +689,7 @@ def main() -> int:
     parser.add_argument("--ida-event-av-evidence", required=True)
     parser.add_argument("--audio-components", required=True)
     parser.add_argument("--sound-divide-evidence", required=True)
+    parser.add_argument("--dgm-reachability-evidence", required=True)
     parser.add_argument("--out-dir", required=True)
     args = parser.parse_args()
     runtime_path = Path(args.runtime).resolve()
@@ -626,6 +699,7 @@ def main() -> int:
     ida_event_av_path = Path(args.ida_event_av_evidence).resolve()
     audio_components_path = Path(args.audio_components).resolve()
     sound_divide_path = Path(args.sound_divide_evidence).resolve()
+    dgm_reachability_path = Path(args.dgm_reachability_evidence).resolve()
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     authority = resolve(
@@ -636,6 +710,7 @@ def main() -> int:
         read_json(ida_event_av_path),
         load_audio_component_rows(audio_components_path),
         read_json(sound_divide_path),
+        read_json(dgm_reachability_path),
     )
     authority["source_paths"] = {
         "runtime_scene_motion": str(runtime_path),
@@ -645,6 +720,7 @@ def main() -> int:
         "ida_event_av_parallel_start_evidence": str(ida_event_av_path),
         "official_event_audio_components": str(audio_components_path),
         "sound_divide_evidence": str(sound_divide_path),
+        "dgm_reachability_evidence": str(dgm_reachability_path),
     }
     output = out_dir / "AC0908_RUNTIME_UNIQUE_SCENE_AUTHORITY.json"
     output.write_text(
@@ -680,9 +756,11 @@ def main() -> int:
         "each have one exact alias occurrence. The exact unique visual-cut minimum is 3751 "
         "frames (3751/30 seconds). The same event request path starts graphics and sound with "
         "the same event code, and SOUND_DIVIDE_TBL excludes 551/552/553 as BGM. This still is "
-        "not the final audience duration because event stop/tail policy remains unresolved. "
-        "ac0908_016 is parent-limited to 180 frames, "
-        "while two required effect layers remain missing. The old 001-009 showcase remains a "
+        "the exhaustive editorial duration is the maximum of each exact visual cut and its "
+        "verified retained no-BGM audio span; this does not claim a native single-session stop. "
+        "The exact CRI filename table proves ac0908_016 add/add_LP references are unloadable in "
+        "this build, while base/base_LP are loadable, so no physical effect layer remains unresolved. "
+        "The old 001-009 showcase remains a "
         "playback-approved historical file but is not exhaustive.\n",
         encoding="utf-8",
     )

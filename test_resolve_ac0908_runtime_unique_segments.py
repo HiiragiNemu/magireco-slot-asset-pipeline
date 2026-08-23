@@ -300,8 +300,48 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
                 }.items()
             ],
         }
+        dgm_reachability = {
+            "schema": "magireco-ac0908-016-crivideo-name-reachability-v1",
+            "status": "passed",
+            "binary": {
+                "inherited_sha256": ida["binary"]["sha256"],
+                "gnu_build_id": "a1aceffc5be1f2380cdcd9af4d8f9764ac2bf40b",
+            },
+            "z2d_dgm_reachability": [
+                {
+                    "cri_lookup_base_name": name,
+                    "runtime_load_disposition": disposition,
+                }
+                for name, disposition in {
+                    "ac8040_premia_EF_add": "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE",
+                    "ac8040_premia_EF_add_LP": "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE",
+                    "ac8040_premia_EF": "LOADABLE_BY_EXACT_NAME",
+                    "ac8040_premia_EF_LP": "LOADABLE_BY_EXACT_NAME",
+                }.items()
+            ],
+            "assertions": {
+                "add_and_add_lp_are_authored_but_unloadable_in_exact_current_binary": True,
+                "base_and_base_lp_are_loadable": True,
+                "zen_is_not_an_authored_substitute_for_this_z2d": True,
+                "ac0908_016_visible_media_set": [
+                    "ac0908_pre_c10",
+                    "ac0908_pre_c10_LP",
+                    "ac8040_premia_EF",
+                    "ac8040_premia_EF_LP",
+                ],
+                "ac0908_016_resource_resolution_status": "CLOSED",
+                "machine_vision_used_as_authority": False,
+            },
+        }
         result = resolve(
-            runtime, prior, dgm, ida, ida_event_av, audio, sound_divide
+            runtime,
+            prior,
+            dgm,
+            ida,
+            ida_event_av,
+            audio,
+            sound_divide,
+            dgm_reachability,
         )
         self.assertEqual(result["counts"]["canonical_unique_visible_scene_count"], 14)
         self.assertEqual(result["counts"]["visible_scene_occurrence_count"], 17)
@@ -327,7 +367,22 @@ class RuntimeUniqueSegmentTests(unittest.TestCase):
         self.assertEqual(win["excluded_bgm_sound_ids"], [553])
         self.assertAlmostEqual(win["strict_no_bgm_envelope_seconds_candidate"], 4.824)
         self.assertEqual(result["duration_audit"]["canonical_unique_visual_frames"], 3751)
-        self.assertFalse(result["duration_audit"]["final_audience_duration_resolved"])
+        self.assertTrue(result["duration_audit"]["final_audience_duration_resolved"])
+        self.assertTrue(
+            result["duration_audit"]["editorial_exhaustive_envelope_resolved"]
+        )
+        self.assertFalse(
+            result["duration_audit"]["native_single_session_stop_policy_claimed"]
+        )
+        self.assertEqual(result["production_blockers"], [])
+        ac016 = next(
+            row for row in result["dgm_coverage"] if row["event"] == "ac0908_016"
+        )
+        self.assertEqual(
+            sorted(ac016["authored_unloadable_in_exact_binary"]),
+            ["ac8040_premia_EF_add", "ac8040_premia_EF_add_LP"],
+        )
+        self.assertEqual(ac016["unresolved_missing_media"], [])
         comparison = result["legacy_longform_code_comparison"]
         self.assertEqual(4, comparison["repeated_event_container_reference_surplus_count"])
         self.assertEqual(2, comparison["guaranteed_exact_duplicate_render_occurrence_surplus_count"])

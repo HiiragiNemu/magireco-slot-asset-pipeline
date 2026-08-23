@@ -1,0 +1,214 @@
+{
+  "schema": "magireco-ac0908-exhaustive-authoritative-longform-checkpoint-v1",
+  "checkpoint_id": "ac0908_exhaustive_authoritative_longform_v153_20260824",
+  "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+  "review_group_id": "ac0908_exhaustive_native416_v102",
+  "review_group_count": 1,
+  "edition_file_count": 3,
+  "native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "native_frame_rate": "30/1",
+  "audio_profile": "strict_no_bgm",
+  "product_scope": "exhaustive_duplicate_free_code_reachable_av_editorial_longform",
+  "natural_single_session_claimed": false,
+  "mutually_exclusive_outcomes_combined": true,
+  "event_container_count": 17,
+  "canonical_unique_presentation_count": 14,
+  "exact_duplicate_presentation_surplus_count": 3,
+  "exact_alias_events": [
+    "ac0908_013",
+    "ac0908_014",
+    "ac0908_015"
+  ],
+  "chapter_count": 14,
+  "canonical_unique_visual_frames": 3751,
+  "presentation_frames": 3915,
+  "duration_seconds": 130.5,
+  "terminal_visual_policy": "hold_last_frame_only_when_verified_retained_audio_outlasts_exact_visual_cut",
+  "strict_no_bgm_excluded_bgm_sound_codes": [
+    551,
+    552,
+    553
+  ],
+  "strict_no_bgm_excluded_bgm_occurrences": 6,
+  "ordered_chapters": [
+    "ac0908_001",
+    "ac0908_009",
+    "ac0908_002",
+    "ac0908_003",
+    "ac0908_004",
+    "ac0908_005",
+    "ac0908_006",
+    "ac0908_007",
+    "ac0908_008",
+    "ac8004_001",
+    "ac8004_003",
+    "ac8004_004",
+    "ac0908_016",
+    "ac8004_002"
+  ],
+  "event_coverage": [
+    "ac0908_001",
+    "ac0908_002",
+    "ac0908_003",
+    "ac0908_004",
+    "ac0908_005",
+    "ac0908_006",
+    "ac0908_007",
+    "ac0908_008",
+    "ac0908_009",
+    "ac0908_010",
+    "ac0908_011",
+    "ac0908_012",
+    "ac0908_013",
+    "ac0908_014",
+    "ac0908_015",
+    "ac0908_016",
+    "ac0908_017"
+  ],
+  "ac0908_016_resource_resolution": {
+    "authored_unloadable_layers": [
+      "ac8040_premia_EF_add",
+      "ac8040_premia_EF_add_LP"
+    ],
+    "loadable_layers": [
+      "ac8040_premia_EF",
+      "ac8040_premia_EF_LP"
+    ],
+    "unresolved_missing_media": [],
+    "proof": "compiled CRI filename table plus exact LoadUSMFileByName failure path"
+  },
+  "legacy_disposition": {
+    "A0007_ac0908_001_to_009_reference_complete": false,
+    "reason": "covers only 001-009 and repeats 009; omits five additional unique outcome presentations",
+    "historical_owner_playback_approval_preserved": true,
+    "current_review_target": "v102 all-entry all-outcome longform"
+  },
+  "bindings": {
+    "runtime_unique_scene_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\runtime_ac0908_scene_motion_v105_editorial_exhaustive_authority_20260823\\AC0908_RUNTIME_UNIQUE_SCENE_AUTHORITY.json",
+      "sha256": "AE79E7506486BAD58485FCA58E3FCEE6E64063C7292E1706732FACF9725BC087",
+      "size_bytes": 121863
+    },
+    "selected_cri_usm_argb_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0908_cri_argb_alpha_authority_v112_20260823\\SELECTED_CRI_USM_ARGB_AUTHORITY.json",
+      "sha256": "A7F8793A1AFD56CB3A344231A30942873AD387B7F4427ABC7B079EACB6B306E2",
+      "size_bytes": 10959
+    },
+    "movie_layer_geometry_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0908_z2d_layer_geometry_authority_v114_20260823\\Z2D_MOVIELAYER_BLEND_AUTHORITY.json",
+      "sha256": "F6185C433BB1266315939B2C2AE312A03D94BFA8E1C0DD4167BECE205E2A261B",
+      "size_bytes": 21196
+    },
+    "event_composition_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0908_016_event_composition_authority_v115_20260823\\AC0908_016_EVENT_COMPOSITION_AUTHORITY.json",
+      "sha256": "F08447CB43C9F6FAA61923A3464ACD256C5579444DC01EE5BC971F80A58E07F0",
+      "size_bytes": 14953
+    },
+    "cri_runtime_render_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0908_cri_movie_runtime_render_authority_v116_20260823\\CRI_MOVIELAYER_RUNTIME_RENDER_AUTHORITY.json",
+      "sha256": "8586C0C68BF1B85F4BBFD68F9A5FEEEBC55B412E84A1996D0406A50F205A7696",
+      "size_bytes": 7348
+    },
+    "cri_name_reachability_authority": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0908_016_crivideo_reachability_authority_v104_20260823\\AC0908_016_DGM_REACHABILITY.json",
+      "sha256": "4656200A984AD5DC2400EF02C270B9E36B33E0176476CF79C750EAEB36E056F5",
+      "size_bytes": 3559
+    },
+    "production_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\manifests\\PRODUCTION_MANIFEST.json",
+      "sha256": "40466EDBD66CBDBE512EF5F2B2A3A761CA96537DB54A903CEA55890886349D11",
+      "size_bytes": 14133
+    },
+    "production_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\verification\\VERIFICATION_RECORD.json",
+      "sha256": "462276E51BF944462DD665F328275D716E42F8A9AFF261CB36E3D0659C887140",
+      "size_bytes": 450
+    },
+    "human_review_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v3_ac7205_ac1103_ac1102_ac0908_20260824\\HUMAN_REVIEW_INDEX.csv",
+      "sha256": "AC1CD664DE0772C1DB31EBAA90A83E798E4F96310DA670A76F01BE1D76EE6FB4",
+      "size_bytes": 9885
+    },
+    "human_review_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v3_ac7205_ac1103_ac1102_ac0908_20260824\\VERIFICATION_RECORD.json",
+      "sha256": "41010DDF7F12570788203CA46BE1732E002FEE60CA039C60BBDA422BF0315261",
+      "size_bytes": 17447
+    },
+    "runtime_unique_resolver": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\resolve_ac0908_runtime_unique_segments.py",
+      "sha256": "FEADB87E14E6D839897BB17F23D8531AF87FFB051374717DCD376BE25C7731AF",
+      "size_bytes": 34493
+    },
+    "composition_builder": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\build_ac0908_016_event_composition_authority.py",
+      "sha256": "94BB64560905F853F6594189C56203980C7785081FDF6DF3C47C33267D84B132",
+      "size_bytes": 19047
+    },
+    "longform_builder": {
+      "path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\build_ac0908_exhaustive_authoritative_longform.py",
+      "sha256": "3CD0C6F8C630D062065AEDE3B49C6B1BCE314CAB53DE898DDA08084EADB2E111",
+      "size_bytes": 22627
+    }
+  },
+  "production_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823",
+  "human_review_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v3_ac7205_ac1103_ac1102_ac0908_20260824",
+  "human_review_current": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\CURRENT_REVIEW",
+  "human_review_relative_group": "{NONE|JP|ZH}/story/万万岁六种菜品_全入口全结局完整合集_ac0908__{edition}.mp4",
+  "media": [
+    {
+      "edition": "none",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\NONE\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__none.mp4",
+      "sha256": "533A84960AA6884E0534A9F56D42D9283D7F7775A97FDF399720E5CCA0DD304E",
+      "frame_count": 3915,
+      "duration_seconds": 130.5,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "ja",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\JP\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__ja.mp4",
+      "sha256": "611449D285D44C4A2B61567078BE1838B1E32AEF058CA96B766344C8E50D7B9C",
+      "frame_count": 3915,
+      "duration_seconds": 130.5,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    },
+    {
+      "edition": "zh",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\ZH\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__zh.mp4",
+      "sha256": "84269680EFD27EC70266B3AE81000400843D2429304216A453D58487D3968A79",
+      "frame_count": 3915,
+      "duration_seconds": 130.5,
+      "width": 416,
+      "height": 232,
+      "frame_rate": "30/1",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "audio_sample_rate": 48000,
+      "audio_channels": 2
+    }
+  ],
+  "fail_closed": {
+    "p16_p17_p18_leak_count": 0,
+    "child_local_only_timing_accepted": false,
+    "with_bgm_accepted": false,
+    "machine_vision_used_as_authority": false
+  },
+  "human_playback_required": true,
+  "publication_approved": false,
+  "bilibili_uploaded": false,
+  "source_media_policy": "read_only_preserve_no_move_no_delete_no_overwrite"
+}
