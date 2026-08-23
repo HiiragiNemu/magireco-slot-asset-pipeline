@@ -1,0 +1,62 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac7205_exhaustive_native416_runtime_bound_dialogue",
+  "status": "machine_draft_pending_owner_for_new_exhaustive_longform",
+  "translations": [
+    {
+      "request_id": 8311,
+      "ja": "だいたいの事情は伺い知ることができたよ",
+      "zh": "大致情况我已经了解了。",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "だいたいの事情は伺い知ることができたよ",
+      "render_zh": "大致情况我已经了解了。",
+      "subtitle_end_policy": "graphical_parent_motion_end",
+      "status": "machine_draft_pending_owner_playback"
+    },
+    {
+      "request_id": 8312,
+      "ja": "つまり君達は\nドッペルという現象によって\n魔女化を防いでいたわけだ",
+      "zh": "也就是说，你们通过\n名为魔女化身的现象避免了魔女化。",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "つまり君達は\nドッペルという現象によって\n魔女化を防いでいたわけだ",
+      "render_zh": "也就是说，你们通过\n名为魔女化身的现象避免了魔女化。",
+      "subtitle_end_policy": "graphical_parent_motion_end",
+      "status": "machine_draft_pending_owner_playback"
+    },
+    {
+      "request_id": 8313,
+      "ja": "たしかに\n魔女化することは\n義務として課されているわけではない",
+      "zh": "确实，\n魔女化并不是\n被强加给你们的义务。",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "たしかに\n魔女化することは\n義務として課されているわけではない",
+      "render_zh": "确实，\n魔女化并不是\n被强加给你们的义务。",
+      "subtitle_end_policy": "graphical_parent_motion_end",
+      "status": "machine_draft_pending_owner_playback"
+    },
+    {
+      "request_id": 8310,
+      "ja": "自分達の人社会に危害を加え始めるなんて\nまったく…\nわけが分からないよ",
+      "zh": "竟然开始危害自己的人类社会，\n真是……\n让人无法理解啊。",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "自分達の人社会に危害を加え始めるなんて\nまったく…\nわけが分からないよ",
+      "render_zh": "竟然开始危害自己的人类社会，\n真是……\n让人无法理解啊。",
+      "subtitle_end_policy": "graphical_parent_motion_end",
+      "status": "machine_draft_pending_owner_playback"
+    },
+    {
+      "request_id": 8314,
+      "ja": "さあ\n君はどうしたい?",
+      "zh": "那么，\n你想怎么做？",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "さあ\n君はどうしたい?",
+      "render_zh": "那么，\n你想怎么做？",
+      "subtitle_end_policy": "official_voice_duration",
+      "status": "machine_draft_pending_owner_playback"
+    }
+  ]
+}
