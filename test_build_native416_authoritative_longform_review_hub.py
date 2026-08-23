@@ -77,6 +77,7 @@ class Native416ReviewHubTests(unittest.TestCase):
 
     def test_safe_filename_and_forbidden_title_characters(self):
         self.assertEqual(hub.safe_filename("完整合集_ac1101", "zh"), "完整合集_ac1101__zh.mp4")
+        self.assertEqual(hub.safe_filename("资料合集_ac7118", "material"), "资料合集_ac7118.mp4")
         with self.assertRaises(hub.ReviewHubError):
             hub.safe_filename("bad/name_ac1101", "zh")
 
@@ -91,6 +92,65 @@ class Native416ReviewHubTests(unittest.TestCase):
             plan = self.make_plan(Path(tmp), family="ac6003")
             with self.assertRaisesRegex(hub.ReviewHubError, "quarantined"):
                 hub.validate_plan(plan)
+
+    @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe())
+    def test_none_only_and_material_singletons_are_valid(self, _probe):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for family, edition, content_type in (
+                ("ac7002", "none", "story"),
+                ("ac7118", "material", "material"),
+            ):
+                source = root / f"{family}__{edition}.mp4"
+                source.write_bytes(family.encode("ascii"))
+                media = {
+                    "edition": edition,
+                    "path": str(source),
+                    "sha256": hub.file_sha256(source),
+                    **media_probe(),
+                }
+                evidence = root / f"{family}_verification.json"
+                evidence.write_text(
+                    json.dumps(
+                        {
+                            "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
+                            "media": [media],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                plan = {
+                    "schema": hub.SCHEMA,
+                    "release_id": f"authority_{family}_test",
+                    "hub_root": str(root / "hub"),
+                    "expected_previous_current_target": str(root / "previous"),
+                    "expected_group_count": 1,
+                    "expected_edition_file_count": 1,
+                    "groups": [
+                        {
+                            "review_group_id": f"{family}_exhaustive",
+                            "family": family,
+                            "title": f"完整合集_{family}",
+                            "content_type": content_type,
+                            "audio_profile": "silent" if edition == "material" else "no_bgm",
+                            "event_container_count": 1,
+                            "unique_complete_presentation_count": 1,
+                            "evidence": {
+                                "kind": "production_verification_media",
+                                "path": str(evidence),
+                                "sha256": hub.file_sha256(evidence),
+                            },
+                            "media": [media],
+                        }
+                    ],
+                }
+                validated = hub.validate_plan(plan)
+                expected_relative = (
+                    f"MATERIAL/完整合集_{family}.mp4"
+                    if edition == "material"
+                    else f"NONE/story/完整合集_{family}__none.mp4"
+                )
+                self.assertEqual(validated[0]["media"][0]["relative_path"], expected_relative)
 
     @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe())
     def test_dry_run_validates_without_creating_hub(self, _probe):

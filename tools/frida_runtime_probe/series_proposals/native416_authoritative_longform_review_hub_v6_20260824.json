@@ -1,0 +1,1051 @@
+{
+  "schema": "magireco-native416-authoritative-longform-review-hub-plan-v1",
+  "release_id": "authority_v6_21families_20260824",
+  "hub_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms",
+  "expected_previous_current_target": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manual_review_native416_authoritative_longforms\\releases\\authority_v5_15families_20260824",
+  "ffprobe": "ffprobe",
+  "expected_group_count": 21,
+  "expected_edition_file_count": 51,
+  "groups": [
+    {
+      "review_group_id": "ac7205_exhaustive_native416_v150",
+      "family": "ac7205",
+      "title": "丘比新闻与魔女化身抉择_全事件全结果完整合集_ac7205",
+      "content_type": "story",
+      "event_container_count": 21,
+      "unique_complete_presentation_count": 21,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v150_ac7205_exhaustive_native416_authoritative_20260824\\PRODUCTION_VERIFICATION.json",
+        "sha256": "1D208B927773FC4390E2F246DD5DBC4E668BDE296FCE585441F19E3DC0BA6F98"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v150_ac7205_exhaustive_native416_authoritative_20260824\\ac7205_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7205_exhaustive_native416_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "D4B9ABC557BA4EB9933F6E11F47A5D7B822ADBF79E94CE6FEABE5807B51E6571",
+          "duration_seconds": 127.566341,
+          "frame_count": 3827,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v150_ac7205_exhaustive_native416_authoritative_20260824\\ac7205_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7205_exhaustive_native416_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "57F544DA77B72DA88C6C61F0AB2B3675DF39871C34CE2D279981A6BBB1E8B77E",
+          "duration_seconds": 127.566667,
+          "frame_count": 3827,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v150_ac7205_exhaustive_native416_authoritative_20260824\\ac7205_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7205_exhaustive_native416_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "708844C9053D057C18FE3041834A91985EFBCB98E3D00EF73BE72914508ECB40",
+          "duration_seconds": 127.566667,
+          "frame_count": 3827,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac1103_exhaustive_native416_v121r1",
+      "family": "ac1103",
+      "title": "外送修行_全路线全结果完整合集_ac1103",
+      "content_type": "story",
+      "event_container_count": 13,
+      "unique_complete_presentation_count": 13,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\PRODUCTION_VERIFICATION.json",
+        "sha256": "BE750EF28E03159667265C8C32BD3825B682A862381EC19FD303BFE031EA40C8"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "A1DAD12B9D18D109A071286EED24B246C01133DB69C90B67BB9C9977A5249D78",
+          "duration_seconds": 103.8,
+          "frame_count": 3114,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "E372C2CBB28E4B59434A866D16AF179920FCDEE27820B5FE69B3B830C7C916E1",
+          "duration_seconds": 103.8,
+          "frame_count": 3114,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v121r1_ac1103_exhaustive_authoritative_20260823\\ac1103_exhaustive_full_no_bgm_editions_v1\\video\\ac1103_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "8477DC6B4CBDCB89FCD0E9FED765AD3A6EBF0A9F37907A6B408D4A2E1EDA7DBA",
+          "duration_seconds": 103.8,
+          "frame_count": 3114,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac1102_exhaustive_native416_v120",
+      "family": "ac1102",
+      "title": "菲莉希亚牧场_全入口全选项全结局完整合集_ac1102",
+      "content_type": "story",
+      "event_container_count": 15,
+      "unique_complete_presentation_count": 15,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\PRODUCTION_VERIFICATION.json",
+        "sha256": "0498D542A268E8955A072209B7DEC026336C544F25E86493DB38426164F47143"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "48B63933E639B21148C0DFB8E86A37AFF8C416319D5650F35920C9C824A34C4C",
+          "duration_seconds": 136.366016,
+          "frame_count": 4091,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "B02B9E8E6E968D1E7DBE2030E3DCBAE43A4F7C2AADC048819DEBEE58AE3B3019",
+          "duration_seconds": 136.366667,
+          "frame_count": 4091,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v120_ac1102_exhaustive_authoritative_20260823\\ac1102_exhaustive_full_no_bgm_editions_v1\\video\\ac1102_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "0D0DE118E7EC29940B277383B6CB5547A5922ED85D1B6702D084F1B6B004E1B7",
+          "duration_seconds": 136.366667,
+          "frame_count": 4091,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac0908_exhaustive_native416_v102",
+      "family": "ac0908",
+      "title": "万万岁六种菜品_全入口全结局完整合集_ac0908",
+      "content_type": "story",
+      "event_container_count": 17,
+      "unique_complete_presentation_count": 14,
+      "evidence": {
+        "kind": "ac0908_production_manifest_outputs",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\manifests\\PRODUCTION_MANIFEST.json",
+        "sha256": "40466EDBD66CBDBE512EF5F2B2A3A761CA96537DB54A903CEA55890886349D11"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\NONE\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__none.mp4",
+          "sha256": "533A84960AA6884E0534A9F56D42D9283D7F7775A97FDF399720E5CCA0DD304E",
+          "duration_seconds": 130.5,
+          "frame_count": 3915,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\JP\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__ja.mp4",
+          "sha256": "611449D285D44C4A2B61567078BE1838B1E32AEF058CA96B766344C8E50D7B9C",
+          "duration_seconds": 130.5,
+          "frame_count": 3915,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823\\HUMAN_REVIEW\\ZH\\story\\ac0908_六种菜品与全部结局完整合集_严格无BGM__zh.mp4",
+          "sha256": "84269680EFD27EC70266B3AE81000400843D2429304216A453D58487D3968A79",
+          "duration_seconds": 130.5,
+          "frame_count": 3915,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac1104_exhaustive_native416_v126",
+      "family": "ac1104",
+      "title": "香蕉船对决_全路线全结果完整合集_ac1104",
+      "content_type": "story",
+      "event_container_count": 17,
+      "unique_complete_presentation_count": 17,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v126_ac1104_exhaustive_authoritative_20260824\\PRODUCTION_VERIFICATION.json",
+        "sha256": "FEF62754245EBB6BE2659E8376C9642E632842CF745DC4D72B4D2F3A6DCE8F0C"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v126_ac1104_exhaustive_authoritative_20260824\\ac1104_exhaustive_full_no_bgm_editions_v1\\video\\ac1104_exhaustive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "308D6DC658DEF73413FD5EC7594464D38FEC93C386B8F2592B3800FCA6A393A3",
+          "duration_seconds": 140.7,
+          "frame_count": 4221,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v126_ac1104_exhaustive_authoritative_20260824\\ac1104_exhaustive_full_no_bgm_editions_v1\\video\\ac1104_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "F6C9F7155D606DC06D0EF4BAD162B11FB60C2CD2205973635EA71321CE63F584",
+          "duration_seconds": 140.7,
+          "frame_count": 4221,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v126_ac1104_exhaustive_authoritative_20260824\\ac1104_exhaustive_full_no_bgm_editions_v1\\video\\ac1104_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "454D5F54E7EA1C8AF0B7464B2FE664BCE551D7E8C20DF84D069621ED0A7BC42A",
+          "duration_seconds": 140.7,
+          "frame_count": 4221,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac1101_exhaustive_native416_v132",
+      "family": "ac1101",
+      "title": "沙奈猫锅挑战_全入口全选项全结局完整合集_ac1101",
+      "content_type": "story",
+      "event_container_count": 13,
+      "unique_complete_presentation_count": 13,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v132_ac1101_exhaustive_authoritative_20260824\\PRODUCTION_VERIFICATION.json",
+        "sha256": "1F298C0179441E517B4CC76C5F4D4C3FF44540B4B3E78BF7B1AAE09717AFE12F"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v132_ac1101_exhaustive_authoritative_20260824\\ac1101_exhaustive_full_no_bgm_editions_v1\\video\\ac1101_exhaustive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "0B074AC4776AFCA0D531B5614DEA649D0701A2873EAFF65F1C0E8D8707061EFD",
+          "duration_seconds": 95.033333,
+          "frame_count": 2851,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v132_ac1101_exhaustive_authoritative_20260824\\ac1101_exhaustive_full_no_bgm_editions_v1\\video\\ac1101_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "2091A6C2768643650281BC5F23C0B193BAC01F7FD8E3F71C29C4090D1E5BD7F6",
+          "duration_seconds": 95.033333,
+          "frame_count": 2851,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v132_ac1101_exhaustive_authoritative_20260824\\ac1101_exhaustive_full_no_bgm_editions_v1\\video\\ac1101_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "2E74EEC277DB404FC2F7F61E498A958A3CF555447C7371B219E210305C17DAA5",
+          "duration_seconds": 95.033333,
+          "frame_count": 2851,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7206_exhaustive_native416_v137r1",
+      "family": "ac7206",
+      "title": "阿莉娜绘画演出_全入口全结果完整合集_ac7206",
+      "content_type": "story",
+      "event_container_count": 14,
+      "unique_complete_presentation_count": 14,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v137r1_ac7206_exhaustive_authoritative_20260824\\PRODUCTION_VERIFICATION.json",
+        "sha256": "80BF50DAF15F33E90C8EC8B26676D5A82CC6B4503835B939E5EE6DA8D2A18D9E"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v137r1_ac7206_exhaustive_authoritative_20260824\\ac7206_exhaustive_full_no_bgm_editions_v1\\video\\ac7206_exhaustive_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "8A8C88CBA3B6ED44A8DEAED500597CA40575E18FEBC1AA9AEC02DE7C2E3BD5F3",
+          "duration_seconds": 54.0,
+          "frame_count": 1620,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v137r1_ac7206_exhaustive_authoritative_20260824\\ac7206_exhaustive_full_no_bgm_editions_v1\\video\\ac7206_exhaustive_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "40FDB2A88889FE39D789DF832A813FEC74A54A3BEA3C844B2943022A5F80F8F8",
+          "duration_seconds": 54.0,
+          "frame_count": 1620,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v137r1_ac7206_exhaustive_authoritative_20260824\\ac7206_exhaustive_full_no_bgm_editions_v1\\video\\ac7206_exhaustive_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "013392A2C4EDB0063A83E45256127D3163B880352823F3A4411D08AA9F940670",
+          "duration_seconds": 54.0,
+          "frame_count": 1620,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7210_exhaustive_native416_v143r1",
+      "family": "ac7210",
+      "title": "八千代与鹤乃火箭突击_全分支全结果完整合集_ac7210",
+      "content_type": "story",
+      "event_container_count": 5,
+      "unique_complete_presentation_count": 5,
+      "evidence": {
+        "kind": "production_verification_media",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v143r1_ac7210_exhaustive_native416_authoritative_20260824\\PRODUCTION_VERIFICATION.json",
+        "sha256": "B657012DEF5D0BA57A1D2C5AFD8C4D2FE238775B9BE965FB55AC1CD2C1AF59EC"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v143r1_ac7210_exhaustive_native416_authoritative_20260824\\ac7210_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7210_exhaustive_native416_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "893B941F8FE9CB25EE229F9B3E076F3E657C3839A161E372510594AABC9BE4F8",
+          "duration_seconds": 45.133,
+          "frame_count": 1354,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v143r1_ac7210_exhaustive_native416_authoritative_20260824\\ac7210_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7210_exhaustive_native416_full_no_bgm_editions_v1__ja.mp4",
+          "sha256": "8A3268102D1F28B55AABBA671EE60E566A76D82ACB87749FF632E44A886810E6",
+          "duration_seconds": 45.133333,
+          "frame_count": 1354,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v143r1_ac7210_exhaustive_native416_authoritative_20260824\\ac7210_exhaustive_native416_full_no_bgm_editions_v1\\video\\ac7210_exhaustive_native416_full_no_bgm_editions_v1__zh.mp4",
+          "sha256": "65AF3D66677EB4433B9552AD854A9DAFC1E6232CF3BDC9A704894D61571CD914",
+          "duration_seconds": 45.133333,
+          "frame_count": 1354,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7101_exhaustive_native416_v98",
+      "family": "ac7101",
+      "title": "彩羽追寻愿望与忧全视频完整合集_ac7101",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7101\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "BDFAE7FCA05E572649D1C577F3EB68A88CCA94AD4096BDC8476965C6076CBD65"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7101\\video\\ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__none.mp4",
+          "sha256": "940DF849B8CFC8980A2E2C1856110ACC5436754D13DA26FE00D28774DCE40DFD",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7101\\video\\ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__ja.mp4",
+          "sha256": "B2619DF27468C1AB9C08FCB1495A3F2ED701E82153D5654FBC593EDC749FA14E",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7101\\video\\ac7101_彩羽追寻愿望与忧全视频合集_严格无BGM__zh.mp4",
+          "sha256": "2A51552BDC0CD37309288C25BDB86FA8DD5D718521E136CC6BAB2EB4414F42D9",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7102_exhaustive_native416_v98",
+      "family": "ac7102",
+      "title": "桃子协助寻找忧并向八千代道歉全视频完整合集_ac7102",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7102\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "59F0CDC0094D7B9ABC8610A7CB989AA609BD94090CC02EF6EFB5BEEABB960D92"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7102\\video\\ac7102_桃子协助寻找忧并向八千代道歉全视频合集_严格无BGM__none.mp4",
+          "sha256": "0C11D77515D9945EF75969B8C4EE1B682A6673BD97B777141037C05319344C5D",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7102\\video\\ac7102_桃子协助寻找忧并向八千代道歉全视频合集_严格无BGM__ja.mp4",
+          "sha256": "F37D3708846380037AE6324C104C2917E8BA6846166124C585C3C955334E48BF",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7102\\video\\ac7102_桃子协助寻找忧并向八千代道歉全视频合集_严格无BGM__zh.mp4",
+          "sha256": "FEEA6DB5F5F5A3564BB79C4D6CDA2FCCD5048FA7C8FAE610E3C94BD9C7DC9CAF",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7103_exhaustive_native416_v98",
+      "family": "ac7103",
+      "title": "鹤乃识破口寄神社与彩羽忧重逢幻象全视频完整合集_ac7103",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7103\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "CD1A17A2B18BE1718D721B847B84EDB9D3176070AE5D4C83FBC6AF145C011AAF"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7103\\video\\ac7103_鹤乃识破口寄神社与彩羽忧重逢幻象全视频合集_严格无BGM__none.mp4",
+          "sha256": "32811DD83B262D5C2605CA66BAE4FDFBE722455A71765D6320217377DF1E28D2",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7103\\video\\ac7103_鹤乃识破口寄神社与彩羽忧重逢幻象全视频合集_严格无BGM__ja.mp4",
+          "sha256": "38B08D3CB195F6F5E5F422AA8A0234C07E97D1CB6CB744CC7DBA01A80FD51BA7",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7103\\video\\ac7103_鹤乃识破口寄神社与彩羽忧重逢幻象全视频合集_严格无BGM__zh.mp4",
+          "sha256": "A7B6BDFCB069423F3B3B6D1B0D6C4BDCC22F56297A1FAA772248CAA1E20D7053",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7104_exhaustive_native416_v98",
+      "family": "ac7104",
+      "title": "菲利希亚品尝幸运水与杏子听闻Magius计划全视频完整合集_ac7104",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7104\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "C648D2BC4ACC1E638562AEE2F2A130E5B52B5E365F13374CAB31D4C1DB3A9EA0"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7104\\video\\ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__none.mp4",
+          "sha256": "ADDAAC8E1300840011AD3624E0DD036E79DAD3DC0C708F4EDE80410A37C5F52D",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7104\\video\\ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__ja.mp4",
+          "sha256": "ADFCB0259DFF4D91D471818D109F6D6DF578A9336DBE1846EC8D80D40B4D1AFF",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7104\\video\\ac7104_菲利希亚品尝幸运水与杏子听闻Magius计划全视频合集_严格无BGM__zh.mp4",
+          "sha256": "29327F728E833E039C63665EE506FB4DD3CF711220DD1DF85F6359EB3E990935",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7105_exhaustive_native416_v98",
+      "family": "ac7105",
+      "title": "爱说明愿望并呼唤纱奈走向外界全视频完整合集_ac7105",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7105\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "C6CFEB504BD7137C7CBA19A5BFCDE8EBE49286A4F0710640C2F712E5927882B9"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7105\\video\\ac7105_爱说明愿望并呼唤纱奈走向外界全视频合集_严格无BGM__none.mp4",
+          "sha256": "F4B180F36462A248CF33EE051D6141C4C116B85ED1B7C7EE50063DF06BD784E0",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7105\\video\\ac7105_爱说明愿望并呼唤纱奈走向外界全视频合集_严格无BGM__ja.mp4",
+          "sha256": "F254B075C2AF16EC2F6CF2F116726069DB088503EA17229077696E227C9372F0",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7105\\video\\ac7105_爱说明愿望并呼唤纱奈走向外界全视频合集_严格无BGM__zh.mp4",
+          "sha256": "43BDB40BB6C0EB4693F59A78EA36FAA71DB89217EF3D1FC29E700BE8BC20732E",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7106_exhaustive_native416_v98",
+      "family": "ac7106",
+      "title": "灯花与彩羽重新相识及麻美揭露魔法少女结局全视频完整合集_ac7106",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7106\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "1DAA7E772430862061A1F72CC35A729BC0D2720CBEBA8BE0168404D42C12BA36"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7106\\video\\ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__none.mp4",
+          "sha256": "D15341A1CB0B1BF2C3E797A0F258030669F9CF9D13616F3A9E8C2EF9DAE5F097",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7106\\video\\ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__ja.mp4",
+          "sha256": "241371C786B86C736875568F903818B617BCABA2F40E8495FD56866CDE365AEA",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7106\\video\\ac7106_灯花与彩羽重新相识及麻美揭露魔法少女结局全视频合集_严格无BGM__zh.mp4",
+          "sha256": "EFE497E6A719F71DC73FDFE1CB6361DCE07B715A59F897BBFC170BAA0D30FE84",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7107_exhaustive_native416_v98",
+      "family": "ac7107",
+      "title": "八千代追问Magius据点与黑江得知彩羽去向全视频完整合集_ac7107",
+      "content_type": "story",
+      "event_container_count": 3,
+      "unique_complete_presentation_count": 3,
+      "unique_source_identity_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7107\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "F6F90D80E291C8099065A98F328554EC4CCA2AAC8A9B8E10AEBF07B7AEB32257"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7107\\video\\ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__none.mp4",
+          "sha256": "58528AD0D0D16F78414011099DC24C1569D54BB50984170EEE6496863A6156F9",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "ja",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7107\\video\\ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__ja.mp4",
+          "sha256": "2E3B0FE42959D7574BB12F9E573FD5B617ABD2E6E70749EB055F5D373FE793B2",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        },
+        {
+          "edition": "zh",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v98_ac7101_ac7107_exhaustive_longforms_20260819\\ac7107\\video\\ac7107_八千代追问Magius据点与黑江得知彩羽去向全视频合集_严格无BGM__zh.mp4",
+          "sha256": "95A0544862F15732E694AEA2C49E2326131F2CA24B014A9F9B3B8EFB45134E86",
+          "duration_seconds": 171.0,
+          "frame_count": 5130,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac4002_exhaustive_native416_v94",
+      "family": "ac4002",
+      "title": "回忆追逐动画_完整合集_ac4002",
+      "content_type": "story",
+      "event_container_count": 1,
+      "unique_complete_presentation_count": 1,
+      "evidence": {
+        "kind": "batch_review_ready_single_canonical",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4002_001_full_no_bgm_editions_v1\\BATCH_REVIEW_READY.json",
+        "sha256": "AEB6BF41D7A22D6B3739AEB24175FA1D2F6D7C0C7CECB96CE3C2E8C3ECF03AFE"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4002_001_full_no_bgm_editions_v1\\video\\ac4002_001_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "8443681F46208E2977B906AC30AD411CA3F532CDF7CA00C7F1B16E10A0F24E0B",
+          "duration_seconds": 40.0,
+          "frame_count": 1200,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac4004_exhaustive_native416_v94",
+      "family": "ac4004",
+      "title": "火焰中的魔法少女动画_完整合集_ac4004",
+      "content_type": "story",
+      "event_container_count": 1,
+      "unique_complete_presentation_count": 1,
+      "evidence": {
+        "kind": "batch_review_ready_single_canonical",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4004_001_full_no_bgm_editions_v1\\BATCH_REVIEW_READY.json",
+        "sha256": "E67A7F1F93DF56DC19BE849A9C437D5F235CE9EE3F6768C629D1694CE0CE2981"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v47_silent_native416_review_20260727\\ac4004_001_full_no_bgm_editions_v1\\video\\ac4004_001_full_no_bgm_editions_v1__none.mp4",
+          "sha256": "1A73227BB58D14C65FA0D3DD190A918C1AFA84B43269454F876E4A13FD1E368F",
+          "duration_seconds": 20.0,
+          "frame_count": 600,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac4003_exhaustive_native416_v94",
+      "family": "ac4003",
+      "title": "游乐园追逐动画（父级边界精确版）_ac4003",
+      "content_type": "story",
+      "audio_profile": "no_bgm",
+      "event_container_count": 1,
+      "unique_complete_presentation_count": 1,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r4_ac4003_parent_cut_exact_20260819\\ac4003\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "A74EEFF040D19BD93FCA3C45817C65946844B733A38E16DE963EAFED9302744A"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v91r4_ac4003_parent_cut_exact_20260819\\ac4003\\video\\ac4003_游乐园追逐动画_父级边界精确版v4_严格无BGM__none.mp4",
+          "sha256": "3FB31DB1A06D3FF3C44889164E900B63DBACF3C84075C18D31F26A557243F326",
+          "duration_seconds": 43.333333,
+          "frame_count": 1300,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7002_exhaustive_native416_v94",
+      "family": "ac7002",
+      "title": "夜空魔女战斗全视频合集_ac7002",
+      "content_type": "story",
+      "audio_profile": "no_bgm",
+      "event_container_count": 5,
+      "unique_complete_presentation_count": 5,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v90r1_exhaustive_unique_longform_20260819\\ac7002\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "D05426B01166D4433836099B22EEF98773D9A60A7F8B6A1831231DC9ABCFE3E7"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v90r1_exhaustive_unique_longform_20260819\\ac7002\\video\\ac7002_夜空魔女战斗全视频合集_严格无BGM__none.mp4",
+          "sha256": "2968FD144DF80B4FA45279C5DAB5B06CC1D13458A589070081079155659CC11D",
+          "duration_seconds": 87.3,
+          "frame_count": 2619,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac8005_exhaustive_native416_v94",
+      "family": "ac8005",
+      "title": "Magius玩法提示全视频合集_ac8005",
+      "content_type": "gameplay_effect",
+      "audio_profile": "no_bgm",
+      "event_container_count": 7,
+      "unique_complete_presentation_count": 7,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v92_exhaustive_unique_longform_20260819\\ac8005\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "88AE97B6F772C0452B62F42A8D0EFFF5447A5A06C5C2D4ACC3CFA5787994BB23"
+      },
+      "media": [
+        {
+          "edition": "none",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v92_exhaustive_unique_longform_20260819\\ac8005\\video\\ac8005_Magius玩法提示全视频合集_严格无BGM__none.mp4",
+          "sha256": "CEA44B64B166E4B6F4AD8B5AD26F49F6EB4B1818DBBEBCD23C069C001FD888A4",
+          "duration_seconds": 86.466667,
+          "frame_count": 2594,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    },
+    {
+      "review_group_id": "ac7118_exhaustive_native416_v94",
+      "family": "ac7118",
+      "title": "全角色资料动画穷尽合集_ac7118",
+      "content_type": "material",
+      "audio_profile": "silent",
+      "event_container_count": 25,
+      "unique_complete_presentation_count": 45,
+      "evidence": {
+        "kind": "exhaustive_unique_longform_verification",
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\silent_material_v93_exhaustive_unique_longform_20260819\\ac7118\\manifests\\VERIFICATION_RECORD.json",
+        "sha256": "D44DB6AAA151EC3D431B5E63F21087E83AC29F1B4F1CB49E06C8C63812E3153F"
+      },
+      "media": [
+        {
+          "edition": "material",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\silent_material_v93_exhaustive_unique_longform_20260819\\ac7118\\video\\ac7118_全角色资料动画穷尽合集.mp4",
+          "sha256": "DAD70C2396B8E50C77A09CCEF2F19250BCF787AE8858456409F9A7F977F68AEC",
+          "duration_seconds": 514.333008,
+          "frame_count": 15430,
+          "width": 416,
+          "height": 232,
+          "frame_rate": "30/1",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "audio_sample_rate": 48000,
+          "audio_channels": 2
+        }
+      ]
+    }
+  ]
+}

@@ -32,8 +32,13 @@ except ImportError:  # pragma: no cover - direct script execution
 
 SCHEMA = "magireco-native416-authoritative-longform-review-hub-plan-v1"
 EDITIONS = ("none", "ja", "zh")
-LANES = {"none": "NONE", "ja": "JP", "zh": "ZH"}
-CONTENT_TYPES = {"story", "routes", "gameplay_effect"}
+ALLOWED_EDITION_SETS = {
+    frozenset(EDITIONS),
+    frozenset({"none"}),
+    frozenset({"material"}),
+}
+LANES = {"none": "NONE", "ja": "JP", "zh": "ZH", "material": "MATERIAL"}
+CONTENT_TYPES = {"story", "routes", "gameplay_effect", "material"}
 FORBIDDEN_TOKENS = {"p16", "p17", "p18", "ac6003", "ac6004", "ac6005"}
 WINDOWS_FORBIDDEN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
@@ -49,13 +54,13 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def safe_filename(title: str, edition: str) -> str:
-    if edition not in EDITIONS:
+    if edition not in LANES:
         raise ReviewHubError(f"unsupported edition: {edition}")
     if not title or title in {".", ".."} or WINDOWS_FORBIDDEN.search(title):
         raise ReviewHubError(f"unsafe review title: {title!r}")
     if title[-1] in {" ", "."}:
         raise ReviewHubError(f"unsafe trailing review title character: {title!r}")
-    filename = f"{title}__{edition}.mp4"
+    filename = f"{title}.mp4" if edition == "material" else f"{title}__{edition}.mp4"
     if len(filename) > 180:
         raise ReviewHubError(f"review filename is too long: {filename}")
     return filename
@@ -266,6 +271,46 @@ def _validate_evidence(
                 raise ReviewHubError(
                     f"longform evidence media contract differs: {expected['edition']}"
                 )
+    elif kind == "batch_review_ready_single_canonical":
+        if (
+            payload.get("status") != "AUTOMATED_QA_PASSED"
+            or payload.get("publishable") is not False
+            or payload.get("readiness", {}).get("HUMAN_PLAYBACK_APPROVED") is not False
+        ):
+            raise ReviewHubError(f"batch evidence status differs: {path}")
+        if len(media) != 1 or str(media[0].get("edition")) != "none":
+            raise ReviewHubError("batch canonical evidence requires one none edition")
+        artifacts = payload.get("artifacts", {})
+        expected = media[0]
+        product_root = path.parent
+        canonical = artifacts.get("video_none", {})
+        canonical_path = product_root / Path(str(canonical.get("path", "")))
+        if (
+            _resolved_norm(canonical_path) != _resolved_norm(Path(str(expected["path"])))
+            or str(canonical.get("sha256", "")).upper()
+            != str(expected.get("sha256", "")).upper()
+        ):
+            raise ReviewHubError("batch canonical media binding differs")
+        for label in ("video_none", "video_ja", "video_zh", "qa", "manifest"):
+            artifact = artifacts.get(label, {})
+            artifact_path = product_root / Path(str(artifact.get("path", "")))
+            artifact_digest = str(artifact.get("sha256", "")).upper()
+            if (
+                not artifact_path.is_file()
+                or len(artifact_digest) != 64
+                or file_sha256(artifact_path) != artifact_digest
+            ):
+                raise ReviewHubError(f"batch artifact binding differs: {label}")
+        aliases = [
+            product_root / Path(str(artifacts[label]["path"]))
+            for label in ("video_ja", "video_zh")
+        ]
+        if any(
+            str(artifacts[label]["sha256"]).upper()
+            != str(expected["sha256"]).upper()
+            for label in ("video_ja", "video_zh")
+        ) or any(not os.path.samefile(canonical_path, alias) for alias in aliases):
+            raise ReviewHubError("batch language aliases are not exact hardlink aliases")
     else:
         raise ReviewHubError(f"unsupported evidence kind: {kind}")
     return {"path": str(path.resolve()), "sha256": actual_digest, "kind": kind}
@@ -306,10 +351,13 @@ def validate_plan(plan: Mapping[str, Any]) -> list[dict[str, Any]]:
         if content_type not in CONTENT_TYPES:
             raise ReviewHubError(f"invalid content type: {content_type}")
         media = group.get("media")
-        if not isinstance(media, list) or len(media) != len(EDITIONS):
-            raise ReviewHubError(f"{group_id} must contain none/ja/zh exactly once")
-        if {str(row.get("edition")) for row in media} != set(EDITIONS):
+        if not isinstance(media, list) or not media:
+            raise ReviewHubError(f"{group_id} has no media editions")
+        edition_set = frozenset(str(row.get("edition")) for row in media)
+        if len(media) != len(edition_set) or edition_set not in ALLOWED_EDITION_SETS:
             raise ReviewHubError(f"{group_id} edition set differs")
+        if (edition_set == frozenset({"material"})) != (content_type == "material"):
+            raise ReviewHubError(f"{group_id} material classification differs")
         evidence = _validate_evidence(group, media)
         checked_media: list[dict[str, Any]] = []
         for raw_media in media:
@@ -322,7 +370,11 @@ def validate_plan(plan: Mapping[str, Any]) -> list[dict[str, Any]]:
             if any(token in str(source).casefold() for token in FORBIDDEN_TOKENS):
                 raise ReviewHubError(f"quarantined source leaked into plan: {source}")
             filename = safe_filename(title, edition)
-            relative = Path(LANES[edition], content_type, filename)
+            relative = (
+                Path("MATERIAL", filename)
+                if edition == "material"
+                else Path(LANES[edition], content_type, filename)
+            )
             destination_key = str(relative).casefold()
             if destination_key in seen_destinations:
                 raise ReviewHubError(f"duplicate review destination: {relative}")
@@ -381,7 +433,7 @@ def _csv_rows(
                     "audio_codec": media["probe"]["audio_codec"],
                     "audio_sample_rate": media["probe"]["audio_sample_rate"],
                     "audio_channels": media["probe"]["audio_channels"],
-                    "audio_profile": "no_bgm",
+                    "audio_profile": group.get("audio_profile", "no_bgm"),
                     "automatic_qa": "PASSED",
                     "human_status": "HUMAN_PLAYBACK_REQUIRED",
                     "publish_status": "DO_NOT_UPLOAD_UNTIL_OWNER_APPROVES",
@@ -421,8 +473,8 @@ def _write_release_metadata(
     guide_lines = [
         "# 原生 416×232 权威长片人工审查入口",
         "",
-        f"- 内容组：{len(groups)} 组；每组 NONE / JP / ZH 各一版。",
-        f"- 文件入口：{len(rows)} 个同盘硬链接；没有转码或媒体复制。",
+        f"- 内容组：{len(groups)} 组；语言长片按 NONE / JP / ZH 归类，纯素材只保留 MATERIAL canonical。",
+        f"- 文件入口：{len(rows)} 个同盘硬链接；同哈希只需人工看一次，没有转码或媒体复制。",
         "- 状态：自动 QA 已通过，全部仍需项目所有者完整播放确认。",
         "- 语义：每组收录该 family 已由代码/运行时证据闭合的全部不重复呈现；不是原生单局声明。",
         "- 音频：有意排除 BGM，保留已验证对白与 SE。",
@@ -457,7 +509,8 @@ def _write_release_metadata(
         "native_416x232_count": sum(
             row["width"] == 416 and row["height"] == 232 for row in rows
         ),
-        "strict_no_bgm_count": len(rows),
+        "strict_no_bgm_count": sum(row["audio_profile"] == "no_bgm" for row in rows),
+        "silent_material_count": sum(row["audio_profile"] == "silent" for row in rows),
         "human_playback_required_count": len(rows),
         "p16_p17_p18_leak_count": 0,
         "with_bgm_leak_count": 0,
