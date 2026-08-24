@@ -1,0 +1,67 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac4903_exhaustive_voice_bound_dialogue",
+  "status": "machine_draft_pending_owner",
+  "translations": [
+    {
+      "ja": "今のところは筋書き通りだ",
+      "zh": "目前为止，一切都按计划进行。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "僕達はみんな\n解放を必要としているんだ",
+      "zh": "我们所有人\n都需要得到解放。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "さぁ\n始めようか",
+      "zh": "那么，\n开始吧。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔法少女の未来のために",
+      "zh": "为了魔法少女的未来。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "計画は順調みたいだね",
+      "zh": "看来计划进行得很顺利呢。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "魔法少女の絶望は\nわたくし達が終わらせる",
+      "zh": "魔法少女的绝望，\n就由我们来终结。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "このふたりにやってもらうよ",
+      "zh": "就让这两个人来做吧。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "梓みふゆにやってもらうよ",
+      "zh": "就让梓美冬来做吧。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "由比鶴乃はマギウスの自信作だよ",
+      "zh": "由比鹤乃可是Magius的得意之作哦。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "大事なことは自分達でやらなきゃね",
+      "zh": "重要的事得由我们自己来做呢。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "もし死んじゃってもわかってくれるよね\n巴マミ",
+      "zh": "就算你死了，也会理解的吧，\n巴麻美。",
+      "status": "machine_draft_pending_owner"
+    },
+    {
+      "ja": "成功だ灯花\n本命が釣れた",
+      "zh": "成功了，灯花。\n目标上钩了。",
+      "status": "machine_draft_pending_owner"
+    }
+  ]
+}
