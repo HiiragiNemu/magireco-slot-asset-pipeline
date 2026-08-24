@@ -1,0 +1,55 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac0003_exhaustive_authoritative_longform_v237_20260824",
+  "family": "ac0003",
+  "title": "两人在零食店完整场景",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "ac0003_exact_route_mode4_event_global_z2d_and_sound_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0003_exhaustive_authority_v236_20260824\\AC0003_EXHAUSTIVE_LONGFORM_AUTHORITY.json",
+      "sha256": "C086614C404609622249CD1B6FF91A68C5AF1224FA8C3F6DC394091BF732FCA2"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac0003_两人在零食店完整场景_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac0003_001",
+          "source_identities": [
+            "cri:main:10/z2d:ac0003_001_LP:movie:0"
+          ],
+          "chapter_title": "零食店完整镜头",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0003\\ac0003_001_LP.mp4",
+          "sha256": "B3CD30A846AB653F7B7A6D0BCD169CF3AD28052BD1A8F33D55088556C5762344",
+          "video_frames": 1405
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 1,
+  "expected_unique_source_count": 1,
+  "expected_total_video_frames": 1405,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}
