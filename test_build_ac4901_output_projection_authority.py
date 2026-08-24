@@ -50,6 +50,8 @@ class Ac4901OutputProjectionTests(unittest.TestCase):
         self.assertEqual(205, len(MODULE.EVENT_IDS))
         self.assertEqual(591, MODULE.EXPECTED_COUNTS["loadable_movie_layer_occurrences"])
         self.assertEqual(194, MODULE.EXPECTED_COUNTS["unique_loadable_cri_sources"])
+        self.assertEqual(90, MODULE.EXPECTED_COUNTS["parent_clock_tail_clip_occurrences"])
+        self.assertEqual(270, MODULE.EXPECTED_COUNTS["parent_clock_clipped_frames"])
         self.assertEqual(frozenset({"ac4901_091"}), MODULE.PRIOR_UNDERLAY_EVENTS)
 
     def test_resolver_passes_component_aware_contract(self) -> None:

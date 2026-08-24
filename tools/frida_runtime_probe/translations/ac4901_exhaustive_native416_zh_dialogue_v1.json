@@ -1,0 +1,40 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac4901_exhaustive_native416_event_global_dialogue",
+  "status": "evidence_bound_pending_new_longform_playback",
+  "translations": [
+    {
+      "request_id": 2439,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：押して！",
+      "render_zh": "环彩羽：按下去！",
+      "status": "curated_voice_override_reused_pending_new_longform_playback",
+      "text_evidence": "verified request 2439 subtitle override plus exact cap5102_iro_oshite_001 callback"
+    },
+    {
+      "request_id": 2740,
+      "ja": "よし！",
+      "zh": "好！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：よし！",
+      "render_zh": "环彩羽：好！",
+      "status": "official_voice_label_pending_new_longform_playback",
+      "text_evidence": "official 15498_iro_AT_働きグマ_よし label, exact cap4901_hatakuma_iro_001 callback, and ac4901 v20 official voice label"
+    },
+    {
+      "request_id": 8209,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "押して！",
+      "render_zh": "按下去！",
+      "status": "official_sound_label_pending_new_longform_playback",
+      "text_evidence": "official 26401_sqb_もきゅPUSH用_押して_通常 label plus exact ac8002_chance_btn_mokyu callback"
+    }
+  ]
+}

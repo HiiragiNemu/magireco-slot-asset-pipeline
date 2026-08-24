@@ -291,28 +291,67 @@ def _intersection(
 
 
 def _frame_policy(
-    source_name: str, source_frames: int, authored_frames: int
+    source_name: str,
+    source_frames: int,
+    authored_frames: int,
+    *,
+    parent_leading_clip_frames: int = 0,
+    parent_visible_frames: int | None = None,
 ) -> dict[str, Any]:
-    if source_frames == authored_frames:
-        return {
-            "mode": "consume_exact_authored_span",
-            "source_frame_count": source_frames,
-            "consumed_source_frames": authored_frames,
-            "discarded_unreferenced_tail_frames": 0,
-        }
-    expected = TAIL_TRIM_POLICY.get(source_name)
-    if expected == (source_frames, authored_frames):
-        return {
-            "mode": "trim_exact_official_source_to_authored_z2d_span",
-            "source_frame_count": source_frames,
-            "consumed_source_frames": authored_frames,
-            "discarded_unreferenced_tail_frames": source_frames - authored_frames,
-            "reason": "exact Z2D MovieLayer interval ends before the official USM tail",
-        }
-    raise ProjectionError(
-        f"authored/source frame span differs: {source_name}/"
-        f"{authored_frames}!={source_frames}"
-    )
+    """Bind source consumption after the parent cut/presentation clock is applied."""
+
+    source_tail = source_frames - authored_frames
+    if source_tail < 0 or (
+        source_tail
+        and TAIL_TRIM_POLICY.get(source_name) != (source_frames, authored_frames)
+    ):
+        raise ProjectionError(
+            f"authored/source frame span differs: {source_name}/"
+            f"{authored_frames}!={source_frames}"
+        )
+    visible = authored_frames if parent_visible_frames is None else parent_visible_frames
+    if (
+        parent_leading_clip_frames < 0
+        or visible <= 0
+        or parent_leading_clip_frames + visible > authored_frames
+    ):
+        raise ProjectionError(
+            f"parent-clock visible span differs: {source_name}/"
+            f"lead={parent_leading_clip_frames}/visible={visible}/authored={authored_frames}"
+        )
+    parent_clip = authored_frames - visible
+    if parent_clip and source_tail:
+        mode = (
+            "trim_exact_official_source_to_authored_z2d_span_then_clip_to_"
+            "parent_cut_and_event_extent"
+        )
+    elif parent_clip:
+        mode = "clip_exact_movie_layer_to_parent_cut_and_event_extent"
+    elif source_tail:
+        mode = "trim_exact_official_source_to_authored_z2d_span"
+    else:
+        mode = "consume_exact_authored_span"
+    result = {
+        "mode": mode,
+        "source_frame_count": source_frames,
+        "authored_movie_layer_frame_count": authored_frames,
+        "source_start_frame": parent_leading_clip_frames,
+        "source_end_frame_inclusive": parent_leading_clip_frames + visible - 1,
+        "consumed_source_frames": visible,
+        "discarded_after_authored_movie_layer_frames": source_tail,
+        "discarded_by_parent_clock_frames": parent_clip,
+        "discarded_unreferenced_tail_frames": source_frames - visible,
+    }
+    if source_tail:
+        result["source_tail_reason"] = (
+            "exact Z2D MovieLayer interval ends before the official USM tail"
+        )
+    if parent_clip:
+        result["parent_clock_reason"] = (
+            "the active Type-3 cut and Type-2 event clock stop drawing the parent "
+            "Z2D before its authored motion/MovieLayer tail"
+        )
+    return result
 
 
 def _validate_counts(actual: Mapping[str, int], expected: Mapping[str, int]) -> None:
@@ -390,6 +429,9 @@ def resolve(
     movie_node_occurrences = 0
     for event_id in expected_events:
         event = events_by_id[event_id]
+        event_frame_count = int(event["presentation_frame_count"])
+        if event_frame_count <= 0:
+            raise ProjectionError(f"{event_id} presentation extent is not positive")
         event_loadable: list[dict[str, Any]] = []
         event_unreachable: list[dict[str, Any]] = []
         event_non_movie: list[dict[str, Any]] = []
@@ -397,6 +439,13 @@ def resolve(
         parent_order = 0
         for scene in event["scenes"]:
             for cut in scene["cuts"]:
+                cut_start = int(cut["cut_start_frame"])
+                cut_end = int(cut["cut_end_frame_inclusive"])
+                cut_instance = int(cut["instance_offset_frames"])
+                if cut_start < 0 or cut_end < cut_start or cut_instance < 0:
+                    raise ProjectionError(f"{event_id} cut clock dimensions differ")
+                cut_event_start = cut_instance
+                cut_event_end = cut_instance + cut_end - cut_start
                 for node in cut["z2d_nodes"]:
                     node_class = str(node["node_authority_class"])
                     if node_class == "runtime_symbolic_counter_overlay":
@@ -427,16 +476,37 @@ def resolve(
                         raise ProjectionError(
                             f"{event_id}/{name} motion-key count differs"
                         )
-                    parent_start = int(motion_keys[0]["event_global_start_frame"])
+                    authored_parent_start = int(
+                        motion_keys[0]["event_global_start_frame"]
+                    )
+                    authored_parent_end = int(
+                        motion_keys[0]["event_global_end_frame_inclusive"]
+                    )
+                    parent_start = max(authored_parent_start, cut_event_start, 0)
+                    parent_end = min(
+                        authored_parent_end,
+                        cut_event_end,
+                        event_frame_count - 1,
+                    )
+                    if parent_end < parent_start:
+                        raise ProjectionError(
+                            f"{event_id}/{name} parent Z2D is outside its active cut"
+                        )
                     if not chunk["movie_layers"]:
                         row = {
                             "event": event_id,
                             "scene": scene["name"],
                             "cut": cut["cut_name"],
                             "node": name,
+                            "authored_event_global_start_frame": authored_parent_start,
+                            "authored_event_global_end_frame_inclusive": authored_parent_end,
                             "event_global_start_frame": parent_start,
-                            "event_global_end_frame_inclusive": int(
-                                motion_keys[0]["event_global_end_frame_inclusive"]
+                            "event_global_end_frame_inclusive": parent_end,
+                            "discarded_by_parent_clock_frames": (
+                                authored_parent_end
+                                - authored_parent_start
+                                + 1
+                                - (parent_end - parent_start + 1)
                             ),
                             "owning_gdp_layer_index": int(
                                 node["owning_layer"]["index"]
@@ -454,6 +524,23 @@ def resolve(
                     for layer in chunk["movie_layers"]:
                         tag_index = int(layer["movie_layer_tag_value_hex"], 16) & 0x07FFFFFF
                         authored_frames = int(layer["frame_count"])
+                        authored_event_start = authored_parent_start + int(
+                            layer["start_frame"]
+                        )
+                        authored_event_end = authored_parent_start + int(
+                            layer["end_frame_inclusive"]
+                        )
+                        effective_event_start = max(authored_event_start, parent_start)
+                        effective_event_end = min(authored_event_end, parent_end)
+                        if effective_event_end < effective_event_start:
+                            raise ProjectionError(
+                                f"{event_id}/{name}/{layer['cri_lookup_base_name']} "
+                                "MovieLayer is outside its active parent clock"
+                            )
+                        parent_leading_clip = effective_event_start - authored_event_start
+                        parent_visible_frames = (
+                            effective_event_end - effective_event_start + 1
+                        )
                         base = {
                             "event": event_id,
                             "scene": scene["name"],
@@ -474,11 +561,12 @@ def resolve(
                                 layer["effective_renderer_state"]
                             ),
                             "source_name": str(layer["cri_lookup_base_name"]),
-                            "event_start_frame": parent_start
-                            + int(layer["start_frame"]),
-                            "event_end_frame_inclusive": parent_start
-                            + int(layer["end_frame_inclusive"]),
+                            "authored_event_start_frame": authored_event_start,
+                            "authored_event_end_frame_inclusive": authored_event_end,
+                            "event_start_frame": effective_event_start,
+                            "event_end_frame_inclusive": effective_event_end,
                             "authored_frame_count": authored_frames,
+                            "effective_frame_count": parent_visible_frames,
                         }
                         if (
                             layer["runtime_load_disposition"]
@@ -517,6 +605,8 @@ def resolve(
                             source_name,
                             int(source["frame_count"]),
                             authored_frames,
+                            parent_leading_clip_frames=parent_leading_clip,
+                            parent_visible_frames=parent_visible_frames,
                         )
                         state = int(layer["effective_renderer_state"])
                         if state == 1:
@@ -578,7 +668,7 @@ def resolve(
         event_rows.append(
             {
                 "event": event_id,
-                "presentation_frame_count": int(event["presentation_frame_count"]),
+                "presentation_frame_count": event_frame_count,
                 "output_canvas": list(OUTPUT),
                 "projection": {
                     "virtual_renderbuffer": list(RENDERBUFFER),
@@ -632,7 +722,15 @@ def resolve(
             int(row["effective_renderer_state"]) == 3 for row in all_loadable
         ),
         "authored_tail_trim_occurrences": sum(
-            row["frame_policy"]["discarded_unreferenced_tail_frames"] > 0
+            row["frame_policy"]["discarded_after_authored_movie_layer_frames"] > 0
+            for row in all_loadable
+        ),
+        "parent_clock_tail_clip_occurrences": sum(
+            row["frame_policy"]["discarded_by_parent_clock_frames"] > 0
+            for row in all_loadable
+        ),
+        "parent_clock_clipped_frames": sum(
+            int(row["frame_policy"]["discarded_by_parent_clock_frames"])
             for row in all_loadable
         ),
         "partial_viewport_movie_layer_occurrences": sum(
@@ -698,9 +796,22 @@ def _flatten_csv_rows(result: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "consumed_source_frames": row["frame_policy"][
                     "consumed_source_frames"
                 ],
+                "source_start_frame": row["frame_policy"].get(
+                    "source_start_frame", 0
+                ),
                 "discarded_tail_frames": row["frame_policy"][
                     "discarded_unreferenced_tail_frames"
                 ],
+                "discarded_by_parent_clock_frames": row["frame_policy"].get(
+                    "discarded_by_parent_clock_frames", 0
+                ),
+                "authored_event_start_frame": row.get(
+                    "authored_event_start_frame", row["event_start_frame"]
+                ),
+                "authored_event_end_frame_inclusive": row.get(
+                    "authored_event_end_frame_inclusive",
+                    row["event_end_frame_inclusive"],
+                ),
                 "event_start_frame": row["event_start_frame"],
                 "event_end_frame_inclusive": row["event_end_frame_inclusive"],
                 "effective_renderer_state": row["effective_renderer_state"],

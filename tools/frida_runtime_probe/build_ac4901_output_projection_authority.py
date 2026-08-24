@@ -59,6 +59,8 @@ EXPECTED_COUNTS = {
     "renderer_state_1_occurrences": 589,
     "renderer_state_3_occurrences": 2,
     "authored_tail_trim_occurrences": 0,
+    "parent_clock_tail_clip_occurrences": 90,
+    "parent_clock_clipped_frames": 270,
     "partial_viewport_movie_layer_occurrences": 2,
     "prior_underlay_required_events": 1,
 }
@@ -124,6 +126,7 @@ def _authority_document(
             "compose_all_parallel_layers_before_crop": True,
             "normal_sources_map_to_native_416x232_without_editorial_upscale": True,
             "ac4901_091_partial_button_layers_require_route_prior_frame_underlay": True,
+            "all_movie_layers_are_intersected_with_the_active_type3_cut_and_type2_event_clock": True,
         },
         "events": result["events"],
         "summary": {
@@ -145,6 +148,7 @@ def _authority_document(
             "only_ac4901_091_requires_prior_frame_underlay": True,
             "two_partial_button_layers_are_not_stretched_to_full_canvas": True,
             "no_source_tail_is_editorially_trimmed": True,
+            "ninety_three_frame_movie_tails_are_runtime_parent_clock_clipped": True,
             "source_media_untouched": True,
             "media_rendered": False,
             "P16_P17_P18_reference_count": 0,
@@ -182,7 +186,10 @@ def _write_checkpoint(
             "then crop `[128,0,1152,576]` to native 416x232. Of 591 loadable "
             "MovieLayer occurrences, only the two ac4901_091 chance-button layers "
             "are partial. They retain exact geometry and require the prior route "
-            "frame as underlay; they are never stretched into standalone video.\n",
+            "frame as underlay; they are never stretched into standalone video. "
+            "The active Type-3/Type-2 parent clock clips 90 authored 63-frame LP "
+            "layers to 60 visible frames, discarding exactly three unreachable tail "
+            "frames from each without modifying source media.\n",
             encoding="utf-8",
         )
         rollback_path = staging / "ROLLBACK.ps1"
@@ -207,6 +214,8 @@ def _write_checkpoint(
                 f"prior_underlay_events={result['counts']['prior_underlay_required_events']} "
                 f"state3={result['counts']['renderer_state_3_occurrences']} "
                 f"unreachable={result['counts']['unreachable_movie_layer_occurrences']} "
+                f"parent_clock_clips={result['counts']['parent_clock_tail_clip_occurrences']} "
+                f"parent_clock_clipped_frames={result['counts']['parent_clock_clipped_frames']} "
                 "output=416x232"
             ),
             "checks": authority["assertions"],

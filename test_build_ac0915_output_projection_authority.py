@@ -100,6 +100,9 @@ class Ac0915OutputProjectionTests(unittest.TestCase):
                             "cuts": [
                                 {
                                     "cut_name": "cut",
+                                    "instance_offset_frames": 0,
+                                    "cut_start_frame": 0,
+                                    "cut_end_frame_inclusive": 5,
                                     "z2d_nodes": [
                                         node("base.z2d"),
                                         node(
@@ -276,6 +279,22 @@ class Ac0915OutputProjectionTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(MODULE.ProjectionError, "frame span differs"):
             MODULE._frame_policy("unknown", 7, 6)
+
+    def test_parent_clock_clips_unreachable_movie_tail(self) -> None:
+        policy = MODULE._frame_policy(
+            "movie",
+            63,
+            63,
+            parent_visible_frames=60,
+        )
+        self.assertEqual(
+            "clip_exact_movie_layer_to_parent_cut_and_event_extent",
+            policy["mode"],
+        )
+        self.assertEqual(60, policy["consumed_source_frames"])
+        self.assertEqual(3, policy["discarded_by_parent_clock_frames"])
+        self.assertEqual(3, policy["discarded_unreferenced_tail_frames"])
+        self.assertEqual(59, policy["source_end_frame_inclusive"])
 
     def test_accepts_explicit_family_presentation_schema(self) -> None:
         fixture = self._fixture()
