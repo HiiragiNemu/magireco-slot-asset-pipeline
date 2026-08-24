@@ -15,7 +15,7 @@ class Ac0917ExhaustiveLongformTests(unittest.TestCase):
     def _authority_headers(self):
         cursor = 0
         timeline = []
-        for event, frames in MODULE.EXPECTED_PRESENTATION_FRAMES.items():
+        for event, frames in MODULE.EXPECTED_ARCHIVE_PRESENTATION_FRAMES.items():
             timeline.append(
                 {
                     "event": event,
@@ -73,10 +73,33 @@ class Ac0917ExhaustiveLongformTests(unittest.TestCase):
                 "final_frame_hold_frames": 229,
             },
         }
-        return route, visual, loop, audio
+        tail = {
+            "schema": "magireco-ac0917-audience-terminal-idle-tail-authority-v1",
+            "status": "PASS_READY_FOR_IDLE_TRIMMED_EXHAUSTIVE_LONGFORM_RENDER",
+            "summary": {
+                "archive_presentation_frames": 3136,
+                "audience_content_frames": 2734,
+                "terminal_idle_frames_omitted": 402,
+                "events_with_terminal_idle_trim": 3,
+            },
+            "mechanism": {
+                "previous_frame_carry": False,
+                "implicit_last_movie_frame_hold": False,
+            },
+            "event_rows": [
+                {
+                    "event": event,
+                    "archive_presentation_frames": MODULE.EXPECTED_ARCHIVE_PRESENTATION_FRAMES[event],
+                    "audience_content_frames": MODULE.EXPECTED_PRESENTATION_FRAMES[event],
+                }
+                for event in MODULE.EXPECTED_PRESENTATION_FRAMES
+            ],
+        }
+        return route, visual, loop, audio, tail
 
     def test_frozen_product_dimensions(self) -> None:
-        self.assertEqual(3136, MODULE.EXPECTED_FRAMES)
+        self.assertEqual(2734, MODULE.EXPECTED_FRAMES)
+        self.assertEqual(3136, MODULE.EXPECTED_ARCHIVE_FRAMES)
         self.assertEqual(12, MODULE.EXPECTED_EVENTS)
         self.assertEqual(22, MODULE.EXPECTED_LAYER_OCCURRENCES)
         self.assertEqual(31, MODULE.EXPECTED_RENDER_SEGMENTS)
@@ -90,9 +113,7 @@ class Ac0917ExhaustiveLongformTests(unittest.TestCase):
             visual_path = Path(temporary) / "visual.json"
             visual_path.write_text("fixture", encoding="utf-8")
             with mock.patch.object(MODULE, "file_sha256", return_value="V"):
-                order = MODULE.validate_authorities(
-                    *values, visual_path=visual_path
-                )
+                order = MODULE.validate_authorities(*values, visual_path=visual_path)
         self.assertEqual(list(MODULE.EXPECTED_PRESENTATION_FRAMES), order)
 
     def test_rejects_route_timeline_drift(self) -> None:
@@ -104,6 +125,18 @@ class Ac0917ExhaustiveLongformTests(unittest.TestCase):
             with mock.patch.object(MODULE, "file_sha256", return_value="V"):
                 with self.assertRaisesRegex(
                     MODULE.Ac0917LongformBuildError, "editorial order differs"
+                ):
+                    MODULE.validate_authorities(*values, visual_path=visual_path)
+
+    def test_rejects_audience_tail_drift(self) -> None:
+        values = self._authority_headers()
+        values[4]["event_rows"][0]["audience_content_frames"] += 1
+        with tempfile.TemporaryDirectory() as temporary:
+            visual_path = Path(temporary) / "visual.json"
+            visual_path.write_text("fixture", encoding="utf-8")
+            with mock.patch.object(MODULE, "file_sha256", return_value="V"):
+                with self.assertRaisesRegex(
+                    MODULE.Ac0917LongformBuildError, "event rows differ"
                 ):
                     MODULE.validate_authorities(*values, visual_path=visual_path)
 

@@ -39,7 +39,8 @@ except ImportError:  # direct script execution
 FPS = 30
 RATE = 48_000
 SAMPLES_PER_FRAME = RATE // FPS
-EXPECTED_FRAMES = 3136
+EXPECTED_FRAMES = 2734
+EXPECTED_ARCHIVE_FRAMES = 3136
 EXPECTED_EVENTS = 12
 EXPECTED_ROUTES = 22
 EXPECTED_ROUTE_OCCURRENCES = 75
@@ -72,18 +73,24 @@ CHAPTER_TITLES = {
     "ac0917_009": "WIN结果",
 }
 EXPECTED_PRESENTATION_FRAMES = {
-    "ac0917_014": 100,
+    "ac0917_014": 84,
     "ac0917_001": 252,
     "ac0917_002": 269,
     "ac0917_004": 300,
     "ac0917_003": 300,
     "ac0917_011": 228,
-    "ac0917_006": 300,
-    "ac0917_010": 300,
+    "ac0917_006": 118,
+    "ac0917_010": 96,
     "ac0917_005": 240,
     "ac0917_007": 287,
     "ac0917_008": 280,
     "ac0917_009": 280,
+}
+EXPECTED_ARCHIVE_PRESENTATION_FRAMES = {
+    **EXPECTED_PRESENTATION_FRAMES,
+    "ac0917_014": 100,
+    "ac0917_006": 300,
+    "ac0917_010": 300,
 }
 EXPECTED_VISUAL_FRAMES = {
     "ac0917_014": 100,
@@ -119,6 +126,7 @@ def validate_authorities(
     visual: Mapping[str, Any],
     loop: Mapping[str, Any],
     audio: Mapping[str, Any],
+    tail: Mapping[str, Any],
     *,
     visual_path: Path,
 ) -> list[str]:
@@ -136,8 +144,8 @@ def validate_authorities(
         "canonical_presentations": EXPECTED_EVENTS,
         "identical_complete_presentation_aliases": 0,
         "visible_unique_cri_sources_covered": EXPECTED_UNIQUE_CRI_SOURCES,
-        "duplicate_free_longform_frames": EXPECTED_FRAMES,
-        "duplicate_free_longform_seconds": EXPECTED_FRAMES / FPS,
+        "duplicate_free_longform_frames": EXPECTED_ARCHIVE_FRAMES,
+        "duplicate_free_longform_seconds": EXPECTED_ARCHIVE_FRAMES / FPS,
     }
     if any(route_summary.get(key) != value for key, value in expected_route.items()):
         raise Ac0917LongformBuildError("ac0917 route/dedup dimensions differ")
@@ -186,17 +194,33 @@ def validate_authorities(
         or audio.get("summary", {}).get("subtitle_page_cue_occurrences")
         != EXPECTED_SUBTITLES
         or audio.get("summary", {}).get("rendered_presentation_frames_before_dedup")
-        != EXPECTED_FRAMES
+        != EXPECTED_ARCHIVE_FRAMES
         or audio.get("summary", {}).get("final_frame_hold_frames") != 229
     ):
         raise Ac0917LongformBuildError("ac0917 audio authority differs")
+    if (
+        tail.get("schema")
+        != "magireco-ac0917-audience-terminal-idle-tail-authority-v1"
+        or tail.get("status")
+        != "PASS_READY_FOR_IDLE_TRIMMED_EXHAUSTIVE_LONGFORM_RENDER"
+        or tail.get("summary", {}).get("archive_presentation_frames")
+        != EXPECTED_ARCHIVE_FRAMES
+        or tail.get("summary", {}).get("audience_content_frames")
+        != EXPECTED_FRAMES
+        or tail.get("summary", {}).get("terminal_idle_frames_omitted") != 402
+        or tail.get("summary", {}).get("events_with_terminal_idle_trim") != 3
+        or tail.get("mechanism", {}).get("previous_frame_carry") is not False
+        or tail.get("mechanism", {}).get("implicit_last_movie_frame_hold")
+        is not False
+    ):
+        raise Ac0917LongformBuildError("ac0917 audience-tail authority differs")
     timeline = list(route.get("editorial_timeline", []))
     order = [str(row["event"]) for row in timeline]
     cursor = 0
     exact_timeline = True
     for row in timeline:
         event = str(row["event"])
-        frames = EXPECTED_PRESENTATION_FRAMES.get(event)
+        frames = EXPECTED_ARCHIVE_PRESENTATION_FRAMES.get(event)
         if frames is None or (
             int(row["start_frame"]) != cursor
             or int(row["end_frame_exclusive"]) != cursor + frames
@@ -210,11 +234,23 @@ def validate_authorities(
         or len(set(order)) != EXPECTED_EVENTS
         or set(order) != set(CHAPTER_TITLES)
         or not exact_timeline
-        or cursor != EXPECTED_FRAMES
+        or cursor != EXPECTED_ARCHIVE_FRAMES
     ):
         raise Ac0917LongformBuildError("ac0917 duplicate-free editorial order differs")
     if route.get("dedup_contract", {}).get("identical_alias_events") != {}:
         raise Ac0917LongformBuildError("ac0917 complete-presentation aliases differ")
+    tail_rows = list(tail.get("event_rows", []))
+    if (
+        [str(row.get("event")) for row in tail_rows] != order
+        or any(
+            int(row.get("archive_presentation_frames", -1))
+            != EXPECTED_ARCHIVE_PRESENTATION_FRAMES[event]
+            or int(row.get("audience_content_frames", -1))
+            != EXPECTED_PRESENTATION_FRAMES[event]
+            for event, row in zip(order, tail_rows)
+        )
+    ):
+        raise Ac0917LongformBuildError("ac0917 audience-tail event rows differ")
     return order
 
 
@@ -223,17 +259,20 @@ def build_event_manifests(
     visual: Mapping[str, Any],
     loop: Mapping[str, Any],
     audio: Mapping[str, Any],
+    tail: Mapping[str, Any],
 ) -> dict[str, dict[str, Any]]:
     visual_events = {str(row["event"]): row for row in visual["events"]}
     loop_events = {str(row["event"]): row for row in loop["events"]}
     audio_presentations = {
         str(row["event"]): row for row in audio["event_presentations"]
     }
+    tail_rows = {str(row["event"]): row for row in tail["event_rows"]}
     expected_event_set = set(order)
     if (
         set(visual_events) != expected_event_set
         or set(loop_events) != expected_event_set
         or set(audio_presentations) != expected_event_set
+        or set(tail_rows) != expected_event_set
     ):
         raise Ac0917LongformBuildError("event authority sets differ")
     audio_rows: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -309,22 +348,30 @@ def build_event_manifests(
         if any(item["volume_bus"] not in {"SE", "VOICE"} for item in retained):
             raise Ac0917LongformBuildError(f"non-retained bus leaked into {event}")
         presentation = audio_presentations[event]
-        visual_frames = int(presentation["visual_presentation_frames"])
-        frames = int(presentation["rendered_presentation_frames"])
+        archive_visual_frames = int(presentation["visual_presentation_frames"])
+        archive_frames = int(presentation["rendered_presentation_frames"])
+        tail_row = tail_rows[event]
+        frames = int(tail_row["audience_content_frames"])
+        visual_frames = min(archive_visual_frames, frames)
         if frames != EXPECTED_PRESENTATION_FRAMES[event]:
             raise Ac0917LongformBuildError(f"event presentation extent differs: {event}")
         if (
-            visual_frames != EXPECTED_VISUAL_FRAMES[event]
-            or int(row["presentation_frame_count"]) != visual_frames
-            or int(presentation["final_frame_hold_frames"])
-            != frames - visual_frames
+            archive_visual_frames != EXPECTED_VISUAL_FRAMES[event]
+            or int(row["presentation_frame_count"]) != archive_visual_frames
+            or archive_frames != EXPECTED_ARCHIVE_PRESENTATION_FRAMES[event]
+            or int(tail_row["archive_presentation_frames"]) != archive_frames
+            or int(tail_row["terminal_idle_frames_omitted"])
+            != archive_frames - frames
         ):
             raise Ac0917LongformBuildError(f"visual extent differs: {event}")
         manifests[event] = {
             "event": event,
+            "archive_visual_frames": archive_visual_frames,
+            "archive_presentation_frames": archive_frames,
             "visual_frames": visual_frames,
             "presentation_frames": frames,
             "final_frame_hold_frames": frames - visual_frames,
+            "terminal_idle_frames_omitted": archive_frames - frames,
             "movie_parent_schedule_count": int(
                 loop_row["movie_parent_schedule_count"]
             ),
@@ -370,6 +417,8 @@ def build_event_manifests(
         or len(subtitles) != EXPECTED_SUBTITLES
         or sum(manifests[event]["final_frame_hold_frames"] for event in order)
         != 229
+        or sum(manifests[event]["terminal_idle_frames_omitted"] for event in order)
+        != 402
         or sum(manifests[event]["presentation_frames"] for event in order)
         != EXPECTED_FRAMES
     ):
@@ -750,7 +799,7 @@ def validate_probe(value: Mapping[str, Any]) -> dict[str, bool]:
         and (int(video[0].get("width", 0)), int(video[0].get("height", 0)))
         == (416, 232),
         "frame_rate_30": len(video) == 1 and video[0].get("avg_frame_rate") == "30/1",
-        "frame_count_3136": len(video) == 1
+        "frame_count_2734": len(video) == 1
         and int(video[0].get("nb_read_frames", -1)) == EXPECTED_FRAMES,
         "audio_aac": len(audio) == 1 and audio[0].get("codec_name") == "aac",
         "audio_48k": len(audio) == 1 and int(audio[0].get("sample_rate", 0)) == RATE,
@@ -821,7 +870,7 @@ def verify_production(
     ) > 0.001:
         raise Ac0917LongformBuildError("edition durations differ")
     report = {
-        "schema": "magireco-ac0917-exhaustive-production-verification-v1",
+        "schema": "magireco-ac0917-exhaustive-production-verification-v2",
         "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
         "content_group_count": 1,
         "edition_file_count": 3,
@@ -832,6 +881,9 @@ def verify_production(
         "identical_complete_presentation_aliases_removed": 0,
         "loop_mapped_post_first_pass_frames": EXPECTED_LOOP_EXTENSION_FRAMES,
         "scheduled_movie_frame_occurrences": EXPECTED_SCHEDULED_MOVIE_FRAMES,
+        "archive_presentation_frames_preserved_elsewhere": EXPECTED_ARCHIVE_FRAMES,
+        "audience_content_frames": EXPECTED_FRAMES,
+        "terminal_contentless_idle_frames_omitted": 402,
         "unique_cri_video_identities_covered": EXPECTED_UNIQUE_CRI_SOURCES,
         "native_416x232_output": True,
         "strict_no_bgm": True,
@@ -857,17 +909,18 @@ def build(args: argparse.Namespace) -> Path:
     visual = read_json(args.visual_authority)
     loop = read_json(args.loop_authority)
     audio = read_json(args.audio_authority)
+    tail = read_json(args.tail_authority)
     order = validate_authorities(
-        route, visual, loop, audio, visual_path=args.visual_authority
+        route, visual, loop, audio, tail, visual_path=args.visual_authority
     )
-    manifests = build_event_manifests(order, visual, loop, audio)
+    manifests = build_event_manifests(order, visual, loop, audio, tail)
     output_root = args.output_root.resolve()
     if output_root.exists():
         raise Ac0917LongformBuildError(f"immutable output already exists: {output_root}")
     if args.validate_authorities_only:
         print(
             "PASS_VALIDATE routes=22 events=12 layers=22 segments=31 "
-            "scheduled_frames=2711 audio=25 subtitles=18 frames=3136"
+            "scheduled_frames=2711 audio=25 subtitles=18 frames=2734 idle_trim=402"
         )
         return output_root
     if args.resume_staging is not None:
@@ -929,9 +982,10 @@ def build(args: argparse.Namespace) -> Path:
             "visual_authority": args.visual_authority,
             "loop_authority": args.loop_authority,
             "audio_authority": args.audio_authority,
+            "audience_tail_authority": args.tail_authority,
         }
         manifest = {
-            "schema": "magireco-ac0917-exhaustive-production-manifest-v1",
+            "schema": "magireco-ac0917-exhaustive-production-manifest-v2",
             "status": "AUTOMATED_QA_PASSED_HUMAN_PLAYBACK_REQUIRED",
             "family": "ac0917",
             "title": TITLE,
@@ -965,6 +1019,8 @@ def build(args: argparse.Namespace) -> Path:
             "all_unique_cri_video_identities_covered": True,
             "loop_mapping_code_proven": True,
             "all_2711_scheduled_movie_frames_accounted": True,
+            "terminal_contentless_idle_frames_omitted": 402,
+            "exact_event_archives_preserved_in_superseded_v216_root": True,
             "human_playback_required": True,
             "publication_approved": False,
         }
@@ -972,7 +1028,7 @@ def build(args: argparse.Namespace) -> Path:
         write_json(staging / "manifests" / "EVENT_MANIFESTS.json", manifests)
         (staging / "README.md").write_text(
             "# ac0917 exhaustive native-416 strict no-BGM longform\n\n"
-            "One 104.533-second content group preserves all 22 exact DirInfo routes and "
+            "One 91.133-second content group preserves all 22 exact DirInfo routes and "
             "75 occurrences as 12 unique complete presentations. All 20 visible CRI "
             "sources are scheduled from exact GFDirection parent clocks. The code-proven "
             "Z2D loop mapping expands only 207 frames; three MovieLayers outside the "
@@ -986,7 +1042,8 @@ def build(args: argparse.Namespace) -> Path:
             "3. 逐页核对18条对白的开口、声音与JA/ZH字幕；新长片未继承人工批准。\n"
             "4. 重点检查001、008、009三个代码循环段无卡末帧或黑帧。\n"
             "5. 检查006、010、014按钮只在父cut内出现，没有错误延长到整段事件。\n"
-            "6. 确认无BGM，同时保留13次SE和12次VOICE。\n",
+            "6. 检查014/006/010已分别裁为84/118/96帧；006仍保留到第118帧的完整SE。\n"
+            "7. 确认无BGM，同时保留13次SE和12次VOICE。\n",
             encoding="utf-8",
         )
         (staging / "UPLOAD_GUIDE.md").write_text(
@@ -1030,6 +1087,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--visual-authority", required=True, type=Path)
     value.add_argument("--loop-authority", required=True, type=Path)
     value.add_argument("--audio-authority", required=True, type=Path)
+    value.add_argument("--tail-authority", required=True, type=Path)
     value.add_argument("--output-root", required=True, type=Path)
     value.add_argument("--resume-staging", type=Path)
     value.add_argument("--fonts-dir", type=Path, default=Path(r"C:\Windows\Fonts"))
