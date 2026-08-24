@@ -8,6 +8,7 @@ from pathlib import Path
 from tools.frida_runtime_probe.extract_selected_cri_usm_argb_authority import (
     CriArgbError,
     read_offsets,
+    select_catalog_rows,
     slice_bounds,
     validate_argb_streams,
 )
@@ -72,6 +73,18 @@ class SelectedCriUsmArgbAuthorityTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(CriArgbError, "expected two"):
             validate_argb_streams(probe, "sample")
+
+    def test_selected_catalog_names_preserve_requested_order(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            catalog = Path(td) / "catalog.csv"
+            catalog.write_text(
+                "official_name,source_exists,package,package_index\n"
+                "second,yes,patch,2\n"
+                "first,yes,main,1\n",
+                encoding="utf-8-sig",
+            )
+            rows = select_catalog_rows(catalog, ("first", "second"))
+            self.assertEqual([row["official_name"] for row in rows], ["first", "second"])
 
 
 if __name__ == "__main__":

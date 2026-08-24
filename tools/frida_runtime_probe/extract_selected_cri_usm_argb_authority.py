@@ -175,6 +175,7 @@ def build(
     patch_bin: Path,
     patch_add: Path,
     output_dir: Path,
+    names: Iterable[str] = EXPECTED_NAMES,
 ) -> dict[str, Any]:
     package_paths = {
         "main": (main_bin, main_add),
@@ -184,7 +185,10 @@ def build(
         package: read_offsets(bin_path, add_path)
         for package, (bin_path, add_path) in package_paths.items()
     }
-    rows = select_catalog_rows(catalog_path, EXPECTED_NAMES)
+    selected_names = tuple(names)
+    if not selected_names or len(set(selected_names)) != len(selected_names):
+        raise CriArgbError("selected CRI names must be non-empty and unique")
+    rows = select_catalog_rows(catalog_path, selected_names)
     artifacts: list[dict[str, Any]] = []
     for row in rows:
         name = row["official_name"]
@@ -300,6 +304,15 @@ def main() -> int:
     parser.add_argument("--patch-bin", required=True, type=Path)
     parser.add_argument("--patch-add", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--name",
+        action="append",
+        dest="names",
+        help=(
+            "extract this exact official CRI base name; repeat for a bounded "
+            "ordered set (defaults to the ac0908 authority set)"
+        ),
+    )
     args = parser.parse_args()
     result = build(
         args.catalog,
@@ -308,6 +321,7 @@ def main() -> int:
         args.patch_bin,
         args.patch_add,
         args.output_dir,
+        args.names or EXPECTED_NAMES,
     )
     write_outputs(result, args.output_dir)
     print(
