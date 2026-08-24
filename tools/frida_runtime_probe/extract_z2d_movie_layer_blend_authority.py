@@ -7,6 +7,7 @@ import argparse
 import csv
 import json
 import math
+import re
 import struct
 from pathlib import Path
 from typing import Any, Iterable
@@ -34,21 +35,38 @@ except ImportError:  # direct script execution
 BLEND_STATE_TABLE_VA = 0x14BAD48
 BLEND_STATE_TABLE_COUNT = 30
 MOVIE_LAYER_TYPE = 10
+PUB_ROOT_TYPE = 13
+MOVIE_ELEMENT_TYPE = 14
 
 CODE_AUTHORITY = (
     (
         "0x4364f4c",
-        "zg::CZ2DHardData::ReadRecursiveElem",
+        "zg::CZ2DReader::ReadRecursiveElem",
         "decodes the high five bits of each element word and dispatches element type 10 as MovieLayer",
     ),
     (
         "0x44bde30",
         "Z2D element reader dispatch table",
-        "maps element type 10 to zg::CZ2DHardData::ReadMovieLayer at 0x43661a8",
+        "maps element type 10 to ReadElemFunc_MovieLayer at 0x43661a8",
+    ),
+    (
+        "0x43661f0",
+        "zg::CZ2DReader::ReadMovieLayer",
+        "reads the linked type-14 movie element ID into MovieLayer offset 0x94",
+    ),
+    (
+        "0x4366834",
+        "zg::CZ2DReader::ReadPubRoot",
+        "for PubRoot kind 2 creates sequential type-14 movie elements and reads their exact names, frame ranges, remap values, and flags",
+    ),
+    (
+        "0x435ea5c",
+        "zg::CZ2DPlayer::DrawMovieLayer",
+        "resolves MovieLayer offset 0x94 through CZ2DRoot::FindElem before drawing the linked movie",
     ),
     (
         "0x4367628",
-        "zg::CZ2DHardData::ReadLayerBase",
+        "zg::CZ2DReader::ReadLayerBase",
         "reads layer flags and stores the authored blend enum at layer offset 0x1c",
     ),
     (
@@ -175,9 +193,19 @@ def parse_movie_layer(
         raise BlendAuthorityError(f"MovieLayer geometry is non-finite for {reference}")
     if layer_width == 0 or layer_height == 0:
         raise BlendAuthorityError(f"MovieLayer dimensions are empty for {reference}")
+    movie_element_id_offset = geometry_offset + 20
+    if movie_element_id_offset + 4 > len(data):
+        raise BlendAuthorityError(f"MovieLayer movie-element ID is truncated for {reference}")
+    movie_element_id = struct.unpack_from("<I", data, movie_element_id_offset)[0]
+    if movie_element_id >> 27 != MOVIE_ELEMENT_TYPE:
+        raise BlendAuthorityError(
+            f"MovieLayer does not link a type-{MOVIE_ELEMENT_TYPE} movie element: "
+            f"{reference}/0x{movie_element_id:08x}"
+        )
     renderer_state = 1 if blend_enum == 0 else blend_state_table[blend_enum - 1]
     return {
         "z2d_reference": reference,
+        "authored_layer_reference": reference,
         "movie_layer_tag_file_offset_hex": f"0x{tag_offset:x}",
         "movie_layer_tag_value_hex": f"0x{tag:08x}",
         "movie_layer_element_type": tag >> 27,
@@ -192,7 +220,202 @@ def parse_movie_layer(
         "pivot": [pivot_x, pivot_y],
         "layer_width": layer_width,
         "layer_height": layer_height,
+        "movie_element_id_file_offset_hex": f"0x{movie_element_id_offset:x}",
+        "movie_element_id": movie_element_id,
+        "movie_element_id_hex": f"0x{movie_element_id:08x}",
     }
+
+
+def authored_movie_layer_references(data: bytes) -> list[str]:
+    """Return exact bracketed MovieLayer names in authored order."""
+
+    references = [
+        match.group(1).decode("ascii")
+        for match in re.finditer(rb"\[([^\]\x00]+\.dgm)\]\x00", data)
+    ]
+    if len(references) != len(set(references)):
+        raise BlendAuthorityError("duplicate bracketed MovieLayer names require occurrence IDs")
+    for reference in references:
+        string_offset = data.find(f"[{reference}]\0".encode("ascii"))
+        _movie_layer_tag_offset(data, string_offset)
+    return references
+
+
+def parse_pubroot_movie_resource_tables(
+    data: bytes, *, z2d_version: int
+) -> list[dict[str, Any]]:
+    """Decode exact PubRoot(kind=2) bulk movie tables used by Z2D v15.
+
+    IDA authority: ReadPubRoot at 0x4366834 creates ``count`` sequential
+    type-14 movie elements from ``base_id`` and then reads two uint32 arrays,
+    start/end/remap arrays, a byte-counted name payload, and (v14+) flags.
+    """
+
+    tables: list[dict[str, Any]] = []
+    for tag_offset in range(0, max(0, len(data) - 23), 4):
+        tag = struct.unpack_from("<I", data, tag_offset)[0]
+        if tag >> 27 != PUB_ROOT_TYPE:
+            continue
+        animation_count = data[tag_offset + 4]
+        child_encoding = data[tag_offset + 5]
+        if child_encoding & 1:
+            continue
+        authored_count = struct.unpack_from("<h", data, tag_offset + 6)[0]
+        payload_offset = tag_offset + 8
+        kind, count = struct.unpack_from("<2I", data, payload_offset)
+        if kind != 2:
+            continue
+        if not (0 < count <= 0xFFFF):
+            continue
+        if authored_count != count:
+            continue
+        movie_element_base_id, name_payload_size = struct.unpack_from(
+            "<2I", data, payload_offset + 8
+        )
+        if movie_element_base_id >> 27 != MOVIE_ELEMENT_TYPE:
+            continue
+        if (movie_element_base_id & 0x07FFFFFF) + count > 0x08000000:
+            raise BlendAuthorityError("PubRoot sequential movie IDs overflow")
+
+        cursor = payload_offset + 16
+        fixed_size = count * (2 + 3) * 4
+        if cursor + fixed_size + name_payload_size > len(data):
+            raise BlendAuthorityError("PubRoot movie table is truncated")
+        source_hashes = list(struct.unpack_from(f"<{count}I", data, cursor))
+        cursor += count * 4
+        original_hashes = list(struct.unpack_from(f"<{count}I", data, cursor))
+        cursor += count * 4
+        start_frames = list(struct.unpack_from(f"<{count}i", data, cursor))
+        cursor += count * 4
+        end_frames = list(struct.unpack_from(f"<{count}i", data, cursor))
+        cursor += count * 4
+        remap_frames = list(struct.unpack_from(f"<{count}i", data, cursor))
+        cursor += count * 4
+
+        names_start = cursor
+        names_end = names_start + name_payload_size
+        names: list[str] = []
+        while len(names) < count:
+            if cursor >= names_end:
+                raise BlendAuthorityError("PubRoot movie name payload ended early")
+            length = data[cursor]
+            cursor += 1
+            if cursor + length > names_end:
+                raise BlendAuthorityError("PubRoot movie name exceeds its payload")
+            try:
+                name = data[cursor : cursor + length].decode("ascii")
+            except UnicodeDecodeError as exc:
+                raise BlendAuthorityError("PubRoot movie name is not ASCII") from exc
+            cursor += length
+            if not re.fullmatch(r"[A-Za-z0-9_]+\.dgm", name):
+                raise BlendAuthorityError(f"PubRoot movie name is not an exact DGM: {name}")
+            names.append(name)
+        if cursor != names_end:
+            raise BlendAuthorityError("PubRoot movie name payload has trailing bytes")
+
+        if z2d_version >= 14:
+            if cursor + count > len(data):
+                raise BlendAuthorityError("PubRoot movie flags are truncated")
+            movie_flags = list(data[cursor : cursor + count])
+            cursor += count
+        else:
+            movie_flags = [0] * count
+        aligned_end = (cursor + 3) & ~3
+        if aligned_end > len(data):
+            raise BlendAuthorityError("PubRoot movie table alignment exceeds the chunk")
+
+        resources = []
+        for index, name in enumerate(names):
+            if end_frames[index] < start_frames[index]:
+                raise BlendAuthorityError(f"PubRoot movie frame range is reversed: {name}")
+            movie_element_id = movie_element_base_id + index
+            resources.append(
+                {
+                    "movie_element_id": movie_element_id,
+                    "movie_element_id_hex": f"0x{movie_element_id:08x}",
+                    "movie_name": name,
+                    "source_hash_hex": f"0x{source_hashes[index]:08x}",
+                    "original_hash_hex": f"0x{original_hashes[index]:08x}",
+                    "start_frame": start_frames[index],
+                    "end_frame_inclusive": end_frames[index],
+                    "time_remap_frame": remap_frames[index],
+                    "movie_flag": movie_flags[index],
+                }
+            )
+        tables.append(
+            {
+                "pubroot_tag_file_offset_hex": f"0x{tag_offset:x}",
+                "pubroot_tag_value_hex": f"0x{tag:08x}",
+                "animation_entry_count": animation_count,
+                "authored_movie_count": authored_count,
+                "movie_element_base_id_hex": f"0x{movie_element_base_id:08x}",
+                "movie_name_payload_size": name_payload_size,
+                "table_end_file_offset_hex": f"0x{aligned_end:x}",
+                "resources": resources,
+            }
+        )
+
+    movie_ids = [
+        resource["movie_element_id"]
+        for table in tables
+        for resource in table["resources"]
+    ]
+    if len(movie_ids) != len(set(movie_ids)):
+        raise BlendAuthorityError("PubRoot movie tables contain duplicate element IDs")
+    return tables
+
+
+def resolve_movie_layer_resources(
+    data: bytes,
+    *,
+    blend_state_table: list[int],
+    manifest_dgm_references: Iterable[str] | None = None,
+    z2d_version: int | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Bind authored MovieLayers to exact PubRoot movie resources by ID."""
+
+    if z2d_version is None:
+        z2d_version = int(parse_z2d_header(data)["version"])
+    layer_references = authored_movie_layer_references(data)
+    tables = parse_pubroot_movie_resource_tables(data, z2d_version=z2d_version)
+    resources = [resource for table in tables for resource in table["resources"]]
+    by_id = {int(resource["movie_element_id"]): resource for resource in resources}
+    layers: list[dict[str, Any]] = []
+    for authored_index, layer_reference in enumerate(layer_references):
+        layer = parse_movie_layer(data, layer_reference, blend_state_table)
+        resource = by_id.get(int(layer["movie_element_id"]))
+        if resource is None:
+            raise BlendAuthorityError(
+                f"MovieLayer has no exact PubRoot movie resource: "
+                f"{layer_reference}/{layer['movie_element_id_hex']}"
+            )
+        layer.update(
+            {
+                "authored_reference_index": authored_index,
+                "authored_layer_reference": layer_reference,
+                "z2d_reference": resource["movie_name"],
+                "movie_media_reference": resource["movie_name"],
+                "layer_name_differs_from_movie_media_reference": (
+                    layer_reference != resource["movie_name"]
+                ),
+                "movie_resource": resource,
+            }
+        )
+        layers.append(layer)
+
+    if layer_references and not resources:
+        raise BlendAuthorityError("MovieLayers exist without a PubRoot movie table")
+    if manifest_dgm_references is not None:
+        observed = set(str(value) for value in manifest_dgm_references)
+        exact = set(layer_references) | {
+            str(resource["movie_name"]) for resource in resources
+        }
+        if observed != exact:
+            raise BlendAuthorityError(
+                f"named Z2D DGM strings differ from exact layer/resource union: "
+                f"missing={sorted(exact - observed)} extra={sorted(observed - exact)}"
+            )
+    return layers, tables
 
 
 def read_filename_table(path: Path) -> dict[str, int]:
@@ -225,10 +448,13 @@ def build_report(
         data = path.read_bytes()
         header = parse_z2d_header(data)
         references = list(source.get("dgm_references", []))
-        layers: list[dict[str, Any]] = []
-        for reference in references:
-            layer = parse_movie_layer(data, reference, blend_state_table)
-            base_name = reference[:-4]
+        layers, movie_resource_tables = resolve_movie_layer_resources(
+            data,
+            blend_state_table=blend_state_table,
+            manifest_dgm_references=references,
+        )
+        for layer in layers:
+            base_name = str(layer["z2d_reference"])[:-4]
             table_index = compiled_names.get(base_name)
             layer.update(
                 {
@@ -242,7 +468,6 @@ def build_report(
                     ),
                 }
             )
-            layers.append(layer)
         chunks.append(
             {
                 "name": source["name"],
@@ -253,6 +478,7 @@ def build_report(
                 "header": header,
                 "movie_layers": layers,
                 "movie_layer_count": len(layers),
+                "movie_resource_tables": movie_resource_tables,
             }
         )
     all_layers = [layer for chunk in chunks for layer in chunk["movie_layers"]]

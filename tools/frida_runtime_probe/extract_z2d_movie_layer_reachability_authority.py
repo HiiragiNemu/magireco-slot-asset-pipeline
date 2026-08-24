@@ -15,9 +15,9 @@ try:
         CODE_AUTHORITY,
         SLOT_BINARY_SHA256,
         BlendAuthorityError,
-        parse_movie_layer,
         parse_z2d_header,
         read_filename_table,
+        resolve_movie_layer_resources,
         validate_exact_binary,
     )
 except ImportError:  # pragma: no cover - direct script execution
@@ -26,9 +26,9 @@ except ImportError:  # pragma: no cover - direct script execution
         CODE_AUTHORITY,
         SLOT_BINARY_SHA256,
         BlendAuthorityError,
-        parse_movie_layer,
         parse_z2d_header,
         read_filename_table,
+        resolve_movie_layer_resources,
         validate_exact_binary,
     )
 
@@ -54,23 +54,25 @@ def build_report(
         header = parse_z2d_header(data)
         if header["filename"] != f"{source['name']}.z2d":
             raise BlendAuthorityError(f"Z2D filename differs: {source['name']}")
-        layers = []
-        for authored_index, reference in enumerate(source.get("dgm_references", [])):
-            layer = parse_movie_layer(data, str(reference), blend_states)
+        layers, movie_resource_tables = resolve_movie_layer_resources(
+            data,
+            blend_state_table=blend_states,
+            manifest_dgm_references=source.get("dgm_references", []),
+        )
+        for layer in layers:
             if (
                 int(layer["start_frame"]) < int(header["scene_start_frame"])
                 or int(layer["end_frame_inclusive"])
                 > int(header["scene_end_frame_inclusive"])
             ):
                 raise BlendAuthorityError(
-                    f"MovieLayer exceeds parent Z2D frame range: {source['name']}/{reference}"
+                    f"MovieLayer exceeds parent Z2D frame range: "
+                    f"{source['name']}/{layer['authored_layer_reference']}"
                 )
-            base_name = str(reference).removesuffix(".dgm")
+            base_name = str(layer["z2d_reference"]).removesuffix(".dgm")
             table_index = compiled_names.get(base_name)
-            layers.append(
+            layer.update(
                 {
-                    **layer,
-                    "authored_reference_index": authored_index,
                     "cri_lookup_base_name": base_name,
                     "compiled_table_present": table_index is not None,
                     "compiled_table_index": table_index,
@@ -91,6 +93,7 @@ def build_report(
                 "header": header,
                 "movie_layers": layers,
                 "movie_layer_count": len(layers),
+                "movie_resource_tables": movie_resource_tables,
             }
         )
     all_layers = [layer for chunk in chunks for layer in chunk["movie_layers"]]
@@ -134,11 +137,15 @@ def build_report(
             "movie_layers": len(all_layers),
             "loadable_movie_layers": loadable,
             "unreachable_movie_layers": len(all_layers) - loadable,
+            "layer_names_differing_from_media_names": sum(
+                bool(layer["layer_name_differs_from_movie_media_reference"])
+                for layer in all_layers
+            ),
             "geometry_contracts": geometry_counts,
         },
         "z2d_chunks": chunks,
         "assertions": {
-            "all_authored_references_resolved_exactly_once": True,
+            "all_movie_layers_bound_to_exact_pubroot_movie_resources": True,
             "all_movie_layers_within_parent_frame_ranges": True,
             "non_fullscreen_components_preserved_without_normalization": True,
             "unreachable_names_not_substituted": True,
