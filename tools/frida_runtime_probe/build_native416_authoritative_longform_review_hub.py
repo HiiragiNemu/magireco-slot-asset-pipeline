@@ -200,6 +200,29 @@ def _validate_evidence(
                 raise ReviewHubError(f"ac0908 evidence output differs: {expected['edition']}")
         if int(payload.get("frames", -1)) != int(media[0]["frame_count"]):
             raise ReviewHubError("ac0908 evidence frame count differs")
+    elif kind == "editorial_exhaustive_authority_with_media":
+        if payload.get("status") != "PRODUCTION_READY_HUMAN_PLAYBACK_REQUIRED_AFTER_RENDER":
+            raise ReviewHubError(f"editorial authority is not production ready: {path}")
+        expected_group_contract = (
+            int(group.get("event_container_count", -1)),
+            int(group.get("unique_complete_presentation_count", -1)),
+        )
+        authority_contract = (
+            int(payload.get("event_container_count", -1)),
+            int(payload.get("canonical_presentation_count", -1)),
+        )
+        if authority_contract != expected_group_contract:
+            raise ReviewHubError("editorial authority event/presentation contract differs")
+        if (
+            payload.get("canvas") != [416, 232]
+            or int(payload.get("frame_rate", 0)) != 30
+            or int(payload.get("total_frames", -1)) != int(media[0]["frame_count"])
+            or int(payload.get("exact_duplicate_surplus_count", -1)) != 0
+            or payload.get("strict_no_bgm", {}).get("excluded_sound_ids") != [551, 552, 553]
+        ):
+            raise ReviewHubError("editorial authority media/no-BGM contract differs")
+        if {str(row.get("edition")) for row in media} != set(EDITIONS):
+            raise ReviewHubError("editorial authority review group requires none/JA/ZH")
     elif kind == "exhaustive_unique_longform_verification":
         if payload.get("result") != "PASS_HUMAN_PLAYBACK_REQUIRED":
             raise ReviewHubError(f"longform evidence status is not review-ready: {path}")

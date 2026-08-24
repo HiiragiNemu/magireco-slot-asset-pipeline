@@ -252,6 +252,56 @@ class Native416ReviewHubTests(unittest.TestCase):
             validated = hub.validate_plan(plan)
             self.assertEqual(validated[0]["family"], "ac7101")
 
+    @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe(frame_count=5515))
+    def test_editorial_authority_accepts_duplicate_free_triple_edition_group(self, _probe):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            media = []
+            for edition in hub.EDITIONS:
+                source = root / f"ac0911__{edition}.mp4"
+                source.write_bytes((edition * 20).encode("ascii"))
+                media.append({
+                    "edition": edition,
+                    "path": str(source),
+                    "sha256": hub.file_sha256(source),
+                    **media_probe(frame_count=5515),
+                })
+            authority = root / "authority.json"
+            authority.write_text(json.dumps({
+                "status": "PRODUCTION_READY_HUMAN_PLAYBACK_REQUIRED_AFTER_RENDER",
+                "event_container_count": 17,
+                "canonical_presentation_count": 17,
+                "canvas": [416, 232],
+                "frame_rate": 30,
+                "total_frames": 5515,
+                "exact_duplicate_surplus_count": 0,
+                "strict_no_bgm": {"excluded_sound_ids": [551, 552, 553]},
+            }), encoding="utf-8")
+            plan = {
+                "schema": hub.SCHEMA,
+                "release_id": "authority_ac0911_test",
+                "hub_root": str(root / "hub"),
+                "expected_previous_current_target": str(root / "previous"),
+                "expected_group_count": 1,
+                "expected_edition_file_count": 3,
+                "groups": [{
+                    "review_group_id": "ac0911_exhaustive",
+                    "family": "ac0911",
+                    "title": "全部分支完整合集_ac0911",
+                    "content_type": "story",
+                    "event_container_count": 17,
+                    "unique_complete_presentation_count": 17,
+                    "evidence": {
+                        "kind": "editorial_exhaustive_authority_with_media",
+                        "path": str(authority),
+                        "sha256": hub.file_sha256(authority),
+                    },
+                    "media": media,
+                }],
+            }
+            validated = hub.validate_plan(plan)
+            self.assertEqual(validated[0]["family"], "ac0911")
+
     @mock.patch.object(hub, "probe_media", side_effect=lambda *_args, **_kwargs: media_probe())
     def test_build_publishes_three_hardlinks_and_metadata(self, _probe):
         with tempfile.TemporaryDirectory() as tmp:
