@@ -67,7 +67,7 @@ CODE_AUTHORITY = (
     (
         "0x4367628",
         "zg::CZ2DReader::ReadLayerBase",
-        "reads layer flags and stores the authored blend enum at layer offset 0x1c",
+        "uses the layer flags to decode the variable-width blend, frame, transform, opacity, pivot, dimensions, and final-scale fields and stores the authored blend enum at layer offset 0x1c",
     ),
     (
         "0x435edc0",
@@ -146,54 +146,133 @@ def _movie_layer_tag_offset(data: bytes, string_offset: int) -> int:
 
 
 def parse_movie_layer(
-    data: bytes, reference: str, blend_state_table: list[int]
+    data: bytes,
+    reference: str,
+    blend_state_table: list[int],
+    *,
+    string_offset: int | None = None,
 ) -> dict[str, Any]:
     needle = f"[{reference}]\0".encode("ascii")
-    offsets: list[int] = []
-    cursor = 0
-    while True:
-        offset = data.find(needle, cursor)
-        if offset < 0:
-            break
-        offsets.append(offset)
-        cursor = offset + 1
-    if len(offsets) != 1:
+    if string_offset is None:
+        offsets: list[int] = []
+        cursor = 0
+        while True:
+            offset = data.find(needle, cursor)
+            if offset < 0:
+                break
+            offsets.append(offset)
+            cursor = offset + 1
+        if len(offsets) != 1:
+            raise BlendAuthorityError(
+                f"expected one bracketed MovieLayer reference for {reference}, found {len(offsets)}"
+            )
+        string_offset = offsets[0]
+    elif (
+        string_offset < 0
+        or string_offset + len(needle) > len(data)
+        or data[string_offset : string_offset + len(needle)] != needle
+    ):
         raise BlendAuthorityError(
-            f"expected one bracketed MovieLayer reference for {reference}, found {len(offsets)}"
+            f"MovieLayer occurrence offset does not match {reference}: 0x{string_offset:x}"
         )
-    string_offset = offsets[0]
     tag_offset = _movie_layer_tag_offset(data, string_offset)
     tag = struct.unpack_from("<I", data, tag_offset)[0]
     layer_base = (string_offset + len(needle) + 3) & ~3
-    if layer_base + 8 > len(data) or data[layer_base : layer_base + 2] != b"\0\0":
+    if layer_base + 4 > len(data) or data[layer_base : layer_base + 2] != b"\0\0":
         raise BlendAuthorityError(f"MovieLayer base alignment differs for {reference}")
     flags = struct.unpack_from("<H", data, layer_base + 2)[0]
+
+    cursor = layer_base + 4
+
+    def read(fmt: str, label: str) -> tuple[Any, ...]:
+        nonlocal cursor
+        size = struct.calcsize(fmt)
+        if cursor + size > len(data):
+            raise BlendAuthorityError(f"MovieLayer {label} is truncated for {reference}")
+        values = struct.unpack_from(fmt, data, cursor)
+        cursor += size
+        return values
+
     if flags & 0x400:
         blend_enum = 0
-        start_frame, end_frame = struct.unpack_from("<2H", data, layer_base + 4)
-        geometry_offset = layer_base + 8
         layout = "flags_0x400_default_blend"
     else:
-        if layer_base + 12 > len(data):
-            raise BlendAuthorityError(f"explicit MovieLayer base is truncated for {reference}")
-        blend_enum = struct.unpack_from("<I", data, layer_base + 4)[0]
-        start_frame, end_frame = struct.unpack_from("<2H", data, layer_base + 8)
-        geometry_offset = layer_base + 12
-        layout = "explicit_uint32_blend_enum"
+        blend_enum = read("<B3x", "blend enum")[0]
+        layout = "explicit_uint8_blend_enum_with_three_padding_bytes"
     if blend_enum > len(blend_state_table):
         raise BlendAuthorityError(f"MovieLayer blend enum is outside the exact table: {blend_enum}")
+
+    if flags & 0x8:
+        layer_user_value = 0
+    else:
+        layer_user_value = read("<i", "user value")[0]
+
+    if flags & 0x100:
+        start_frame, end_frame = read("<2h", "frame range")
+        frame_storage = "int16"
+    else:
+        start_frame, end_frame = read("<2i", "frame range")
+        frame_storage = "int32"
     if end_frame < start_frame:
         raise BlendAuthorityError(f"MovieLayer frame range is reversed for {reference}")
-    if geometry_offset + 20 > len(data):
-        raise BlendAuthorityError(f"MovieLayer geometry is truncated for {reference}")
-    position_x, position_y, pivot_x, pivot_y, layer_width, layer_height = (
-        struct.unpack_from("<4f2H", data, geometry_offset)
+
+    position_x, position_y = read("<2f", "geometry")
+    position_z = read("<f", "geometry")[0] if flags & 0x1 else 0.0
+
+    if flags & 0x4:
+        scale_x, scale_y = 1.0, 1.0
+    else:
+        scale_x, scale_y = read("<2f", "geometry")
+    if flags & 0x1:
+        scale_z = 1.0 if flags & 0x4 else read("<f", "geometry")[0]
+        layer_extra_x, layer_extra_y = read("<2f", "geometry")
+    else:
+        scale_z = 1.0
+        layer_extra_x, layer_extra_y = 1.0, 0.0
+
+    rotation = 0.0 if flags & 0x40 else read("<f", "geometry")[0]
+    opacity = 1.0 if flags & 0x20 else read("<f", "geometry")[0]
+    pivot_x, pivot_y = read("<2f", "geometry")
+    pivot_z = read("<f", "geometry")[0] if flags & 0x1 else 0.0
+
+    if flags & 0x200:
+        layer_width, layer_height = read("<2h", "geometry")
+        dimension_storage = "int16"
+    else:
+        layer_width, layer_height = read("<2f", "geometry")
+        dimension_storage = "float32"
+
+    final_scale = 1.0 if flags & 0x10 else read("<f", "geometry")[0]
+
+    float_fields = (
+        position_x,
+        position_y,
+        position_z,
+        scale_x,
+        scale_y,
+        scale_z,
+        layer_extra_x,
+        layer_extra_y,
+        rotation,
+        opacity,
+        pivot_x,
+        pivot_y,
+        pivot_z,
+        float(layer_width),
+        float(layer_height),
+        final_scale,
     )
-    if not all(math.isfinite(value) for value in (position_x, position_y, pivot_x, pivot_y)):
+    if not all(math.isfinite(value) for value in float_fields):
         raise BlendAuthorityError(f"MovieLayer geometry is non-finite for {reference}")
-    if layer_width == 0 or layer_height == 0:
+    if layer_width <= 0 or layer_height <= 0:
         raise BlendAuthorityError(f"MovieLayer dimensions are empty for {reference}")
-    movie_element_id_offset = geometry_offset + 20
+
+    if isinstance(layer_width, float) and layer_width.is_integer():
+        layer_width = int(layer_width)
+    if isinstance(layer_height, float) and layer_height.is_integer():
+        layer_height = int(layer_height)
+
+    movie_element_id_offset = cursor
     if movie_element_id_offset + 4 > len(data):
         raise BlendAuthorityError(f"MovieLayer movie-element ID is truncated for {reference}")
     movie_element_id = struct.unpack_from("<I", data, movie_element_id_offset)[0]
@@ -206,39 +285,54 @@ def parse_movie_layer(
     return {
         "z2d_reference": reference,
         "authored_layer_reference": reference,
+        "authored_layer_string_file_offset_hex": f"0x{string_offset:x}",
         "movie_layer_tag_file_offset_hex": f"0x{tag_offset:x}",
         "movie_layer_tag_value_hex": f"0x{tag:08x}",
         "movie_layer_element_type": tag >> 27,
         "layer_flags_hex": f"0x{flags:04x}",
         "layer_layout": layout,
+        "frame_storage": frame_storage,
+        "dimension_storage": dimension_storage,
         "authored_blend_enum": blend_enum,
         "effective_renderer_state": renderer_state,
+        "layer_user_value": layer_user_value,
         "start_frame": start_frame,
         "end_frame_inclusive": end_frame,
         "frame_count": end_frame - start_frame + 1,
         "position": [position_x, position_y],
+        "position_z": position_z,
+        "scale": [scale_x, scale_y],
+        "scale_z": scale_z,
+        "layer_extra_xy": [layer_extra_x, layer_extra_y],
+        "rotation": rotation,
+        "opacity": opacity,
         "pivot": [pivot_x, pivot_y],
+        "pivot_z": pivot_z,
         "layer_width": layer_width,
         "layer_height": layer_height,
+        "final_scale": final_scale,
         "movie_element_id_file_offset_hex": f"0x{movie_element_id_offset:x}",
         "movie_element_id": movie_element_id,
         "movie_element_id_hex": f"0x{movie_element_id:08x}",
     }
 
 
-def authored_movie_layer_references(data: bytes) -> list[str]:
-    """Return exact bracketed MovieLayer names in authored order."""
+def authored_movie_layer_occurrences(data: bytes) -> list[tuple[str, int]]:
+    """Return every exact bracketed MovieLayer occurrence in authored order."""
 
-    references = [
-        match.group(1).decode("ascii")
+    occurrences = [
+        (match.group(1).decode("ascii"), match.start())
         for match in re.finditer(rb"\[([^\]\x00]+\.dgm)\]\x00", data)
     ]
-    if len(references) != len(set(references)):
-        raise BlendAuthorityError("duplicate bracketed MovieLayer names require occurrence IDs")
-    for reference in references:
-        string_offset = data.find(f"[{reference}]\0".encode("ascii"))
+    for _reference, string_offset in occurrences:
         _movie_layer_tag_offset(data, string_offset)
-    return references
+    return occurrences
+
+
+def authored_movie_layer_references(data: bytes) -> list[str]:
+    """Return exact bracketed names, preserving duplicate authored occurrences."""
+
+    return [reference for reference, _offset in authored_movie_layer_occurrences(data)]
 
 
 def parse_pubroot_movie_resource_tables(
@@ -376,13 +470,22 @@ def resolve_movie_layer_resources(
 
     if z2d_version is None:
         z2d_version = int(parse_z2d_header(data)["version"])
-    layer_references = authored_movie_layer_references(data)
+    layer_occurrences = authored_movie_layer_occurrences(data)
+    layer_references = [reference for reference, _offset in layer_occurrences]
     tables = parse_pubroot_movie_resource_tables(data, z2d_version=z2d_version)
     resources = [resource for table in tables for resource in table["resources"]]
     by_id = {int(resource["movie_element_id"]): resource for resource in resources}
     layers: list[dict[str, Any]] = []
-    for authored_index, layer_reference in enumerate(layer_references):
-        layer = parse_movie_layer(data, layer_reference, blend_state_table)
+    occurrence_counts: dict[str, int] = {}
+    for authored_index, (layer_reference, string_offset) in enumerate(layer_occurrences):
+        occurrence_index = occurrence_counts.get(layer_reference, 0)
+        occurrence_counts[layer_reference] = occurrence_index + 1
+        layer = parse_movie_layer(
+            data,
+            layer_reference,
+            blend_state_table,
+            string_offset=string_offset,
+        )
         resource = by_id.get(int(layer["movie_element_id"]))
         if resource is None:
             raise BlendAuthorityError(
@@ -392,6 +495,7 @@ def resolve_movie_layer_resources(
         layer.update(
             {
                 "authored_reference_index": authored_index,
+                "authored_reference_occurrence_index": occurrence_index,
                 "authored_layer_reference": layer_reference,
                 "z2d_reference": resource["movie_name"],
                 "movie_media_reference": resource["movie_name"],

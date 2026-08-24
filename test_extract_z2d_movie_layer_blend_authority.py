@@ -21,6 +21,11 @@ def movie_layer(
     end: int,
     layer_index: int = 0,
     movie_index: int = 0,
+    position: tuple[float, float] = (512.0, 288.0),
+    scale: tuple[float, float] = (1.0, 1.0),
+    opacity: float = 1.0,
+    pivot: tuple[float, float] = (512.0, 288.0),
+    dimensions: tuple[int, int] = (1024, 576),
 ) -> bytes:
     data = bytearray(struct.pack("<II", (10 << 27) | layer_index, 0))
     data.extend(f"[{reference}]\0".encode("ascii"))
@@ -28,12 +33,36 @@ def movie_layer(
         data.append(0)
     data.extend(b"\0\0")
     data.extend(struct.pack("<H", flags))
-    if flags & 0x400:
-        data.extend(struct.pack("<2H", start, end))
+    if not flags & 0x400:
+        data.extend(struct.pack("<B3x", blend))
+    if not flags & 0x8:
+        data.extend(struct.pack("<i", 0))
+    if flags & 0x100:
+        data.extend(struct.pack("<2h", start, end))
     else:
-        data.extend(struct.pack("<I", blend))
-        data.extend(struct.pack("<2H", start, end))
-    data.extend(struct.pack("<4f2H", 512.0, 288.0, 512.0, 288.0, 1024, 576))
+        data.extend(struct.pack("<2i", start, end))
+    data.extend(struct.pack("<2f", *position))
+    if flags & 0x1:
+        data.extend(struct.pack("<f", 0.0))
+    if not flags & 0x4:
+        data.extend(struct.pack("<2f", *scale))
+    if flags & 0x1:
+        if not flags & 0x4:
+            data.extend(struct.pack("<f", 1.0))
+        data.extend(struct.pack("<2f", 1.0, 0.0))
+    if not flags & 0x40:
+        data.extend(struct.pack("<f", 0.0))
+    if not flags & 0x20:
+        data.extend(struct.pack("<f", opacity))
+    data.extend(struct.pack("<2f", *pivot))
+    if flags & 0x1:
+        data.extend(struct.pack("<f", 0.0))
+    if flags & 0x200:
+        data.extend(struct.pack("<2h", *dimensions))
+    else:
+        data.extend(struct.pack("<2f", *map(float, dimensions)))
+    if not flags & 0x10:
+        data.extend(struct.pack("<f", 1.0))
     data.extend(struct.pack("<I", (14 << 27) | movie_index))
     return bytes(data)
 
@@ -81,6 +110,50 @@ class Z2DMovieLayerBlendAuthorityTests(unittest.TestCase):
         self.assertEqual(row["effective_renderer_state"], 3)
         self.assertEqual((row["start_frame"], row["end_frame_inclusive"]), (60, 259))
 
+    def test_flag_driven_ac0005_transform_layout(self) -> None:
+        row = parse_movie_layer(
+            movie_layer(
+                "ac0005_title_logo_in_add.dgm",
+                flags=0x035A,
+                blend=2,
+                start=0,
+                end=29,
+                scale=(0.8, 0.8),
+                opacity=0.5,
+                pivot=(800.0, 450.0),
+                dimensions=(1600, 900),
+            ),
+            "ac0005_title_logo_in_add.dgm",
+            [2, 3, 4],
+        )
+        self.assertEqual(row["authored_blend_enum"], 2)
+        self.assertEqual(row["frame_storage"], "int16")
+        self.assertEqual(row["dimension_storage"], "int16")
+        self.assertEqual(row["position"], [512.0, 288.0])
+        self.assertAlmostEqual(row["scale"][0], 0.8)
+        self.assertAlmostEqual(row["scale"][1], 0.8)
+        self.assertEqual(row["opacity"], 0.5)
+        self.assertEqual(row["pivot"], [800.0, 450.0])
+        self.assertEqual((row["layer_width"], row["layer_height"]), (1600, 900))
+        self.assertEqual(row["movie_element_id_hex"], "0x70000000")
+
+    def test_flag_driven_float_dimensions_and_int32_frames(self) -> None:
+        row = parse_movie_layer(
+            movie_layer(
+                "float_dimensions.dgm",
+                flags=0x047E,
+                blend=0,
+                start=70000,
+                end=70029,
+            ),
+            "float_dimensions.dgm",
+            [2, 3, 4],
+        )
+        self.assertEqual(row["frame_storage"], "int32")
+        self.assertEqual(row["dimension_storage"], "float32")
+        self.assertEqual((row["start_frame"], row["end_frame_inclusive"]), (70000, 70029))
+        self.assertEqual((row["layer_width"], row["layer_height"]), (1024, 576))
+
     def test_missing_or_duplicate_bracketed_reference_fails_closed(self) -> None:
         with self.assertRaisesRegex(BlendAuthorityError, "found 0"):
             parse_movie_layer(b"no layer", "missing.dgm", [2, 3, 4])
@@ -119,6 +192,38 @@ class Z2DMovieLayerBlendAuthorityTests(unittest.TestCase):
         self.assertEqual(layers[1]["z2d_reference"], "movie_b_MR.dgm")
         self.assertTrue(layers[1]["layer_name_differs_from_movie_media_reference"])
         self.assertEqual(layers[1]["movie_element_id_hex"], "0x70000001")
+
+    def test_resolver_preserves_duplicate_layer_name_occurrences(self) -> None:
+        data = (
+            movie_layer(
+                "same.dgm", flags=0x077E, blend=0, start=0, end=9,
+                layer_index=0, movie_index=0,
+            )
+            + movie_layer(
+                "same.dgm", flags=0x077E, blend=0, start=10, end=19,
+                layer_index=1, movie_index=1,
+            )
+            + movie_pubroot(["same.dgm", "same.dgm"])
+        )
+        layers, _tables = resolve_movie_layer_resources(
+            data,
+            blend_state_table=[2, 3, 4],
+            manifest_dgm_references=["same.dgm"],
+            z2d_version=15,
+        )
+        self.assertEqual(len(layers), 2)
+        self.assertEqual(
+            [row["authored_reference_occurrence_index"] for row in layers],
+            [0, 1],
+        )
+        self.assertNotEqual(
+            layers[0]["authored_layer_string_file_offset_hex"],
+            layers[1]["authored_layer_string_file_offset_hex"],
+        )
+        self.assertEqual(
+            [row["movie_element_id_hex"] for row in layers],
+            ["0x70000000", "0x70000001"],
+        )
 
     def test_manifest_union_mismatch_fails_closed(self) -> None:
         data = movie_layer(
