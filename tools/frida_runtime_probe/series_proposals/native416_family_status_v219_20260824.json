@@ -2,6 +2,7 @@
   "schema": "magireco-native416-family-status-overlay-v1",
   "claim_boundary": "This overlay records already-produced or explicit fail-closed families only. Omitted families remain unclassified and render-blocked until deep code authority closes.",
   "families": [
+    {"family": "ac0001", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v225_ac0001_exhaustive_authoritative_longform_20260824"},
     {"family": "ac0908", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823"},
     {"family": "ac0911", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "ac0911_exhaustive_native416_authority_v156r1_20260824"},
     {"family": "ac0915", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v182_ac0915_exhaustive_native416_20260824"},

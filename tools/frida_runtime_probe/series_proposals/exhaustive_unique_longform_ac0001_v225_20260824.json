@@ -1,0 +1,99 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac0001_exhaustive_authoritative_longform_v225_20260824",
+  "family": "ac0001",
+  "title": "咖啡店四人会面完整场景",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "ac0001_exact_route_event_global_z2d_and_sound_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0001_exhaustive_authority_v224_20260824\\AC0001_EXHAUSTIVE_LONGFORM_AUTHORITY.json",
+      "sha256": "70891ED03E66DEDB697B513484AFEE329090ABAFF663E3EADF62325C30476247"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac0001_咖啡店四人会面完整场景_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac0001_001",
+          "source_identities": [
+            "cri:main:0/z2d:ac0001_001:movie:0"
+          ],
+          "chapter_title": "会面镜头一",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0001\\ac0001_001_c1_MR.mp4",
+          "sha256": "E50565818D88231350D620007E321BDD3126D1AB0C4FB99B36D941F2FF060944",
+          "video_frames": 383
+        },
+        {
+          "order": 1,
+          "event": "ac0001_001",
+          "source_identities": [
+            "cri:main:1/z2d:ac0001_001:movie:1"
+          ],
+          "chapter_title": "会面镜头二",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0001\\ac0001_001_c2.mp4",
+          "sha256": "A1F00A8695DB0CA1D59926FB2CC0EE577323F2A041CD8D30F4301B06BAE1DA35",
+          "video_frames": 268
+        },
+        {
+          "order": 2,
+          "event": "ac0001_001",
+          "source_identities": [
+            "cri:main:2/z2d:ac0001_001:movie:2"
+          ],
+          "chapter_title": "会面镜头三",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0001\\ac0001_001_c3_MR.mp4",
+          "sha256": "5CC659F996A3D16E623F77B9BEA3CAE22E83FBB214FB78BBB4804D8C827022BC",
+          "video_frames": 285
+        },
+        {
+          "order": 3,
+          "event": "ac0001_001",
+          "source_identities": [
+            "cri:main:3/z2d:ac0001_001:movie:3"
+          ],
+          "chapter_title": "会面镜头四",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0001\\ac0001_001_c4.mp4",
+          "sha256": "656AD88B1CB8FC298ECB873C33E73ADE932E1E312851FA0A58465A080D0F5234",
+          "video_frames": 270
+        },
+        {
+          "order": 4,
+          "event": "ac0001_001",
+          "source_identities": [
+            "cri:main:4/z2d:ac0001_001:movie:4"
+          ],
+          "chapter_title": "会面镜头五",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0001\\ac0001_001_c5_MR.mp4",
+          "sha256": "466E7DC1D9550D8B96122F633DF7D50982E0D00B0ABCE752903A75B4A973BBE8",
+          "video_frames": 307
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 5,
+  "expected_unique_source_count": 5,
+  "expected_total_video_frames": 1513,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}
