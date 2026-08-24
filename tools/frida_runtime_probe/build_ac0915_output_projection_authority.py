@@ -131,6 +131,8 @@ def _validate_inputs(
     project: Mapping[str, Any],
     renderer: Mapping[str, Any],
     *,
+    expected_presentation_schema: str,
+    family_label: str,
     expected_event_count: int,
     expected_presentation_node_count: int,
     expected_chunk_count: int,
@@ -141,7 +143,7 @@ def _validate_inputs(
 ) -> None:
     if (
         presentation.get("schema")
-        != "magireco-ac0915-gfdirection-presentation-authority-v1"
+        != expected_presentation_schema
         or presentation.get("status")
         != "passed_code_runtime_cross_bound_projection_pending"
         or presentation.get("summary", {}).get("event_count")
@@ -149,7 +151,7 @@ def _validate_inputs(
         or presentation.get("summary", {}).get("z2d_node_occurrence_count")
         != expected_presentation_node_count
     ):
-        raise ProjectionError("ac0915 presentation authority differs")
+        raise ProjectionError(f"{family_label} presentation authority differs")
     if (
         movie.get("schema")
         != "magireco-z2d-movielayer-reachability-authority-v1"
@@ -162,7 +164,7 @@ def _validate_inputs(
         or movie.get("counts", {}).get("unreachable_movie_layers")
         != expected_unique_unreachable_layer_count
     ):
-        raise ProjectionError("ac0915 MovieLayer authority differs")
+        raise ProjectionError(f"{family_label} MovieLayer authority differs")
     if (
         cri.get("schema") != "magireco-selected-cri-usm-argb-authority-v1"
         or cri.get("status") != "passed_exact_color_alpha_streams_resolved"
@@ -173,7 +175,7 @@ def _validate_inputs(
         )
         is not True
     ):
-        raise ProjectionError("ac0915 CRI ARGB authority differs")
+        raise ProjectionError(f"{family_label} CRI ARGB authority differs")
     render_sets = project.get("project", {}).get("render_buffer_sets", [])
     if (
         project.get("schema")
@@ -329,6 +331,10 @@ def resolve(
     renderer: Mapping[str, Any],
     *,
     expected_events: Sequence[str] = EVENTS,
+    expected_presentation_schema: str = (
+        "magireco-ac0915-gfdirection-presentation-authority-v1"
+    ),
+    family_label: str = "ac0915",
     expected_counts: Mapping[str, int] = EXPECTED_COUNTS,
     expected_chunk_count: int = 34,
     expected_movie_layer_count: int = 44,
@@ -347,6 +353,8 @@ def resolve(
         cri,
         project,
         renderer,
+        expected_presentation_schema=expected_presentation_schema,
+        family_label=family_label,
         expected_event_count=len(expected_events),
         expected_presentation_node_count=int(
             expected_counts["archive_backed_z2d_occurrences"]

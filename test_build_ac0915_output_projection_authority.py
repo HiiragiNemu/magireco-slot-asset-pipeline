@@ -277,6 +277,31 @@ class Ac0915OutputProjectionTests(unittest.TestCase):
         with self.assertRaisesRegex(MODULE.ProjectionError, "frame span differs"):
             MODULE._frame_policy("unknown", 7, 6)
 
+    def test_accepts_explicit_family_presentation_schema(self) -> None:
+        fixture = self._fixture()
+        fixture[0]["schema"] = "magireco-ac4902-gfdirection-presentation-authority-v1"
+        presentation, movie, cri, project, renderer, expected = fixture
+        result = MODULE.resolve(
+            presentation,
+            movie,
+            cri,
+            project,
+            renderer,
+            expected_events=("ac0915_001",),
+            expected_presentation_schema=(
+                "magireco-ac4902-gfdirection-presentation-authority-v1"
+            ),
+            family_label="ac4902",
+            expected_counts=expected,
+            expected_chunk_count=3,
+            expected_movie_layer_count=3,
+            expected_unique_loadable_layer_count=2,
+            expected_unique_unreachable_layer_count=1,
+            expected_state3_names=frozenset({"effect_source"}),
+            expected_unreachable_names=frozenset({"missing_add"}),
+        )
+        self.assertEqual(1, result["counts"]["events"])
+
 
 if __name__ == "__main__":
     unittest.main()
