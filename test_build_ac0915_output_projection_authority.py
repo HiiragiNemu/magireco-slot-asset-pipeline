@@ -302,6 +302,91 @@ class Ac0915OutputProjectionTests(unittest.TestCase):
         )
         self.assertEqual(1, result["counts"]["events"])
 
+    def test_partial_only_event_requires_exact_route_underlay_allowance(self) -> None:
+        fixture = self._fixture()
+        presentation, movie, cri, project, renderer, expected = fixture
+        base_layer = movie["z2d_chunks"][0]["movie_layers"][0]
+        base_layer.update(
+            {
+                "position": [640.0, 467.0],
+                "pivot": [640.0, 360.0],
+                "layer_width": 1280,
+                "layer_height": 720,
+            }
+        )
+        movie["z2d_chunks"][0]["header"] = {
+            "canvas_width": 1280,
+            "canvas_height": 1024,
+        }
+        presentation["events"][0]["scenes"][0]["cuts"][0]["z2d_nodes"][0][
+            "owning_layer"
+        ]["effective_viewport"] = {
+            "left": 0,
+            "top": 0,
+            "width": 1280,
+            "height": 1024,
+        }
+        movie["z2d_chunks"][2]["movie_layers"][0][
+            "runtime_load_disposition"
+        ] = "UNREACHABLE_LOADUSMFILEBYNAME_RETURNS_FALSE"
+        movie["counts"]["loadable_movie_layers"] = 1
+        movie["counts"]["unreachable_movie_layers"] = 2
+        cri["artifacts"] = [cri["artifacts"][0]]
+        cri["counts"]["selected_usm_count"] = 1
+        expected.update(
+            {
+                "loadable_movie_layer_occurrences": 1,
+                "unique_loadable_cri_sources": 1,
+                "unreachable_movie_layer_occurrences": 2,
+                "unique_unreachable_movie_layer_names": 2,
+                "renderer_state_3_occurrences": 0,
+                "partial_viewport_movie_layer_occurrences": 1,
+                "prior_underlay_required_events": 1,
+            }
+        )
+        with self.assertRaisesRegex(
+            MODULE.ProjectionError, "does not cover the exact physical viewport"
+        ):
+            MODULE.resolve(
+                presentation,
+                movie,
+                cri,
+                project,
+                renderer,
+                expected_events=("ac0915_001",),
+                expected_counts=expected,
+                expected_chunk_count=3,
+                expected_movie_layer_count=3,
+                expected_unique_loadable_layer_count=1,
+                expected_unique_unreachable_layer_count=2,
+                expected_state3_names=frozenset(),
+                expected_unreachable_names=frozenset(
+                    {"effect_source", "missing_add"}
+                ),
+            )
+        result = MODULE.resolve(
+            presentation,
+            movie,
+            cri,
+            project,
+            renderer,
+            expected_events=("ac0915_001",),
+            expected_counts=expected,
+            expected_chunk_count=3,
+            expected_movie_layer_count=3,
+            expected_unique_loadable_layer_count=1,
+            expected_unique_unreachable_layer_count=2,
+            expected_state3_names=frozenset(),
+            expected_unreachable_names=frozenset(
+                {"effect_source", "missing_add"}
+            ),
+            allowed_partial_viewport_events=frozenset({"ac0915_001"}),
+        )
+        event = result["events"][0]
+        self.assertTrue(event["requires_prior_frame_underlay"])
+        self.assertFalse(event["has_full_viewport_movie_layer"])
+        self.assertEqual(1, result["counts"]["prior_underlay_required_events"])
+
 
 if __name__ == "__main__":
     unittest.main()

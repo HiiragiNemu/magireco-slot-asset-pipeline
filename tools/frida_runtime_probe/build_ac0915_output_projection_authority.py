@@ -346,7 +346,10 @@ def resolve(
     expected_unreachable_names: frozenset[str] = frozenset(
         {"ac8040_premia_EF_add", "ac8040_premia_EF_add_LP"}
     ),
+    allowed_partial_viewport_events: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
+    if not set(allowed_partial_viewport_events).issubset(expected_events):
+        raise ProjectionError("partial-viewport event allowance is outside event set")
     _validate_inputs(
         presentation,
         movie,
@@ -502,7 +505,11 @@ def resolve(
                             )
                         rect = _layer_rect_in_renderbuffer(node, chunk, layer)
                         clipped = _intersection(rect, NORMAL_CROP_LTRB)
-                        if clipped != NORMAL_CROP_LTRB:
+                        covers_physical_viewport = clipped == NORMAL_CROP_LTRB
+                        if (
+                            not covers_physical_viewport
+                            and event_id not in allowed_partial_viewport_events
+                        ):
                             raise ProjectionError(
                                 f"{event_id}/{source_name} does not cover the exact physical viewport: {clipped}"
                             )
@@ -534,6 +541,8 @@ def resolve(
                             "source": source,
                             "frame_policy": frame_policy,
                             "virtual_layer_rect_ltrb": list(rect),
+                            "clipped_virtual_layer_rect_ltrb": list(clipped),
+                            "covers_physical_viewport": covers_physical_viewport,
                             "physical_viewport_crop_ltrb": list(NORMAL_CROP_LTRB),
                             "output_rect_xywh": [0, 0, *OUTPUT],
                             "runtime_authored_source_to_layer_scale": [
@@ -582,6 +591,15 @@ def resolve(
                 "unreachable_movie_layer_occurrences": len(event_unreachable),
                 "non_movie_text_z2d_occurrences": len(event_non_movie),
                 "runtime_symbolic_node_occurrences": len(event_symbolic),
+                "has_full_viewport_movie_layer": any(
+                    bool(row["covers_physical_viewport"])
+                    for row in event_loadable
+                ),
+                "requires_prior_frame_underlay": bool(event_loadable)
+                and not any(
+                    bool(row["covers_physical_viewport"])
+                    for row in event_loadable
+                ),
                 "layers_in_render_pass_order_under_to_top": event_loadable,
                 "unreachable_layers_excluded_by_exact_loader": event_unreachable,
                 "non_movie_text_z2d_nodes": event_non_movie,
@@ -617,6 +635,12 @@ def resolve(
             row["frame_policy"]["discarded_unreferenced_tail_frames"] > 0
             for row in all_loadable
         ),
+        "partial_viewport_movie_layer_occurrences": sum(
+            not bool(row["covers_physical_viewport"]) for row in all_loadable
+        ),
+        "prior_underlay_required_events": sum(
+            bool(row["requires_prior_frame_underlay"]) for row in event_rows
+        ),
     }
     _validate_counts(counts, expected_counts)
     state3_names = {
@@ -629,6 +653,13 @@ def resolve(
     unreachable_names = {row["source_name"] for row in all_unreachable}
     if unreachable_names != set(expected_unreachable_names):
         raise ProjectionError("exact unreachable MovieLayer set differs")
+    actual_partial_events = {
+        row["event"]
+        for row in event_rows
+        if bool(row["requires_prior_frame_underlay"])
+    }
+    if actual_partial_events != set(allowed_partial_viewport_events):
+        raise ProjectionError("exact prior-underlay event set differs")
     return {
         "events": event_rows,
         "occurrences": all_loadable,
@@ -676,6 +707,16 @@ def _flatten_csv_rows(result: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "renderer_rgb_equation": row["renderer_contract"]["rgb"],
                 "virtual_layer_rect_ltrb": ",".join(
                     str(value) for value in row["virtual_layer_rect_ltrb"]
+                ),
+                "clipped_virtual_layer_rect_ltrb": ",".join(
+                    str(value)
+                    for value in row.get(
+                        "clipped_virtual_layer_rect_ltrb",
+                        row["virtual_layer_rect_ltrb"],
+                    )
+                ),
+                "covers_physical_viewport": row.get(
+                    "covers_physical_viewport", True
                 ),
                 "physical_viewport_crop_ltrb": "128,0,1152,576",
                 "output_rect_xywh": "0,0,416,232",
