@@ -13,10 +13,8 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 try:
-    from .build_ac0915_route_dedup_authority import _visual_signature
     from .resolve_ac0917_event_audio_authority import bind_source
 except ImportError:  # pragma: no cover - direct execution
-    from build_ac0915_route_dedup_authority import _visual_signature  # type: ignore
     from resolve_ac0917_event_audio_authority import bind_source  # type: ignore
 
 
@@ -79,6 +77,23 @@ class Ac0917RouteDedupError(ValueError):
     pass
 
 
+LOOP_EXPECTED = {
+    "events": 12,
+    "movie_parents": 13,
+    "scheduled_movie_frame_occurrences": 2711,
+    "render_segments": 31,
+    "loadable_movie_layer_occurrences": 22,
+    "unique_sources": 20,
+    "parent_clock_excluded_occurrences": 3,
+}
+
+
+def bind_published_output(stage_path: Path, output_dir: Path) -> dict[str, Any]:
+    bound = bind_source(stage_path)
+    bound["path"] = str((output_dir.resolve() / stage_path.name))
+    return bound
+
+
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         rows = list(csv.DictReader(stream))
@@ -127,29 +142,9 @@ def validate_dirinfo(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
 
 
 def _audio_signature(audio: Mapping[str, Any], event: str) -> dict[str, Any]:
-    audio_keys = (
-        "source_kind",
-        "z2d_name",
-        "request_id",
-        "sound_id",
-        "code_name",
-        "start_frame",
-        "start_ms",
-        "duration_ms",
-        "end_ms",
-        "ogg_name",
-        "official_source",
-        "volume_kind_value",
-        "volume_bus",
-        "strict_no_bgm_disposition",
-        "timing_evidence",
-    )
     subtitle_keys = (
-        "voice_request_id",
-        "voice_sound_id",
         "page_index",
         "page_count",
-        "z2d_name",
         "start_frame",
         "start_ms",
         "end_ms",
@@ -159,17 +154,25 @@ def _audio_signature(audio: Mapping[str, Any], event: str) -> dict[str, Any]:
         "speaker_zh",
         "ja",
         "zh",
-        "translation_status",
-        "text_evidence",
         "subtitle_end_policy",
-        "timing_evidence",
     )
     presentation = next(
         row for row in audio["event_presentations"] if row["event"] == event
     )
     return {
         "retained_audio": [
-            {key: row.get(key) for key in audio_keys}
+            {
+                "start_frame": row.get("start_frame"),
+                "start_ms": row.get("start_ms"),
+                "duration_ms": row.get("duration_ms"),
+                "end_ms": row.get("end_ms"),
+                "source_sha256": str(row["official_source"]["sha256"]).upper(),
+                "volume_kind_value": row.get("volume_kind_value"),
+                "volume_bus": row.get("volume_bus"),
+                "strict_no_bgm_disposition": row.get(
+                    "strict_no_bgm_disposition"
+                ),
+            }
             for row in audio["retained_audio_rows"]
             if row["event"] == event
         ],
@@ -182,6 +185,112 @@ def _audio_signature(audio: Mapping[str, Any], event: str) -> dict[str, Any]:
             presentation["rendered_presentation_frames"]
         ),
         "final_frame_hold_frames": int(presentation["final_frame_hold_frames"]),
+    }
+
+
+def _loop_aware_visual_signature(
+    visual_event: Mapping[str, Any],
+    loop_event: Mapping[str, Any],
+    source_catalog: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Describe rendered content, not event/source labels or provenance paths."""
+
+    projection_layers = {
+        "|".join(
+            (
+                str(row["scene"]),
+                str(row["cut"]),
+                str(row["parent_z2d"]),
+                str(row["source_name"]),
+            )
+        ): row
+        for row in visual_event["layers_in_render_pass_order_under_to_top"]
+    }
+    node_keys = (
+        "node",
+        "event_global_start_frame",
+        "event_global_end_frame_inclusive",
+        "owning_gdp_layer_index",
+        "disposition",
+    )
+    parents = []
+    for parent in loop_event["parent_z2d_schedules_in_gfdirection_order"]:
+        segments = []
+        for segment in parent["render_segments"]:
+            projection_key = str(segment["projection_key"])
+            layer = projection_layers.get(projection_key)
+            if layer is None:
+                raise Ac0917RouteDedupError(
+                    f"loop segment lacks visual projection: {projection_key}"
+                )
+            source_name = str(segment["source_name"])
+            source = source_catalog.get(source_name)
+            if source is None:
+                raise Ac0917RouteDedupError(
+                    f"loop segment lacks exact source identity: {source_name}"
+                )
+            segments.append(
+                {
+                    "event_start_frame": int(segment["event_start_frame"]),
+                    "event_end_frame_inclusive": int(
+                        segment["event_end_frame_inclusive"]
+                    ),
+                    "source_sha256": str(source["sha256"]).upper(),
+                    "source_start_frame": int(segment["source_start_frame"]),
+                    "source_end_frame_inclusive": int(
+                        segment["source_end_frame_inclusive"]
+                    ),
+                    "source_progression": segment["source_progression"],
+                    "authored_blend_enum": layer.get("authored_blend_enum"),
+                    "effective_renderer_state": layer.get(
+                        "effective_renderer_state"
+                    ),
+                    "virtual_layer_rect_ltrb": layer.get(
+                        "virtual_layer_rect_ltrb"
+                    ),
+                    "physical_viewport_crop_ltrb": layer.get(
+                        "physical_viewport_crop_ltrb"
+                    ),
+                    "output_rect_xywh": layer.get("output_rect_xywh"),
+                    "effective_source_to_output_scale": layer.get(
+                        "effective_source_to_output_scale"
+                    ),
+                    "renderer_contract": layer.get("renderer_contract"),
+                }
+            )
+        parents.append(
+            {
+                "owning_gdp_layer_index": int(parent["owning_gdp_layer_index"]),
+                "active_event_start_frame": int(
+                    parent["active_event_start_frame"]
+                ),
+                "active_event_end_frame_inclusive": int(
+                    parent["active_event_end_frame_inclusive"]
+                ),
+                "motion_key_raw_floats": parent["motion_key_raw_floats"],
+                "motion_key_raw_flags": parent["motion_key_raw_flags"],
+                "mapping_policy": parent["mapping_policy"],
+                "scene_start_frame": int(parent["scene_start_frame"]),
+                "scene_end_frame_inclusive": int(
+                    parent["scene_end_frame_inclusive"]
+                ),
+                "scene_loop_frame": int(parent["scene_loop_frame"]),
+                "render_segments": segments,
+            }
+        )
+    return {
+        "presentation_frame_count": int(visual_event["presentation_frame_count"]),
+        "output_canvas": visual_event["output_canvas"],
+        "projection": visual_event["projection"],
+        "loop_aware_parent_schedules_in_draw_order": parents,
+        "non_movie_text_nodes": [
+            {key: row.get(key) for key in node_keys}
+            for row in visual_event["non_movie_text_z2d_nodes"]
+        ],
+        "runtime_symbolic_nodes": [
+            {key: row.get(key) for key in node_keys}
+            for row in visual_event["runtime_symbolic_nodes"]
+        ],
     }
 
 
@@ -215,10 +324,15 @@ def group_complete_signatures(
 
 
 def build_report(
-    *, dirinfo_path: Path, visual_path: Path, audio_path: Path
+    *,
+    dirinfo_path: Path,
+    visual_path: Path,
+    loop_path: Path,
+    audio_path: Path,
 ) -> dict[str, Any]:
     routes = validate_dirinfo(read_csv(dirinfo_path))
     visual = json.loads(visual_path.read_text(encoding="utf-8"))
+    loop = json.loads(loop_path.read_text(encoding="utf-8"))
     audio = json.loads(audio_path.read_text(encoding="utf-8"))
     if (
         visual.get("schema") != "magireco-ac0917-output-projection-authority-v1"
@@ -228,6 +342,20 @@ def build_report(
         or visual.get("summary", {}).get("exact_cri_source_identity_count") != 21
     ):
         raise Ac0917RouteDedupError("ac0917 visual projection authority differs")
+    if (
+        loop.get("schema")
+        != "magireco-ac0917-parent-clock-z2d-loop-authority-v1"
+        or loop.get("status")
+        != "PASS_READY_FOR_LOOP_AWARE_ROUTE_DEDUP_AND_LONGFORM_RENDER"
+        or any(
+            loop.get("summary", {}).get(key) != value
+            for key, value in LOOP_EXPECTED.items()
+        )
+        or len(loop.get("source_catalog", {})) != 20
+        or len(loop.get("events", [])) != 12
+        or len(loop.get("parent_clock_excluded_occurrences", [])) != 3
+    ):
+        raise Ac0917RouteDedupError("ac0917 loop authority differs")
     if (
         audio.get("schema")
         != "magireco-ac0917-native416-event-audio-runtime-and-sound-bus-authority-v1"
@@ -244,12 +372,15 @@ def build_report(
     ):
         raise Ac0917RouteDedupError("ac0917 audio authority differs")
     visual_events = {row["event"]: row for row in visual["events"]}
-    if set(visual_events) != set(EVENTS):
-        raise Ac0917RouteDedupError("ac0917 visual event set differs")
+    loop_events = {row["event"]: row for row in loop["events"]}
+    if set(visual_events) != set(EVENTS) or set(loop_events) != set(EVENTS):
+        raise Ac0917RouteDedupError("ac0917 visual/loop event set differs")
 
     payloads = {
         event: {
-            "visual": _visual_signature(visual_events[event]),
+            "visual": _loop_aware_visual_signature(
+                visual_events[event], loop_events[event], loop["source_catalog"]
+            ),
             "audio_and_subtitles": _audio_signature(audio, event),
         }
         for event in EVENTS
@@ -289,7 +420,8 @@ def build_report(
                 "route_occurrence_count": len(occurrences[event]),
                 "route_occurrences": occurrences[event],
                 "equality_basis": (
-                    "exact canonical JSON equality over projected visual, retained "
+                    "exact canonical JSON equality over code-mapped source hashes and "
+                    "loop-aware frame schedules, projected blend/geometry, retained "
                     "no-BGM audio, page subtitles, and rendered event extent"
                 ),
                 "canonical_payload_characters": len(canonical_json[event]),
@@ -324,7 +456,7 @@ def build_report(
         )
 
     return {
-        "schema": "magireco-ac0917-dirinfo-route-and-complete-presentation-dedup-authority-v1",
+        "schema": "magireco-ac0917-dirinfo-route-and-complete-presentation-dedup-authority-v2",
         "status": "PASS_READY_FOR_DUPLICATE_FREE_LONGFORM_RENDER",
         "family": "ac0917",
         "goal": (
@@ -334,6 +466,7 @@ def build_report(
         "inputs": {
             "dirinfo_routes": bind_source(dirinfo_path),
             "visual_projection_authority": bind_source(visual_path),
+            "parent_clock_z2d_loop_authority": bind_source(loop_path),
             "event_audio_authority": bind_source(audio_path),
         },
         "route_contract": {
@@ -349,7 +482,7 @@ def build_report(
         "dedup_contract": {
             "unit": (
                 "complete projected event presentation including retained audio, "
-                "page subtitles, and exact final-frame hold"
+                "code-mapped loop frames, page subtitles, and exact final-frame hold"
             ),
             "canonical_presentations": 12,
             "identical_alias_events": {},
@@ -382,6 +515,9 @@ def build_report(
             "no_complete_presentation_alias_exists": True,
             "all_12_canonical_presentations_retained_once": True,
             "all_20_visible_cri_sources_covered": True,
+            "all_2711_movie_frame_occurrences_code_mapped": True,
+            "source_labels_and_paths_excluded_from_content_equality": True,
+            "audio_request_ids_and_names_excluded_from_content_equality": True,
             "one_parent_clock_unscheduled_cri_identity_remains_provenance_only": True,
             "strict_no_bgm_exclusion_preserved": True,
             "P16_P17_P18_reference_count": 0,
@@ -430,9 +566,10 @@ def write_outputs(report: Mapping[str, Any], output_dir: Path) -> Path:
         _write_csv(canonical_path, list(report["canonicalization"]))
         _write_csv(timeline_path, list(report["editorial_timeline"]))
         readme_path.write_text(
-            "# ac0917 路线覆盖与完整演出去重权威\n\n"
+            "# ac0917 路线覆盖与循环后完整演出去重权威\n\n"
             "DirInfo kind 42 的 22 条路线含 75 个事件 occurrence，覆盖全部 12 个"
-            "事件。以最终 416×232 投影、严格无 BGM 音频、页面字幕和尾帧保持做完整"
+            "事件。以 2711 个代码映射 MovieLayer 帧、最终 416×232 投影、严格无 "
+            "BGM 音频、页面字幕和尾帧保持做完整"
             "呈现等价比较后，没有两个事件完全相同；因此长片保留 12 个完整呈现各"
             "一次，共 3136 帧（104.533 秒）。互斥路线全部留在 manifest，成片是"
             "穷尽编辑合集而不是单局录像。\n",
@@ -457,7 +594,7 @@ def write_outputs(report: Mapping[str, Any], output_dir: Path) -> Path:
             rollback_path,
         ]
         verification = {
-            "schema": "magireco-ac0917-route-dedup-verification-v1",
+            "schema": "magireco-ac0917-route-dedup-verification-v2",
             "status": report["status"],
             "literal_result": (
                 "PASS routes=22 occurrences=75 events=12 canonical_presentations=12 "
@@ -465,7 +602,10 @@ def write_outputs(report: Mapping[str, Any], output_dir: Path) -> Path:
             ),
             "checks": report["assertions"],
             "summary": report["summary"],
-            "outputs": {path.name: bind_source(path) for path in outputs},
+            "outputs": {
+                path.name: bind_published_output(path, output_dir)
+                for path in outputs
+            },
         }
         (staging / "VERIFICATION_RECORD.json").write_text(
             json.dumps(verification, ensure_ascii=False, indent=2) + "\n",
@@ -486,6 +626,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dirinfo", required=True, type=Path)
     parser.add_argument("--visual-authority", required=True, type=Path)
+    parser.add_argument("--loop-authority", required=True, type=Path)
     parser.add_argument("--audio-authority", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     return parser.parse_args(argv)
@@ -496,6 +637,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     report = build_report(
         dirinfo_path=args.dirinfo,
         visual_path=args.visual_authority,
+        loop_path=args.loop_authority,
         audio_path=args.audio_authority,
     )
     output = write_outputs(report, args.output_dir)
