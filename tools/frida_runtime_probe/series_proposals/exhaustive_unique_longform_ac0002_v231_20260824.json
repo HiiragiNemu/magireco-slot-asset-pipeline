@@ -1,0 +1,99 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac0002_exhaustive_authoritative_longform_v231_20260824",
+  "family": "ac0002",
+  "title": "三人前往神社完整场景",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "ac0002_exact_route_event_global_z2d_and_sound_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0002_exhaustive_authority_v230_20260824\\AC0002_EXHAUSTIVE_LONGFORM_AUTHORITY.json",
+      "sha256": "AD5E285A25892C153097F56D71D5623846091AD29BF5DC69448C53C6CBCDB5AD"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac0002_三人前往神社完整场景_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac0002_001",
+          "source_identities": [
+            "cri:main:5/z2d:ac0002_001:movie:0"
+          ],
+          "chapter_title": "神社镜头一",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0002\\ac0002_001_c1.mp4",
+          "sha256": "4116C22FB40A43C2C37774B936CE5D484F2C478FE92D8284DAF68B8E75BDE562",
+          "video_frames": 255
+        },
+        {
+          "order": 1,
+          "event": "ac0002_001",
+          "source_identities": [
+            "cri:main:6/z2d:ac0002_001:movie:1"
+          ],
+          "chapter_title": "神社镜头二",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0002\\ac0002_001_c2.mp4",
+          "sha256": "9C6C29D63E2588D84ED33F5EB018AA2C794147C8765C4CA767C63FFD00EE64D3",
+          "video_frames": 316
+        },
+        {
+          "order": 2,
+          "event": "ac0002_001",
+          "source_identities": [
+            "cri:main:7/z2d:ac0002_001:movie:2"
+          ],
+          "chapter_title": "神社镜头三",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0002\\ac0002_001_c3.mp4",
+          "sha256": "617AF135D82C5D0EA326CD267C82348826AA122EE8F2EB0FF548E457B884FCA8",
+          "video_frames": 262
+        },
+        {
+          "order": 3,
+          "event": "ac0002_001",
+          "source_identities": [
+            "cri:main:8/z2d:ac0002_001:movie:3"
+          ],
+          "chapter_title": "神社镜头四",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0002\\ac0002_001_c4_MR.mp4",
+          "sha256": "9BDAAA992F3924FE8FDDE519BB0FC9AD0DFCC0EC39A13C0F19AFB912E8FA69C2",
+          "video_frames": 283
+        },
+        {
+          "order": 4,
+          "event": "ac0002_001",
+          "source_identities": [
+            "cri:main:9/z2d:ac0002_001:movie:4"
+          ],
+          "chapter_title": "神社镜头五",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0002\\ac0002_001_c5_MR.mp4",
+          "sha256": "BA56AA13B7248E3BFDA3CB555953FFC0B38854F934D38DB93F92C47010FECBEB",
+          "video_frames": 298
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 5,
+  "expected_unique_source_count": 5,
+  "expected_total_video_frames": 1414,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}
