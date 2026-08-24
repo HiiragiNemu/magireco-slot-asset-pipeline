@@ -106,7 +106,9 @@ def _parse_static_single_value(reader: Reader, value_type: int) -> Any:
     raise ParseError(f"unsupported single parameter value type {value_type}")
 
 
-def parse_parameter(reader: Reader) -> dict[str, Any]:
+def parse_parameter(
+    reader: Reader, *, allow_keyed_float: bool = False
+) -> dict[str, Any]:
     start = reader.offset
     version = reader.i32()
     parameter_id = reader.u16()
@@ -137,17 +139,38 @@ def parse_parameter(reader: Reader) -> dict[str, Any]:
             raise ParseError(
                 f"invalid compound component count {component_count} at 0x{start:x}"
             )
-        row["components"] = [parse_parameter(reader) for _ in range(component_count)]
+        row["components"] = [
+            parse_parameter(reader, allow_keyed_float=allow_keyed_float)
+            for _ in range(component_count)
+        ]
     else:
         row["load_flags"] = [reader.u8(), reader.u8(), reader.u8()]
         reader.fixed(1)  # code-proven one-byte padding
         key_count = reader.i32()
-        if key_count != 0:
+        if key_count < 0 or key_count > 0x100000:
+            raise ParseError(
+                f"invalid key count {key_count} for parameter {parameter_id} at 0x{start:x}"
+            )
+        if key_count and (not allow_keyed_float or value_type != 2):
             raise ParseError(
                 f"keyed parameter {parameter_id} at 0x{start:x} is outside the bounded parser"
             )
         row["key_count"] = key_count
-        row["static_value"] = _parse_static_single_value(reader, value_type)
+        if key_count:
+            if row["load_flags"][0]:
+                raise ParseError(
+                    f"spline curve parameter {parameter_id} at 0x{start:x} is outside the bounded parser"
+                )
+            row["keys"] = [
+                {
+                    "value": reader.f32(),
+                    "frame_or_interpolation": reader.i32(),
+                    "tangent_or_aux": reader.f32(),
+                }
+                for _ in range(key_count)
+            ]
+        else:
+            row["static_value"] = _parse_static_single_value(reader, value_type)
 
     row["end_offset_hex"] = f"0x{reader.offset:x}"
     return row
@@ -179,7 +202,9 @@ def find_node_offset(data: bytes, name: str) -> int:
     return node_offset
 
 
-def parse_node(data: bytes, name: str) -> dict[str, Any]:
+def parse_node(
+    data: bytes, name: str, *, allow_keyed_float: bool = False
+) -> dict[str, Any]:
     start = find_node_offset(data, name)
     reader = Reader(data, start)
     node_type = reader.i32()
@@ -200,7 +225,10 @@ def parse_node(data: bytes, name: str) -> dict[str, Any]:
         raise ParseError(f"target node {name!r} unexpectedly has {child_count} children")
     if not 0 <= parameter_count <= 256 or not 0 <= motion_count <= 256:
         raise ParseError(f"invalid target node counts at 0x{start:x}")
-    parameters = [parse_parameter(reader) for _ in range(parameter_count)]
+    parameters = [
+        parse_parameter(reader, allow_keyed_float=allow_keyed_float)
+        for _ in range(parameter_count)
+    ]
     top_level_ids = [int(row["parameter_id"]) for row in parameters]
     all_ids = flatten_parameter_ids(parameters)
     return {

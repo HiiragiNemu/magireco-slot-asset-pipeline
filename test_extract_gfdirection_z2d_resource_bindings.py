@@ -33,6 +33,17 @@ def single_parameter(parameter_id: int, value_type: int, value: int | float) -> 
     return header + load + payload
 
 
+def keyed_float_parameter(
+    parameter_id: int,
+    keys: list[tuple[float, int, float]],
+    *, spline: bool = False,
+) -> bytes:
+    header = struct.pack("<iHBB", 5, parameter_id, 2, 0) + string255("")
+    load = bytes([int(spline), 0, 0, 0]) + struct.pack("<i", len(keys))
+    payload = b"".join(struct.pack("<fif", *key) for key in keys)
+    return header + load + payload
+
+
 def compound_parameter(parameter_id: int, children: list[bytes]) -> bytes:
     return (
         struct.pack("<iHBB", 4, parameter_id, 4, 0)
@@ -93,6 +104,22 @@ class ResourceBindingParserTests(unittest.TestCase):
         reader = MODULE.Reader(bytes(value), 0)
         with self.assertRaisesRegex(MODULE.ParseError, "keyed parameter"):
             MODULE.parse_parameter(reader)
+
+    def test_parses_keyed_float_when_explicitly_enabled(self) -> None:
+        value = keyed_float_parameter(19, [(0.0, 0, 0.0), (1.0, 30, 0.5)])
+        result = MODULE.parse_parameter(
+            MODULE.Reader(value, 0), allow_keyed_float=True
+        )
+        self.assertEqual(2, result["key_count"])
+        self.assertEqual(30, result["keys"][1]["frame_or_interpolation"])
+        self.assertAlmostEqual(1.0, result["keys"][1]["value"])
+
+    def test_rejects_spline_curve_even_when_keyed_float_is_enabled(self) -> None:
+        value = keyed_float_parameter(19, [(1.0, 0, 0.0)], spline=True)
+        with self.assertRaisesRegex(MODULE.ParseError, "spline curve"):
+            MODULE.parse_parameter(
+                MODULE.Reader(value, 0), allow_keyed_float=True
+            )
 
 
 if __name__ == "__main__":
