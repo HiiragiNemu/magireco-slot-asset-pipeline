@@ -1,0 +1,73 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac0005_exhaustive_authoritative_longform_v252_20260824",
+  "family": "ac0005",
+  "title": "调整屋会谈完整章节（标题入口与无标题路线去重）",
+  "content_type": "routes",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "ac0005_exact_route_draw_order_dedup_and_sound_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0005_exhaustive_authority_v251_20260824\\AC0005_EXHAUSTIVE_LONGFORM_AUTHORITY.json",
+      "sha256": "EBE48E094BED13C98B92F697BC54C5EC33951AAC5CD100FA8565C9A1CDAEFE56"
+    },
+    {
+      "role": "ac0005_exact_draw_order_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0005_draw_order_authority_v250_20260824\\AC0005_DRAW_ORDER_AUTHORITY.json",
+      "sha256": "FC28C95BE6627BF30EB677FF52C6F157744145CD1EEF7C4F219D873668B290D3"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac0005_调整屋会谈完整章节（标题入口与无标题路线去重）_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "assembly": "render_title_route_delta_100_frames_then_complete_main_route_1200_frames",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac0005_001",
+          "source_identity": "cri:main:13/z2d:ac0005_title_logo:movie:4",
+          "chapter_title": "标题入口差分",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0005\\ac0005_title_logo.mp4",
+          "sha256": "1914E7A14DF07E04C053BF2928C5350747C70F61EC7593516FCFB95EC72957A7",
+          "video_frames": 100,
+          "render": "normal opaque overlay at nearest native rect x42 y23 w333 h186 over main frames 0..99"
+        },
+        {
+          "order": 1,
+          "event": "ac0005_002",
+          "source_identity": "cri:main:12/z2d:ac0005_001:movie:0",
+          "chapter_title": "无标题完整会谈",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0005\\ac0005_001.mp4",
+          "sha256": "7D2A791140DEDD2624B4A6389B5C98C39BE66AF4517B91352BBB74ADA289117A",
+          "video_frames": 1200,
+          "source_frame_range": [
+            0,
+            1199
+          ]
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 2,
+  "expected_unique_source_count": 2,
+  "expected_total_video_frames": 1300,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcome_deltas": true,
+    "each_unique_rendered_presentation_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}
