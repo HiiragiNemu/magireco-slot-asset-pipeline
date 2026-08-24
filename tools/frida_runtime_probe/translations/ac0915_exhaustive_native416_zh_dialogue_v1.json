@@ -1,0 +1,161 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac0915_exhaustive_native416_event_global_dialogue",
+  "status": "mixed_existing_and_machine_draft_pending_owner_playback",
+  "translations": [
+    {
+      "request_id": 5592,
+      "ja": "僕は柊ねむ",
+      "zh": "我是柊音梦。",
+      "speaker_ja": "柊ねむ",
+      "speaker_zh": "柊音梦",
+      "render_ja": "柊ねむ：僕は柊ねむ",
+      "render_zh": "柊音梦：我是柊音梦。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5592 plus exact cap0915_magius_nem_001 callback"
+    },
+    {
+      "request_id": 5593,
+      "ja": "神浜市に生息するウワサは\n僕が作ったものだよ",
+      "zh": "栖息在神滨市的传闻，\n都是我创造的哦。",
+      "speaker_ja": "柊ねむ",
+      "speaker_zh": "柊音梦",
+      "render_ja": "柊ねむ：神浜市に生息するウワサは\n僕が作ったものだよ",
+      "render_zh": "柊音梦：栖息在神滨市的传闻，\n都是我创造的哦。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifests request 5593 plus exact cap0915_magius_nem_002 callback"
+    },
+    {
+      "request_id": 5364,
+      "ja": "わたくしは里見灯花",
+      "zh": "我是里见灯花。",
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "render_ja": "里見灯花：わたくしは里見灯花",
+      "render_zh": "里见灯花：我是里见灯花。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5364 plus exact cap0915_magius_tou_005 callback"
+    },
+    {
+      "request_id": 5365,
+      "ja": "マギウスのひとりだよ",
+      "zh": "我是Magius的一员。",
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "render_ja": "里見灯花：マギウスのひとりだよ",
+      "render_zh": "里见灯花：我是Magius的一员。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifests request 5365 plus exact cap0915_magius_tou_006 callback"
+    },
+    {
+      "request_id": 5133,
+      "ja": "アリナ・グレイ\nヨロシク",
+      "zh": "阿莉娜·格雷，\n请多关照。",
+      "speaker_ja": "アリナ・グレイ",
+      "speaker_zh": "阿莉娜·格雷",
+      "render_ja": "アリナ・グレイ：アリナ・グレイ\nヨロシク",
+      "render_zh": "阿莉娜·格雷：阿莉娜·格雷，\n请多关照。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5133 plus exact cap0915_magius_ari_009 callback"
+    },
+    {
+      "request_id": 5134,
+      "ja": "魔法少女の存在と怒りは\nアリナが世界中へシャウトしてあげる！",
+      "zh": "魔法少女的存在与愤怒，\n就由阿莉娜向全世界呐喊出来！",
+      "speaker_ja": "アリナ・グレイ",
+      "speaker_zh": "阿莉娜·格雷",
+      "render_ja": "アリナ・グレイ：魔法少女の存在と怒りは\nアリナが世界中へシャウトしてあげる！",
+      "render_zh": "阿莉娜·格雷：魔法少女的存在与愤怒，\n就由阿莉娜向全世界呐喊出来！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifests request 5134 plus exact cap0915_magius_ari_010 callback"
+    },
+    {
+      "request_id": 5594,
+      "ja": "僕達マギウスは弱者を救い\n大当りへと導くんだ",
+      "zh": "我们Magius会拯救弱者，\n引导大家走向大奖。",
+      "speaker_ja": "柊ねむ",
+      "speaker_zh": "柊音梦",
+      "render_ja": "柊ねむ：僕達マギウスは弱者を救い\n大当りへと導くんだ",
+      "render_zh": "柊音梦：我们Magius会拯救弱者，\n引导大家走向大奖。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5594 plus exact cap0915_magius_nem_003 callback"
+    },
+    {
+      "request_id": 5366,
+      "ja": "わたくし達マギウスは\nみんなにWINをあげる",
+      "zh": "我们Magius会把胜利\n送给大家。",
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "render_ja": "里見灯花：わたくし達マギウスは\nみんなにWINをあげる",
+      "render_zh": "里见灯花：我们Magius会把胜利\n送给大家。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5366 plus exact cap0915_magius_tou_007 callback"
+    },
+    {
+      "request_id": 5135,
+      "ja": "アリナが最高にエキサイティングで\nブリリアントなWINを見せてアゲル！",
+      "zh": "阿莉娜会让你见识\n最刺激、最辉煌的胜利！",
+      "speaker_ja": "アリナ・グレイ",
+      "speaker_zh": "阿莉娜·格雷",
+      "render_ja": "アリナ・グレイ：アリナが最高にエキサイティングで\nブリリアントなWINを見せてアゲル！",
+      "render_zh": "阿莉娜·格雷：阿莉娜会让你见识\n最刺激、最辉煌的胜利！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "existing ac0915 event manifest request 5135 plus exact cap0915_magius_ari_011 callback"
+    },
+    {
+      "request_id": 5595,
+      "ja": "僕達は今\n南の島で休暇を満喫中だ",
+      "zh": "我们现在正在南方小岛上\n尽情享受假期。",
+      "speaker_ja": "柊ねむ",
+      "speaker_zh": "柊音梦",
+      "render_ja": "柊ねむ：僕達は今\n南の島で休暇を満喫中だ",
+      "render_zh": "柊音梦：我们现在正在南方小岛上\n尽情享受假期。",
+      "status": "machine_draft_pending_owner_playback",
+      "text_evidence": "exact cap0915_magius_nem_004 request 5595 binding and project caption transcript"
+    },
+    {
+      "request_id": 5367,
+      "ja": "南の島でバカンスの真っ最中だよ！",
+      "zh": "现在正在南方小岛上尽情度假！",
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "render_ja": "里見灯花：南の島でバカンスの真っ最中だよ！",
+      "render_zh": "里见灯花：现在正在南方小岛上尽情度假！",
+      "status": "machine_draft_pending_owner_playback",
+      "text_evidence": "exact cap0915_magius_tou_008 request 5367 binding and project caption transcript"
+    },
+    {
+      "request_id": 5136,
+      "ja": "トロピカルなバケーションを\nエンジョイしてるってワケ",
+      "zh": "也就是说，正在享受\n热带风情的假期。",
+      "speaker_ja": "アリナ・グレイ",
+      "speaker_zh": "阿莉娜·格雷",
+      "render_ja": "アリナ・グレイ：トロピカルなバケーションを\nエンジョイしてるってワケ",
+      "render_zh": "阿莉娜·格雷：也就是说，正在享受\n热带风情的假期。",
+      "status": "machine_draft_pending_owner_playback",
+      "text_evidence": "exact cap0915_magius_ari_012 request 5136 binding and project caption transcript"
+    },
+    {
+      "request_id": 2439,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：押して！",
+      "render_zh": "环彩羽：按下去！",
+      "status": "curated_voice_override_reused_pending_new_longform_playback",
+      "text_evidence": "verified_voice_subtitle_overrides request 2439 plus exact cap5102_iro_oshite_001 callback"
+    },
+    {
+      "request_id": 8209,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "押して！",
+      "render_zh": "按下去！",
+      "status": "official_sound_label_pending_new_longform_playback",
+      "text_evidence": "official 26401_もきゅPUSH用_押して_通常 label plus exact ac8002_chance_btn_mokyu callback"
+    }
+  ]
+}
