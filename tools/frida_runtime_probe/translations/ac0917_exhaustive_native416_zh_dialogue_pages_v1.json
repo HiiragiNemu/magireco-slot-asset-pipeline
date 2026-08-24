@@ -1,0 +1,153 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-pages-v1",
+  "scope": "ac0917_exhaustive_native416_event_global_dialogue_pages",
+  "status": "project_caption_translation_pending_owner_playback",
+  "translations": [
+    {
+      "request_id": 5368,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact cap0917_enzetu_tou_001 display text plus request 5368 / sound 20543",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_001",
+          "ja": "魔法少女のみんな！",
+          "zh": "魔法少女们！"
+        }
+      ]
+    },
+    {
+      "request_id": 5369,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact consecutive cap0917_enzetu_tou_002/_003 display texts plus request 5369 / sound 20544",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_002",
+          "ja": "かつて希望をいだきいつか",
+          "zh": "曾经怀抱希望，终有一天"
+        },
+        {
+          "z2d_name": "cap0917_enzetu_tou_003",
+          "ja": "いつか絶望を振りまく魔法少女のみんな",
+          "zh": "终有一天却会散播绝望的魔法少女们"
+        }
+      ]
+    },
+    {
+      "request_id": 5370,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact consecutive cap0917_enzetu_tou_004/_005 display texts plus request 5370 / sound 20545",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_004",
+          "ja": "わたくし達は\n必ず魔法少女を解放する",
+          "zh": "我们一定会\n解放魔法少女"
+        },
+        {
+          "z2d_name": "cap0917_enzetu_tou_005",
+          "ja": "そう\n魔法少女はマギウスによって救われるの！",
+          "zh": "没错，魔法少女\n将由Magius拯救！"
+        }
+      ]
+    },
+    {
+      "request_id": 5371,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact consecutive cap0917_enzetu_tou_006/_007 display texts plus request 5371 / sound 20546",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_006",
+          "ja": "この地球上すべての魔法少女は",
+          "zh": "这颗地球上的所有魔法少女"
+        },
+        {
+          "z2d_name": "cap0917_enzetu_tou_007",
+          "ja": "魔女化の恐怖を克服し\n運命から解放されるの！",
+          "zh": "都将克服魔女化的恐惧，\n从命运中获得解放！"
+        }
+      ]
+    },
+    {
+      "request_id": 5372,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact consecutive cap0917_enzetu_tou_008/_009 display texts plus request 5372 / sound 20547",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_008",
+          "ja": "人類は魔法少女の犠牲と引き換えに発展してきた",
+          "zh": "人类以魔法少女的牺牲为代价\n发展至今"
+        },
+        {
+          "z2d_name": "cap0917_enzetu_tou_009",
+          "ja": "願う力は\nわたくし達の運命だって変えられる！",
+          "zh": "许愿的力量，\n连我们的命运也能够改变！"
+        }
+      ]
+    },
+    {
+      "request_id": 5373,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact cap0917_enzetu_tou_010 display text plus request 5373 / sound 20548",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_010",
+          "ja": "わたくし達のマギアチャレンジは\n誰にも利用させない！",
+          "zh": "我们的Magia挑战，\n绝不会让任何人利用！"
+        }
+      ]
+    },
+    {
+      "request_id": 5374,
+      "speaker_ja": "里見灯花",
+      "speaker_zh": "里见灯花",
+      "status": "project_caption_translation_pending_owner_playback",
+      "text_evidence": "exact cap0917_enzetu_tou_011 display text plus request 5374 / sound 20549",
+      "pages": [
+        {
+          "z2d_name": "cap0917_enzetu_tou_011",
+          "ja": "わたくし達は\n必ず大当りを解放する！",
+          "zh": "我们一定会\n解放大奖！"
+        }
+      ]
+    },
+    {
+      "request_id": 2439,
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "status": "curated_voice_override_reused_pending_owner_playback",
+      "text_evidence": "verified request 2439 voice override plus exact cap5102_iro_oshite_001 callback",
+      "pages": [
+        {
+          "z2d_name": "cap5102_iro_oshite_001",
+          "ja": "押して！",
+          "zh": "按下去！"
+        }
+      ]
+    },
+    {
+      "request_id": 8209,
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "status": "official_sound_label_pending_owner_playback",
+      "text_evidence": "official sound label 26401 plus exact ac8002_chance_btn_mokyu callback",
+      "pages": [
+        {
+          "z2d_name": "ac8002_chance_btn_mokyu",
+          "ja": "押して！",
+          "zh": "按下去！"
+        }
+      ]
+    }
+  ]
+}
