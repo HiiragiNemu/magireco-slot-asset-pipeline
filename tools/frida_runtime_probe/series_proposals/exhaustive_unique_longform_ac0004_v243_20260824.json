@@ -1,0 +1,55 @@
+{
+  "schema": "magireco-exhaustive-unique-longform-plan-v1",
+  "release_id": "ac0004_exhaustive_authoritative_longform_v243_20260824",
+  "family": "ac0004",
+  "title": "众人在家中聚会完整场景",
+  "content_type": "story",
+  "native": {
+    "width": 416,
+    "height": 232,
+    "frame_rate": "30/1",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "audio_channels": 2
+  },
+  "audio_profile": "no_bgm",
+  "authority": [
+    {
+      "role": "ac0004_exact_route_mode2_event_global_z2d_and_sound_authority",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\ac0004_exhaustive_authority_v242_20260824\\AC0004_EXHAUSTIVE_LONGFORM_AUTHORITY.json",
+      "sha256": "AE0CED2BAB119280662522E601BEF42460A72242E1119D3161244D8B5145A0E3"
+    }
+  ],
+  "editions": [
+    {
+      "edition": "none",
+      "output_filename": "ac0004_众人在家中聚会完整场景_严格无BGM__none.mp4",
+      "audio_assembly": "synthesize_silence",
+      "sources": [
+        {
+          "order": 0,
+          "event": "ac0004_001",
+          "source_identities": [
+            "cri:main:11/z2d:ac0004_001_LP:movie:0"
+          ],
+          "chapter_title": "家中聚会完整镜头",
+          "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\official_named_videos\\main\\ac0004\\ac0004_001_LP.mp4",
+          "sha256": "5C5FBDF618E11AD1EC695696B9EACD1C72D03F92B538DCA30A3DBDA91E37578D",
+          "video_frames": 1500
+        }
+      ]
+    }
+  ],
+  "expected_chapter_count": 1,
+  "expected_unique_source_count": 1,
+  "expected_total_video_frames": 1500,
+  "human_status": "HUMAN_PLAYBACK_REQUIRED",
+  "production_scope": {
+    "native_416_only": true,
+    "include_mutually_exclusive_outcomes": true,
+    "each_unique_source_once": true,
+    "single_exhaustive_longform": true,
+    "source_media_modified": false
+  }
+}

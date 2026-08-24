@@ -5,6 +5,7 @@
     {"family": "ac0001", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v225_ac0001_exhaustive_authoritative_longform_20260824"},
     {"family": "ac0002", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v231_ac0002_exhaustive_authoritative_longform_20260824"},
     {"family": "ac0003", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v237_ac0003_exhaustive_authoritative_longform_20260824"},
+    {"family": "ac0004", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v243_ac0004_exhaustive_authoritative_longform_20260824"},
     {"family": "ac0908", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v102_ac0908_exhaustive_authoritative_20260823"},
     {"family": "ac0911", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "ac0911_exhaustive_native416_authority_v156r1_20260824"},
     {"family": "ac0915", "state": "PRODUCED_REVIEW_CANDIDATE_REAUDIT_PENDING", "authority": "no_bgm_editions_v182_ac0915_exhaustive_native416_20260824"},
