@@ -25,15 +25,28 @@ def type3(name: str, frames: int) -> bytes:
         struct.pack("<II", 1, 2)
         + struct.pack("<III", frames, 0, frames - 1)
         + string255(name)
-        + b"PAYLOAD"
+        + b"PAYLOAD0"
     )
     return record(3, body)
+
+
+def type2(name: str, frames: int, references: list[tuple[int, int]]) -> bytes:
+    body = (
+        struct.pack("<II", 3, 4)
+        + struct.pack("<I", frames)
+        + string255(name)
+        + struct.pack("<I", len(references))
+        + b"".join(struct.pack("<II", *reference) for reference in references)
+    )
+    return record(2, body)
 
 
 def group_chunk() -> bytes:
     return (
         b"H" * 28
-        + record(0, b"HEADER")
+        + record(0, b"HEADER00")
+        + type2("fixture", 30, [(0, 0)])
+        + type2("fixture_alias", 22, [(1, 10)])
         + type3("fixture_001", 30)
         + type3("subscene_001", 12)
         + record(4, b"")
@@ -47,6 +60,10 @@ class GFDirectionSceneGroupAuthorityTests(unittest.TestCase):
         self.assertEqual("fixture_001", result["type3_records"][0]["name"])
         self.assertEqual(30, result["type3_records"][0]["frame_count"])
         self.assertEqual(1, result["counts_by_record_type"]["4"])
+        self.assertEqual(
+            "subscene_001",
+            result["type2_presentations"][1]["scene_references"][0]["target_name"],
+        )
 
     def test_rejects_missing_final_terminator(self) -> None:
         with self.assertRaisesRegex(target.SceneGroupError, "terminator"):

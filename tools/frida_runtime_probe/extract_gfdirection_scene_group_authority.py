@@ -158,7 +158,39 @@ def parse_group_chunk(chunk: bytes) -> dict[str, Any]:
             "total_size": end - cursor,
             "sha256": sha256_bytes(chunk[cursor:end]),
         }
-        if record_type == 3:
+        if record_type == 2:
+            if body_size < 16:
+                raise SceneGroupError("type-2 GDB record is shorter than its header")
+            frame_count = struct.unpack_from("<I", chunk, cursor + 16)[0]
+            name, payload_offset = _string255_at(chunk, cursor + 20)
+            if payload_offset + 4 > end:
+                raise SceneGroupError("type-2 scene reference count is truncated")
+            reference_count = struct.unpack_from("<I", chunk, payload_offset)[0]
+            payload_offset += 4
+            if reference_count > 4096 or payload_offset + reference_count * 8 != end:
+                raise SceneGroupError("type-2 scene reference payload differs")
+            references = []
+            for _ in range(reference_count):
+                type3_ordinal, instance_offset = struct.unpack_from(
+                    "<II", chunk, payload_offset
+                )
+                payload_offset += 8
+                references.append(
+                    {
+                        "type3_ordinal": type3_ordinal,
+                        "instance_offset_frames": instance_offset,
+                    }
+                )
+            if not name or not references or frame_count < 1:
+                raise SceneGroupError(f"type-2 event header differs at 0x{cursor:x}")
+            record.update(
+                {
+                    "name": name,
+                    "presentation_frame_count": frame_count,
+                    "scene_references": references,
+                }
+            )
+        elif record_type == 3:
             if body_size < 24:
                 raise SceneGroupError("type-3 GDB record is shorter than its header")
             frame_count, scene_start, scene_end = struct.unpack_from(
@@ -185,9 +217,40 @@ def parse_group_chunk(chunk: bytes) -> dict[str, Any]:
     if not terminator_seen:
         raise SceneGroupError("scene group lacks final GDB type-4 terminator")
     type3 = [row for row in records if row["record_type"] == 3]
+    for ordinal, row in enumerate(type3):
+        row["type3_ordinal"] = ordinal
     names = [str(row["name"]) for row in type3]
     if len(names) != len(set(names)):
         raise SceneGroupError("scene group contains duplicate type-3 names")
+    type2 = [row for row in records if row["record_type"] == 2]
+    type2_names = [str(row["name"]) for row in type2]
+    if len(type2_names) != len(set(type2_names)):
+        raise SceneGroupError("scene group contains duplicate type-2 names")
+    for presentation in type2:
+        resolved = []
+        for reference in presentation["scene_references"]:
+            ordinal = int(reference["type3_ordinal"])
+            if ordinal >= len(type3):
+                raise SceneGroupError(
+                    f"type-2 {presentation['name']} references absent type-3 ordinal {ordinal}"
+                )
+            target = type3[ordinal]
+            resolved.append(
+                {
+                    **reference,
+                    "target_name": target["name"],
+                    "target_frame_count": target["frame_count"],
+                }
+            )
+        expected_frames = max(
+            int(row["instance_offset_frames"]) + int(row["target_frame_count"])
+            for row in resolved
+        )
+        if expected_frames != int(presentation["presentation_frame_count"]):
+            raise SceneGroupError(
+                f"type-2 {presentation['name']} presentation frame count differs"
+            )
+        presentation["scene_references"] = resolved
     counts: dict[str, int] = {}
     for row in records:
         key = str(row["record_type"])
@@ -196,6 +259,7 @@ def parse_group_chunk(chunk: bytes) -> dict[str, Any]:
         "header_size": first_record,
         "header_hex": chunk[:first_record].hex(),
         "records": records,
+        "type2_presentations": type2,
         "type3_records": type3,
         "counts_by_record_type": counts,
     }
