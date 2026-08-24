@@ -1,0 +1,112 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac6007_exhaustive_gfdirection_bound_dialogue",
+  "status": "mixed_owner_approved_and_machine_draft_pending_owner",
+  "translations": [
+    {
+      "request_id": 4090,
+      "ja": "深月フェリシア：うおおおお",
+      "zh": "深月菲莉希亚：呜哦哦哦！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4091,
+      "ja": "オレ達もいろはのところに行かせろー！！",
+      "zh": "也让我们去彩羽那里——！！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4092,
+      "ja": "深月フェリシア：くらえっ！",
+      "zh": "深月菲莉希亚：接招！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4093,
+      "ja": "ぶったおす！",
+      "zh": "打倒它！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4094,
+      "ja": "深月フェリシア：どりゃー！",
+      "zh": "深月菲莉希亚：呀——！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4095,
+      "ja": "深月フェリシア：よっしゃー！",
+      "zh": "深月菲莉希亚：好耶！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4096,
+      "ja": "いっけー！",
+      "zh": "上啊——！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4097,
+      "ja": "深月フェリシア：あああああ",
+      "zh": "深月菲莉希亚：啊啊啊啊！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4098,
+      "ja": "深月フェリシア：まだだ！",
+      "zh": "深月菲莉希亚：还没完！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4099,
+      "ja": "深月フェリシア：やるぞ、さな！",
+      "zh": "深月菲莉希亚：上吧，莎奈！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4356,
+      "ja": "二葉さな：フェリシアさん",
+      "zh": "二叶莎奈：菲莉希亚同学！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4358,
+      "ja": "二葉さな：やーっ！",
+      "zh": "二叶莎奈：呀——！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4359,
+      "ja": "二葉さな：きゃああああ",
+      "zh": "二叶莎奈：呀啊啊啊！",
+      "status": "owner_playback_approved_in_p19",
+      "source": "bilibili_incremental_review_v73_ac6007_event_global_20260817"
+    },
+    {
+      "request_id": 4360,
+      "ja": "二葉さな：まだです！",
+      "zh": "二叶莎奈：还没结束！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    },
+    {
+      "request_id": 4361,
+      "ja": "二葉さな：はいっ！",
+      "zh": "二叶莎奈：好！",
+      "status": "machine_draft_pending_owner",
+      "source": "official_reqSound_label_plus_character_bound_z2d_name"
+    }
+  ]
+}
