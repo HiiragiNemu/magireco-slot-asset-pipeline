@@ -1,0 +1,227 @@
+{
+  "schema": "magireco-reviewed-story-zh-dialogue-map-v1",
+  "scope": "ac4902_exhaustive_native416_event_global_dialogue",
+  "status": "mixed_owner_approved_identity_and_existing_project_translation_pending_new_longform_playback",
+  "translations": [
+    {
+      "request_id": 2742,
+      "ja": "みんなは大丈夫かな…",
+      "zh": "大家没事吧……",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：みんなは大丈夫かな…",
+      "render_zh": "环彩羽：大家没事吧……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_iro_001 request 2742 plus existing project caption transcript"
+    },
+    {
+      "request_id": 2743,
+      "ja": "！",
+      "zh": "！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：！",
+      "render_zh": "环彩羽：！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_iro_002 request 2743 plus existing project caption transcript"
+    },
+    {
+      "request_id": 8340,
+      "ja": "くそっ！",
+      "zh": "可恶！",
+      "speaker_ja": "黒羽",
+      "speaker_zh": "黑羽",
+      "render_ja": "黒羽：くそっ！",
+      "render_zh": "黑羽：可恶！",
+      "status": "project_owner_identity_approved_existing_translation_pending_new_longform_playback",
+      "text_evidence": "owner-approved ac4902_003/ac4902_059 request 8340 identity plus exact official voice asset"
+    },
+    {
+      "request_id": 2745,
+      "ja": "待っててね\nうい…！",
+      "zh": "等着我，\n忧……！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：待っててね\nうい…！",
+      "render_zh": "环彩羽：等着我，\n忧……！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_iro_004 request 2745 plus existing project caption transcript"
+    },
+    {
+      "request_id": 2746,
+      "ja": "私の願いはこんなところで負けない…！",
+      "zh": "我的愿望不会在这种地方输掉……！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：私の願いはこんなところで負けない…！",
+      "render_zh": "环彩羽：我的愿望不会在这种地方输掉……！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_iro_005 request 2746 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4340,
+      "ja": "本当なんでしょうか…\n神浜に魔女を呼ぶって…",
+      "zh": "这是真的吗……\n说要把魔女引到神滨……",
+      "speaker_ja": "二葉さな",
+      "speaker_zh": "二叶莎奈",
+      "render_ja": "二葉さな：本当なんでしょうか…\n神浜に魔女を呼ぶって…",
+      "render_zh": "二叶莎奈：这是真的吗……\n说要把魔女引到神滨……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_san_006 request 4340 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4341,
+      "ja": "魔女を育ててるとは聞いてましたが\nまさかこんなに…",
+      "zh": "虽然听说你们在培育魔女，\n没想到竟有这么多……",
+      "speaker_ja": "二葉さな",
+      "speaker_zh": "二叶莎奈",
+      "render_ja": "二葉さな：魔女を育ててるとは聞いてましたが\nまさかこんなに…",
+      "render_zh": "二叶莎奈：虽然听说你们在培育魔女，\n没想到竟有这么多……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_san_007 request 4341 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4342,
+      "ja": "もうこれ以上…\n家族が危ない目に\nあっていた事すら知らないなんて嫌",
+      "zh": "我不想再这样了……\n连家人遇到危险都一无所知。",
+      "speaker_ja": "二葉さな",
+      "speaker_zh": "二叶莎奈",
+      "render_ja": "二葉さな：もうこれ以上…\n家族が危ない目に\nあっていた事すら知らないなんて嫌",
+      "render_zh": "二叶莎奈：我不想再这样了……\n连家人遇到危险都一无所知。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_san_008 request 4342 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4343,
+      "ja": "運命を変えられなかったとしても…\n私が最後に居たい場所はここじゃない",
+      "zh": "即使没能改变命运……\n我最后想待的地方也不是这里。",
+      "speaker_ja": "二葉さな",
+      "speaker_zh": "二叶莎奈",
+      "render_ja": "二葉さな：運命を変えられなかったとしても…\n私が最後に居たい場所はここじゃない",
+      "render_zh": "二叶莎奈：即使没能改变命运……\n我最后想待的地方也不是这里。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_san_009 request 4343 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4070,
+      "ja": "魔女が全部いなくなるんなら\nなんだって構わねえよ",
+      "zh": "只要魔女能全部消失，\n怎么样都无所谓。",
+      "speaker_ja": "深月フェリシア",
+      "speaker_zh": "深月菲莉希亚",
+      "render_ja": "深月フェリシア：魔女が全部いなくなるんなら\nなんだって構わねえよ",
+      "render_zh": "深月菲莉希亚：只要魔女能全部消失，\n怎么样都无所谓。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_fer_010 request 4070 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4071,
+      "ja": "魔女にならなくて済む方法が\n分かるまでオレは帰らねー",
+      "zh": "在找到不会变成魔女的方法之前，\n我不会回去。",
+      "speaker_ja": "深月フェリシア",
+      "speaker_zh": "深月菲莉希亚",
+      "render_ja": "深月フェリシア：魔女にならなくて済む方法が\n分かるまでオレは帰らねー",
+      "render_zh": "深月菲莉希亚：在找到不会变成魔女的方法之前，\n我不会回去。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_fer_011 request 4071 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4072,
+      "ja": "倒さねーといけねーんだ！\n父ちゃんと母ちゃんを殺した魔女を！",
+      "zh": "我非打倒它不可！\n那个杀害爸爸妈妈的魔女！",
+      "speaker_ja": "深月フェリシア",
+      "speaker_zh": "深月菲莉希亚",
+      "render_ja": "深月フェリシア：倒さねーといけねーんだ！\n父ちゃんと母ちゃんを殺した魔女を！",
+      "render_zh": "深月菲莉希亚：我非打倒它不可！\n那个杀害爸爸妈妈的魔女！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_fer_012 request 4072 plus existing project caption transcript"
+    },
+    {
+      "request_id": 4073,
+      "ja": "魔女は一匹残らず\nぶっ殺す！",
+      "zh": "魔女一个不留，\n全部宰掉！",
+      "speaker_ja": "深月フェリシア",
+      "speaker_zh": "深月菲莉希亚",
+      "render_ja": "深月フェリシア：魔女は一匹残らず\nぶっ殺す！",
+      "render_zh": "深月菲莉希亚：魔女一个不留，\n全部宰掉！",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_fer_013 request 4073 plus existing project caption transcript"
+    },
+    {
+      "request_id": 3228,
+      "ja": "キリがないわね…",
+      "zh": "没完没了呢……",
+      "speaker_ja": "七海やちよ",
+      "speaker_zh": "七海八千代",
+      "render_ja": "七海やちよ：キリがないわね…",
+      "render_zh": "七海八千代：没完没了呢……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_yac_014 request 3228 plus existing project caption transcript"
+    },
+    {
+      "request_id": 3229,
+      "ja": "急がないと…",
+      "zh": "得快点……",
+      "speaker_ja": "七海やちよ",
+      "speaker_zh": "七海八千代",
+      "render_ja": "七海やちよ：急がないと…",
+      "render_zh": "七海八千代：得快点……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_yac_015 request 3229 plus existing project caption transcript"
+    },
+    {
+      "request_id": 3230,
+      "ja": "マギウスはいったい何をする気なの…",
+      "zh": "Magius到底想做什么……",
+      "speaker_ja": "七海やちよ",
+      "speaker_zh": "七海八千代",
+      "render_ja": "七海やちよ：マギウスはいったい何をする気なの…",
+      "render_zh": "七海八千代：Magius到底想做什么……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_yac_016 request 3230 plus existing project caption transcript"
+    },
+    {
+      "request_id": 3576,
+      "ja": "魔法少女は救われなきゃだめなんだよ…",
+      "zh": "魔法少女必须得到救赎才行……",
+      "speaker_ja": "由比鶴乃",
+      "speaker_zh": "由比鹤乃",
+      "render_ja": "由比鶴乃：魔法少女は救われなきゃだめなんだよ…",
+      "render_zh": "由比鹤乃：魔法少女必须得到救赎才行……",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_tur_017 request 3576 plus existing project caption transcript"
+    },
+    {
+      "request_id": 3577,
+      "ja": "魔法少女は救われなくてはいけない",
+      "zh": "魔法少女必须得到救赎。",
+      "speaker_ja": "由比鶴乃",
+      "speaker_zh": "由比鹤乃",
+      "render_ja": "由比鶴乃：魔法少女は救われなくてはいけない",
+      "render_zh": "由比鹤乃：魔法少女必须得到救赎。",
+      "status": "existing_project_translation_pending_new_longform_playback",
+      "text_evidence": "exact cap4902_chact_tur_018 request 3577 plus existing project caption transcript"
+    },
+    {
+      "request_id": 2439,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "環いろは",
+      "speaker_zh": "环彩羽",
+      "render_ja": "環いろは：押して！",
+      "render_zh": "环彩羽：按下去！",
+      "status": "curated_voice_override_reused_pending_new_longform_playback",
+      "text_evidence": "verified voice override request 2439 plus exact cap5102_iro_oshite_001 callback"
+    },
+    {
+      "request_id": 8209,
+      "ja": "押して！",
+      "zh": "按下去！",
+      "speaker_ja": "",
+      "speaker_zh": "",
+      "render_ja": "押して！",
+      "render_zh": "按下去！",
+      "status": "official_sound_label_pending_new_longform_playback",
+      "text_evidence": "official 26401_もきゅPUSH用_押して_通常 label plus exact ac8002_chance_btn_mokyu callback"
+    }
+  ]
+}
