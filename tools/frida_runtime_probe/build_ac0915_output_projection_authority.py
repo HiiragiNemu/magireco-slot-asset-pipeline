@@ -379,12 +379,16 @@ def resolve(
     expected_movie_layer_count: int = 44,
     expected_unique_loadable_layer_count: int = 42,
     expected_unique_unreachable_layer_count: int = 2,
+    expected_cri_source_identity_count: int | None = None,
     expected_state3_names: frozenset[str] = frozenset(
         {"ac8050_uwanose_impact_ef", "ac8050_uwanose_impact_ef_LP"}
     ),
     expected_unreachable_names: frozenset[str] = frozenset(
         {"ac8040_premia_EF_add", "ac8040_premia_EF_add_LP"}
     ),
+    expected_parent_clock_excluded_occurrences: frozenset[
+        tuple[str, str, str]
+    ] = frozenset(),
     allowed_partial_viewport_events: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     if not set(allowed_partial_viewport_events).issubset(expected_events):
@@ -403,8 +407,10 @@ def resolve(
         )
         + int(expected_counts["runtime_symbolic_node_occurrences"]),
         expected_chunk_count=expected_chunk_count,
-        expected_unique_source_count=int(
-            expected_counts["unique_loadable_cri_sources"]
+        expected_unique_source_count=(
+            int(expected_cri_source_identity_count)
+            if expected_cri_source_identity_count is not None
+            else int(expected_counts["unique_loadable_cri_sources"])
         ),
         expected_movie_layer_count=expected_movie_layer_count,
         expected_unique_loadable_layer_count=expected_unique_loadable_layer_count,
@@ -413,9 +419,12 @@ def resolve(
     chunks = {str(row["name"]): row for row in movie["z2d_chunks"]}
     if len(chunks) != expected_chunk_count:
         raise ProjectionError("bounded parent Z2D identity count differs")
-    sources = _source_rows(
-        cri, expected_count=int(expected_counts["unique_loadable_cri_sources"])
+    source_identity_count = (
+        int(expected_cri_source_identity_count)
+        if expected_cri_source_identity_count is not None
+        else int(expected_counts["unique_loadable_cri_sources"])
     )
+    sources = _source_rows(cri, expected_count=source_identity_count)
     events_by_id = {str(row["event_id"]): row for row in presentation["events"]}
     if set(events_by_id) != set(expected_events):
         raise ProjectionError("projection event set differs")
@@ -423,6 +432,7 @@ def resolve(
     event_rows: list[dict[str, Any]] = []
     all_loadable: list[dict[str, Any]] = []
     all_unreachable: list[dict[str, Any]] = []
+    all_parent_clock_excluded: list[dict[str, Any]] = []
     non_movie_nodes: list[dict[str, Any]] = []
     symbolic_nodes: list[dict[str, Any]] = []
     archive_occurrences = 0
@@ -434,6 +444,7 @@ def resolve(
             raise ProjectionError(f"{event_id} presentation extent is not positive")
         event_loadable: list[dict[str, Any]] = []
         event_unreachable: list[dict[str, Any]] = []
+        event_parent_clock_excluded: list[dict[str, Any]] = []
         event_non_movie: list[dict[str, Any]] = []
         event_symbolic: list[dict[str, Any]] = []
         parent_order = 0
@@ -533,10 +544,62 @@ def resolve(
                         effective_event_start = max(authored_event_start, parent_start)
                         effective_event_end = min(authored_event_end, parent_end)
                         if effective_event_end < effective_event_start:
-                            raise ProjectionError(
-                                f"{event_id}/{name}/{layer['cri_lookup_base_name']} "
-                                "MovieLayer is outside its active parent clock"
-                            )
+                            source_name = str(layer["cri_lookup_base_name"])
+                            exclusion_key = (event_id, name, source_name)
+                            if (
+                                exclusion_key
+                                not in expected_parent_clock_excluded_occurrences
+                            ):
+                                raise ProjectionError(
+                                    f"{event_id}/{name}/{source_name} MovieLayer is "
+                                    "outside its active parent clock"
+                                )
+                            if (
+                                layer["runtime_load_disposition"]
+                                != "LOADABLE_BY_EXACT_NAME"
+                            ):
+                                raise ProjectionError(
+                                    f"{event_id}/{name}/{source_name} clock-excluded "
+                                    "MovieLayer is not an exact loadable source"
+                                )
+                            source = sources.get(source_name)
+                            if source is None:
+                                raise ProjectionError(
+                                    f"clock-excluded MovieLayer lacks exact CRI: {source_name}"
+                                )
+                            row = {
+                                "event": event_id,
+                                "scene": scene["name"],
+                                "cut": cut["cut_name"],
+                                "parent_z2d": name,
+                                "parent_composition_order": parent_order,
+                                "owning_gdp_layer_index": int(
+                                    node["owning_layer"]["index"]
+                                ),
+                                "owning_gdp_layer_name": str(
+                                    node["owning_layer"]["canonical_name"]
+                                ),
+                                "source_name": source_name,
+                                "source": source,
+                                "authored_event_start_frame": authored_event_start,
+                                "authored_event_end_frame_inclusive": authored_event_end,
+                                "active_parent_start_frame": parent_start,
+                                "active_parent_end_frame_inclusive": parent_end,
+                                "authored_frame_count": authored_frames,
+                                "effective_frame_count": 0,
+                                "runtime_load_disposition": "LOADABLE_BY_EXACT_NAME",
+                                "schedule_disposition": (
+                                    "EXCLUDED_BY_EXACT_PARENT_EVENT_CLOCK_BEFORE_FIRST_FRAME"
+                                ),
+                                "decision": (
+                                    "retain the exact CRI identity as provenance but do not "
+                                    "render this occurrence; the active Type-3/Type-2 parent "
+                                    "clock ends before its first authored MovieLayer frame"
+                                ),
+                            }
+                            event_parent_clock_excluded.append(row)
+                            all_parent_clock_excluded.append(row)
+                            continue
                         parent_leading_clip = effective_event_start - authored_event_start
                         parent_visible_frames = (
                             effective_event_end - effective_event_start + 1
@@ -679,6 +742,9 @@ def resolve(
                 },
                 "loadable_movie_layer_occurrences": len(event_loadable),
                 "unreachable_movie_layer_occurrences": len(event_unreachable),
+                "parent_clock_excluded_movie_layer_occurrences": len(
+                    event_parent_clock_excluded
+                ),
                 "non_movie_text_z2d_occurrences": len(event_non_movie),
                 "runtime_symbolic_node_occurrences": len(event_symbolic),
                 "has_full_viewport_movie_layer": any(
@@ -692,16 +758,23 @@ def resolve(
                 ),
                 "layers_in_render_pass_order_under_to_top": event_loadable,
                 "unreachable_layers_excluded_by_exact_loader": event_unreachable,
+                "loadable_layers_excluded_by_exact_parent_clock": (
+                    event_parent_clock_excluded
+                ),
                 "non_movie_text_z2d_nodes": event_non_movie,
                 "runtime_symbolic_nodes": event_symbolic,
             }
         )
 
     used_sources = {row["source_name"] for row in all_loadable}
-    if used_sources != set(sources):
+    parent_clock_excluded_sources = {
+        row["source_name"] for row in all_parent_clock_excluded
+    }
+    accounted_sources = used_sources | parent_clock_excluded_sources
+    if accounted_sources != set(sources):
         raise ProjectionError(
-            "projection does not cover every exact CRI identity: "
-            f"missing={sorted(set(sources) - used_sources)}"
+            "projection does not account for every exact CRI identity: "
+            f"missing={sorted(set(sources) - accounted_sources)}"
         )
     counts = {
         "events": len(event_rows),
@@ -711,6 +784,13 @@ def resolve(
         "runtime_symbolic_node_occurrences": len(symbolic_nodes),
         "loadable_movie_layer_occurrences": len(all_loadable),
         "unique_loadable_cri_sources": len(used_sources),
+        "exact_cri_source_identity_count": len(sources),
+        "parent_clock_excluded_movie_layer_occurrences": len(
+            all_parent_clock_excluded
+        ),
+        "unique_parent_clock_excluded_source_names": len(
+            parent_clock_excluded_sources
+        ),
         "unreachable_movie_layer_occurrences": len(all_unreachable),
         "unique_unreachable_movie_layer_names": len(
             {row["source_name"] for row in all_unreachable}
@@ -751,6 +831,14 @@ def resolve(
     unreachable_names = {row["source_name"] for row in all_unreachable}
     if unreachable_names != set(expected_unreachable_names):
         raise ProjectionError("exact unreachable MovieLayer set differs")
+    actual_parent_clock_excluded = {
+        (row["event"], row["parent_z2d"], row["source_name"])
+        for row in all_parent_clock_excluded
+    }
+    if actual_parent_clock_excluded != set(
+        expected_parent_clock_excluded_occurrences
+    ):
+        raise ProjectionError("exact parent-clock-excluded MovieLayer set differs")
     actual_partial_events = {
         row["event"]
         for row in event_rows
@@ -762,6 +850,7 @@ def resolve(
         "events": event_rows,
         "occurrences": all_loadable,
         "unreachable_occurrences": all_unreachable,
+        "parent_clock_excluded_occurrences": all_parent_clock_excluded,
         "non_movie_nodes": non_movie_nodes,
         "symbolic_nodes": symbolic_nodes,
         "counts": counts,

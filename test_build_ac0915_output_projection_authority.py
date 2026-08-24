@@ -406,6 +406,82 @@ class Ac0915OutputProjectionTests(unittest.TestCase):
         self.assertFalse(event["has_full_viewport_movie_layer"])
         self.assertEqual(1, result["counts"]["prior_underlay_required_events"])
 
+    def test_exact_parent_clock_exclusion_accounts_source_without_rendering(self) -> None:
+        fixture = self._fixture()
+        presentation, movie, cri, project, renderer, expected = fixture
+        tail_path = Path(cri["artifacts"][0]["path"]).parent / "tail.usm"
+        tail_path.write_bytes(b"tail-source")
+        tail = layer("tail_source", width=1024, height=576, state=1, tag_index=1)
+        tail.update({"start_frame": 6, "end_frame_inclusive": 8, "frame_count": 3})
+        movie["z2d_chunks"][0]["movie_layers"].append(tail)
+        movie["counts"].update({"movie_layers": 4, "loadable_movie_layers": 3})
+        cri["artifacts"].append(
+            {
+                "official_name": "tail_source",
+                "path": str(tail_path),
+                "size": tail_path.stat().st_size,
+                "global_index": 102,
+                "package": "main",
+                "package_index": 102,
+                "width": 416,
+                "height": 232,
+                "frame_rate": "30/1",
+                "frame_count": 3,
+                "color_stream_index": 0,
+                "alpha_stream_index": 1,
+            }
+        )
+        cri["counts"]["selected_usm_count"] = 3
+        expected.update(
+            {
+                "exact_cri_source_identity_count": 3,
+                "parent_clock_excluded_movie_layer_occurrences": 1,
+                "unique_parent_clock_excluded_source_names": 1,
+            }
+        )
+        common = {
+            "expected_events": ("ac0915_001",),
+            "expected_counts": expected,
+            "expected_chunk_count": 3,
+            "expected_movie_layer_count": 4,
+            "expected_unique_loadable_layer_count": 3,
+            "expected_unique_unreachable_layer_count": 1,
+            "expected_cri_source_identity_count": 3,
+            "expected_state3_names": frozenset({"effect_source"}),
+            "expected_unreachable_names": frozenset({"missing_add"}),
+        }
+        with self.assertRaisesRegex(
+            MODULE.ProjectionError, "outside its active parent clock"
+        ):
+            MODULE.resolve(
+                presentation,
+                movie,
+                cri,
+                project,
+                renderer,
+                **common,
+            )
+        result = MODULE.resolve(
+            presentation,
+            movie,
+            cri,
+            project,
+            renderer,
+            expected_parent_clock_excluded_occurrences=frozenset(
+                {("ac0915_001", "base", "tail_source")}
+            ),
+            **common,
+        )
+        self.assertEqual(2, len(result["occurrences"]))
+        self.assertEqual(1, len(result["parent_clock_excluded_occurrences"]))
+        excluded = result["parent_clock_excluded_occurrences"][0]
+        self.assertEqual("tail_source", excluded["source_name"])
+        self.assertEqual(0, excluded["effective_frame_count"])
+        self.assertEqual(
+            "EXCLUDED_BY_EXACT_PARENT_EVENT_CLOCK_BEFORE_FIRST_FRAME",
+            excluded["schedule_disposition"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
