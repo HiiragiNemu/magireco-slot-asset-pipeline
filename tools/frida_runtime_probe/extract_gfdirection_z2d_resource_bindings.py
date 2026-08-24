@@ -163,9 +163,9 @@ def parse_parameter(
                 )
             row["keys"] = [
                 {
+                    "time": reader.f32(),
+                    "curve_type": reader.i32(),
                     "value": reader.f32(),
-                    "frame_or_interpolation": reader.i32(),
-                    "tangent_or_aux": reader.f32(),
                 }
                 for _ in range(key_count)
             ]

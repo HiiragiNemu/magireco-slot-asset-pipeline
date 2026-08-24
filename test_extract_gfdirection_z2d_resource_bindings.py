@@ -106,13 +106,14 @@ class ResourceBindingParserTests(unittest.TestCase):
             MODULE.parse_parameter(reader)
 
     def test_parses_keyed_float_when_explicitly_enabled(self) -> None:
-        value = keyed_float_parameter(19, [(0.0, 0, 0.0), (1.0, 30, 0.5)])
+        value = keyed_float_parameter(19, [(0.0, 0, 1.0), (30.0, 1, 0.5)])
         result = MODULE.parse_parameter(
             MODULE.Reader(value, 0), allow_keyed_float=True
         )
         self.assertEqual(2, result["key_count"])
-        self.assertEqual(30, result["keys"][1]["frame_or_interpolation"])
-        self.assertAlmostEqual(1.0, result["keys"][1]["value"])
+        self.assertAlmostEqual(30.0, result["keys"][1]["time"])
+        self.assertEqual(1, result["keys"][1]["curve_type"])
+        self.assertAlmostEqual(0.5, result["keys"][1]["value"])
 
     def test_rejects_spline_curve_even_when_keyed_float_is_enabled(self) -> None:
         value = keyed_float_parameter(19, [(1.0, 0, 0.0)], spline=True)
