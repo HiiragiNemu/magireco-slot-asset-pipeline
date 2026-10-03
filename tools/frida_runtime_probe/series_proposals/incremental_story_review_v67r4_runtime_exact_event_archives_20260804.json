@@ -1,0 +1,73 @@
+{
+  "schema": "magireco-incremental-story-review-plan-v1",
+  "checkpoint_id": "20260804-v67r4-runtime-exact-event-archives-review",
+  "checkpoint_label": "v67r4",
+  "start_upload_id": 208,
+  "expected_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "no_dialogue_aliases": false,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\UPLOAD_GUIDE.json",
+    "sha256": "6EA70F468742D8D7C3B0D17763E0CB800EF5D6FA420F96BB670E625BD95FCAD9"
+  },
+  "products": [
+    {
+      "family": "ac0915_005_runtime_exact_archive",
+      "title": "Magius灯花自我介绍",
+      "filename_title": "Magius灯花自我介绍",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v67r4_runtime_exact_event_archives_20260804\\ac0915_005_runtime_exact_archive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "5FD52366D18727C9320C935F4D005175A464ABCA739FF1798829870F508DF1A6"
+      }
+    },
+    {
+      "family": "ac0915_006_runtime_exact_archive",
+      "title": "Magius阿莉娜自我介绍",
+      "filename_title": "Magius阿莉娜自我介绍",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v67r4_runtime_exact_event_archives_20260804\\ac0915_006_runtime_exact_archive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "DC807C053FB5CF9DA39931E80DDD1F5C62A3AF3A84896A8292CB13DA3BF3C60E"
+      }
+    },
+    {
+      "family": "ac0915_007_runtime_exact_archive",
+      "title": "Magius阿莉娜宣言",
+      "filename_title": "Magius阿莉娜宣言",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v67r4_runtime_exact_event_archives_20260804\\ac0915_007_runtime_exact_archive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "8266F0C5D530EFA2F8E63728012CE6DCA4122D20A548F446B563164FCF103077"
+      }
+    },
+    {
+      "family": "ac7205_008_runtime_exact_archive",
+      "title": "丘比解释魔女化身",
+      "filename_title": "丘比解释魔女化身",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v67r4_runtime_exact_event_archives_20260804\\ac7205_008_runtime_exact_archive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "05B68B28844D6B020833F49E57F1CA6E428BBCEB942C5E832D68BFDBB9B67071"
+      }
+    },
+    {
+      "family": "ac7205_016_runtime_exact_archive",
+      "title": "丘比询问你的选择",
+      "filename_title": "丘比询问你的选择",
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v67r4_runtime_exact_event_archives_20260804\\ac7205_016_runtime_exact_archive_full_no_bgm_editions_v1\\manifests\\family_editions_manifest.json",
+        "sha256": "DD6884E23D99AE27FBD55294C9E75EA0069986D8444C7A36EBE8758F98B94DB2"
+      }
+    }
+  ],
+  "excluded_archive_occurrences": [
+    {
+      "event": "ac0915_021",
+      "canonical_event": "ac0915_007",
+      "reason": "same visual/audio asset occurrence with runtime-capture millisecond jitter; preserve single-event archive but exclude from audience review/upload"
+    }
+  ],
+  "status": "superseded_do_not_use",
+  "superseded_by": "incremental_story_review_v67r5_runtime_exact_event_archives_20260804.json",
+  "superseded_reason": "product identity used verbose suffix outside the strict acNNNN_event review package contract; no review root was created"
+}

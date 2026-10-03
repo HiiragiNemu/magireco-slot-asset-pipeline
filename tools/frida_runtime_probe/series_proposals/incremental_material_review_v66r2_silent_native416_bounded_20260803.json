@@ -1,0 +1,84 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v2",
+  "checkpoint_id": "20260803-v66r2-silent-native416-bounded-materials",
+  "checkpoint_label": "v66r2",
+  "packaging_mode": "single_visual_canonical",
+  "start_upload_id": 205,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\UPLOAD_GUIDE.json",
+    "sha256": "6EA70F468742D8D7C3B0D17763E0CB800EF5D6FA420F96BB670E625BD95FCAD9"
+  },
+  "specific_exclusions": [
+    "本批是原生416x232无声视觉素材，不生成 none/JA/ZH，也不在文件名添加 __none。",
+    "ac7118 每个角色只取完整 intro 加一个完整 source loop；不声明 runtime loop 次数或自然 session 时长。",
+    "ac5004_007 的唯一源已由 current ac5004 catalog 精确覆盖，不重复生成。",
+    "ac8004_001/_002/_003/_004/_007 与 ac8050_001 因重叠分层构图继续阻断。",
+    "自动 QA 已通过，全部仍需 owner 人工播放。",
+    "v66 仅含失败的构建前审计且无媒体；记录保留在生产 proposal，不作为旧上传包传入本包装器。"
+  ],
+  "superseded_packages": [],
+  "batch_source_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v66r1_silent_native416_bounded_20260803\\BATCH_SUMMARY.json",
+    "sha256": "43EE5D646E98186EBA79DC74405B28A4B32F9B213190F41E6EA4E303217E0174"
+  },
+  "products": [
+    {
+      "collection": "ac7118_profile_visual_materials_416x232_v1",
+      "title": "角色资料动画合集·21人",
+      "family": "ac7118",
+      "material_product_eligible": true,
+      "presentation_role": "bounded_visual_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v66r1_silent_native416_bounded_20260803\\ac7118_profile_visual_materials_416x232_v1\\material_collection_manifest.json",
+        "sha256": "6BB5A097529F54579F4FDEB08C2F1C1772F6E27387E0AD2AE5C15E7A65F7F121"
+      },
+      "output_sha256": "8FE899F1ABF8F9C3FFEEE125D0AA2C73793A03613084FF48960E7F093B04D88D"
+    },
+    {
+      "collection": "ac2001_ac2002_wait_loop_materials_416x232_v2",
+      "title": "挑战待机循环组件",
+      "family": "ac2001+ac2002",
+      "material_product_eligible": true,
+      "presentation_role": "bounded_visual_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v66r1_silent_native416_bounded_20260803\\ac2001_ac2002_wait_loop_materials_416x232_v2\\material_collection_manifest.json",
+        "sha256": "BD2F3E500958BF99AC149FC579A3903C33B5F3037987905E097B52E0AD0BC60B"
+      },
+      "output_sha256": "57AD23E6DFCBB2920267B36C1D126BA8B1D2A076350E69CE7E6DFD4A4FE5CBB7"
+    },
+    {
+      "collection": "ac8005_ac8050_visual_state_materials_416x232_v1",
+      "title": "胜利背景与上乘冲击组件",
+      "family": "ac8005+ac8050",
+      "material_product_eligible": true,
+      "presentation_role": "bounded_visual_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v66r1_silent_native416_bounded_20260803\\ac8005_ac8050_visual_state_materials_416x232_v1\\material_collection_manifest.json",
+        "sha256": "3C9EE6510B2D35E4520D13F9EA0154F5802D8274B9ED1E3F90A665F628547A3B"
+      },
+      "output_sha256": "773838D6F2D310924882C453436CF957A256CD19E3F1AB520EBEB1423F74BF83"
+    }
+  ]
+}

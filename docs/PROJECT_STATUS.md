@@ -1,5 +1,29 @@
 # Project Status
 
+## 2026-10-03 整合状态（优先于下方历史记录）
+
+本轮只整合代码、测试、生产计划和研究证据，不新增渲染，不改变任何媒体或人工批准。
+当前工作树是 `D:\Codex\State\worktrees\2fe8\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==`；
+唯一工作分支为 `codex/corrected-runtime-pipeline`。不创建分支或 PR。
+
+- 现代原生 416 长片审查指针：
+  `D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\CURRENT_NATIVE416_EXHAUSTIVE.json`。
+  本次读取指向 `native416_exhaustive_new_standard_v144_20260824`，20 个内容组、48 个 edition 文件，
+  状态 `HUMAN_PLAYBACK_REQUIRED`。这只是已发布审查批次，不是全项目最终分母；其后 ac0001–ac0005 等提交仍有独立证据。
+- `CURRENT_PRODUCTION.json` / `00_BILIBILI_统一入口` / v59r2 的 347 文件等下文叙述是八月历史快照，
+  不再声明为现代唯一入口，不按旧文档恢复定时器、通信任务或旧产线。
+- 当前内容标准是同一场景/系列的**穷尽、不重复长片**：互斥分支允许按可理解顺序编入合集，
+  不冒充原生单局；每个 unique 内容都要有代码/来源覆盖与时序证据，不能用短片数冒充完整内容量。
+- 优先原生 416×232；512×288 等较低优先级保留原生尺寸，不 upscale。无声纯素材只有一个无语言后缀文件。
+- no-BGM 排除 BGM 总线、保留已证明对白与 SE；child-local 不直接晋升 event-global。
+  P16/P17/P18 等隔离不因本轮代码提交而解除，自动 QA 不等于人工批准；黑羽/黑/黑江继续按精确证据区分。
+- 新提交的 v59–v69 计划是可追溯的历史输入/纠错证据，不是重新投产命令。
+  旧主目录的 OBB、CRI、SO 和源索引仍被现代代码引用，保留为来源；旧拼接成片不充当现代权威。
+
+完整整合分类、旧目录保留理由及验证记录见 `docs/research/2026-10-03-backlog-integration-and-source-retention.md`。
+
+## 历史记录（下方的“当前/最新”仅指记录日期）
+
 更新时间：2026-07-30
 
 ## 2026-07-30 ac4906 分尺寸初批与 ac2202 复用 v59

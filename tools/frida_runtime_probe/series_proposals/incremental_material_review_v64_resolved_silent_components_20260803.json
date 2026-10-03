@@ -1,0 +1,216 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v2",
+  "checkpoint_id": "20260803-v64-resolved-silent-components",
+  "checkpoint_label": "v64",
+  "packaging_mode": "single_visual_canonical",
+  "start_upload_id": 187,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\UPLOAD_GUIDE.json",
+    "sha256": "6EA70F468742D8D7C3B0D17763E0CB800EF5D6FA420F96BB670E625BD95FCAD9"
+  },
+  "specific_exclusions": [
+    "本批仅归档玩法、效果、副屏、UI及导航组件，不声明为剧情或完整 session。",
+    "每项只有一个无语言后缀 material 文件，不生成 none/JA/ZH。",
+    "全部保持原生分辨率、H.264 30fps、无音轨且不 upscale。",
+    "ac9911 与后续 ac0927、ac4916 与后续 ac4914/ac4915/ac4917 的共享源只由 canonical 集合发出一次。",
+    "自动 QA 已通过，但全部仍需 owner 人工播放。"
+  ],
+  "superseded_packages": [],
+  "batch_source_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\BATCH_SUMMARY.json",
+    "sha256": "188D496C4259B02806EB7AA9068CE6FB4AEA920585B6CA9443E864C24973688F"
+  },
+  "products": [
+    {
+      "collection": "ac9010_magiata_icons_160x56_v1",
+      "title": "Magia槽图标组件",
+      "family": "ac9010",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 160,
+        "height": 56
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac9010_magiata_icons_160x56_v1\\material_collection_manifest.json",
+        "sha256": "E5BB69F87E5EE1B629B1767AA497FB01689404F8D116B589879929665763313E"
+      },
+      "output_sha256": "CC125E9480303CC0A2EA68196356D36C9B15C325A338ED341454E5A0676B4CFF"
+    },
+    {
+      "collection": "ac8005_effect_components_512x416_v1",
+      "title": "玩法效果组件",
+      "family": "ac8005",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac8005_effect_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "9E4CB7B4620624FDD376FDB20B9F1B9A6F5B3F146C85FA5BB1B309A194F094C4"
+      },
+      "output_sha256": "2BC2F4A579024C574BC0F02D33E23EE828F4B09E5E1912A2D2725B7F7118E335"
+    },
+    {
+      "collection": "ac3201_magia_bonus_stage_components_512x416_v1",
+      "title": "Magia奖励阶段组件D",
+      "family": "ac3201",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac3201_magia_bonus_stage_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "4D729F0AD55693D39E7EE4DD56C7CF59A3721A0F84EFA82D215190C97EF7F0DA"
+      },
+      "output_sha256": "2C3860A8F41F6124D5C8A720FD18E65158F3DFABCF8D46AC705058703A4802DA"
+    },
+    {
+      "collection": "ac9911_bonus_sub_components_192x320_v1",
+      "title": "奖励副屏状态组件",
+      "family": "ac9911",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 192,
+        "height": 320
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac9911_bonus_sub_components_192x320_v1\\material_collection_manifest.json",
+        "sha256": "4CCFC9613C001D8C47C92631C6B0FDFE676638FB5C452270F0C3AAE397A0A15D"
+      },
+      "output_sha256": "4D6A9B684FB4B46EF931832DF27DF6E2CE1206EC0F913F8BEA8B06D9DC3A42D3"
+    },
+    {
+      "collection": "ac9902_sub_character_components_384x312_v1",
+      "title": "副屏角色组件",
+      "family": "ac9902",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 384,
+        "height": 312
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac9902_sub_character_components_384x312_v1\\material_collection_manifest.json",
+        "sha256": "1498DBE9F308D8F25D88E192C4D79BA3FD6AD89F5AFFF90B99DF10798EA67688"
+      },
+      "output_sha256": "542D32C2A94CC2BA37C424EA5E977807B2061811917D7675EA3FD3D7B87D96D0"
+    },
+    {
+      "collection": "ac3503_bonus_components_512x416_v1",
+      "title": "奖励玩法组件",
+      "family": "ac3503",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac3503_bonus_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "D5BF699BD0BCA03DB720DD96CCE1F058A2D452C997A19C8B94B07611A593963A"
+      },
+      "output_sha256": "8B0CB4469E1BB907D9678257F828B6D485A49B5FCF94B2845BA2C9E32A5717C9"
+    },
+    {
+      "collection": "ac0930_slide_components_192x320_v1",
+      "title": "滑动提示与结果组件",
+      "family": "ac0930",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 192,
+        "height": 320
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac0930_slide_components_192x320_v1\\material_collection_manifest.json",
+        "sha256": "73FEACCA2E45AFD86846FFBC1C76618F5E5C879133EE58302EB824B6DE817737"
+      },
+      "output_sha256": "7BABB884B18093FF37225B161C8B00E7AE458C3A190246BBD84EB1A3A043F37C"
+    },
+    {
+      "collection": "ac9904_character_entry_components_512x416_v1",
+      "title": "25角色入场组件",
+      "family": "ac9904",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 512,
+        "height": 416
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac9904_character_entry_components_512x416_v1\\material_collection_manifest.json",
+        "sha256": "4C444C584F67859D7B0E75FFFF06F80CE75962F468F8560DDD3582DA34BC2FF0"
+      },
+      "output_sha256": "163227A0F248061228577D7F2E033E0276723AF655627AEACA9362D7EF9A7940"
+    },
+    {
+      "collection": "ac4916_navigation_components_200x200_v1",
+      "title": "导航组件200x200",
+      "family": "ac4916",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 200,
+        "height": 200
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac4916_navigation_components_200x200_v1\\material_collection_manifest.json",
+        "sha256": "CD14A7311EAD82A39814724AC581D04461BED5338169BC299ED995C6FC3A9F7F"
+      },
+      "output_sha256": "BA046BAD4D79F8E0D4F0E67BFD4F96E0935FC2DB85D8BE1987A1023616D70285"
+    },
+    {
+      "collection": "ac4916_navigation_components_128x128_v1",
+      "title": "导航组件128x128",
+      "family": "ac4916",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v64_resolved_silent_components_20260803\\ac4916_navigation_components_128x128_v1\\material_collection_manifest.json",
+        "sha256": "4662F5669DC9B164C0E49A157DFDCAB1CBF75CFC96997856E55B3A319C645029"
+      },
+      "output_sha256": "CC38AC1A1C9ED5AC5800B474CB90651D256211B7901613640766FB00E8C9EB60"
+    }
+  ]
+}

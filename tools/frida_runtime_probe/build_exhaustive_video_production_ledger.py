@@ -59,6 +59,14 @@ SPLIT_COMPONENT_COVERAGE_POLICY = (
 REUSED_COMPONENT_COVERAGE_POLICY = (
     "reuse_hash_identical_current_native_component_catalog_without_duplicate_media"
 )
+COMPONENT_BLOCKER_OVERRIDES = {
+    "ac4903_015": (
+        "layered_component_composition_required;"
+        "missing_media_and_duration:"
+        "ac8040_shouri_EF_small_add,"
+        "ac8040_shouri_EF_small_add_LP"
+    ),
+}
 
 
 def _bound(
@@ -1111,7 +1119,7 @@ def build(
                 if event in produced_events
                 else "planned_unproduced"
             )
-            blocker = ""
+            blocker = COMPONENT_BLOCKER_OVERRIDES.get(event, "")
         elif raw.get("classification") == "unresolved":
             disposition = "blocked"
             state = "classification_unresolved"

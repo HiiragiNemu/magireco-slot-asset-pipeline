@@ -518,6 +518,48 @@ class SpStoryChapterReviewTests(unittest.TestCase):
             "unsubtitled_audio",
         )
 
+    def test_scene_audio_role_accepts_exact_unsubtitled_voice_bus_evidence(self) -> None:
+        row = {
+            "source": "z2d_req_sound",
+            "request_id": "4036",
+            "volume_bus": "VOICE",
+            "volume_kind_value": 2,
+            "strict_no_bgm_disposition": "RETAIN_VERIFIED_VOICE",
+            "timing_evidence": (
+                "runtime_parent_scene_z2d_start_plus_exact_child_callback_frame_0"
+            ),
+            "event_global_start_resolved": True,
+        }
+        self.assertEqual(scene_audio_role(row, set()), "voice")
+
+    def test_scene_audio_role_accepts_exact_event_global_se_bus_evidence(self) -> None:
+        row = {
+            "source": "event_audio_component",
+            "request_id": "1037",
+            "volume_bus": "SE",
+            "volume_kind_value": 1,
+            "strict_no_bgm_disposition": "RETAIN_VERIFIED_SE",
+            "timing_evidence": "official_event_audio_component_event_global_start",
+        }
+        self.assertEqual(scene_audio_role(row, set()), "scene_se")
+
+    def test_scene_audio_role_rejects_partial_or_bgm_bus_claim(self) -> None:
+        with self.assertRaisesRegex(ValueError, "incomplete exact sound-bus"):
+            scene_audio_role({"volume_bus": "VOICE"}, set())
+        with self.assertRaisesRegex(ValueError, "not retainable no-BGM"):
+            scene_audio_role(
+                {
+                    "source": "event_audio_component",
+                    "volume_bus": "BGM",
+                    "volume_kind_value": 0,
+                    "strict_no_bgm_disposition": "EXCLUDE_AS_BGM_BUS",
+                    "timing_evidence": (
+                        "official_event_audio_component_event_global_start"
+                    ),
+                },
+                set(),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

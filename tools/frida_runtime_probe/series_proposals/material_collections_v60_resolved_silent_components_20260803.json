@@ -1,0 +1,199 @@
+{
+  "schema": "magireco-material-production-batch-plan-v1",
+  "batch_id": "20260803-v60-resolved-silent-components",
+  "recorded_date": "2026-08-03",
+  "branch": "codex/corrected-runtime-pipeline",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v60_resolved_silent_components_20260803",
+  "contract": {
+    "classification": "gameplay_effect_material_only",
+    "language_editions": [],
+    "material_file_per_collection": 1,
+    "preserve_native_resolution": true,
+    "never_upscale": true,
+    "expected_audio_state": "digital_silence",
+    "publication_state": "human_playback_required",
+    "cross_plan_source_policy": "no SHA-256 overlap within batch or with v27r1 current material index"
+  },
+  "plans": [
+    {
+      "collection": "ac0925_kegare_size_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac0925_kegare_size_components_512x416_v1.json",
+      "plan_sha256": "4EA79B5BB563DA40D9079AF3E23DEF65EC6AA75FC4C2DF3CF0A5A80A468AA998",
+      "events": [
+        "ac0925_001",
+        "ac0925_002",
+        "ac0925_003"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac0925_cmn_kegare_S",
+        "ac0925_cmn_kegare_S_LP",
+        "ac0925_cmn_kegare_M",
+        "ac0925_cmn_kegare_M_LP",
+        "ac0925_cmn_kegare_L",
+        "ac0925_cmn_kegare_L_LP"
+      ]
+    },
+    {
+      "collection": "ac0929_kegare_get_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac0929_kegare_get_components_512x416_v1.json",
+      "plan_sha256": "C6D18878002B14230E9DE5187703375536C7371B23FD07DDA490E47E7605146C",
+      "events": [
+        "ac0929_001",
+        "ac0929_002",
+        "ac0929_003"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac0929_cmn_kegare_get_S",
+        "ac0929_cmn_kegare_get_M",
+        "ac0929_cmn_kegare_get_L"
+      ]
+    },
+    {
+      "collection": "ac4006_attack_end_background_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac4006_attack_end_background_components_512x416_v1.json",
+      "plan_sha256": "4D9D9D32F1810C209DFA2F4850A90E10BD09A1701DFCF702FA943A6FBEF17EEF",
+      "events": [
+        "ac4006_005",
+        "ac4006_006"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac4006_AT_end_bg_05",
+        "ac4006_AT_end_bg_06",
+        "ac4006_AT_end_bg_06_LP"
+      ]
+    },
+    {
+      "collection": "ac7220_title_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac7220_title_components_512x416_v1.json",
+      "plan_sha256": "0DEE4F0851BA308DA2F86E17F965A1C4857F266D259BD0AFDEC3156383B7E4F9",
+      "events": [
+        "ac7220_001"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac7220_001_tiitle",
+        "ac7220_001_tiitle_LP"
+      ]
+    },
+    {
+      "collection": "ac7302_ending_intro_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac7302_ending_intro_components_512x416_v1.json",
+      "plan_sha256": "3CB33AF2F8B24B7F26D28A2A068CAC8DA364D45BA62DF1FF277713B5D101451B",
+      "events": [
+        "ac7302_001",
+        "ac7302_002"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac7302_ED_dounyu01",
+        "ac7302_ED_dounyu02"
+      ]
+    },
+    {
+      "collection": "ac8000_win_text_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8000_win_text_components_512x416_v1.json",
+      "plan_sha256": "CDF1CB9F9EB32EAE0B04FDB92E3EF9F061148CAEDD769DFA45B838068296E7BE",
+      "events": [
+        "ac8000_001"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac8000_cmn_tx_WIN",
+        "ac8000_cmn_tx_WIN_LP"
+      ]
+    },
+    {
+      "collection": "ac8006_maxbet_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8006_maxbet_components_512x416_v1.json",
+      "plan_sha256": "33451AC3EC728F6C11E657EB43F12D3B17D7B9EC1D7B7EEA23142FEDD6E03B3D",
+      "events": [
+        "ac8006_001",
+        "ac8006_002"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac8006_REF_MAXBET",
+        "ac8006_REF_MAXBET_LP",
+        "ac8006_REF_MAXBET_renda",
+        "ac8006_REF_MAXBET_renda_LP"
+      ]
+    },
+    {
+      "collection": "ac9035_bonus_obi_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9035_bonus_obi_components_512x416_v1.json",
+      "plan_sha256": "4CD3F7AD4E9D25368047F3654BE03F3EBDCF139961FA88E14F9C7D48A04660BC",
+      "events": [
+        "ac9035_001",
+        "ac9035_002"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac9035_bonus_obi_01_in",
+        "ac9035_bonus_obi_01_lp"
+      ]
+    },
+    {
+      "collection": "ac9040_tenraku_component_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9040_tenraku_component_512x416_v1.json",
+      "plan_sha256": "52E17ED8C7CAC444BFC0F083E759B79A7FD3225C818B6C0C14675C4EBF8B41A8",
+      "events": [
+        "ac9040_001"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac9040_at_tenraku"
+      ]
+    },
+    {
+      "collection": "ac9022_front_effect_component_512x232_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9022_front_effect_component_512x232_v1.json",
+      "plan_sha256": "662C10595F7945A99A6092AC5C738916349BFA187EF549D90ECF360AD01EEA1E",
+      "events": [
+        "ac9022_003"
+      ],
+      "native_dimensions": "512x232",
+      "official_names": [
+        "ac9022_cz_ef_suuji_tuika_ef_front_02"
+      ]
+    },
+    {
+      "collection": "ac9903_speech_frame_component_80x40_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9903_speech_frame_component_80x40_v1.json",
+      "plan_sha256": "5AD51FEE3F72E776F38786395C75D23E63CC180272B552FCD8B55BE92D2C288D",
+      "events": [
+        "ac9903_003"
+      ],
+      "native_dimensions": "80x40",
+      "official_names": [
+        "ac9903_sub_custom_waku_tx_fukidasi"
+      ]
+    }
+  ],
+  "explicit_blockers": [
+    {
+      "family": "ac4007",
+      "reason": "Both fully resolved native 512x416 sources contain ALAC audio; auto_voice_count=0 does not prove semantic identity. Keep separate until embedded audio is classified or a visual-only publication contract is explicitly chosen."
+    }
+  ],
+  "inputs": {
+    "component_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "63F5FACF5220E91D138582190C6D55ACCF60AC77C2A46982BBD4C9FEAC3619E4"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "DC276BCC05A1FE22FE7C32943D6059A443E7BC57935C296BD84F443904DE76C9"
+    },
+    "audience_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "video_map": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  }
+}

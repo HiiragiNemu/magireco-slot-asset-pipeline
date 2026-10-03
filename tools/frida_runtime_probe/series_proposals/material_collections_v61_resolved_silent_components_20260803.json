@@ -1,0 +1,174 @@
+{
+  "schema": "magireco-material-production-batch-plan-v1",
+  "batch_id": "20260803-v61-resolved-silent-components",
+  "recorded_date": "2026-08-03",
+  "branch": "codex/corrected-runtime-pipeline",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v61_resolved_silent_components_20260803",
+  "contract": {
+    "classification": "gameplay_effect_material_only",
+    "language_editions": [],
+    "material_file_per_collection": 1,
+    "preserve_native_resolution": true,
+    "never_upscale": true,
+    "expected_audio_state": "digital_silence",
+    "publication_state": "human_playback_required",
+    "cross_plan_source_policy": "no SHA-256 overlap within batch or with current material index plus v60"
+  },
+  "plans": [
+    {
+      "collection": "ac8040_dark_overlay_large_256x208_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8040_dark_overlay_large_256x208_v1.json",
+      "plan_sha256": "B7A2B132299BAD47F43421E931F401D41B42EF443DC7751A437B45754799C35D",
+      "events": [
+        "ac8040_002"
+      ],
+      "native_dimensions": "256x208",
+      "official_names": [
+        "ac8040_kyo_anten_L"
+      ]
+    },
+    {
+      "collection": "ac5302_stop_position_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5302_stop_position_components_512x416_v1.json",
+      "plan_sha256": "D93CE27BE1B3EB3AF71BBE85841A728B68088D22C6F46D8F00FAEB45CAA91108",
+      "events": [
+        "ac5302_2_001",
+        "ac5302_2_003"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac5302_1on_1kaku",
+        "ac5302_2on_2kaku"
+      ]
+    },
+    {
+      "collection": "ac3404_bonus_aim_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3404_bonus_aim_components_512x416_v1.json",
+      "plan_sha256": "9E0FC3A48C3731EC9C4C888BB178BB4DADD70E2A86F741117A185D84BA412908",
+      "events": [
+        "ac3404_007"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3404_BB_nerae_kok_AT",
+        "ac3404_BB_nerae_kok_AT_lp"
+      ]
+    },
+    {
+      "collection": "ac3206_magia_bonus_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3206_magia_bonus_components_512x416_v1.json",
+      "plan_sha256": "C59221738E46C67617B0F57F059F36CEC8F3EA55675F27E291571C8C913E3AB3",
+      "events": [
+        "ac3206_001"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3206_magia_bonus_IN",
+        "ac3206_magia_bonus_LP"
+      ]
+    },
+    {
+      "collection": "ac3307_ac7003_niguredo_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3307_ac7003_niguredo_components_512x416_v1.json",
+      "plan_sha256": "C6B4F837A3F5AB6962C42C4AD1D612FE7A6BB7DFE339503AC9BA2B99BCDCB696",
+      "events": [
+        "ac3307_001",
+        "ac7003_004",
+        "ac7003_005"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3307_EPB_niguredo_01",
+        "ac3307_EPB_niguredo_02"
+      ]
+    },
+    {
+      "collection": "ac5502_iroha_sub_loop_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5502_iroha_sub_loop_192x320_v1.json",
+      "plan_sha256": "151A619DFEFDB0B812859EBA97DF4341F7C00E18C82F7A954A430B5ECA0753E0",
+      "events": [
+        "ac5502_002",
+        "ac5502_005",
+        "ac5502_006"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac5502_at_dc_iroha_sub_LP"
+      ]
+    },
+    {
+      "collection": "ac5503_yachiyo_sub_loop_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5503_yachiyo_sub_loop_192x320_v1.json",
+      "plan_sha256": "9A99BB12EF4FA438CC7753177364FC6A7E5026823AD60EEC71040B2A10C71846",
+      "events": [
+        "ac5503_002",
+        "ac5503_005",
+        "ac5503_006"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac5503_at_dc_yachiyo_sub_LP"
+      ]
+    },
+    {
+      "collection": "ac5504_kuroe_sub_loop_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5504_kuroe_sub_loop_192x320_v1.json",
+      "plan_sha256": "0E027854F5F18906777169A798ECFD5A4A4226A511737ECAFC172B4E38AF20B0",
+      "events": [
+        "ac5504_002",
+        "ac5504_005",
+        "ac5504_006"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac5504_at_dc_kuroe_sub_LP"
+      ]
+    },
+    {
+      "collection": "ac3502_bonus_black_shutter_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3502_bonus_black_shutter_components_512x416_v1.json",
+      "plan_sha256": "40CDA0C4595EE0FFCB347A789746FD8ACA5B902D6DF121995F5C3DECC953B1EB",
+      "events": [
+        "ac3502_002"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3502_bonus_blk_shutter_close",
+        "ac3502_bonus_blk_shutter_magiarush",
+        "ac3502_bonus_blk_shutter_magiarush_LP"
+      ]
+    },
+    {
+      "collection": "ac5305_alina_cube_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5305_alina_cube_components_512x416_v1.json",
+      "plan_sha256": "813A2B627CF9F8D17D3F929253C4AE77E9C05A618FBFC77F299CAC989ACE1473",
+      "events": [
+        "ac5305_005"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac5305_arina_cube_3on_SU3",
+        "ac5305_arina_cube_3on_SU3_LP",
+        "ac5305_arina_cube_3on_EF_line_LP"
+      ]
+    }
+  ],
+  "inputs": {
+    "component_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "63F5FACF5220E91D138582190C6D55ACCF60AC77C2A46982BBD4C9FEAC3619E4"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V60.json",
+      "sha256": "0E29932A1401BBBEEB19120A56118748E8C54795F581A6D37EEC6B5028C2D076"
+    },
+    "audience_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "video_map": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  }
+}

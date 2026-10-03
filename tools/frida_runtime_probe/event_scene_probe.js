@@ -1,12 +1,77 @@
 "use strict";
 
 const moduleName = "libGameProc.so";
+const exactGameProcAuthority = {
+  elf_sha256: "5A0AE3CE7F25B89A3B9A13D11BF36AAA1DE04FACEB612357FA04F42426F17EBF",
+  runtime_module_size: 0x4cf3b10,
+  anchors: [
+    {
+      symbol: "_ZN8CScnSlot4CalcEv",
+      offset: 0x42412c4,
+      hex: "ff0301d1fd7b01a9f65702a9f44f03a9",
+    },
+    {
+      symbol: "_ZN8SoundMng4playEPhii",
+      offset: 0x4260464,
+      hex: "ffc302d1fd7b05a9fc6f06a9fa6707a9",
+    },
+    {
+      symbol: "_ZN2zg3snd11RequestCtrl14codeName2ReqIdEPKc",
+      offset: 0x4288b28,
+      hex: "ff8301d1fd7b02a9f85f03a9f65704a9",
+    },
+    {
+      symbol: "_ZN2zg5SCENEEv",
+      offset: 0x437ea1c,
+      hex: "fd7bbea9f30b00f9fd030091484900f0",
+    },
+    {
+      symbol: "_ZN9C_AnmBase10fnReqSceneEyhtt",
+      offset: 0x438b280,
+      hex: "fd7bbca9f70b00f9f65702a9f44f03a9",
+    },
+  ],
+  symbol_offsets: {
+    EventInfo: 0x44c1430,
+    _Z10CTRLSNDLIBv: 0x43941b4,
+    _Z6ANMMNGv: 0x439c5e0,
+    _Z8TSK_GAMEv: 0x43b2edc,
+    _ZN12C_CtrlSndLib17fnReqSndEventCodeEy: 0x4394624,
+    _ZN2zg10CZ2DPlayer7ReadZ2DEPKc: 0x435db34,
+    _ZN2zg10CZ2DPlayer8MakeCZ2DEPv: 0x435c2d0,
+    _ZN2zg11GBossLoader14getEventObjectEy: 0x43199d8,
+    _ZN2zg15Z2DP_CreateFileEPKc: 0x43584e8,
+    _ZN2zg16Z2DP_GetFileDataEPv: 0x4358610,
+    _ZN2zg18CGFDirectionPlayer16LoadResourceFileEPKcS2_: 0x42be26c,
+    _ZN2zg19Z2DreqSoundCallbackEPNS_10CZ2DPlayerEPNS_15CZ2DElemUCBFuncEPv:
+      0x42c0904,
+    _ZN2zg3snd11RequestCtrl14codeName2ReqIdEPKc: 0x4288b28,
+    _ZN2zg5SCENEEv: 0x437ea1c,
+    _ZN2zg7C_Scene10fnReqSceneEyhPKc: 0x437fdec,
+    _ZN8CScnSlot4CalcEv: 0x42412c4,
+    _ZN8SoundMng4playEPhii: 0x4260464,
+    _ZN9C_AnmBase10fnReqSceneEyhtt: 0x438b280,
+    _ZN9C_AnmMain3preEv: 0x439b760,
+    zgGBossGetAnimChoiceCount: 0x431a1a4,
+    zgGBossGetAnimChoiceID: 0x431a1bc,
+    zgGBossGetAnimChoiceName: 0x431a1b0,
+    zgGBossGetAnimCount: 0x431a030,
+    zgGBossGetAnimGroupName: 0x431a180,
+    zgGBossGetAnimObject: 0x431a0c8,
+    zgGBossGetAnimSceneCount: 0x431a18c,
+    zgGBossGetAnimSceneName: 0x431a198,
+    zgGBossGetSoundCount: 0x431a34c,
+    zgGBossGetSoundHashCode: 0x431a49c,
+    zgGBossGetSoundObject: 0x431a3e4,
+  },
+};
 const bucketCount = 127;
 const bucketSize = 24;
 const loaderBucketOffset = 0x20;
 const sceneLoaderOffset = 0x48;
 
 let gameModule = null;
+let gameModuleResolution = null;
 let sceneObject = null;
 let pendingRequest = null;
 let requestSequence = 0;
@@ -41,12 +106,87 @@ function emit(kind, fields) {
   );
 }
 
+function byteArrayHex(value) {
+  const bytes = new Uint8Array(value);
+  let result = "";
+  for (let index = 0; index < bytes.length; index += 1) {
+    result += bytes[index].toString(16).padStart(2, "0");
+  }
+  return result;
+}
+
+function validateExactGameModule(candidate) {
+  const observed = [];
+  for (const anchor of exactGameProcAuthority.anchors) {
+    let actual = null;
+    let error = null;
+    try {
+      actual = byteArrayHex(
+        candidate.base.add(anchor.offset).readByteArray(anchor.hex.length / 2)
+      );
+    } catch (caught) {
+      error = String(caught);
+    }
+    observed.push({
+      symbol: anchor.symbol,
+      offset: "0x" + anchor.offset.toString(16),
+      expected_hex: anchor.hex,
+      actual_hex: actual,
+      error,
+      matched: error === null && actual === anchor.hex,
+    });
+  }
+  return {
+    module_name: candidate.name,
+    module_path: candidate.path,
+    module_base: candidate.base.toString(),
+    module_size: candidate.size,
+    anchors: observed,
+    matched: observed.every((item) => item.matched),
+  };
+}
+
+function resolveExactGameModule() {
+  const sizeCandidates = Process.enumerateModules().filter(
+    (candidate) => candidate.size === exactGameProcAuthority.runtime_module_size
+  );
+  const checked = sizeCandidates.map(validateExactGameModule);
+  const matched = checked.filter((item) => item.matched);
+  gameModuleResolution = {
+    method: "exact_runtime_size_and_five_anchor_bytes",
+    elf_sha256: exactGameProcAuthority.elf_sha256,
+    expected_runtime_module_size: exactGameProcAuthority.runtime_module_size,
+    candidate_count: checked.length,
+    matched_count: matched.length,
+    candidates: checked,
+  };
+  if (matched.length !== 1) {
+    return null;
+  }
+  const selected = sizeCandidates.find(
+    (candidate) => candidate.base.toString() === matched[0].module_base
+  );
+  return selected === undefined ? null : selected;
+}
+
 function findExport(symbol) {
   const address = Module.findGlobalExportByName(symbol);
-  if (address === null) {
-    throw new Error("missing export: " + symbol);
+  if (address !== null) {
+    return address;
   }
-  return address;
+  if (gameModule === null) {
+    gameModule = resolveExactGameModule();
+  }
+  const offset = exactGameProcAuthority.symbol_offsets[symbol];
+  if (gameModule === null || offset === undefined) {
+    throw new Error("missing export and exact offset: " + symbol);
+  }
+  const fallback = gameModule.base.add(offset);
+  const range = Process.findRangeByAddress(fallback);
+  if (range === null || range.protection.indexOf("r") === -1) {
+    throw new Error("exact offset is not readable: " + symbol);
+  }
+  return fallback;
 }
 
 function normalizeEventCode(value) {
@@ -361,6 +501,10 @@ function loaderStatus() {
   }
   return {
     module_base: gameModule === null ? null : gameModule.base.toString(),
+    module_name: gameModule === null ? null : gameModule.name,
+    module_path: gameModule === null ? null : gameModule.path,
+    module_size: gameModule === null ? null : gameModule.size,
+    module_resolution: gameModuleResolution,
     scene_object: scene === null ? null : scene.toString(),
     loader: loader === null ? null : loader.toString(),
     event_count: count,
@@ -1154,13 +1298,27 @@ function installWhenReady() {
   if (hooksInstalled) {
     return;
   }
-  const calcAddress = Module.findGlobalExportByName("_ZN8CScnSlot4CalcEv");
-  gameModule =
-    calcAddress === null ? Process.findModuleByName(moduleName) : Process.findModuleByAddress(calcAddress);
+  let calcAddress = Module.findGlobalExportByName("_ZN8CScnSlot4CalcEv");
+  if (calcAddress !== null) {
+    gameModule = Process.findModuleByAddress(calcAddress);
+    gameModuleResolution = {
+      method: "global_dynamic_export",
+      symbol: "_ZN8CScnSlot4CalcEv",
+      address: calcAddress.toString(),
+    };
+  } else {
+    gameModule = resolveExactGameModule();
+    if (gameModule !== null) {
+      calcAddress = gameModule.base.add(
+        exactGameProcAuthority.symbol_offsets._ZN8CScnSlot4CalcEv
+      );
+    }
+  }
   if (calcAddress === null || gameModule === null) {
     emit("probe_waiting", {
       reason: "CScnSlot::Calc is not loaded",
       requested_module: moduleName,
+      exact_resolution: gameModuleResolution,
     });
     setTimeout(installWhenReady, 1000);
     return;

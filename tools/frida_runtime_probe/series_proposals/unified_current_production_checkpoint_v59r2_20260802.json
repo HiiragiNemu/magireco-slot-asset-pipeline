@@ -1,0 +1,113 @@
+{
+  "schema": "magireco-unified-current-production-plan-v1",
+  "checkpoint_id": "20260802-v59r2-unified-control-plane",
+  "recorded_date": "2026-08-02",
+  "branch": "codex/corrected-runtime-pipeline",
+  "production_owner_thread": "019f9520-0925-7cb0-b494-ab9282a9a3a7",
+  "authority": {
+    "media_production": "The production-owner thread creates immutable, versioned media batches.",
+    "ledger_and_upload_guide": "The v27r1 ledger and v59r2 upload guide are the only current cross-batch indexes.",
+    "supervisory_thread": "The originating thread audits and fixes metadata; it does not run a competing renderer or media tree.",
+    "path_rule": "Versioned D: media roots remain immutable and are reached through the current guide; path version differences do not imply different production methods."
+  },
+  "production_contract": {
+    "audio_lane": "no_bgm_preserve_verified_voice_and_se",
+    "editions": [
+      "none",
+      "ja",
+      "zh"
+    ],
+    "priority": "native_416x232_first_then_other_native_sizes",
+    "never_upscale": true,
+    "preserve_original_events": true,
+    "route_policy": "DirInfo/runtime-evidence routes stay independent; no filename-order guessing or sibling-route concatenation.",
+    "component_policy": "Mixed sizes and gameplay/effect components stay separate until a hash-bound layered composition is proven.",
+    "approval_policy": "Automated QA never implies human playback or publication approval.",
+    "bgm_policy": "with-BGM remains an independent evidence-gated lane and cannot alter current no-BGM media."
+  },
+  "sources": {
+    "ledger_summary": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\SUMMARY.json",
+      "sha256": "708EC0F5265EB69EAD11DEE375A6365B35A0CD78731C7AC8923DE9B7429CD2DB"
+    },
+    "production_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\CURRENT_PRODUCTION_MANIFEST_INDEX.json",
+      "sha256": "ABE93B17C913C1ECDEB5B79E3BEE2C09A3A7DDF74D82E9EB7B5CF03CF4E47707"
+    },
+    "material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+      "sha256": "DC276BCC05A1FE22FE7C32943D6059A443E7BC57935C296BD84F443904DE76C9"
+    },
+    "ledger_hash_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\SHA256SUMS.json",
+      "sha256": "C85E7C01CA00B8300E7DA774677A54DB41A78F29C689D327B244294CD69918EE"
+    },
+    "upload_guide": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\UPLOAD_GUIDE.json",
+      "sha256": "6EA70F468742D8D7C3B0D17763E0CB800EF5D6FA420F96BB670E625BD95FCAD9"
+    },
+    "upload_guide_hash_manifest": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\SHA256SUMS.json",
+      "sha256": "4F423696AECD3A170C658351A5ED4CA865F75C63CF3EB35DB352E9D22039AC46"
+    },
+    "v43_batch_summary": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\BATCH_SUMMARY.json",
+      "sha256": "B4604E0E2F3C2657D73461239DBAC77885E636142531F36C8615906A77BDDF59"
+    },
+    "v43_metadata_verification": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\no_bgm_editions_v43_event_exact_512_review_20260727\\_metadata_fix_audit_20260730\\VERIFICATION.json",
+      "sha256": "D389A946F4CE47F8EF367762B3C5139C3FAC770A979EE9ED4CD94C02B816097C"
+    }
+  },
+  "expected": {
+    "guide_counts": {
+      "already_uploaded": 11,
+      "ready_to_upload": 18,
+      "human_playback_required": 318,
+      "explicit_exclusions": 8,
+      "total_exact_files": 347
+    },
+    "hard_quarantine": {
+      "ac6003": "P16",
+      "ac6004": "P17",
+      "ac6005": "P18"
+    },
+    "v43_families": [
+      "ac7114_001_full_no_bgm_editions_v1",
+      "ac7115_001_full_no_bgm_editions_v1",
+      "ac7115_013_full_no_bgm_editions_v1",
+      "ac7116_001_full_no_bgm_editions_v1"
+    ]
+  },
+  "human_view": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\00_BILIBILI_统一入口",
+    "layout": "state_then_zh_jp_none_material",
+    "link_policy": "same_volume_hardlink_no_copy_no_reencode",
+    "filename_overrides": {
+      "D9E47A1F98CF5311AE4FC434D55ECE3EB6BD035CB3BD633D7205A574012F9259": "U144_Magius白色阶段玩法组件_ac4906.mp4",
+      "F71CA6911169A142C6DE1F9F7A5209AD2A69850E7CA1DFF69954589DDB4D489C": "U145_Magius暗转叠加组件_ac4906.mp4"
+    },
+    "bilibili_material_metadata": {
+      "title": "魔法纪录 街机版 动画整合 纯素材｜游戏资源解包与技术还原",
+      "description_lines": [
+        "本合集整理《スマスロ マギアレコード 魔法少女まどか☆マギカ外伝》中的纯视觉素材、玩法组件、效果层、界面演出与角色动作。",
+        "",
+        "视频并非实机录屏，而是基于游戏资源解包、事件数据解析与媒体清单审计整理出的外部技术归档。每个分P保持素材原生画幅与30fps，不进行AI超分辨率处理，也不把不同尺寸素材拉伸或机械合并。",
+        "",
+        "本合集包含416×232、512×288、512×416、416×120、208×120、192×320、160×120、144×160、144×56、128×64等原生尺寸。416×232多为老虎机演出画布；512×288等素材可能接近动画原画面规格，但均按文件本身的原生尺寸发布。",
+        "",
+        "纯素材条目通常没有音轨，部分内容本来就是需要与其他画面叠加的图层；这不代表完整游戏演出没有BGM、对白或音效。剧情无BGM技术还原版与本纯素材合集分别归档。",
+        "",
+        "为方便中文观众检索，本合集使用“魔法纪录街机版动画”这一通俗名称；实际资源来源为日本推出的《スマスロ マギアレコード》。",
+        "",
+        "研究记录、处理脚本与技术文档持续公开：https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/tree/codex/corrected-runtime-pipeline",
+        "",
+        "本合集为非官方、非商业性的游戏资料整理与技术研究成果，相关作品及素材版权归原权利方所有。项目仍会继续补充剧情动画、特殊演出、玩法效果、纯素材与后续BGM证据闭合版本。"
+      ],
+      "preferred_sha256_order": [
+        "F71CA6911169A142C6DE1F9F7A5209AD2A69850E7CA1DFF69954589DDB4D489C",
+        "D9E47A1F98CF5311AE4FC434D55ECE3EB6BD035CB3BD633D7205A574012F9259"
+      ]
+    }
+  }
+}

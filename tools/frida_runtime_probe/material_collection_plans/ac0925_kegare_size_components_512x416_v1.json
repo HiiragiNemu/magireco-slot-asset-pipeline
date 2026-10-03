@@ -1,0 +1,64 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac0925_kegare_size_components_512x416_v1",
+  "classification": "ac0925_native512x416_kegare_size_component_catalog",
+  "evidence": "Small, medium and large kegare entry/loop components are fully resolved and remain separate visual material rather than a fabricated gameplay route.",
+  "expected_audio_state": "digital_silence",
+  "allow_single_source_component_catalog": false,
+  "component_events": [
+    "ac0925_001",
+    "ac0925_002",
+    "ac0925_003"
+  ],
+  "component_native_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "component_official_name_allowlist": [
+    "ac0925_cmn_kegare_S",
+    "ac0925_cmn_kegare_S_LP",
+    "ac0925_cmn_kegare_M",
+    "ac0925_cmn_kegare_M_LP",
+    "ac0925_cmn_kegare_L",
+    "ac0925_cmn_kegare_L_LP"
+  ],
+  "derive_clips_from_audience_event_catalog": true,
+  "audience_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "8292714AD983D478F5EE42B7F3C1487428EC83897C5A1E6F3443686E1574DFB1",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "classification": "component_only"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "current_material_index_no_overlap": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\CURRENT_MATERIAL_COLLECTION_INDEX.json",
+    "sha256": "DC276BCC05A1FE22FE7C32943D6059A443E7BC57935C296BD84F443904DE76C9"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "v27r1 exhaustive component/mixed ledger",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "63F5FACF5220E91D138582190C6D55ACCF60AC77C2A46982BBD4C9FEAC3619E4"
+    },
+    {
+      "label": "component and mixed audience-event catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\component_or_mixed_review.csv",
+      "sha256": "5EF3F01F9E766A6AFCE061D6965BD6826B58B314E5EA81A88291737EFFA10FCF"
+    },
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

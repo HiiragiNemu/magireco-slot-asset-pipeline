@@ -382,6 +382,53 @@ def prepare_manifest(
 def scene_audio_role(
     row: Mapping[str, Any], voice_request_ids: set[str] | None = None
 ) -> str:
+    # A VOICE bus row can be exact even when the game has no text cue for the
+    # utterance.  Do not force such audio into ``unsubtitled_audio`` merely
+    # because subtitles are intentionally absent.  Accept this bypass only
+    # with the complete code-derived SOUND_DIVIDE_TBL contract; a loose
+    # ``volume_bus`` label is not enough.
+    sound_bus_fields = {
+        "volume_bus",
+        "volume_kind_value",
+        "strict_no_bgm_disposition",
+        "timing_evidence",
+    }
+    if any(field in row for field in sound_bus_fields):
+        missing = sorted(field for field in sound_bus_fields if field not in row)
+        if missing:
+            raise ValueError(
+                "incomplete exact sound-bus audio contract: " + ", ".join(missing)
+            )
+        bus = str(row["volume_bus"])
+        try:
+            volume_kind = int(row["volume_kind_value"])
+        except (TypeError, ValueError) as error:
+            raise ValueError("exact sound-bus volume kind is invalid") from error
+        disposition = str(row["strict_no_bgm_disposition"])
+        timing = str(row["timing_evidence"])
+        expected = {
+            "SE": (1, "RETAIN_VERIFIED_SE", "scene_se"),
+            "VOICE": (2, "RETAIN_VERIFIED_VOICE", "voice"),
+        }
+        if bus not in expected:
+            raise ValueError(f"exact sound-bus row is not retainable no-BGM audio: {bus}")
+        expected_kind, expected_disposition, role = expected[bus]
+        if volume_kind != expected_kind or disposition != expected_disposition:
+            raise ValueError("exact sound-bus role/disposition mapping differs")
+        if role == "scene_se":
+            if (
+                row.get("source") != "event_audio_component"
+                or timing != "official_event_audio_component_event_global_start"
+            ):
+                raise ValueError("exact SE row lacks event-global component timing")
+        elif (
+            row.get("source") != "z2d_req_sound"
+            or timing
+            != "runtime_parent_scene_z2d_start_plus_exact_child_callback_frame_0"
+            or row.get("event_global_start_resolved") is not True
+        ):
+            raise ValueError("exact VOICE row lacks resolved parent/child timing")
+        return role
     request_id = str(row.get("request_id", ""))
     if voice_request_ids is not None and request_id in voice_request_ids:
         return "voice"

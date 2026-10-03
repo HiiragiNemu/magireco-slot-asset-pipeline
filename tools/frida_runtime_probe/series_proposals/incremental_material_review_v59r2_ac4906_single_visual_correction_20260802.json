@@ -1,0 +1,86 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v2",
+  "checkpoint_id": "20260802-v59r2-ac4906-single-visual-correction",
+  "checkpoint_label": "v59r2",
+  "packaging_mode": "single_visual_canonical",
+  "start_upload_id": 144,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59R1.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r1_metadata_fix_20260730\\UPLOAD_GUIDE.json",
+    "sha256": "426E0F0F64DC2C96593B3A6B97CFA1615D8B4689B956C53AFD71EF4B9E231940"
+  },
+  "specific_exclusions": [
+    "纯视觉无声素材不是 none/JA/ZH 语言产品；本批仅保留一个 canonical visual 审查入口。",
+    "U145 的原生 208x120 一秒暗转叠加源可能必须与白色视频分层合成；素材本体已获 owner 验收且已上传，不能因单独不可视而丢弃。",
+    "旧 v59 U144/U145 三语 hardlink 包只保留审计和回滚用途；废止的是重复语言入口，不是素材内容。",
+    "本批不声明 ac4906 叠加位置、z-order、alpha/blend、父级 hold、循环次数或自然游戏 session。"
+  ],
+  "superseded_packages": [
+    {
+      "upload_id": "U144",
+      "disposition": "superseded_by_single_visual_canonical",
+      "reason": "旧包把同一纯视觉文件错误展开为 none/JA/ZH 三个语言入口；新包只保留一个 visual canonical 文件。",
+      "package_summary": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_incremental_review_v59_material_native416x232_20260730\\manifests\\PACKAGE_SUMMARY.json",
+        "sha256": "770CEBF936716CF0FAD7E1C2F6BFC994A31FEDEA33BC42207BD607AAF45EDF58"
+      },
+      "preserved_source_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_white_progression_components_416_v1\\material_collection_manifest.json",
+        "sha256": "50220EB49E054A2FFC2FB4E4B2D7886202B1AE445BCFD71B9F5001036DF04DAB"
+      }
+    },
+    {
+      "upload_id": "U145",
+      "disposition": "superseded_by_single_visual_canonical",
+      "reason": "素材内容已获 owner 验收并已上传；旧包仅因错误展开 none/JA/ZH 三个语言入口而被单一 material 文件取代。",
+      "package_summary": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\bilibili_incremental_review_v59_material_native208x120_20260730\\manifests\\PACKAGE_SUMMARY.json",
+        "sha256": "236E102AE685537F008149ABC668ED93C5EE342F55978E894C2BFC4A4033540D"
+      },
+      "preserved_source_manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_dark_overlay_component_208x120_v1\\material_collection_manifest.json",
+        "sha256": "18AB72E16838B862375BE430AAADA6F14C1B7658294F1A04B2964B6AC74CA12D"
+      }
+    }
+  ],
+  "products": [
+    {
+      "collection": "ac4906_magius_white_progression_components_416_v1",
+      "title": "Magius白色阶段玩法组件",
+      "family": "ac4906",
+      "material_product_eligible": true,
+      "presentation_role": "standalone_visual_catalog",
+      "human_approval_status": "human_playback_approved",
+      "publication_state": "ready_to_upload",
+      "suggested_action": "READY_TO_UPLOAD_MATERIAL",
+      "expected_dimensions": {
+        "width": 416,
+        "height": 232
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_white_progression_components_416_v1\\material_collection_manifest.json",
+        "sha256": "50220EB49E054A2FFC2FB4E4B2D7886202B1AE445BCFD71B9F5001036DF04DAB"
+      },
+      "output_sha256": "D9E47A1F98CF5311AE4FC434D55ECE3EB6BD035CB3BD633D7205A574012F9259"
+    },
+    {
+      "collection": "ac4906_magius_dark_overlay_component_208x120_v1",
+      "title": "Magius暗转叠加组件",
+      "family": "ac4906",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_approved",
+      "publication_state": "already_uploaded",
+      "suggested_action": "NO_ACTION_ALREADY_UPLOADED",
+      "expected_dimensions": {
+        "width": 208,
+        "height": 120
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v59_ac4906_initial_split_review_20260727\\ac4906_magius_dark_overlay_component_208x120_v1\\material_collection_manifest.json",
+        "sha256": "18AB72E16838B862375BE430AAADA6F14C1B7658294F1A04B2964B6AC74CA12D"
+      },
+      "output_sha256": "F71CA6911169A142C6DE1F9F7A5209AD2A69850E7CA1DFF69954589DDB4D489C"
+    }
+  ]
+}

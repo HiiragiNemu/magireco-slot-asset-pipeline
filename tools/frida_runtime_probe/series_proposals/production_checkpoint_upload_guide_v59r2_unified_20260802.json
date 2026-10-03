@@ -1,0 +1,37 @@
+{
+  "base_plan": {
+    "path": "production_checkpoint_upload_guide_v59r1_20260730.json",
+    "sha256": "48FFE945917564EFC329F1A51121D87BB4041F0671CEAB6D133B97A5AF17DA2E"
+  },
+  "checkpoint_id": "20260802-v59r2-unified-material-owner-state",
+  "exact_item_overrides": [
+    {
+      "sha256": "D9E47A1F98CF5311AE4FC434D55ECE3EB6BD035CB3BD633D7205A574012F9259",
+      "set": {
+        "state": "ready_to_upload",
+        "target_bv": "用户的 MagiaReco Slot 纯素材多P BV",
+        "subtitle_track": "material; no audio; no burned-in subtitles",
+        "suggested_part_name": "Magius白色阶段玩法组件 ac4906",
+        "action": "append_to_pure_material_bv",
+        "automated_qa_status": "passed_visual_only_review_contract",
+        "human_approval_status": "exact_file_owner_playback_approved",
+        "publication_instruction": "UPLOAD ALLOWED FOR THIS EXACT HASH",
+        "scope_note": "Native 416x232 standalone_visual_catalog; one canonical material file, no none/JA/ZH editions."
+      }
+    },
+    {
+      "sha256": "F71CA6911169A142C6DE1F9F7A5209AD2A69850E7CA1DFF69954589DDB4D489C",
+      "set": {
+        "state": "already_uploaded",
+        "target_bv": "用户已投稿的 MagiaReco Slot 纯素材多P BV",
+        "subtitle_track": "material; no audio; no burned-in subtitles",
+        "suggested_part_name": "Magius暗转叠加组件 ac4906",
+        "action": "none_already_uploaded_do_not_repeat",
+        "automated_qa_status": "passed_visual_only_review_contract",
+        "human_approval_status": "exact_file_owner_playback_approved_and_uploaded",
+        "publication_instruction": "DO NOT REUPLOAD",
+        "scope_note": "Native 208x120 layer_component_material; one canonical material file. It may require compositing and does not claim a standalone story or complete gameplay presentation."
+      }
+    }
+  ]
+}

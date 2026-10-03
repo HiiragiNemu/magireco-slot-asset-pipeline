@@ -154,6 +154,7 @@ from tools.frida_runtime_probe.build_no_bgm_story_family_editions import (
     display_text,
     is_exact_graphical_continuation,
     promote_exact_graphical_continuation_cues,
+    subtitle_bound_voice_request_ids,
 )
 
 
@@ -2644,6 +2645,36 @@ class SubtitleVoiceCatalogTests(unittest.TestCase):
             speaker_hint("ac7117_003_kuroe_振り返る"),
             "kuroe",
         )
+
+
+class SubtitleMergedVoiceBindingTests(unittest.TestCase):
+    def valid_cue(self):
+        return {
+            "voice_request_id": "3260",
+            "merged_voice_request_ids": ["3260", "3261"],
+            "subtitle_source": "official_runtime_capture",
+            "evidence": "runtime_text_merged_adjacent_voice",
+            "merged_voice_evidence": "official_runtime_capture_runtime_text_merged_adjacent_voice",
+        }
+
+    def test_primary_and_exact_runtime_merged_requests(self):
+        self.assertEqual(subtitle_bound_voice_request_ids([{}, {"voice_request_id": "3"}]), {"3"})
+        self.assertEqual(subtitle_bound_voice_request_ids([self.valid_cue()]), {"3260", "3261"})
+
+    def test_unproven_or_malformed_merged_requests_fail_closed(self):
+        invalid = [
+            ("subtitle_source", "child_local"), ("evidence", "guessed"),
+            ("merged_voice_evidence", ""), ("voice_request_id", ""),
+            ("merged_voice_request_ids", ["3260", "3260"]),
+            ("merged_voice_request_ids", ["3261", "3260"]),
+            ("merged_voice_request_ids", ["3260"]),
+            ("merged_voice_request_ids", "3260,3261"),
+        ]
+        for key, value in invalid:
+            with self.subTest(key=key, value=value):
+                cue = self.valid_cue(); cue[key] = value
+                with self.assertRaisesRegex(ValueError, "invalid exact runtime"):
+                    subtitle_bound_voice_request_ids([cue])
 
 
 class SeriesEditionTests(unittest.TestCase):

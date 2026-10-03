@@ -1,0 +1,146 @@
+{
+  "schema": "magireco-material-production-batch-plan-v1",
+  "batch_id": "20260803-v66-silent-native416-bounded-materials",
+  "recorded_date": "2026-08-03",
+  "branch": "codex/corrected-runtime-pipeline",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v66_silent_native416_bounded_20260803",
+  "contract": {
+    "classification": "bounded_visual_material_only",
+    "language_editions": [],
+    "material_file_per_collection": 1,
+    "preserve_native_resolution": true,
+    "never_upscale": true,
+    "expected_audio_state": "digital_silence",
+    "publication_state": "human_playback_required",
+    "cross_plan_source_policy": "no SHA-256 overlap within batch or with current material index plus v65",
+    "natural_session_claimed": false
+  },
+  "plans": [
+    {
+      "collection": "ac7118_profile_visual_materials_416x232_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac7118_profile_visual_materials_416x232_v1.json",
+      "plan_sha256": "1AD906A6FC6952AE2D079925AE4D50B50D864CDFF9E0ADF1041C58C940CD52FF",
+      "events": [
+        "ac7118_002",
+        "ac7118_003",
+        "ac7118_004",
+        "ac7118_005",
+        "ac7118_006",
+        "ac7118_007",
+        "ac7118_008",
+        "ac7118_009",
+        "ac7118_010",
+        "ac7118_011",
+        "ac7118_012",
+        "ac7118_013",
+        "ac7118_014",
+        "ac7118_015",
+        "ac7118_016",
+        "ac7118_017",
+        "ac7118_018",
+        "ac7118_019",
+        "ac7118_020",
+        "ac7118_021",
+        "ac7118_022"
+      ],
+      "native_dimensions": "416x232",
+      "official_names": [
+        "ac7118_at_ch_profile_yac_IN",
+        "ac7118_at_ch_profile_yac_LP",
+        "ac7118_at_ch_profile_tur_IN",
+        "ac7118_at_ch_profile_tur_LP",
+        "ac7118_at_ch_profile_san_IN",
+        "ac7118_at_ch_profile_san_LP",
+        "ac7118_at_ch_profile_fer_IN",
+        "ac7118_at_ch_profile_fer_LP",
+        "ac7118_at_ch_profile_sqb_IN",
+        "ac7118_at_ch_profile_sqb_LP",
+        "ac7118_at_ch_profile_ren_IN",
+        "ac7118_at_ch_profile_ren_LP",
+        "ac7118_at_ch_profile_mom_IN",
+        "ac7118_at_ch_profile_mom_LP",
+        "ac7118_at_ch_profile_kae_IN",
+        "ac7118_at_ch_profile_kae_LP",
+        "ac7118_at_ch_profile_kur_IN",
+        "ac7118_at_ch_profile_kur_LP",
+        "ac7118_at_ch_profile_mad_IN",
+        "ac7118_at_ch_profile_mad_LP",
+        "ac7118_at_ch_profile_say_IN",
+        "ac7118_at_ch_profile_say_LP",
+        "ac7118_at_ch_profile_mam_IN",
+        "ac7118_at_ch_profile_mam_LP",
+        "ac7118_at_ch_profile_kyo_IN",
+        "ac7118_at_ch_profile_kyo_LP",
+        "ac7118_at_ch_profile_hom_IN",
+        "ac7118_at_ch_profile_hom_LP",
+        "ac7118_at_ch_profile_mit_IN",
+        "ac7118_at_ch_profile_mit_LP",
+        "ac7118_at_ch_profile_ui_IN",
+        "ac7118_at_ch_profile_ui_LP",
+        "ac7118_at_ch_profile_tou_IN",
+        "ac7118_at_ch_profile_tou_LP",
+        "ac7118_at_ch_profile_nem_IN",
+        "ac7118_at_ch_profile_nem_LP",
+        "ac7118_at_ch_profile_ama_IN",
+        "ac7118_at_ch_profile_ama_LP",
+        "ac7118_at_ch_profile_mif_IN",
+        "ac7118_at_ch_profile_mif_LP",
+        "ac7118_at_ch_profile_ari_IN",
+        "ac7118_at_ch_profile_ari_LP"
+      ]
+    },
+    {
+      "collection": "ac2001_ac2002_ac5004_wait_loop_materials_416x232_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac2001_ac2002_ac5004_wait_loop_materials_416x232_v1.json",
+      "plan_sha256": "9F6B3B64BB5C6ED923A658E52A3589E9D70B8BC079281E5AF43A7BAE9303C9CF",
+      "events": [
+        "ac2001_002",
+        "ac2002_002",
+        "ac5004_007"
+      ],
+      "native_dimensions": "416x232",
+      "official_names": [
+        "ac2001_cz1_magia_challenge_taiki_LP",
+        "ac2002_cz2_kuroe_challenge_taiki_LP",
+        "ac5004_at_CC_taiki_LP"
+      ]
+    },
+    {
+      "collection": "ac8005_ac8050_visual_state_materials_416x232_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8005_ac8050_visual_state_materials_416x232_v1.json",
+      "plan_sha256": "B9D713202172667F473905F1D685567896D855A8FA921D216926E5B554DD0946",
+      "events": [
+        "ac8005_012",
+        "ac8050_002"
+      ],
+      "native_dimensions": "416x232",
+      "official_names": [
+        "ac8005_ef_bg_win_mot",
+        "ac8005_ef_bg_win_mot_lp",
+        "ac8050_uwanose_impact_ef_noLP"
+      ]
+    }
+  ],
+  "inputs": {
+    "eligibility_audit": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\SILENT_NATIVE416_MATERIAL_ELIGIBILITY_AFTER_V65.json",
+      "sha256": "707D4A26462716F91DD59E7C9D4339F8D8D7177D0822AA065C6E17CFB8C0D72F"
+    },
+    "audience_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "8292714AD983D478F5EE42B7F3C1487428EC83897C5A1E6F3443686E1574DFB1"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V65.json",
+      "sha256": "35CB1AB01D1BA05641CE3C6B12069E8C498C7715624C6334881131FAE748A35D"
+    },
+    "audience_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "video_map": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "schema": "magireco-material-production-batch-plan-v1",
+  "batch_id": "20260803-v62-resolved-silent-components",
+  "recorded_date": "2026-08-03",
+  "branch": "codex/corrected-runtime-pipeline",
+  "output_root": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v62_resolved_silent_components_20260803",
+  "contract": {
+    "classification": "gameplay_effect_material_only",
+    "language_editions": [],
+    "material_file_per_collection": 1,
+    "preserve_native_resolution": true,
+    "never_upscale": true,
+    "expected_audio_state": "digital_silence",
+    "publication_state": "human_playback_required",
+    "cross_plan_source_policy": "no SHA-256 overlap within batch or with current material index plus v61"
+  },
+  "plans": [
+    {
+      "collection": "ac9910_challenge_sub_backgrounds_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9910_challenge_sub_backgrounds_192x320_v1.json",
+      "plan_sha256": "F96A47AEBACF13C2F8B88C1B8949F453A6CCE22DD6CAB5DB023B1BC452D2BD24",
+      "events": [
+        "ac9910_001",
+        "ac9910_002"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac9910_cz1_sub_bg",
+        "ac9910_cz1_sub_bg_lp",
+        "ac9910_cz2_sub_bg",
+        "ac9910_cz2_sub_bg_lp"
+      ]
+    },
+    {
+      "collection": "ac8050_uwanose_sub_components_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8050_uwanose_sub_components_192x320_v1.json",
+      "plan_sha256": "67040366CFDDCDB40179C72AFF924E5E6A9F0D2FC532E19EF1574B3334E9888A",
+      "events": [
+        "ac8050_005",
+        "ac8050_006"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac8050_uwanose_base_sub_bg_LP",
+        "ac8050_uwanose_impact_sub_ef",
+        "ac8050_uwanose_impact_sub_ef_LP",
+        "ac8050_uwanose_impact_sub_ef_noLP"
+      ]
+    },
+    {
+      "collection": "ac5002_kessen_seijo_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5002_kessen_seijo_components_512x416_v1.json",
+      "plan_sha256": "5B273BFABF1C6992D4AC570B242B41D721BCCA3134DBB642DEDA6EAF05CE5282",
+      "events": [
+        "ac5002_001"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac5002_01_MR",
+        "ac5002_01_MR_LP",
+        "ac5002_AT_kessen_seijo_title_NML",
+        "ac5002_AT_kessen_seijo_title_NML_LP"
+      ]
+    },
+    {
+      "collection": "ac9010_uwasa_icon_impact_80x48_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac9010_uwasa_icon_impact_80x48_v1.json",
+      "plan_sha256": "87F6196818CA74C9863C256613A50ED4140CB6F3A9AB77B5955F2147020B26EC",
+      "events": [
+        "ac9010_013",
+        "ac9010_015",
+        "ac9010_017",
+        "ac9010_019",
+        "ac9010_021"
+      ],
+      "native_dimensions": "80x48",
+      "official_names": [
+        "ac9010_at_magiata_icon_uwa_ef_impact"
+      ]
+    },
+    {
+      "collection": "ac3405_bonus_gold_shutter_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3405_bonus_gold_shutter_components_512x416_v1.json",
+      "plan_sha256": "6A2BB0FF13423DEC1D119B6630491B5CDBC9231E059ADD1954A3E7B9D56BCA1A",
+      "events": [
+        "ac3405_002",
+        "ac3405_003"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3405_bb_gld_shutter_bg",
+        "ac3405_bb_gld_shutter_bg_LP",
+        "ac3405_bb_gld_shutter_open",
+        "ac3405_bb_gld_shutter_close",
+        "ac3405_bb_gld_shutter_close_LP"
+      ]
+    },
+    {
+      "collection": "ac5202_character_cutin_large_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5202_character_cutin_large_components_512x416_v1.json",
+      "plan_sha256": "67A0A772122030F2C2AB747DFA943A874E8EAD3C1EEC12804CE211AD7738902C",
+      "events": [
+        "ac5202_018",
+        "ac5202_035",
+        "ac5202_051"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac5202_cutin_sayaka_L",
+        "ac5202_cutin_sayaka_L_LP",
+        "ac5202_cutin_kyoko_L",
+        "ac5202_cutin_kyoko_L_LP",
+        "ac5202_cutin_madohomu_L",
+        "ac5202_cutin_madohomu_L_LP"
+      ]
+    },
+    {
+      "collection": "ac5505_berserk_iroha_sub_loop_192x320_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac5505_berserk_iroha_sub_loop_192x320_v1.json",
+      "plan_sha256": "2A3548B6B505E46C388D3D307C2EEA7D5CE0BC2A888A1CD92371509C5BE70D5E",
+      "events": [
+        "ac5505_016",
+        "ac5505_017",
+        "ac5505_018",
+        "ac5505_019",
+        "ac5505_020",
+        "ac5505_021"
+      ],
+      "native_dimensions": "192x320",
+      "official_names": [
+        "ac5505_at_dc_bousouiroha_sub_LP"
+      ]
+    },
+    {
+      "collection": "ac8050_ac8052_uwanose_full_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac8050_ac8052_uwanose_full_components_512x416_v1.json",
+      "plan_sha256": "EF24978EB1A42642D63F0F72C0B1E6E71B59C0D0EF62F9E43042D54E2CCADA01",
+      "events": [
+        "ac8050_003",
+        "ac8050_004",
+        "ac8050_007",
+        "ac8052_001",
+        "ac8052_002",
+        "ac8052_003"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac8050_bb_kou_impact_ZEN_ef_noLP",
+        "ac8050_uwanose_base_ZEN_bg_LP",
+        "ac8050_uwanose_impact_ZEN_ef",
+        "ac8050_uwanose_impact_ZEN_ef_LP",
+        "ac8052_uwanose_aln_ZEN_bg_LP",
+        "ac8050_uwanose_impact_ZEN_ef_noLP"
+      ]
+    },
+    {
+      "collection": "ac3204_magia_bonus_stage_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3204_magia_bonus_stage_components_512x416_v1.json",
+      "plan_sha256": "E6B9FBE9F8D9F1D528A27963AB5190A36AE8FADF4D5966B26D9BBD1A813BE22B",
+      "events": [
+        "ac3204_001",
+        "ac3204_002",
+        "ac3204_003",
+        "ac3204_004",
+        "ac3204_005",
+        "ac3204_006",
+        "ac3204_007"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3204_m_IN1",
+        "ac3204_m_LP1",
+        "ac3204_m_LP2",
+        "ac3204_m_LP3",
+        "ac3204_m_LP4",
+        "ac3204_m_LP5",
+        "ac3204_m_LP6"
+      ]
+    },
+    {
+      "collection": "ac3203_magia_bonus_stage_components_512x416_v1",
+      "plan_path": "C:\\Users\\proje\\.codex\\worktrees\\2fe8\\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==\\tools\\frida_runtime_probe\\material_collection_plans\\ac3203_magia_bonus_stage_components_512x416_v1.json",
+      "plan_sha256": "FFA20DBA8EBC829AF008C4C5427A40E612DDEA4E02D3F0434B740BDA9CE0F5C2",
+      "events": [
+        "ac3203_001",
+        "ac3203_002",
+        "ac3203_003",
+        "ac3203_004",
+        "ac3203_005",
+        "ac3203_006",
+        "ac3203_007"
+      ],
+      "native_dimensions": "512x416",
+      "official_names": [
+        "ac3203_m_IN1",
+        "ac3203_m_LP1",
+        "ac3203_m_LP2",
+        "ac3203_m_LP3",
+        "ac3203_m_LP4",
+        "ac3203_m_LP5",
+        "ac3203_m_LP6"
+      ]
+    }
+  ],
+  "inputs": {
+    "component_ledger": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "63F5FACF5220E91D138582190C6D55ACCF60AC77C2A46982BBD4C9FEAC3619E4"
+    },
+    "current_material_index": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V61.json",
+      "sha256": "D3F0902FD2CCE5AB5387ED4C2258E8D7DF8F33235EC7E1CB1C4B82417AE76837"
+    },
+    "audience_clips": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    "video_map": {
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  }
+}

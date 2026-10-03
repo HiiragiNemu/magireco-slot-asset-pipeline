@@ -1,0 +1,9 @@
+{
+  "base_plan": {
+    "path": "exhaustive_video_production_ledger_v27.json",
+    "sha256": "9B1775697CF600057A5CD1AE57CE326647E1A2962431B8E4D958AC5E8D124A62"
+  },
+  "checkpoint_id": "20260730-v27r1-metadata-integrity-fix",
+  "recorded_date": "2026-07-30",
+  "scope": "Metadata-only correction: precise ac4903_015 layered-component blocker. No media or classification changes."
+}

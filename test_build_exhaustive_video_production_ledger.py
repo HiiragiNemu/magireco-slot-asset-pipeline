@@ -285,6 +285,12 @@ class BuildExhaustiveVideoProductionLedgerTest(unittest.TestCase):
             ("gameplay_effect_collection", "planned_unproduced", ""),
         )
 
+    def test_ac4903_component_blocker_is_precise(self) -> None:
+        blocker = module.COMPONENT_BLOCKER_OVERRIDES["ac4903_015"]
+        self.assertIn("layered_component_composition_required", blocker)
+        self.assertIn("ac8040_shouri_EF_small_add", blocker)
+        self.assertIn("ac8040_shouri_EF_small_add_LP", blocker)
+
     def test_material_event_is_not_left_as_planned_unproduced(self) -> None:
         disposition = module._classify_audience_event(
             row={

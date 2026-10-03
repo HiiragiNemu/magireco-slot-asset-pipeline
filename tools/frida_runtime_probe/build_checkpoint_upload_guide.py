@@ -76,6 +76,21 @@ MATERIAL_PART_NAMES = {
     "ac8000_next_story_visual_catalog_v1": (
         "下一段剧情界面视觉素材 ac8000"
     ),
+    "ac5102_416_component_visual_catalog_v1": (
+        "416画幅通用玩法组件素材 ac5102"
+    ),
+    "ac0504_win_raw_components_v1": "胜利演出原始组件素材 ac0504",
+    "ac4921_character_action_components_v1": "角色动作组件素材 ac4921",
+    "ac4921_result_frame_components_v1": "结果框组件素材 ac4921",
+    "ac905x_uwanose_backdrop_impact_416_v1": (
+        "追加奖励背景与冲击组件素材 ac905x"
+    ),
+    "ac905x_uwanose_g_plus_counter_144_v1": (
+        "追加奖励G与Plus计数组件素材 ac905x"
+    ),
+    "ac905x_uwanose_total_counter_128_v1": (
+        "追加奖励总计数组件素材 ac905x"
+    ),
     "ac905x_uwanose_components_416_v1": "上乗せ玩法组件素材 ac905x",
     "ac905x_uwanose_badges_144x160_v1": "上乗せ徽章素材 ac905x",
     "ac905x_uwanose_numbers_128x64_v1": "上乗せ数字素材 ac905x",
@@ -133,6 +148,68 @@ ROUTE_BATCH_SOURCE_NAMES = (
     "v35_ac0911_manifest",
     "v51_ac4902_selector_routes_manifest",
 )
+
+
+def is_no_subtitle_alias(editions: set[str], hashes: set[str]) -> bool:
+    """Only a byte-identical NONE edition proves absence of burned-in text."""
+    return "none" in editions and len(editions) >= 2 and len(hashes) == 1
+
+
+def subtitle_track_label(
+    edition: str,
+    *,
+    exact_cross_target_alias: bool = False,
+) -> str:
+    if exact_cross_target_alias:
+        return "no burned-in subtitles; exact cross-edition alias"
+    if edition == "none":
+        return "no burned-in subtitles"
+    return f"{edition.upper()} burned-in"
+
+
+def apply_exact_item_overrides(
+    items: list[dict[str, str]],
+    overrides: Any,
+) -> None:
+    """Apply owner-state corrections to one exact, already hash-bound item."""
+
+    if overrides is None:
+        return
+    if not isinstance(overrides, list):
+        raise ValueError("upload guide exact_item_overrides must be a list")
+    allowed = {
+        "state",
+        "target_bv",
+        "subtitle_track",
+        "suggested_part_name",
+        "action",
+        "automated_qa_status",
+        "human_approval_status",
+        "publication_instruction",
+        "scope_note",
+    }
+    seen: set[str] = set()
+    for raw in overrides:
+        if not isinstance(raw, Mapping):
+            raise ValueError("upload guide exact item override must be an object")
+        sha256 = str(raw.get("sha256", "")).upper()
+        if not re.fullmatch(r"[0-9A-F]{64}", sha256) or sha256 in seen:
+            raise ValueError("upload guide exact item override SHA-256 differs")
+        seen.add(sha256)
+        matches = [row for row in items if row["sha256"] == sha256]
+        if len(matches) != 1:
+            raise ValueError(
+                f"upload guide exact item override must match once: {sha256}"
+            )
+        changes = raw.get("set")
+        if not isinstance(changes, Mapping) or not changes:
+            raise ValueError("upload guide exact item override set is malformed")
+        unknown = set(changes) - allowed
+        if unknown or any(not isinstance(value, str) for value in changes.values()):
+            raise ValueError(
+                f"upload guide exact item override fields differ: {sorted(unknown)}"
+            )
+        matches[0].update({str(key): str(value) for key, value in changes.items()})
 
 
 def material_part_name(collection: str) -> str:
@@ -644,11 +721,17 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
         manifest_path = source_paths[source_name]
         value = read_json(manifest_path)
         family = str(value.get("family") or value.get("series") or "")
-        for row in _manifest_media(
+        route_media = _manifest_media(
             value,
             family_root=manifest_path.parent,
             family=family,
-        ):
+        )
+        hashes_by_product: dict[str, set[str]] = {}
+        editions_by_product: dict[str, set[str]] = {}
+        for row in route_media:
+            hashes_by_product.setdefault(row["product"], set()).add(row["sha256"])
+            editions_by_product.setdefault(row["product"], set()).add(row["edition"])
+        for row in route_media:
             path = Path(row["path"])
             items.append(
                 _item(
@@ -658,10 +741,14 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                     target_bv=_track_target(
                         plan, family, row["edition"], row["product"]
                     ),
-                    subtitle_track=(
-                        "no burned-in subtitles"
-                        if row["edition"] == "none"
-                        else f"{row['edition'].upper()} burned-in"
+                    subtitle_track=subtitle_track_label(
+                        row["edition"],
+                        exact_cross_target_alias=(
+                            is_no_subtitle_alias(
+                                editions_by_product[row["product"]],
+                                hashes_by_product[row["product"]],
+                            )
+                        ),
                     ),
                     suggested_part_name=path.stem,
                     action="hold_for_owner_playback",
@@ -837,7 +924,7 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                         state="human_playback_required",
                         target_bv=_target(plan, target_key),
                         subtitle_track=(
-                            "no burned-in subtitles; exact no-dialogue alias"
+                            "no burned-in subtitles; exact cross-edition alias"
                             if no_dialogue_aliases
                             else "no burned-in subtitles"
                             if edition == "none"
@@ -967,6 +1054,8 @@ def build(*, plan_path: Path, output_root: Path) -> Path:
                 plan=plan,
             )
         )
+
+    apply_exact_item_overrides(items, plan.get("exact_item_overrides"))
 
     keys = [(row["absolute_folder"].casefold(), row["exact_filename"].casefold()) for row in items]
     if len(keys) != len(set(keys)):

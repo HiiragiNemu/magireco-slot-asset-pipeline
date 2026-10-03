@@ -138,6 +138,38 @@ SUBTITLE_EDITIONS = {"ja", "zh", "ja_zh"}
 OMITTED_SPEAKER_CODES = {"", "multiple", "narration", "unknown", "conflicting"}
 
 
+def subtitle_bound_voice_request_ids(
+    subtitle_rows: Sequence[Mapping[str, Any]],
+) -> set[str]:
+    """Return primary and exact runtime-merged voice request IDs for cues."""
+
+    result: set[str] = set()
+    for cue in subtitle_rows:
+        primary = str(cue.get("voice_request_id", "")).strip()
+        if primary:
+            result.add(primary)
+        merged = cue.get("merged_voice_request_ids")
+        if merged is None:
+            continue
+        normalized = [str(value).strip() for value in merged] if isinstance(merged, list) else []
+        if (
+            not primary
+            or len(normalized) < 2
+            or normalized[0] != primary
+            or any(not value for value in normalized)
+            or len(set(normalized)) != len(normalized)
+            or cue.get("subtitle_source") != "official_runtime_capture"
+            or cue.get("evidence") != "runtime_text_merged_adjacent_voice"
+            or cue.get("merged_voice_evidence")
+            != "official_runtime_capture_runtime_text_merged_adjacent_voice"
+        ):
+            raise ValueError(
+                f"invalid exact runtime merged-voice cue for request {primary!r}"
+            )
+        result.update(normalized)
+    return result
+
+
 def normalize_editions(values: Sequence[str] | None) -> tuple[str, ...]:
     """Return a stable, duplicate-free edition selection."""
 
@@ -2112,12 +2144,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             row["applied_voice_subtitle_overrides"] = applied_voice
             applied_rows.extend(applied)
             applied_voice_rows.extend(applied_voice)
-            voice_request_ids = {
-                str(cue.get("voice_request_id", "")).strip()
-                for cue in projected.get("subtitles", [])
-                if isinstance(cue, Mapping)
-                and str(cue.get("voice_request_id", "")).strip()
-            }
+            voice_request_ids = subtitle_bound_voice_request_ids(
+                [
+                    cue
+                    for cue in projected.get("subtitles", [])
+                    if isinstance(cue, Mapping)
+                ]
+            )
             role_rows = [
                 {
                     "request_id": str(audio.get("request_id", "")),

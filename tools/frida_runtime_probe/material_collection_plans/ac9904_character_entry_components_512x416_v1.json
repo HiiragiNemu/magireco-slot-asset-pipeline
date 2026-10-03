@@ -1,0 +1,135 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac9904_character_entry_components_512x416_v1",
+  "classification": "ac9904_native512x416_character_entry_component_catalog",
+  "evidence": "Twenty-five resolved character entry/loop pairs are preserved as visual material.",
+  "expected_audio_state": "digital_silence",
+  "allow_single_source_component_catalog": false,
+  "component_events": [
+    "ac9904_2_001",
+    "ac9904_2_002",
+    "ac9904_2_003",
+    "ac9904_2_004",
+    "ac9904_2_005",
+    "ac9904_2_006",
+    "ac9904_2_007",
+    "ac9904_2_008",
+    "ac9904_2_009",
+    "ac9904_2_010",
+    "ac9904_2_011",
+    "ac9904_2_012",
+    "ac9904_2_013",
+    "ac9904_2_014",
+    "ac9904_2_015",
+    "ac9904_2_016",
+    "ac9904_2_017",
+    "ac9904_2_018",
+    "ac9904_2_019",
+    "ac9904_2_020",
+    "ac9904_2_021",
+    "ac9904_2_022",
+    "ac9904_2_023",
+    "ac9904_2_024",
+    "ac9904_2_025"
+  ],
+  "component_native_dimensions": {
+    "width": 512,
+    "height": 416
+  },
+  "component_official_name_allowlist": [
+    "ac9904_ch_01_iroha_in",
+    "ac9904_ch_01_iroha_in_lp",
+    "ac9904_ch_02_yatiyo_in",
+    "ac9904_ch_02_yatiyo_in_lp",
+    "ac9904_ch_03_turuno_in",
+    "ac9904_ch_03_turuno_in_lp",
+    "ac9904_ch_04_sana_in",
+    "ac9904_ch_04_sana_in_lp",
+    "ac9904_ch_05_ferisia_in",
+    "ac9904_ch_05_ferisia_in_lp",
+    "ac9904_ch_06_momoko_in",
+    "ac9904_ch_06_momoko_in_lp",
+    "ac9904_ch_07_rena_in",
+    "ac9904_ch_07_rena_in_lp",
+    "ac9904_ch_08_kaede_in",
+    "ac9904_ch_08_kaede_in_lp",
+    "ac9904_ch_09_mitama_in",
+    "ac9904_ch_09_mitama_in_lp",
+    "ac9904_ch_10_kuroe_in",
+    "ac9904_ch_10_kuroe_in_lp",
+    "ac9904_ch_11_madoka_in",
+    "ac9904_ch_11_madoka_in_lp",
+    "ac9904_ch_12_sayaka_in",
+    "ac9904_ch_12_sayaka_in_lp",
+    "ac9904_ch_13_mami_in",
+    "ac9904_ch_13_mami_in_lp",
+    "ac9904_ch_14_kyoko_in",
+    "ac9904_ch_14_kyoko_in_lp",
+    "ac9904_ch_15_homura_in",
+    "ac9904_ch_15_homura_in_lp",
+    "ac9904_ch_16_touka_in",
+    "ac9904_ch_16_touka_in_lp",
+    "ac9904_ch_17_nemu_in",
+    "ac9904_ch_17_nemu_in_lp",
+    "ac9904_ch_18_tukuyo_in",
+    "ac9904_ch_18_tukuyo_in_lp",
+    "ac9904_ch_19_tukasa_in",
+    "ac9904_ch_19_tukasa_in_lp",
+    "ac9904_ch_20_mihuyu_in",
+    "ac9904_ch_20_mihuyu_in_lp",
+    "ac9904_ch_21_uwtrn_in",
+    "ac9904_ch_21_uwtrn_in_lp",
+    "ac9904_ch_22_hlymami_in",
+    "ac9904_ch_22_hlymami_in_lp",
+    "ac9904_ch_23_arina_in",
+    "ac9904_ch_23_arina_in_lp",
+    "ac9904_ch_24_ui_in",
+    "ac9904_ch_24_ui_in_lp",
+    "ac9904_ch_25_sqb_in",
+    "ac9904_ch_25_sqb_in_lp"
+  ],
+  "derive_clips_from_audience_event_catalog": true,
+  "audience_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "8292714AD983D478F5EE42B7F3C1487428EC83897C5A1E6F3443686E1574DFB1",
+    "production_state": "planned_unproduced",
+    "disposition": "gameplay_effect_collection",
+    "classification": "component_only"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "current_material_index_no_overlap": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V63.json",
+    "sha256": "D1E5A1D24D4D1D35F5B14D7CC168E99B9A3AA4D4DF5C0382D69720088165118B"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "v27r1 exhaustive component/mixed ledger",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\COMPONENT_MIXED_LEDGER.csv",
+      "sha256": "63F5FACF5220E91D138582190C6D55ACCF60AC77C2A46982BBD4C9FEAC3619E4"
+    },
+    {
+      "label": "component and mixed audience-event catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\component_or_mixed_review.csv",
+      "sha256": "5EF3F01F9E766A6AFCE061D6965BD6826B58B314E5EA81A88291737EFFA10FCF"
+    },
+    {
+      "label": "post-v63 eligibility scan",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\ELIGIBLE_COMPONENT_ONLY_SCAN_AFTER_V63.json",
+      "sha256": "16602A14AD9D076F2ED03ACF1E548CEA3CB24B4D40805A116378E4E98A7F7E9B"
+    },
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

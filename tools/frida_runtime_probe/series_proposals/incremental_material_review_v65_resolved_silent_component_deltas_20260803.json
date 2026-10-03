@@ -1,0 +1,178 @@
+{
+  "schema": "magireco-incremental-material-review-plan-v2",
+  "checkpoint_id": "20260803-v65-resolved-silent-component-deltas",
+  "checkpoint_label": "v65",
+  "packaging_mode": "single_visual_canonical",
+  "start_upload_id": 197,
+  "source_guide_copy_name": "SOURCE_GLOBAL_UPLOAD_GUIDE_V59R2.json",
+  "source_upload_guide": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\upload_guide_v59r2_unified_20260802\\UPLOAD_GUIDE.json",
+    "sha256": "6EA70F468742D8D7C3B0D17763E0CB800EF5D6FA420F96BB670E625BD95FCAD9"
+  },
+  "specific_exclusions": [
+    "本批只归档副屏、导航和角色动作视觉组件，不声明为剧情或完整 session。",
+    "每项只有一个无语言后缀 material 文件，不生成 none/JA/ZH。",
+    "全部保持原生分辨率、H.264 30fps、无音轨且不 upscale。",
+    "与 v64 重复的来源哈希已排除；alias-only 事件由 coverage bundle 绑定，不重复生成媒体。",
+    "自动 QA 已通过，但全部仍需 owner 人工播放。"
+  ],
+  "superseded_packages": [],
+  "batch_source_summary": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\BATCH_SUMMARY.json",
+    "sha256": "2E7E0DF7C70FC6CE28E66F6B5CEED41A870A6398FDEC2B36CD9B0B509273D2AF"
+  },
+  "products": [
+    {
+      "collection": "ac0927_sub_call_unique_delta_192x320_v1",
+      "title": "呼叫副屏状态组件",
+      "family": "ac0927",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 192,
+        "height": 320
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac0927_sub_call_unique_delta_192x320_v1\\material_collection_manifest.json",
+        "sha256": "0CC2EA1A67A4320450CF24756E43C1593E2A2D25207943949267811C216EA9BA"
+      },
+      "output_sha256": "8F9264D98B053C3B10B2C644FB8EB0235D321F0EEF9AEAF70D52DB9F41EA4AC0"
+    },
+    {
+      "collection": "ac4917_navigation_unique_delta_200x200_v1",
+      "title": "导航组件200x200·4917增量",
+      "family": "ac4917",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 200,
+        "height": 200
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4917_navigation_unique_delta_200x200_v1\\material_collection_manifest.json",
+        "sha256": "33CFC26AA539F99695810C89AED8A746AC688526B2AFEEB9EF146ECE84BDD40D"
+      },
+      "output_sha256": "6B4DA54F21CB9D0783E2E16D22AF97AEF7993951ABE57B0CDA43ADC41B4A3051"
+    },
+    {
+      "collection": "ac4914_navigation_unique_delta_200x200_v1",
+      "title": "导航组件200x200·4914增量",
+      "family": "ac4914",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 200,
+        "height": 200
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4914_navigation_unique_delta_200x200_v1\\material_collection_manifest.json",
+        "sha256": "A97ED10DD50755EEABEC85CD2B1B8A81F8214E6869BA30724B95B08B9A5D802C"
+      },
+      "output_sha256": "386FEBCB23A4C9C1526D726ACD7C6A5DCC408E8468081470F8322C6EAD7887E9"
+    },
+    {
+      "collection": "ac4915_navigation_unique_delta_200x200_v1",
+      "title": "导航组件200x200·4915",
+      "family": "ac4915",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 200,
+        "height": 200
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4915_navigation_unique_delta_200x200_v1\\material_collection_manifest.json",
+        "sha256": "CDCEEB75AE5C7A412B164AA75DD0F0F178CF40DE7C088B958F0857BF5407F926"
+      },
+      "output_sha256": "E6E548E9B4E1F8B7B8F78102FA916C86F46CEE015E2BEC91E0AFE01DB2B459DA"
+    },
+    {
+      "collection": "ac4917_navigation_unique_delta_128x128_v1",
+      "title": "导航组件128x128·4917增量",
+      "family": "ac4917",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4917_navigation_unique_delta_128x128_v1\\material_collection_manifest.json",
+        "sha256": "AF6464C8818C15469DE1D4C83B3D8072030E79F2F9B693EEBCD697BF033513D7"
+      },
+      "output_sha256": "4235CE5ED1C88BE5A38E7AB30BF55B587616A85E8EC1BEBBFD58649E52AF0AE4"
+    },
+    {
+      "collection": "ac0909_character_action_components_192x320_v1",
+      "title": "角色动作副屏组件",
+      "family": "ac0909",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 192,
+        "height": 320
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac0909_character_action_components_192x320_v1\\material_collection_manifest.json",
+        "sha256": "209915AC091164BEDCDFCE931EFF821E4A87D89860B6456554D274DC7CAB4A73"
+      },
+      "output_sha256": "E1D30643E5819685F95767A1F6949C489078C7FF3B6DA704AB50BE0C9ED8AC53"
+    },
+    {
+      "collection": "ac4915_navigation_unique_delta_128x128_v1",
+      "title": "导航组件128x128·4915增量",
+      "family": "ac4915",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4915_navigation_unique_delta_128x128_v1\\material_collection_manifest.json",
+        "sha256": "75FAABDED62344448803F1EC48DB302004B6BCAFDADABC4ED56C5FE377698E7F"
+      },
+      "output_sha256": "DDADD8034279BE4DB9C879D4F1F8175708B798430F807F3F541EC53F77D0FD2E"
+    },
+    {
+      "collection": "ac4914_navigation_unique_delta_128x128_v1",
+      "title": "导航组件128x128·4914增量",
+      "family": "ac4914",
+      "material_product_eligible": true,
+      "presentation_role": "layer_component_material",
+      "human_approval_status": "human_playback_required",
+      "publication_state": "human_playback_required",
+      "suggested_action": "HOLD_FOR_HUMAN_PLAYBACK",
+      "expected_dimensions": {
+        "width": 128,
+        "height": 128
+      },
+      "manifest": {
+        "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\material_collections_v65_resolved_silent_component_deltas_20260803\\ac4914_navigation_unique_delta_128x128_v1\\material_collection_manifest.json",
+        "sha256": "7E90C76716157C41D1E10BADCF190B37C6DA14514D19A8FD67B54C773B352B95"
+      },
+      "output_sha256": "E1CA358FA8DFF951FB93F4C29A7F150D8FD27679249C8223629E182ED2ACE573"
+    }
+  ]
+}

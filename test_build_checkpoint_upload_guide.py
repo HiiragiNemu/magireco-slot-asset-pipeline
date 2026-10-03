@@ -13,6 +13,50 @@ import build_checkpoint_upload_guide as module  # noqa: E402
 
 
 class BuildCheckpointUploadGuideTest(unittest.TestCase):
+    def test_subtitle_track_label_for_exact_alias(self) -> None:
+        self.assertEqual(
+            module.subtitle_track_label(
+                "ja",
+                exact_cross_target_alias=True,
+            ),
+            "no burned-in subtitles; exact cross-edition alias",
+        )
+        self.assertEqual(module.subtitle_track_label("zh"), "ZH burned-in")
+
+    def test_no_subtitle_alias_requires_none_baseline(self) -> None:
+        self.assertTrue(module.is_no_subtitle_alias({"none", "ja", "zh"}, {"A"}))
+        self.assertFalse(module.is_no_subtitle_alias({"ja", "zh"}, {"A"}))
+        self.assertFalse(module.is_no_subtitle_alias({"none"}, {"A"}))
+        self.assertFalse(module.is_no_subtitle_alias({"none", "ja"}, {"A", "B"}))
+
+    def test_exact_item_override_requires_one_hash_match(self) -> None:
+        sha256 = "A" * 64
+        items = [
+            {
+                "sha256": sha256,
+                "state": "human_playback_required",
+                "subtitle_track": "material; no audio",
+            }
+        ]
+        module.apply_exact_item_overrides(
+            items,
+            [
+                {
+                    "sha256": sha256,
+                    "set": {
+                        "state": "ready_to_upload",
+                        "human_approval_status": "exact_file_owner_playback_approved",
+                    },
+                }
+            ],
+        )
+        self.assertEqual(items[0]["state"], "ready_to_upload")
+        with self.assertRaisesRegex(ValueError, "must match once"):
+            module.apply_exact_item_overrides(
+                items,
+                [{"sha256": "B" * 64, "set": {"state": "ready_to_upload"}}],
+            )
+
     def test_nested_hash_bound_plan_overlays_merge(self) -> None:
         with tempfile.TemporaryDirectory() as value:
             root = Path(value)

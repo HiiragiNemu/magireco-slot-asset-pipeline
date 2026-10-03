@@ -1,0 +1,69 @@
+{
+  "schema": "magireco-named-material-plan-v1",
+  "collection": "ac2001_ac2002_wait_loop_materials_416x232_v2",
+  "classification": "multi_family_native416x232_bounded_wait_loop_visual_material_catalog",
+  "evidence": "Two independent waiting-loop source cycles, each included once as material; ac5004_007 reuses an exact source already preserved by the current ac5004 collection.",
+  "expected_audio_state": "digital_silence",
+  "allow_single_source_component_catalog": false,
+  "component_events": [
+    "ac2001_002",
+    "ac2002_002"
+  ],
+  "component_native_dimensions": {
+    "width": 416,
+    "height": 232
+  },
+  "component_official_name_allowlist": [
+    "ac2001_cz1_magia_challenge_taiki_LP",
+    "ac2002_cz2_kuroe_challenge_taiki_LP"
+  ],
+  "derive_clips_from_audience_event_catalog": true,
+  "audience_event_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\AUDIENCE_EVENT_LEDGER.csv",
+    "sha256": "8292714AD983D478F5EE42B7F3C1487428EC83897C5A1E6F3443686E1574DFB1",
+    "production_state": "missing_modern_event_manifest",
+    "disposition": "blocked",
+    "classification": "native_full_frame_only"
+  },
+  "audience_clip_index": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+    "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+  },
+  "current_material_index_no_overlap": {
+    "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V65.json",
+    "sha256": "35CB1AB01D1BA05641CE3C6B12069E8C498C7715624C6334881131FAE748A35D"
+  },
+  "source_root_overrides": [
+    {
+      "from": "A:\\magireco_bili_fulltest_20260603",
+      "to": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "label": "post-v65 strict silent native416 material eligibility audit",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\SILENT_NATIVE416_MATERIAL_ELIGIBILITY_AFTER_V65.json",
+      "sha256": "707D4A26462716F91DD59E7C9D4339F8D8D7177D0822AA065C6E17CFB8C0D72F"
+    },
+    {
+      "label": "v27r1 exhaustive audience event ledger",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\production_ledger_v27r1_metadata_fix_20260730\\AUDIENCE_EVENT_LEDGER.csv",
+      "sha256": "8292714AD983D478F5EE42B7F3C1487428EC83897C5A1E6F3443686E1574DFB1"
+    },
+    {
+      "label": "hash-bound audience event clip occurrence catalog",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\audience_event_catalog_v1\\audience_event_clips.csv",
+      "sha256": "C341BDC08F9C2EDAE5A4892B34134A130B136CF1626525624CF9D94003299AC6"
+    },
+    {
+      "label": "v65 current material no-overlap index",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_corrected_research_20260612\\manifests\\production_deltas\\CURRENT_MATERIAL_COLLECTION_INDEX_PLUS_V65.json",
+      "sha256": "35CB1AB01D1BA05641CE3C6B12069E8C498C7715624C6334881131FAE748A35D"
+    },
+    {
+      "label": "official-name video map copied to durable D root",
+      "path": "D:\\magia\\MyProducts\\casino\\magireco_bili_fulltest_20260603\\cri_official_video_map\\cri_official_name_video_map.csv",
+      "sha256": "35DC44871C2532D92E87671C7572DAA7D16B86CD2C3D85C36DE359EC9FF3BA4B"
+    }
+  ]
+}

@@ -45,6 +45,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--immediate", action="store_true")
     parser.add_argument("--with-sound", action="store_true")
     parser.add_argument("--host", default="127.0.0.1:27043")
+    parser.add_argument(
+        "--pid",
+        type=int,
+        help="attach this ADB-verified numeric PID without enumerating Gadget processes",
+    )
+    parser.add_argument(
+        "--no-unload",
+        action="store_true",
+        default=True,
+        help="exit without explicit script unload/session detach (single-session Gadget policy)",
+    )
     parser.add_argument("--realm", choices=("native", "emulated"))
     parser.add_argument("--attach-timeout", type=float, default=60.0)
     parser.add_argument(
@@ -81,6 +92,10 @@ def main() -> int:
         raise SystemExit("--pattern is required for symbols")
     if args.limit < 0:
         raise SystemExit("--limit must be non-negative")
+    if args.pid is None:
+        raise SystemExit("--pid is required; use an ADB-verified numeric PID")
+    if args.pid <= 0:
+        raise SystemExit("--pid must be a positive numeric PID")
 
     output_path = Path(args.out).resolve() if args.out else None
     if output_path:
@@ -92,11 +107,8 @@ def main() -> int:
     while True:
         try:
             device = manager.add_remote_device(args.host)
-            processes = device.enumerate_processes()
-            if not processes:
-                raise RuntimeError(f"no process exposed by Gadget at {args.host}")
-            target = processes[0]
-            session = device.attach(target.pid, realm=args.realm)
+            target_pid = args.pid
+            session = device.attach(target_pid, realm=args.realm)
             break
         except Exception as error:
             last_attach_error = error
@@ -261,8 +273,16 @@ def main() -> int:
             for item in records:
                 output.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-    script.unload()
-    session.detach()
+    if args.no_unload:
+        record(
+            {
+                "event": "single_session_no_explicit_unload",
+                "target_pid": target_pid,
+            }
+        )
+    else:
+        script.unload()
+        session.detach()
     return 0
 
 
