@@ -1,333 +1,130 @@
 # Magireco Slot Asset Pipeline
 
-这是一个本地资产审计与整理工具仓库，用于继续处理当前解包工程中的视频、图像、音频清单、命名、分类和候选拼合分析。
+基于游戏静态代码、资源引用和运行时证据，还原 MagiaReco Slot 的动画、对白、音效与字幕，
+形成**原生分辨率、内容穷尽且不重复的场景长片／素材合集**。
 
-可复现输入布局、已验证版本指纹、外部工具锁定和派生证据 Release
-打包流程见 [reproducibility/README.md](reproducibility/README.md)。
+这不是仅按文件名拼接视频的工具，也不以逐局触发全部演出为目标。代码分析用于确定内容全集、
+分支、层级和调度规则；有限动态采样用于验证仍有疑问的时序与参数。
 
-仓库只保存脚本和轻量文档，不保存 APK、解包素材、JADX 反编译源码、native 库、视频、图像或音频文件。原始游戏数据需要放在本地工作目录中，由 `.gitignore` 排除。
+## 当前状态 · 2026-10-03
 
-## 当前状态
+- 唯一开发及默认分支：`codex/corrected-runtime-pipeline`。本项目不另开分支或 PR。
+- 最新代码整合基线：[70b925c](https://github.com/HiiragiNemu/magireco-slot-asset-pipeline/commit/70b925c7d1e90e18113bb6a4ed67299f7eab7afb)，
+  已纳入此前 112 项代码、测试、计划与文档积压，并修正历史输入绑定及 Git 换行导致的哈希风险。
+- 该基线全仓回归：**1013 通过、4 跳过、0 失败**。这是代码测试结果，不是人工播放批准。
+- 已有静态内容全集盘点、event-global 音画调度、分层／循环／尾帧分析、精确去重和长片构建流程；
+  **全项目尚未穷尽完成**。已提交 ac0001–ac0005 等后续长片计划，仍需与集中审查索引逐项衔接。
+- 现存原生 416 集中审查批次为 **20 个内容组、48 个语言／伴随版本文件**，状态
+  `HUMAN_PLAYBACK_REQUIRED`。这是一个已发布审查批次，不是全项目库存总数，也不是 48 部独立作品。
+- P16／ac6003、P17／ac6004、P18／ac6005，以及未闭合的 child-local → event-global 时序继续隔离。
+  旧 v24/v25 的 QA、旧 READY 数字或历史人工批准不能自动外推到后续重建版本。
 
-> **2026-07-24 无 BGM 全面扩产检查点：** 系统重装后的生产环境已经恢复。机器现有
-> Python 3.14.6、Git 2.55.0 和 GitHub CLI 2.96.0；本轮恢复 FFmpeg 8.1.2、
-> Node.js LTS 24.18.0、npm 11.16.0、Frida 17.16.4、frida-tools 14.10.4 以及
-> `requirements.txt` 依赖。项目所有者已经将先前通过审查的内容分别发布为
-> [无 BGM 中文版](https://www.bilibili.com/video/BV13bKN6nEsd/)、
-> [无 BGM 原始日文官方字幕版](https://www.bilibili.com/video/BV1zQKN6eEC6/) 和
-> [无 BGM 无字幕版](https://www.bilibili.com/video/BV1rUKN6iEcj/)，后续沿用其
-> edition 标题和分 P 分类／命名风格。
->
-> v24 已完成 11 个 family、95 个 event、33 个 none/JA/ZH MP4，全部通过自动 QA；
-> v25 又完成 `ac4902`、`ac7117`、`ac7112`，并将 `ac7113` 按原生画幅拆成
-> 512x288 主章节与 512x416 opening，共 5 个 family、81 个 event、15 个 MP4。
-> 合计 16 个 family、176 个 event、48 个 MP4、1,920.099 秒，均保持原生
-> 416x232、512x288 或 512x416、30 fps、H.264、AAC 48 kHz stereo，无 upscale、无自动黑场，
-> BGM 明确排除且 voice/SE 证据绑定。旧 v23 `ac5203` 因漏掉 request 7856 对白而
-> 失效，v24 已携带完整 reviewed cue 正确重建。`ac4901`、`ac7204`、`ac1101`
-> 继续失败关闭，没有为追求数量强行归入线性剧情。完整路径、规格、环境和边界见
-> [2026-07-24 扩产与环境恢复](docs/research/2026-07-24-mass-no-bgm-production-and-environment-recovery.md)。
-> `no_bgm_none/no_bgm_ja/no_bgm_zh` 继续作为独立生产轨道；`with_bgm` 仍等待
-> 场景级继承曲目、入口相位、音量和切换证据闭合。
-> 最新全仓回归为 354 tests passed、5 skipped、0 failed/error；真实 FFmpeg
-> 集成测试与严格 v24/v25 媒体审计均已实际执行。
+详细状态以 [PROJECT_STATUS](docs/PROJECT_STATUS.md) 顶部为准；
+整合范围与原始资源保留理由见 [2026-10-03 整合记录](docs/research/2026-10-03-backlog-integration-and-source-retention.md)。
 
-> **2026-07-18 非线性／多层扩产历史检查点：** 项目所有者已确认 Story 3/4/5 三部完整
-> 章节全部通过并授权全面生产；原话和三部 artifact hash 已写入 owner attestation。
-> 随后构建器已越过“单全画面线性 SP Story”：首批 `ac1102/ac1103/ac1104/ac5208`
-> 覆盖 40 event、99 条 voice-bound 中文字幕、175 个声音层、21 个 linear event 与
-> 19 个 `timed_full_frame_layers`，包括多片段、loop background、screen overlay、
-> loop overlay、416x232 与 512x288，总时长 315.067 秒。四部长片均通过精确帧／样本
-> 自动 QA，保持原生尺寸、30 fps、H.264、AAC 48 kHz stereo，明确排除 BGM；当前仍为
-> `HUMAN_PLAYBACK_APPROVED=false`、`BILIBILI_RELEASE_READY=false`，已停止等待项目
-> 所有者播放，尤其检查运行时 sparkle/logo 是否应留在 clean-story、并发对白字幕和
-> 416x232 布局。详见
-> [非线性／多层剧情首轮扩产审查批次](docs/research/2026-07-18-mixed-composition-expansion-review-batch.md)。
-> 已通过的前三部完整章节及其旧检查点见
-> [SP Story 完整章节首轮扩产审查批次](docs/research/2026-07-18-sp-story-chapter-expansion-review-batch.md)。
-> 本轮全仓回归为 319 tests passed、4 skipped、0 failed/error。
+## 内容与验收标准
 
-> 2026-07-16 存储约束：A: RAMDISK 已关闭，不再作为输入、scratch 或输出路径。
-> 耐久研究/媒体一律写入 `D:\magia\MyProducts\casino`，仓库和小型临时处理使用 C:
-> SSD。任何旧 A: 路径只可作为历史 provenance，必须通过显式、可哈希验证的 D: 路径
-> 映射读取，禁止重新依赖 A:。
+1. **穷尽独立内容，而非累加文件数量。** 同一场景／剧情的入口、选项、互斥结果均需纳入覆盖表。
+   互斥分支可按可理解的顺序整合为一部长片，但不冒充游戏原生单局；同一内容只出现一次，
+   保留其所有事件／来源映射。音频、字幕或有效画面不同的版本不应误判成重复。
+2. **长片优先。** 事件短片用于来源、QA 和复现，不默认作为独立剧情产品交付。
+   分离路线版须有项目所有者的具体需求；纯素材按其真实组件用途保留，不因短或叠加后才可见而丢弃。
+3. **原生画布。** 优先 416×232 的 Slot 演出；512×288 等较低优先级记录后排队。
+   不 upscale，不按尺寸强行拉伸或机械拼接；多层组件必须有 composition plan。
+4. **音画字幕证据。** 层区间、父子实例化偏移、循环、尾帧、对白、SE、字幕和累计时间轴必须对应。
+   child Z2D 的局部帧号不等于父事件全局时间；缺少依据时保持阻断，不靠目测统一平移。
+5. **语言与音频轨分开管理。** 剧情按实际内容提供 NONE／JA／ZH；无语言差异的纯视觉／无声素材
+   只保留一个无语言后缀的文件，不制造三份 `__none`／`__ja`／`__zh` 包装。
+   同哈希审查一次，确需跨目标使用时以可追溯别名处理。
+6. **人工批准绑定精确文件。** 自动 QA、人工播放通过、可投稿、已投稿、隔离是不同状态；
+   批准必须绑定具体文件和 SHA-256，不因同 family 或相同字幕轨名称而扩展。
 
-> 2026-07-15：权威开发分支是 `codex/corrected-runtime-pipeline`。当前已由
-> `libGameProc.so` 的 `C_ObjNml::fnSndRequest_BGM_DIR` 静态闭环证明业务声音代码
-> 835/836 都是 BGM 请求，并完成从 `SoundMng` 到跨线程 `CSLMng::PlayStart` 的
-> 精确播放身份连接；用户也确认对应自然运行批次中确实听到了 BGM。听检时间尚未与
-> 835 或 836 中的单一首曲目唯一绑定，因此目标场景仍须保存同一次运行的曲目、循环
-> 相位、音量和切换证据，不能靠听感或时间邻近猜测。详见
-> [BGM_DIR 与 CSL 跨线程身份链](docs/research/2026-07-15-bgm-dir-and-csl-cross-thread-identity.md)。
-> 目标 SP Story 的上游静态链进一步证明：ac7114/15/16 自身不请求 BGM，而是继承
-> 全局 Direction `kind/no`；DirInfo 190/191/192 绝不是 BGM 的 `no`。详见
-> [目标 SP Story BGM 状态上游](docs/research/2026-07-15-target-sp-story-bgm-state-upstream.md)。
-> 2026-07-16 已把该上游链实现成 fail-closed observer，并在 PID3188 完成 8 秒零输入
-> 预检：已安装 split APK 与其中 STORED GameProc ELF 双重完整哈希匹配，13/13 hooks
-> 安装、0 unavailable/error、973 条 sound metadata 零丢失、未发送输入。该检查只证明
-> 捕获器已就绪；自然目标同 run 仍是最终 BGM 门禁。
-> 随后真实单回合暴露的高频 signature 溢出已失败关闭并修复；第二个 bounded
-> non-target 回合以 40/1024 条上游记录、0 drop/error 完成，证明 observer 已通过
-> 实际负载，但该回合没有目标 SP Story 或 835/836。
->
-> 完整归档规格仍为两条经证据约束的音频母版（`with_bgm` / `no_bgm`）乘三种字幕
-> （无字幕 / 日文 / 中文），共六版。项目所有者 2026-07-18 的覆盖允许满足自身证据
-> 合同的 `no_bgm_zh` R1 独立获得 BUILD_READY；人工播放批准仍是 Bilibili 投稿硬门禁。
-> clean visual、双音频母版、字幕六路以及 scene 长片均采用失败关闭的
-> manifest/hash/逐帧逐样本 QA。完整归档合同与实现状态见
-> [双音频母版与六版合同](docs/research/2026-07-14-two-audio-master-six-edition-contract.md)。
-> event/scene/series/material 的 AAC 样本边界、SRT 回读、source rehash、staging/READY、
-> 并发 no-replace 与失败回滚加固见
-> [六版发布流水线加固](docs/research/2026-07-16-release-pipeline-hardening.md)。
->
-> 真实 v20 manifest 已在 D: 重建：926 个事件中 521 READY、405 fail-closed；
-> ac7114/15/16 的 512x288、30 fps、H.264 clean visual 已分别通过 289/666/391
-> 精确帧 QA。双母版和 scene 六版引擎已经实现；完整六版归档仍阻塞于自然目标同 run
-> 的 BGM ID/phase/volume/transitions。独立 R1 已不再等待该 BGM 门禁，目前只等待项目
-> 所有者对首个中文候选的翻译、布局和完整播放确认。设置 D: 真实资源根后，前一检查点
-> 自动测试为 289/289 passed、
-> 0 skipped/failed/error。
-> 2026-07-18 的同步边界、已修复发布缺陷以及已经关闭的重复 runtime-event
-> `last-wins` P1 见
-> [上传前状态与已知问题](docs/research/2026-07-18-prepush-status-and-known-issues.md)。
+### no-BGM 与 with-BGM
 
-面向项目所有者和外部读者的最新中文进度、静态/动态机制边界、三版本字幕规格、
-CDN 高分辨率备选路线和量化剩余工作见
-[docs/HUMAN_PROGRESS_REPORT_2026-07-13.md](docs/HUMAN_PROGRESS_REPORT_2026-07-13.md)。
-三项只读审计的完整证据边界见
-[docs/research/2026-07-13-static-generality-font-and-cdn.md](docs/research/2026-07-13-static-generality-font-and-cdn.md)：
-它明确区分 Slot 与 Exedra 下载机制，并记录静态通用性和游戏字体门禁。
-当前 Sound Pack entitlement、222 项原生静音表和 BGM 结论边界见
-[docs/research/2026-07-14-sound-pack-entitlement-gate.md](docs/research/2026-07-14-sound-pack-entitlement-gate.md)；
-全部 7 个付费 SKU、native 字段/xref、角色/设定/强制役影响、当前 PID3188 只读快照
-和 CDN 高清结论见
-[docs/research/2026-07-16-paid-addon-gates-and-archive-impact.md](docs/research/2026-07-16-paid-addon-gates-and-archive-impact.md)；
-设定 0..5/随机、五角色 profile、强制役 0..19 与 SP Story 独立路由的完整静态枚举见
-[docs/research/2026-07-16-setting-character-force-variant-space.md](docs/research/2026-07-16-setting-character-force-variant-space.md)；
-JM 位图字形的可复现导出/缺字门禁见
-[docs/research/2026-07-14-jm-dgi-glyph-catalog.md](docs/research/2026-07-14-jm-dgi-glyph-catalog.md)。
-中文字幕使用的独立可审计字体依赖、固定上游 commit、字体/许可证 SHA-256、离线缓存
-校验及 ac7114/15/16 候选字符 34/34 覆盖见
-[reproducibility/fonts/README.md](reproducibility/fonts/README.md)。该字体明确标为
-`audited_chinese_fallback`，不是游戏原生字体；翻译与布局未人工批准前仍失败关闭。
-ac7114/15/16 的中文字幕原始审阅表与 JM 缺字实测见
-[docs/review/2026-07-15-ac7114-16-chinese-subtitle-review.md](docs/review/2026-07-15-ac7114-16-chinese-subtitle-review.md)；
-R1 已从中排除 `graphical-only` 的 `ごめんね…`，只渲染 9 条对白；翻译和布局仍是
-等待项目所有者播放批准的草案。
+- **no-BGM**：有意排除 BGM，保留已证明的对白与 SE。使用代码导出的音频总线／请求身份，
+  不把未知声音猜成 SE，也不声称游戏原本无 BGM。
+- **with-BGM**：独立证据门控轨。曲目身份、入口相位、音量、fade／duck／stop、来源哈希和
+  事件／路线时间线闭合后再进入正式生产，不用猜测音轨填补缺口。
+- 保持原生分辨率与合理码率，交付视频 30 fps、H.264；有声输出使用 AAC 48 kHz stereo。
+  无声纯素材不为凑规格添加无意义语言音轨。
 
-接手或恢复工作时先读
-[docs/HANDOFF_NEXT_AI_MAGIRECO.md](docs/HANDOFF_NEXT_AI_MAGIRECO.md)；它是唯一
-核心入口。最新自然 SP Story hunter、停轮权威门禁、静态抽奖表和量化剩余工作见
-[docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md](docs/research/2026-07-13-natural-sp-story-hunter-and-lottery.md)。
-前一轮 MuMu 重连与声音链基线见
-[docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md](docs/research/2026-07-12-runtime-reconnect-and-completion-gap.md)。
-滚动审计结论见 [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md)。
+### 人物身份与翻译
 
-下方历史统计用于资产盘点，不等于已经通过语音、字幕、BGM 和场景语义门禁
-的可投稿成片数量；发生冲突时以核心 handoff 和最新 dated delta 为准。
+黑羽（黒羽）、黑（黒）、黑江（黒江）是三个角色。`speaker_code=kuro` 有上下文歧义，
+不得全局映射；`kuroe` 是黑江。使用
+[精确身份覆盖表](tools/frida_runtime_probe/speaker_identity_overrides_v1.json)，未闭合的 `kuro` 不加人物名前缀。
+黑江及八千代对环彩羽的对应「環さん」称呼按已确认规则译为“环同学”。
 
-当前执行顺序以
-[核心交接](docs/HANDOFF_NEXT_AI_MAGIRECO.md)、
-[首个独立 no_bgm_zh 候选](docs/research/2026-07-18-first-independent-no-bgm-zh-candidate.md)、
-[人类可读报告](docs/HUMAN_PROGRESS_REPORT_2026-07-13.md) 和
-[双音频母版 × 三字幕合同](docs/research/2026-07-14-two-audio-master-six-edition-contract.md)
-为准。
+## 人工审查入口（本地 D:）
 
-[旧 NEXT_STEPS](docs/NEXT_STEPS.md)、
-[旧官方事件流程](docs/OFFICIAL_EVENT_PIPELINE.md) 和
-[旧 B站分P流程](docs/BILIBILI_PRODUCTION_WORKFLOW.md) 仅保留为历史审计材料；其中的
-视觉候选、两版、1920×1080 upscale、全局 limiter/loudness 和 `--edition both`
-命令均禁止用于当前生产。
-
-本阶段研究记录见
-[docs/RESEARCH_LOG_2026-06-05.md](docs/RESEARCH_LOG_2026-06-05.md)。
-
-当前最终生产不再使用 `main_video_NNNN_candidatesX` 数字候选关系，也不使用
-`low_motion` / `short_static` / `static_like` 目录做判断。权威链路为
-`GDB event -> Z2D -> DGM -> native CRI -> MP4`。
-
-主要结果：
-
-- 精确官方事件：7753
-- 精确事件/画布输出：8482
-- 有声无字幕输出：5201
-- 有声有字幕输出：284
-- 静音视觉输出：2997
-- 已全量验证有声事件/画布：5485
-- 有声B站分P计划：294
-- 视频 CRID chunk：7801
-- 可唯一命名视频 chunk：483
-- 多候选共享视频 chunk：607
-- 直接无 GDB 候选视频 chunk：6711
-- z2d 图像 chunk：12083
-- z2d 名称引用：11733
-- OGG chunk：9952
-- `sound_id.dat` 音频映射记录：9951
-- 含内嵌 `@SFA` 音频的视频 slice：456
-- PCM chunk：21
-- 视频连续序列候选：263，其中 175 组为旧候选分析结果，不用于最终官方事件合并
-
-## 不上传的数据
-
-公开仓库不包含：
-
-- `*.apk`, `*.obb`, `*.bin`, `*.dat`, `*.mp4`, `*.ogg`, `*.z2d`
-- `downloaded_assets/`
-- `unpacked_assets/`
-- `unpacked_base/`
-- `unpacked_lib/`
-- `jadx_audit/`
-- `asset_manifests/`
-- 临时导出、最终视频、JADX GUI 工具包
-
-这些内容体积很大，并且可能包含专有游戏数据。需要时在本地重新生成。
-
-## 常用命令
-
-生成基础资产清单：
-
-```powershell
-python magireco_asset_pipeline.py manifest
-```
-
-生成 Java/smali/native/GDB/m_info/sound_id 交叉审计报告：
-
-```powershell
-python magireco_internal_audit.py
-```
-
-音频导出 dry-run，按 `sound_id.dat` 给 OGG 命名：
-
-```powershell
-python magireco_asset_pipeline.py export-audio --sound-id-names --limit 5
-```
-
-实际导出音频：
-
-```powershell
-python magireco_asset_pipeline.py export-audio --sound-id-names --execute
-```
-
-视频整理 dry-run：
-
-```powershell
-python magireco_asset_pipeline.py organize-videos
-```
-
-对已导出的 MP4 生成序列复核报告，不合并视频：
-
-```powershell
-python magireco_asset_pipeline.py video-review --video-dir D:\MagiaRe_RAMDISK_Backup_20260603_032042\magireco_final_mp4_videos --write-concat-plans
-```
-
-解析 `zg_snd_request_tbl.bin`，生成声音请求 ID、描述标签、候选 `.smz/.pcm` 媒体名与 `sound_id.dat` 的关联审计：
-
-```powershell
-python magireco_asset_pipeline.py sound-request-audit
-```
-
-按 native `RequestCtrl::loadRequestTbl()` 的结构解析 `zg_snd_request_tbl.bin`，生成精确的 code -> request id -> ReqData/SMZ 审计：
-
-```powershell
-python magireco_asset_pipeline.py sound-request-struct-audit
-```
-
-审计声音请求表中的 `.smz/.pcm` 媒体名、`zg_snd_hashreq_tbl.bin` 哈希请求表，以及可选的安装态 `smz.bin/smz_add.bin`：
-
-```powershell
-python magireco_asset_pipeline.py sound-media-audit --smz-bin D:\magia\MyProducts\casino\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz.bin --smz-add D:\magia\MyProducts\casino\magireco_installed_pull_20260603\data_user_0\files\assetpacks\OnDemandPack01\31\31\assets\smz_add.bin
-```
-
-当前版本还会读取 `libGameProc.so` 中 `loadFileSmz` / `loadFilePcm` 的 relocated name table，生成官方媒体名到安装态 chunk 的对应表：
+稳定指针：
 
 ```text
-asset_manifests/smz_name_chunk_map.csv
-asset_manifests/pcm_name_table.csv
-asset_manifests/smz_request_missing_from_installed_pack.csv
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\CURRENT_NATIVE416_EXHAUSTIVE.json
 ```
 
-注意：`zg_snd_hashreq_tbl.bin` 的 request id 是记录序号，第三个 `u32` 是 sample/play length 字段，不是 request id。
-
-从已有 native 字符串清单中提取声音请求、SMZ 表和 `EVT_ac` 事件标签证据：
-
-```powershell
-python magireco_asset_pipeline.py native-sound-video-audit
-```
-
-扫描已导出的 MP4，收集纯音频、无视频流、全黑或近黑画面复核候选：
-
-```powershell
-python magireco_asset_pipeline.py review-special-videos --video-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\review_special
-```
-
-对已导出的 MP4 做水平翻转校正，输出到新的目录，不覆盖源目录：
-
-```powershell
-python magireco_asset_pipeline.py hflip-videos --input-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder h264_nvenc --workers 2
-python magireco_asset_pipeline.py hflip-videos --input-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos_hflip --execute --encoder libx264 --workers 4
-```
-
-对方向正确的视频树重新做复核，并用 `volumedetect` 区分可听音轨和静音音轨：
-
-```powershell
-python magireco_asset_pipeline.py review-special-videos --video-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos_hflip --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\review_special_hflip_audible --audio-volume --workers 4
-```
-
-将导出的 `.pcmraw` 封装为 foobar2000 可播放的 WAV：
-
-```powershell
-python magireco_asset_pipeline.py convert-pcm-wav --input-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_raw --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\audio_assets\audio\pcm_wav_48k_stereo --execute --overwrite --audio-volume --workers 4
-```
-
-按 `MultiCandidate_Slices` 中连续的 `main_video_NNNN_candidatesX` 切片做候选数合并测试：
-
-```powershell
-python magireco_asset_pipeline.py merge-candidate-runs --video-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\videos --out-dir D:\magia\MyProducts\casino\magireco_bili_fulltest_20260603\merge_tests\candidate_runs_command_execute_hflip_video_only --execute --hflip --drop-audio --probe
-```
-
-生成面向 B 站整理的标题、标签和说明候选报告：
-
-```powershell
-python magireco_asset_pipeline.py bili-metadata-audit
-```
-
-官方 GDB -> Z2D -> DGM -> CRI 事件重建、音频、字幕和分 P 工作流见：
+截至本页更新，指向：
 
 ```text
-docs/OFFICIAL_EVENT_PIPELINE.md
-docs/BILIBILI_PRODUCTION_WORKFLOW.md
+D:\magia\MyProducts\casino\magireco_corrected_research_20260612\manual_review_hub_v2_flat\releases\native416_exhaustive_new_standard_v144_20260824
 ```
 
-对已生成的 B 站分 P 做独立的流、音量、时长和硬链接审计：
+从该目录的 `00_START_HERE.md` 开始，再按 `ZH`／`JP`／`NONE` 查看 `story`、`routes`、
+`gameplay_effect`；纯素材集中在 `MATERIAL`。MP4 平铺，不要求人类逐个进入 family/event 目录。
+该批次使用同盘 NTFS 硬链接，不另复制媒体。`JP` 是目录显示名，对应计划中的 `ja`。
+
+以上 20 组仍是待审候选，不是投稿目录。GitHub 不携带这些本地视频，克隆仓库不会获得成片。
+旧 `CURRENT_PRODUCTION.json`、`00_BILIBILI_统一入口`、分散版本目录及七月分 P 数字只保留来源意义，
+不应与本页入口混用。新增内容先更新绑定清单与统一索引，不另造零碎人类审查入口。
+
+## 仓库与本地数据的边界
+
+| 保存位置 | 内容 |
+| --- | --- |
+| Git / GitHub | 分析与构建脚本、测试、轻量研究文档、composition / production plans、精确覆盖和来源指纹 |
+| D: 原始资源目录 | 官方 APK／OBB、CRI、native SO、解包表与源媒体；不作为 Git 大文件上传 |
+| D: 版本化研究／生产根 | runtime 证据、manifest、QA、原始单事件及候选成片；保留来源关系与隔离状态 |
+| D: 集中审查入口 | 按当前索引聚合的硬链接视图；不是又一份物理媒体备份 |
+
+本机工作树：
+
+```text
+D:\Codex\State\worktrees\2fe8\com.universal777.magireco-Ga9DaxEd9F9Lqn9OVKVSfw==
+```
+
+旧主目录仍包含原始输入和共享 `.git`，不是可整体删除的过时仓库。
+旧拼接成片／分类结论可以失去当前权威性，但原始 OBB／CRI／SO 不因目录日期早而失效。
+A: RAMDISK 不作为当前输入、生产或证据保存位置。不自动创建整仓／整盘备份，也不自动上传 Bilibili。
+
+## 开发与复现
+
+先看 [输入与复现指南](reproducibility/README.md) 和
+[核心交接](docs/HANDOFF_NEXT_AI_MAGIRECO.md)，确认具体计划、源指纹和隔离边界。
+[字体依赖](reproducibility/fonts/README.md) 独立锁定；本地字体缓存不是无用媒体副本。
+历史工具链锁和输入指纹是对应检查点的记录，不应覆盖当前已经验证的环境。
+
+在已配置依赖的工作树中运行全仓回归：
 
 ```powershell
-python magireco_asset_pipeline.py bilibili-part-output-audit --help
+$env:PYTHONDONTWRITEBYTECODE = '1'
+python -B -m unittest
 ```
 
-在实际 SRT 字幕时间点比较无字幕与烧录字幕画面：
+生产实现及探针位于 [tools/frida_runtime_probe](tools/frida_runtime_probe/)。
+运行时操作只验证静态预测的具体问题；先核对 Slot 的 exact-hash SO／IDA 会话和实际进程，
+使用 ADB 确认的数字 PID、单会话、不显式 unload 的策略。旧 `--usb`／进程枚举／双会话示例
+不作为当前操作入口，也不操作其他正在运行的游戏。
 
-```powershell
-python magireco_asset_pipeline.py subtitle-burn-audit --help
-```
+## 研究导航与历史边界
 
-当模拟器已运行并且 Android 侧有匹配版本的 `frida-server` 时，可以探测 native WAV 转换入口。无 `--code` 参数时只做状态检查：
+- [ac0908 全入口／结局代码权威复核](docs/research/2026-08-24-ac0908-exhaustive-authority-after-reverse.md)
+- [ac1102 旧长片与新内容全集复核](docs/research/2026-08-24-ac1102-legacy-longform-code-authority.md)
+- [ac7205 代码权威与长片重建](docs/research/2026-08-24-ac7205-code-authority-and-v150-production.md)
+- [原生 416 静态来源全集构建器](tools/frida_runtime_probe/build_native416_static_source_universe.py)
+- [ac0005 穷尽去重长片计划](tools/frida_runtime_probe/series_proposals/exhaustive_unique_longform_ac0005_v252_20260824.json)
+- [研究记录目录](docs/research/)
 
-```powershell
-python tools\frida_smz_wav_probe.py --usb
-python tools\frida_smz_wav_probe.py --usb --code 1049 --output-dir /sdcard/Download/magireco_wav_probe
-```
-
-## 外部工具
-
-- Python 3.10+
-- FFmpeg，用于视频封装、音频合并、候选拼接
-- JADX，用于生成本地 `jadx_audit/base_src_only`
-- 可选：`requests`, `tqdm`, `mitmproxy`
-- 可选：Frida，用于在模拟器进程内调用 native WAV 转换探针
-
-## 安全原则
-
-默认命令尽量 dry-run。会移动、复制、导出或合并文件的步骤需要显式加 `--execute`。
-
-旧的候选数切片拼合只保留作研究证据。当前生产流程使用
-GDB -> Z2D -> DGM -> native CRI 的官方引用链重建事件，并按官方事件根和画布分组生成 B 站分 P。
+带日期的报告保留其当时观察，不因本页更新而重写成今天的结论。
+旧 `main_video_NNNN_candidatesX` 拼接、motion/static 分类、1080p upscale、旧全局人物映射，
+以及早期 `NEXT_STEPS`／`OFFICIAL_EVENT_PIPELINE`／`BILIBILI_PRODUCTION_WORKFLOW` 的命令
+均不作为当前生产指令。需要复现历史实验时，应使用该检查点的完整来源合同，而不是从旧说明中摘一条命令直接运行。
